@@ -26,7 +26,7 @@
 #define CW	0
 #define CCW 1
 
-//****Define Motor Pins for readability of code****//
+//****Motor Pins***//
 //Motor 1
 #define	FIN_1_Low	(REG_PIOB_CODR |= (1<<12))
 #define	FIN_1_High	(REG_PIOB_SODR |= (1<<12))
