@@ -42,9 +42,35 @@
 /******** UART ********/
 #define TXRDY (REG_UART3_SR & (1<<1))		//UART TX READY flag
 
-/*######## GLOBAL VARIABLES ########*/
+/******STRUCTURES******/
+struct Position
+//struture to store all the robot side navigation / positioning data
+//this will be written to by getMouseXY, getEulerAngles, and another navigation function which combines them
+//The struture will store the relevant info from both key sensors and fuse them in an additional function
+{
+	float opticaldx;
+	float opticaldy;
+	float opticalx;
+	float opticaly;
+	float IMUqw;
+	float IMUqx;
+	float IMUqy;
+	float IMUqz;
+	float x;
+	float y;
+	float h;
+};
+
+struct Command
+//structure to receive the command and interpret it to something useful
+{
+	char messageClass;
+	char commandCode;
+	char command[10];
+};
 
 
+/*************FUNCTIONS*************/
 uint16_t ADC_ReadCH(uint8_t channel);
 
 #endif /* ROBOTDEFINES_H_ */
