@@ -1,5 +1,12 @@
+
+
 # Prerequisites
 *.d
+
+#ignore non git hidden files
+.*
+!.gitignore
+!.gitattibutes
 
 # Object files
 *.o
@@ -62,6 +69,3 @@ dkms.conf
 *.ld
 
 
-.*
-!/.gitignore
-!/.gitattibutes
