@@ -220,6 +220,9 @@
     <Compile Include="imu_interface.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="prox_sens_interface.c">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="prox_sens_interface.h">
       <SubType>compile</SubType>
     </Compile>
