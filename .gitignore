@@ -60,3 +60,8 @@ dkms.conf
 
 #device startup config
 *.ld
+
+
+.*
+!/.gitignore
+!/.gitattibutes
