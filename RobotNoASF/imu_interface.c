@@ -1,33 +1,37 @@
-/*	twi_driver.c
-*	TWI read and write functions that are compatible with the IMU's driver software
-*	Also includes a routine to setup the master clock on the SAM4SD32C for 100MHz, driven by PLLA
-*	and an external 12MHz crystal oscillator
+/*	imu_interface.c
 *	
 *	by Matthew Witt
 *	28/04/2017
+*	Desc: imu_interface provides functions that allow both retrieval of data from IMU as well as
+*	functions required by the IMU DMP driver
 */
 
+//tgmath required for atan2 in GetEulerAngles()
 #include <tgmath.h>
 #include "sam.h"
 #include "imu_interface.h"
+//Invensense Direct Motion Processing Driver Files
 #include "IMU-DMP/inv_mpu_dmp_motion_driver_CUSTOM.h"
 #include "IMU-DMP/inv_mpu_CUSTOM.h"
 #include "IMU-DMP/mpu9250.h"
 
-/* IMU Variables */
-short gyro[3], accel[3], sensors;
-unsigned char more;
-unsigned long sensor_timestamp;
-euler_packet_t eulerAngle;
-euler_packet_t *ptEulerAngle = &eulerAngle;
-long quat[4];
-long *ptQuat = &quat[0];
+//IMU Variables
+short			gyro[3],
+				accel[3],
+				sensors;
+unsigned char	more;
+unsigned long	sensor_timestamp;
+euler_packet_t	eulerAngle,
+				*ptEulerAngle		= &eulerAngle;
+long			quat[4],
+				*ptQuat				= &quat[0];
+				
+//Flags and system globals
+uint32_t		systemTimestamp		= 0,			//Number of ms since powerup
+				blinker				= 0,			//Used by TC0 to blink one of the LEDs
+				check_IMU_FIFO		= 0;			//At what time will the IMUs FIFO next be read?
 
-uint32_t systemTimestamp = 0;
-uint32_t blinker = 0;
-uint32_t check_IMU_FIFO = 0;
-
-//Initialise the IMU, robotsetup MUST be run first
+//Initialise the IMU, Master clock and TWI2 MUST be setup first
 void init_imu(void)
 {
 	unsigned char accel_fsr;
@@ -159,7 +163,9 @@ int delay_ms(uint32_t period_ms)
 	return 0;
 }
 
-//twi write function that has parameters compatible with the IMU's drivers
+//twi write function that has parameters compatible with the IMU's drivers. Parameters: slave_addr is the address of the
+//device to be written to on TWI2. It varies because the IMU and compass has different TWI slave addresses. reg_addr is the
+//address of the register being written to. length is the number of bytes to be written. *data points to the data to be written
 char twi_write_imu (unsigned char slave_addr, unsigned char reg_addr, unsigned char length, unsigned char const *data)
 {
 	//note txcomp MUST = 1 before writing
@@ -187,7 +193,11 @@ char twi_write_imu (unsigned char slave_addr, unsigned char reg_addr, unsigned c
 	return 0;
 }
 
-//twi read function that has parameters compatible with the IMU's drivers
+//twi read function that has parameters compatible with the IMU's drivers. Parameters: slave_addr is the address of the
+//device to be written to on TWI2. It varies because the IMU and compass has different TWI slave addresses. reg_addr is the
+//address of the register being read from. length is the number of bytes to be read. The IMU automatically increments the
+//register address when reading more than one byte. *data points to the location in memory where the retrieved data will
+//be stored.
 char twi_read_imu(unsigned char slave_addr, unsigned char reg_addr, unsigned char length, unsigned char *data)
 {
 	REG_TWI2_CR |= TWI_CR_MSEN | TWI_CR_SVDIS;	//Enable master mode
@@ -234,10 +244,11 @@ void TC0_Handler()
 			blinker = systemTimestamp;
 			if(REG_PIOA_ODSR & LED1) REG_PIOA_CODR |= LED1; else REG_PIOA_SODR |= LED1;
 		}
-		if(systemTimestamp >= (check_IMU_FIFO + 5))						//Read IMUs FIFO every 5ms
+		//Read IMUs FIFO every 5ms. In future this will be done from an external interrupt.
+		if(systemTimestamp >= (check_IMU_FIFO + 5))					
 		{
 			check_IMU_FIFO = systemTimestamp;
-			int returnVal = dmp_read_fifo(gyro, accel, ptQuat, &sensor_timestamp, &sensors, &more);	// Read the FIFO
+			dmp_read_fifo(gyro, accel, ptQuat, &sensor_timestamp, &sensors, &more);	// Read the FIFO
 		}
 	}
 }

@@ -1,12 +1,14 @@
 /*
- * twi_driver.h
+ * imu_interface.h
  *
  * Created: 28/04/2017 3:43:52 PM
  *  Author: Matthew Witt
+ *	Desc: imu_interface provides functions that allow both retrieval of data from IMU as well as
+ *	functions required by the IMU DMP driver
  */ 
 
-#ifndef TWI_DRIVER_H_
-#define TWI_DRIVER_H_
+#ifndef IMU_INTERFACE_H_
+#define IMU_INTERFACE_H_
 
 #include "robotdefines.h"
 
@@ -21,6 +23,8 @@
 #define IMU_TXRDY				(REG_TWI2_SR & TWI_SR_TXRDY)
 #define IMU_NACK				(REG_TWI2_SR & TWI_SR_NACK)
 
+//Some other status flags that were taken from the ASF TWI library. I don't think these are
+//needed any longer, but will keep for now
 #define TWI_SUCCESS              0
 #define TWI_INVALID_ARGUMENT     1
 #define TWI_ARBITRATION_LOST     2
@@ -32,13 +36,14 @@
 #define TWI_BUSY                 8
 #define TWI_ERROR_TIMEOUT        9
 
-//Stores converted Euler angles of rotation
+//Structure that stores converted Euler angles of rotation. Parameter of GetEulerAngles
 typedef struct euler_packet {
 	double pitch;
 	double roll;
 	double yaw;
 } euler_packet_t;
 
+//See .c file for function descriptions
 void init_imu(void);
 char twi_write_imu(unsigned char slave_addr, unsigned char reg_addr, unsigned char length, unsigned char const *data);
 char twi_read_imu(unsigned char slave_addr, unsigned char reg_addr, unsigned char length, unsigned char *data);
@@ -49,4 +54,4 @@ unsigned short inv_row_2_scale(const signed char *row);
 void GetEulerAngles(long *ptQuat, euler_packet_t *eulerAngle);
 void TC0_Handler();
 
-#endif /* TWI_DRIVER_H_ */
+#endif /* IMU_INTERFACE_H_ */
