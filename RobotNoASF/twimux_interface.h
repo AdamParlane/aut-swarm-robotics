@@ -9,6 +9,8 @@
 #ifndef TWIMUX_INTERFACE_H_
 #define TWIMUX_INTERFACE_H_
 
+#include "sam.h"
+
 /******** TWI ********/
 /*** General Commands ***/
 #define twi0RXRDY	REG_TWI0_SR & (1<<1)

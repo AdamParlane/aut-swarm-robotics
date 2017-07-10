@@ -11,7 +11,7 @@
 */
 #include "spi.h"
 #include "sam.h"
-#include "robotdefines.h"
+//#include "robotdefines.h" //Not sure if this line is constructive!
 #include "imu_interface.h"
 #include "opt_interface.h"
 #include "motor_driver.h"
