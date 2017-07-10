@@ -2,7 +2,8 @@
  * twimux_interface.h
  *
  * Created: 11/07/2017 10:03:32 AM
- *  Author: Matthew
+ *  Author: Matthew Witt
+ *	Desc: Defines for TWI0, and the TWI mux
  */ 
 
 
@@ -11,6 +12,7 @@
 
 #include "sam.h"
 
+///////////////Defines//////////////////
 /******** TWI ********/
 /*** General Commands ***/
 #define twi0RXRDY	REG_TWI0_SR & (1<<1)
@@ -19,22 +21,23 @@
 #define twi0NACK	REG_TWI0_SR & (1<<8)		//Check TWI0 Status register for Not Acknowledged
 
 /*** Device/Slave Addresses ***/
-#define TWI0_Mux_Address			0b1110000	//Mux Address 000
+#define TWI0_Mux_Address			0xE0		//Mux Address 000
 #define TWI0_LightSensorAddress		0x10		//Light sensors
 #define TWI0_ProximitySensorAddress 0x39		//Proximity sensors
 #define TWI0_FastChargeChipAddress	0x6B		//Battery Charger (Fast Charge Controller)
 
 /*** I2C Mux Channel ***/
 /* Only one channel is active at a time */
-#define Mux_RHS_LightSens 0b11111000	//Mux Channel 0, Side Panel A
-#define Mux_LHS_LightSens 0b11111001	//Mux Channel 1, Side Panel A
-#define Mux_ProximityA 0b11111010		//Mux Channel 2, Side Panel A
-#define Mux_ProximityB 0b11111111		//Mux Channel 7, Side Panel B
-#define Mux_ProximityC 0b11111110		//Mux Channel 6, Side Panel C
-#define Mux_ProximityD 0b11111101		//Mux Channel 5, Side Panel D
-#define Mux_ProximityE 0b11111100		//Mux Channel 4, Side Panel E
-#define Mux_ProximityF 0b11111011		//Mux Channel 3, Side Panel F
+#define Mux_RHS_LightSens	0xF8				//Mux Channel 0, Side Panel A
+#define Mux_LHS_LightSens	0xF9				//Mux Channel 1, Side Panel A
+#define Mux_ProximityA		0xFA				//Mux Channel 2, Side Panel A
+#define Mux_ProximityB		0xFF				//Mux Channel 7, Side Panel B
+#define Mux_ProximityC		0xFE				//Mux Channel 6, Side Panel C
+#define Mux_ProximityD		0xFD				//Mux Channel 5, Side Panel D
+#define Mux_ProximityE		0xFC				//Mux Channel 4, Side Panel E
+#define Mux_ProximityF		0xFB				//Mux Channel 3, Side Panel F
 
+////////////////Functions/////////////////
 void twi0Init(void);
 void TWI0_MuxSwitch(uint8_t channel);
 uint8_t TWI0_ReadMuxChannel(void);

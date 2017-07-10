@@ -2,7 +2,8 @@
  * twimux_interface.c
  *
  * Created: 11/07/2017 10:41:59 AM
- *  Author: Matthew
+ *  Author: Matthew Witt
+ *	Desc: Contains functions for initialising TWI0 hardware and controlling the TWI mux
  */ 
 
 #include "twimux_interface.h"
