@@ -175,6 +175,9 @@
     <Compile Include="communication.c">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="fc_interface.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="IMU-DMP\dmpKey_CUSTOM.h">
       <SubType>compile</SubType>
     </Compile>
@@ -191,6 +194,12 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="IMU-DMP\inv_mpu_dmp_motion_driver_CUSTOM.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="light_sens_interface.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="line_sens_interface.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="motor_driver.c">
@@ -211,6 +220,9 @@
     <Compile Include="imu_interface.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="prox_sens_interface.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="robotdefines.c">
       <SubType>compile</SubType>
     </Compile>
@@ -221,6 +233,9 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="twi0_interface.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="twimux_interface.h">
       <SubType>compile</SubType>
     </Compile>
     <None Include="communication.h">
