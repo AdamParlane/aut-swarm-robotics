@@ -67,5 +67,6 @@ dkms.conf
 
 #device startup config
 *.ld
-
+*.vs
+.vs
 
