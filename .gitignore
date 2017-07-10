@@ -49,3 +49,6 @@ modules.order
 Module.symvers
 Mkfile.old
 dkms.conf
+
+# Atmel Studio build files
+*.atsuo
