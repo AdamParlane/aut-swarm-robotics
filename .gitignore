@@ -50,5 +50,13 @@ Module.symvers
 Mkfile.old
 dkms.conf
 
-# Atmel Studio build files
+# Atmel Studio extra build / debug files
+*.bin
+*.eep
+*.lss
+*.srec
+*.mk
 *.atsuo
+
+#device startup config
+*.ld
