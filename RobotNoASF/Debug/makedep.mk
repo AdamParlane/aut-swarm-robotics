@@ -14,9 +14,13 @@ opt_interface.c
 
 imu_interface.c
 
+prox_sens_interface.c
+
 robotdefines.c
 
 twi0_interface.c
+
+twimux_interface.c
 
 Device_Startup\startup_sam4n.c
 
