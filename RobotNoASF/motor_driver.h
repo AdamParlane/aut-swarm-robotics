@@ -26,6 +26,8 @@
 #define CW	0
 #define CCW 1
 
+
+//hello matt
 //****Motor Pins***//
 //Motor 1
 #define	FIN_1_Low	(REG_PIOB_CODR |= (1<<12))
