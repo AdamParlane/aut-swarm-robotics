@@ -56,13 +56,13 @@ int main(void)
 			dockRobot();
 		}
 		
-		if(FrameBufferInfoGetFull(&frame) == 0)
+		if(FrameBufferInfoGetFull(&frame) == 0)	//Check for a received XBee Message
 		{
-			InterpretXbeeAPIFrame(frame);
+			InterpretXbeeAPIFrame(frame); //Interpret the received XBee Message
 
-			if(MessageBufferInfoGetFull(&message) == 0)
+			if(MessageBufferInfoGetFull(&message) == 0) //Check for a message from the swarm
 			{
-				InterpretSwarmMessage(message);
+				InterpretSwarmMessage(message);	//Interpret the message
 			}
 		}
 

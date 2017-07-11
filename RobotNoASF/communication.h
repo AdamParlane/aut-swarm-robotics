@@ -1,27 +1,31 @@
 /*
  * communication.h
  *
- * Created: 21/05/2017 6:02:32 p.m.
- *  Author: OEM
- */ 
-
+ *  Author: Mansel Jeffares
+ * 	First Build: 10 May 2017
+ *	Current Build:  11 July 2017
+ *  
+ *	Description :
+ *		Basic Communication to computer GUI using wireless XBee Module in API Mode
+ *
+ */
 
 #ifndef COMMUNICATION_H_
 #define COMMUNICATION_H_
 
 #include "robotdefines.h"
 
-//64bit robot addresses
+//64-bit robot addresses
 #define COORDINATOR_64 0x0000000000000000
 #define BROADCAST_64 0x000000000000FFFF
 
-//16bit robot addresses
+//16-bit robot addresses
 #define ALL_ROUTERS_16 0xFFFC
 #define ALL_NON_SLEEPING_DEVICES_16 0xFFFD
 #define UNKNOWN_16 0xFFFE
 #define ALL_DEVICES_16 0xFFFF
 
-//////// Message codes /////////////
+/******* Message codes *******/
 //System Messages 0x0* 
 #define COMMUNICATION_TEST	0x00
 #define BATTERY_DATA		0x01
@@ -37,7 +41,8 @@
 #define NAV_OPT_HDG			0x18
 //More to come
 
-// Buffer Structures
+
+//Structures for information about the primary buffers
 struct frame_info
 {
 	int index;
@@ -52,12 +57,12 @@ struct message_info
 	int length;
 };
 
-// Public Function Prototypes
-void CommunicationSetup(void);
-void InterpretSwarmMessage(struct message_info message);
-void InterpretXbeeAPIFrame(struct frame_info frame);
-void SendXbeeAPITransmitRequest(uint64_t destination_64, uint16_t destination_16, uint8_t *data, uint8_t  bytes);
-int FrameBufferInfoGetFull(struct frame_info * info);
-int MessageBufferInfoGetFull(struct message_info * info);
+/**** Public Function Prototypes ****/
+void CommunicationSetup(void);								// Sets up UART3 and the required buffers
+void InterpretSwarmMessage(struct message_info message);	// Interprets and acts on a received swarm messages
+void InterpretXbeeAPIFrame(struct frame_info frame);		// Interprets and acts on a received xbee message
+void SendXbeeAPITransmitRequest(uint64_t destination_64, uint16_t destination_16, uint8_t *data, uint8_t  bytes);	// Forms and sends XBee Transmit Request Frame
+int FrameBufferInfoGetFull(struct frame_info * info);		// Gets the information about the oldest frame from the buffer
+int MessageBufferInfoGetFull(struct message_info * info);	// Gets the information about the oldest message from the buffer
 
 #endif /* COMMUNICATION_H_ */
