@@ -64,9 +64,12 @@ dkms.conf
 *.srec
 *.mk
 *.atsuo
+Makefile
 
 #device startup config
 *.ld
 *.vs
 .vs
 
+RobotNoASF/Debug/Makefile
+*.mk

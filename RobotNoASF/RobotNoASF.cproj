@@ -238,6 +238,9 @@
     <Compile Include="spi.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="twi0_interface.c">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="twimux_interface.c">
       <SubType>compile</SubType>
     </Compile>
