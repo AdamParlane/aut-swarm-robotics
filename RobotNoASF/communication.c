@@ -3,28 +3,28 @@
  *
  *  Author: Mansel Jeffares
  * 	First Build: 10 May 2017
- *	Current Build:  21 May 2017
+ *	Current Build:  11 July 2017
  *  
  *	Description :
  *		Basic Communication to computer GUI using wireless XBee Module in API Mode
  *
  *	Improvements:
- *		Many
+ *		
  */
 
- #include <stdbool.h>
- #include <string.h>
- #include "sam.h"
- #include "communication.h"
- #include "robotdefines.h"
+#include <stdbool.h>
+#include <string.h>
+#include "sam.h"
+#include "communication.h"
+#include "robotdefines.h"
 
- // X-Bee flow control bytes
+// XBee flow control bytes
 #define FRAME_DELIMITER 0x7E
 #define ESCAPE_BYTE 0x7D
 #define XON 0x11
 #define XOFF 0x13
 
-// X-Bee API Frames
+// XBee API Frames
 #define AT_COMMAND 0x08
 #define AT_COMMAND_QUEUE 0x09
 #define ZIGBEE_TRANSMIT_REQUEST 0x10
@@ -54,6 +54,7 @@
 #define CASE_CHECKSUM 5
 
 // Buffer defines
+// Due to simplistic implementation of FIFO a buffer the array must be one element larger than the number of elements wanted
 #define FRAME_BUFFER_ELEMENTS 1000
 #define FRAME_BUFFER_SIZE (FRAME_BUFFER_ELEMENTS + 1)
 
@@ -67,6 +68,8 @@
 #define MESSAGE_BUFFER_INFO_SIZE (MESSAGE_BUFFER_INFO_ELEMENTS + 1)
 
 // Buffer variables
+//In is the next free location an element can be put into
+//Out is the next element to be read out
 uint8_t FrameBuffer[FRAME_BUFFER_SIZE];
 int FrameBufferIn, FrameBufferOut, FrameBufferUse;
 
@@ -80,50 +83,54 @@ struct message_info MessageBufferInfo[MESSAGE_BUFFER_INFO_SIZE];
 int MessageBufferInfoIn, MessageBufferInfoOut, MessageBufferInfoUse;
 
 // Local Function Prototypes
-void FrameBufferInit(void);
-int FrameBufferPut(uint8_t new);
-int FrameBufferGet(uint8_t *old);
-int FrameBufferPeek(uint8_t *old);
-void FrameBufferInfoInit(void);
-int FrameBufferInfoPut(int ind, uint8_t typ, int len);
-int FrameBufferInfoGet(int * ind, uint8_t * typ, int * len);
-//int FrameBufferInfoGetFull(struct frame_info * info);
-void MessageBufferInit(void);
-int MessageBufferPut(uint8_t new);
-int MessageBufferGet(uint8_t *old);
-int MessageBufferPeek(uint8_t *old);
-void MessageBufferInfoInit(void);
-int MessageBufferInfoPut(int ind, uint8_t cmd, int len);
-int MessageBufferInfoGet(int * ind, uint8_t * cmd, int * len);
-//int MessageBufferInfoGetFull(struct message_info * info);
-void UART3_Handler(void);
-void UART3_Write(uint8_t data);
-void SendXbeeAPIFrame(uint8_t * frame_data, int len);
+void FrameBufferInit(void);			//Initialize all usage variables to the beginning of the array
+int FrameBufferPut(uint8_t new);	//Adds a new byte to the end of the array
+int FrameBufferGet(uint8_t *old);	//Gets the oldest byte from the array
+
+void FrameBufferInfoInit(void);							//Initialize all usage variables to the beginning of the array
+int FrameBufferInfoPut(int ind, uint8_t typ, int len);	//Adds a element to the end of the array
+
+void MessageBufferInit(void);		//Initialize all usage variables to the beginning of the array
+int MessageBufferPut(uint8_t new);	//Adds a new byte to the end of the array
+int MessageBufferGet(uint8_t *old);	//Gets the oldest byte from the array
+
+void MessageBufferInfoInit(void);							//Initialize all usage variables to the beginning of the array
+int MessageBufferInfoPut(int ind, uint8_t cmd, int len);	//Adds a element to the end of the array
+
+void UART3_Handler(void);									//UART3 Interrupt handler, receives XBee Frames and adds them to the buffer
+void UART3_Write(uint8_t data);								//Writes a byte to UART3
+void SendXbeeAPIFrame(uint8_t * frame_data, int len);		//Sends an XBee API Frame
 
 
 void InterpretSwarmMessage(struct message_info message)
 {
+	//copy information from the message info structure to local variables
 	int index = message.index;
 	uint8_t message_command = message.command;
 	int length = message.length;
-
-	uint8_t data[50];
-	uint16_t temp;
-
+	
+	uint8_t data[50];			//Array used to form reply message
+	uint16_t batteryVoltage;	//Variable to store battery voltage
+	
+	//Behaviour depends on type of message received
 	switch(message_command)
 	{
 		case COMMUNICATION_TEST:
-			data[0] = 0x00;
-			SendXbeeAPITransmitRequest(BROADCAST_64,UNKNOWN_16,data,1);
+			//Replies with simple ACK
+			//Forms the message to send to the PC/GUI
+			data[0] = 0x00;	
+			SendXbeeAPITransmitRequest(BROADCAST_64,UNKNOWN_16,data,1);  //Send the Message
 			break;
 
 		case BATTERY_DATA:
-			temp = ADC_ReadCH(BV);
+
+			batteryVoltage = ADC_ReadCH(BV); //Reads the battery voltage using the ADC
+
+			//Forms the message to send to the PC/GUI
 			data[0] = BATTERY_DATA;
-			data[1] = (temp & (0xFF00)) >> 8;
-			data[2] = temp & (0xFF);
-			SendXbeeAPITransmitRequest(BROADCAST_64,UNKNOWN_16,data,3);
-			//to get voltage multiply by 5/1000
+			data[1] = (batteryVoltage & (0xFF00)) >> 8;
+			data[2] = batteryVoltage & (0xFF);
+			SendXbeeAPITransmitRequest(BROADCAST_64,UNKNOWN_16,data,3); //Send the formed Message, NOTE: To convert this number to voltage multiply by 5/1000
 			break;
 		
 		case NAV_IMU_QW:
@@ -140,12 +147,15 @@ void InterpretSwarmMessage(struct message_info message)
 
 void InterpretXbeeAPIFrame(struct frame_info frame)
 {
+	//copy information from the frame info structure to local variables
 	int index = frame.index;
 	uint8_t frame_type = frame.type;
 	int length = frame.length;
 
+	//Temporary variable to store value from buffer
 	uint8_t temp;
 
+	//Behaviour depends on type of frame received
 	switch(frame_type)
 	{
 		case AT_COMMAND_RESPONSE:
@@ -162,7 +172,9 @@ void InterpretXbeeAPIFrame(struct frame_info frame)
 		
 		case ZIGBEE_RECEIVE_PACKET:
 			//XBEE: Data Packet Received
-			FrameBufferOut = index;
+			FrameBufferOut = index;	//Update the location we read from within the FrameBuffer
+
+			//The source's 64-Bit address
 			FrameBufferGet(&temp);		
 			FrameBufferGet(&temp);
 			FrameBufferGet(&temp);
@@ -172,21 +184,24 @@ void InterpretXbeeAPIFrame(struct frame_info frame)
 			FrameBufferGet(&temp);
 			FrameBufferGet(&temp);
 			
+			//The source's 16-Bit address
 			FrameBufferGet(&temp);
 			FrameBufferGet(&temp);
 			
+			//Receive options
 			FrameBufferGet(&temp);	
 			
+			//Received Data
 			if(FrameBufferGet(&temp) == 0)
 			{
-				MessageBufferInfoPut(MessageBufferIn,temp,1);
+				MessageBufferInfoPut(MessageBufferIn,temp,1); //Store information about received message
 				for(int i = 1; i <= length-12; i++)
 				{
+					//Take data from FrameBuffer and put it into the MessageBuffer 
 					FrameBufferGet(&temp);
 					MessageBufferPut(temp);
 				}
 			}
-			
 			break;
 		
 		case ZIGBEE_EXPLICIT_RX_INDICATOR:
@@ -228,7 +243,6 @@ void InterpretXbeeAPIFrame(struct frame_info frame)
 		default:
 			//WARNING ERROR XBEE: unhandled message received;
 			break;
-
 	}
 }
 
@@ -244,6 +258,7 @@ void CommunicationSetup(void)
 	
 	NVIC_EnableIRQ(16);						//ENABLE the UART3 system interrupts
 
+	//Initializes buffers to beginning of arrays
 	FrameBufferInit();
 	FrameBufferInfoInit();
 	MessageBufferInit();
@@ -254,87 +269,76 @@ void CommunicationSetup(void)
 /******** UART3 Interrupt Handler ********/
 void UART3_Handler(void)
 {
-	uint8_t temp;
-
-	static bool escape = false;
+	uint8_t temp;	//temporary variable to store received byte
+		
 	static uint8_t receiveState = CASE_START;
-	static int length;
-	static int index;
-	static int check;
-	static int frame_start_index;
-	static int frame_type;
+	static bool escape = false;		//Flag for escaping received bytes
+	static int length;				//Length as reported by XBee Frame	
+	static int index;				//Number of bytes received that count towards length of XBee Frame
+	static int check;				//Checksum calculation
+	static int frame_start_index;	//The position in the FrameBuffer where the data of this XBee Frame is stored
+	static int frame_type;			//The type of received XBee Frame
 	
 
 	if(REG_UART3_IMR == UART_IMR_RXRDY)	//if we receive data
 	{
-		temp = REG_UART3_RHR;
+		temp = REG_UART3_RHR;	//store the incoming data in a temporary variable 
 
-		if(temp == FRAME_DELIMITER && receiveState != CASE_START)
+		if(temp == FRAME_DELIMITER && receiveState != CASE_START ) //if we receive a start byte out of sequence
 		{
-			receiveState = CASE_START;
-
-			//XXXX error partial message received will need some kinda of handling to remove them from the buffer (update the tail and the head)
-			//XXX this might do it but needs testing
-			/*
-			if(FrameBufferIn > index)
-			{
-				FrameBufferIn -= FrameBufferIn - index;
-			}
-			else
-			{
-				FrameBufferIn -= 50 - FrameBufferIn + index;
-			}
-			*/			
+			receiveState = CASE_START;	//reset back to the start state	
 		}
-		else if(temp == ESCAPE_BYTE)
+		else if(temp == ESCAPE_BYTE) //if the next byte needs to be escaped
 		{
-			escape = true;
+			escape = true;	//set the flag
 		}
-		else if(escape)
+		else if(escape) //if the current byte needs to be escaped
 		{
-			temp ^= 0x20;
-			escape = false;
+			temp ^= 0x20;	//reverse the escape procedure
+			escape = false;	//reset the flag
 		}
 
-		if(escape == false)
+		if(escape == false)	//we only go through the receive states if the data has been escaped
 		{
 			switch(receiveState)
 			{
 				case CASE_START:
 					if(temp == FRAME_DELIMITER)
 					{
-						receiveState = CASE_LENGTH_MSB;
+						//reset our book-keeping variables and updates the receive state
 						length = 0;
 						index = 0;
 						check = 0;
+						receiveState = CASE_LENGTH_MSB;
 					}
 					break;
 
 				case CASE_LENGTH_MSB:
+					//Calculates the length using the first length byte and updates the receive state
 					length = temp*256;
 					receiveState = CASE_LENGTH_LSB;
 					break;
 
 				case CASE_LENGTH_LSB:
+					//Calculates the length using the second length byte and updates the receive state
 					length =+ temp;
 					receiveState = CASE_FRAME_TYPE;
 					break;
 
 				case CASE_FRAME_TYPE:
-					frame_type = temp;
-					check += temp;
-					
-					index++;
-					frame_start_index = FrameBufferIn;
-					receiveState = CASE_DATA;
+					frame_type = temp;					//Receives and stores the Frame type
+					check += temp;						//Calculates the checksum over the received byte
+					index++;							//Updates the number of received bytes that count towards the XBee frame length
+					frame_start_index = FrameBufferIn;	//Stores the location of the Frame Data in the FrameBuffer
+					receiveState = CASE_DATA;			//Updates the receive state
 					break;
 
 				case CASE_DATA:	
-					FrameBufferPut(temp);
-					check += temp;
-					index++;
+					FrameBufferPut(temp); //Stores the Received data into the FrameBuffer
+					check += temp; //Calculates the checksum over the received byte
+					index++; //Updates the number of received bytes that count towards the XBee frame length
 
-					if(index == length)
+					if(index == length) //Checks if we have received all the data and if we have updates the receive state
 					{
 						receiveState = CASE_CHECKSUM;
 					}
@@ -342,13 +346,13 @@ void UART3_Handler(void)
 					break;
 				
 				case CASE_CHECKSUM:
-					check += temp;
-					check &= 0xFF;
-					if(check == 0xFF)
+					check += temp;		//Calculates the checksum over the received byte
+					check &= 0xFF;		//Final Step of checksum calculation for XBee Frame
+					if(check == 0xFF)	//Verifies the calculated checksum value
 					{
-						receiveState = CASE_START;
-						FrameBufferInfoPut(frame_start_index, frame_type, index -1);
+						FrameBufferInfoPut(frame_start_index, frame_type, index -1); //Stores Frame info in buffer
 					}
+					receiveState = CASE_START; //Resets receive state d
 				break;
 			}
 		}
@@ -363,51 +367,55 @@ void UART3_Write(uint8_t data)
 
 void SendXbeeAPIFrame(uint8_t * frame_data, int len)
 {
-	uint16_t length = len;
+	uint16_t length = len;		//length of API Frame Data
+	uint8_t data[length + 4];	//Array to store the full Frame
+	uint8_t checksum = 0;		//Variable to store checksum calculation
+	uint8_t data_length;
 
-	uint8_t data[length + 4];
-	uint8_t checksum = 0;
-
+	//Forms XBee Frame Header with start delimiter and length
 	data[0] = FRAME_DELIMITER;
 	data[1] = (uint8_t) (length >> 7) & 0xFF;
 	data[2] = length & 0xFF;
 
+	//Copies frame data into the full frame array
 	memcpy(data + 3, frame_data, length);
 	
-
+	//Calculates the checksum over the frame data array
 	for(int i = 0; i < length; i++)
 	{
 		checksum += frame_data[i];
 	}
+	
+	data[length+3] = 0xFF - checksum;	//Completes final step in checksum calculation and copies it to the full frame array
+	data_length = sizeof(data);			//Gets the length of full message
+	UART3_Write(data[0]);				//Writes the Frame Delimiter as this shouldn't be escaped
 
-	data[length+3] = 0xFF - checksum;
-
-	uint8_t data_length = sizeof(data);
-
-	UART3_Write(data[0]);
-
+	//Sends the message out the UART, escaping characters on the fly as needed
 	for(int i = 1; i <data_length; i++)
 	{
-		if(data[i] == 0x7E || data[i] == 0x7D || data[i] == 0x11 || data[i] == 0x13)
+		//Checks for bytes that need to be escaped
+		if(data[i] == 0x7E || data[i] == 0x7D || data[i] == 0x11 || data[i] == 0x13) 
 		{
-			UART3_Write(ESCAPE_BYTE);
-			UART3_Write(data[i]^0x20);
+			UART3_Write(ESCAPE_BYTE);	//Writes the escape byte
+			UART3_Write(data[i]^0x20);	//Writes the escaped byte
 		}
 		else
 		{
-			UART3_Write(data[i]);
+			UART3_Write(data[i]);	//Writes the byte
 		}
 	}
 }
 
-
+//Sends an XBee Transmit Request Frame
 void SendXbeeAPITransmitRequest(uint64_t destination_64, uint16_t destination_16, uint8_t *data, uint8_t  bytes)
 {
+	//array to store message
 	uint8_t frame_data[bytes + 14];
 
-	frame_data[0] = ZIGBEE_TRANSMIT_REQUEST;
+	frame_data[0] = ZIGBEE_TRANSMIT_REQUEST;	//Frame type
 	frame_data[1] = 150;						//frame ID (assigned arbitrary at the moment)
 
+	//Destination 64-Bit Address
 	frame_data[2] = (destination_64 & (0xFF00000000000000)) >> 56;
 	frame_data[3] = (destination_64 & (0xFF000000000000)) >> 48;
 	frame_data[4] = (destination_64 & (0xFF0000000000)) >> 40;
@@ -417,56 +425,46 @@ void SendXbeeAPITransmitRequest(uint64_t destination_64, uint16_t destination_16
 	frame_data[8] = (destination_64 & (0xFF00)) >> 8;
 	frame_data[9] = destination_64 & (0xFF);
 
-
+	//Destination 16-Bit Address
 	frame_data[10] = (destination_16 & (0xFF00)) >> 8;
 	frame_data[11] = destination_16 & (0xFF);
 
-	frame_data[12] = 0x00;  //broadcast radius
+	//Broadcast radius
+	frame_data[12] = 0x00;  
 
-	frame_data[13] = 0x00;  //options
+	//Options
+	frame_data[13] = 0x00;  
 
+	//Copies message data to frame array
 	memcpy(frame_data + 14, data, bytes);
 
+	//Sends the message
 	SendXbeeAPIFrame(frame_data,bytes+14);
 }
 
 
-
-
-///******** UART3 Transmit Function *******/
-//void sendInstruction(uint8_t txrobotID, uint8_t txinstruction, uint8_t txpacketSize)
-//{
-	//uint8_t x;
-	//txBuffer[0] = 0xC4;						//Open header (will need to confirm these addresses)
-	//txBuffer[1] = 0x3B;						//Open header
-	//txBuffer[2] = txrobotID;				//Robot ID number
-	//txBuffer[3] = txinstruction;			//Command to send
-	//txBuffer[4] = txpacketSize;				//Number of data bytes
-	//txBuffer[txpacketSize + 5] = 0xA5;		//Close header (will need to confirm these addresses)
-	//for (x = 0; x < (txpacketSize+6); x++ )
-	//{
-		//while (!TXRDY);
-		//REG_UART3_THR = txBuffer[x];
-	//}
-//}
-
-
-// Buffer functions XXXX this can be greatly improved
+/****** Buffer functions *******/
 
 void FrameBufferInit(void)
 {
-	FrameBufferIn = FrameBufferOut = 0;
+	//Initialize all usage variables to the beginning of the array
+	FrameBufferIn = 0;
+	FrameBufferOut = 0;
 	FrameBufferUse = 0;
 }
 
 int FrameBufferPut(uint8_t new)
 {
+	//Check if the Buffer is full
 	if(FrameBufferIn == (( FrameBufferOut - 1 + FRAME_BUFFER_SIZE) % FRAME_BUFFER_SIZE))
 	{
 		return -1; // FrameBuffer Full
 	}
 
+	//Put the new byte in to the buffer
 	FrameBuffer[FrameBufferIn] = new;
+
+	//Update our buffer variables
 	FrameBufferIn = (FrameBufferIn + 1) % FRAME_BUFFER_SIZE;
 	FrameBufferUse++;
 	return 0; // No errors
@@ -474,74 +472,60 @@ int FrameBufferPut(uint8_t new)
 
 int FrameBufferGet(uint8_t *old)
 {
+	//Check to see if the buffer if empty
 	if(FrameBufferIn == FrameBufferOut)
 	{
 		return -1; // FrameBuffer Empty - nothing to get
 	}
-
+	
+	//fetch the info struct from the buffer
 	*old = FrameBuffer[FrameBufferOut];
+
+	//Update our buffer variables
 	FrameBufferOut = (FrameBufferOut + 1) % FRAME_BUFFER_SIZE;
 	FrameBufferUse--;
 	return 0; // No errors
 }
 
-int FrameBufferPeek(uint8_t *old)
-{
-	if(FrameBufferIn == FrameBufferOut)
-	{
-		return -1; // FrameBuffer Empty - nothing to get
-	}
-
-	*old = FrameBuffer[FrameBufferOut];
-	return 0; // No errors
-}
-
 void FrameBufferInfoInit(void)
 {
-	FrameBufferInfoIn = FrameBufferInfoOut = 0;
+	//Initialize all usage variables to the beginning of the array
+	FrameBufferInfoIn = 0;
+	FrameBufferInfoOut = 0;
 	FrameBufferInfoUse = 0;
 }
 
 int FrameBufferInfoPut(int ind, uint8_t typ, int len)
 {
-	
+	//Check if the Buffer is full
 	if(FrameBufferInfoIn == (( FrameBufferInfoOut -1 + FRAME_BUFFER_INFO_SIZE) % FRAME_BUFFER_INFO_SIZE))
 	{
 		return -1; // FrameBufferInfo Full
 	}
 
+	//Put the new data in to the buffer
 	FrameBufferInfo[FrameBufferInfoIn].index = ind;
 	FrameBufferInfo[FrameBufferInfoIn].type = typ;
 	FrameBufferInfo[FrameBufferInfoIn].length = len;
+
+	//Update our buffer variables
 	FrameBufferInfoIn = (FrameBufferInfoIn + 1) % FRAME_BUFFER_INFO_SIZE;
 	FrameBufferInfoUse++;
 	return 0; // No errors
 }
 
-int FrameBufferInfoGet(int * ind, uint8_t * typ, int * len)
-{
-	if(FrameBufferInfoIn == FrameBufferInfoOut)
-	{
-		return -1; // FrameBufferInfo Empty - nothing to get
-	}
-
-	*ind = FrameBufferInfo[FrameBufferInfoOut].index;
-	*typ = FrameBufferInfo[FrameBufferInfoOut].type;
-	*len = FrameBufferInfo[FrameBufferInfoOut].length;
-	FrameBufferInfoOut = (FrameBufferInfoOut + 1) % FRAME_BUFFER_INFO_SIZE;
-	FrameBufferInfoUse--;
-	return 0; // No errors
-}
-
 int FrameBufferInfoGetFull(struct frame_info * info)
 {
+	//Check to see if the buffer if empty
 	if(FrameBufferInfoIn == FrameBufferInfoOut)
 	{
 		return -1; // FrameBufferInfo Empty - nothing to get
 	}
 
+	//fetch the info struct from the buffer
 	*info = FrameBufferInfo[FrameBufferInfoOut];
 
+	//Update our buffer variables
 	FrameBufferInfoOut = (FrameBufferInfoOut + 1) % FRAME_BUFFER_INFO_SIZE;
 	FrameBufferInfoUse--;
 	return 0; // No errors
@@ -549,18 +533,24 @@ int FrameBufferInfoGetFull(struct frame_info * info)
 
 void MessageBufferInit(void)
 {
-	MessageBufferIn = MessageBufferOut = 0;
+	//Initialize all usage variables to the beginning of the array
+	MessageBufferIn = 0;
+	MessageBufferOut = 0;
 	MessageBufferUse = 0;
 }
 
 int MessageBufferPut(uint8_t new)
 {
+	//Check if the Buffer is full
 	if(MessageBufferIn == (( MessageBufferOut - 1 + MESSAGE_BUFFER_SIZE) % MESSAGE_BUFFER_SIZE))
 	{
 		return -1; // MessageBuffer Full
 	}
 
+	//Put the new byte in to the buffer
 	MessageBuffer[MessageBufferIn] = new;
+
+	//Update our buffer variables
 	MessageBufferIn = (MessageBufferIn + 1) % MESSAGE_BUFFER_SIZE;
 	MessageBufferUse++;
 	return 0; // No errors
@@ -568,134 +558,61 @@ int MessageBufferPut(uint8_t new)
 
 int MessageBufferGet(uint8_t *old)
 {
+	//Check to see if the buffer if empty
 	if(MessageBufferIn == MessageBufferOut)
 	{
 		return -1; // MessageBuffer Empty - nothing to get
 	}
 
+	//fetch the byte from the buffer
 	*old = MessageBuffer[MessageBufferOut];
+
+	//Update our buffer variables
 	MessageBufferOut = (MessageBufferOut + 1) % MESSAGE_BUFFER_SIZE;
 	MessageBufferUse--;
 	return 0; // No errors
 }
 
-int MessageBufferPeek(uint8_t *old)
-{
-	if(MessageBufferIn == MessageBufferOut)
-	{
-		return -1; // MessageBuffer Empty - nothing to get
-	}
-
-	*old = MessageBuffer[MessageBufferOut];
-	return 0; // No errors
-}
-
-
-
 void MessageBufferInfoInit(void)
 {
-	MessageBufferInfoIn = MessageBufferInfoOut = 0;
+	//Initialize all usage variables to the beginning of the array
+	MessageBufferInfoIn = 0;
+	MessageBufferInfoOut = 0;
 	MessageBufferInfoUse = 0;
 }
 
 int MessageBufferInfoPut(int ind, uint8_t cmd, int len)
 {
+	//Check if the Buffer is full
 	if(MessageBufferInfoIn == (( MessageBufferInfoOut - 1 + MESSAGE_BUFFER_INFO_SIZE) % MESSAGE_BUFFER_INFO_SIZE))
 	{
 		return -1; // MessageBufferInfo Full
 	}
-
+	
+	//Put the new data in to the buffer
 	MessageBufferInfo[MessageBufferInfoIn].index = ind;
 	MessageBufferInfo[MessageBufferInfoIn].command = cmd;
 	MessageBufferInfo[MessageBufferInfoIn].length = len;
+
+	//Update our buffer variables
 	MessageBufferInfoIn = (MessageBufferInfoIn + 1) % MESSAGE_BUFFER_INFO_SIZE;
 	MessageBufferInfoUse++;
 	return 0; // No errors
 }
 
-int MessageBufferInfoGet(int * ind, uint8_t * cmd, int * len)
-{
-	if(MessageBufferInfoIn == MessageBufferInfoOut)
-	{
-		return -1; // MessageBufferInfo Empty - nothing to get
-	}
-
-	*ind = MessageBufferInfo[MessageBufferInfoOut].index;
-	*cmd = MessageBufferInfo[MessageBufferInfoOut].command;
-	*len = MessageBufferInfo[MessageBufferInfoOut].length;
-	MessageBufferInfoOut = (MessageBufferInfoOut + 1) % MESSAGE_BUFFER_INFO_SIZE;
-	MessageBufferInfoUse--;
-	return 0; // No errors
-}
-
 int MessageBufferInfoGetFull(struct message_info * info)
 {
+	//Check to see if the buffer if empty
 	if(MessageBufferInfoIn == MessageBufferInfoOut)
 	{
 		return -1; // MessageBufferInfo Empty - nothing to get
 	}
 
+	//fetch the info struct from the buffer
 	*info = MessageBufferInfo[MessageBufferInfoOut];
 
+	//Update our buffer variables
 	MessageBufferInfoOut = (MessageBufferInfoOut + 1) % MESSAGE_BUFFER_INFO_SIZE;
 	MessageBufferInfoUse--;
 	return 0; // No errors
 }
-
-
-
-/*
-struct FIFO
-{
-	int size, in, out, use;
-	void * buffer;
-};
-
-void FIFO_init(struct FIFO buf, void * data, int elements)
-{
-	buf.size = elements + 1;
-	buf.in = buf.out = 0;
-	buf.buffer = data;
-}
-
-int FIFO_put(struct FIFO buf, uint new)
-{
-	if(buf.in == ((buf.out - 1 + buf.size) % buf.size))
-	{
-		return -1; // Buffer Full
-	}
-	*buf.buffer[buf.in] = new;
-	buf.in = (buf.in + 1) % buf.size;
-	buf.size++;
-	return 1;	// No Errors
-}
-*/
-
-
-/*
-int FrameBufferPut(uint8_t new)
-{
-	if(FrameBufferIn == (( FrameBufferOut - 1 + FRAME_BUFFER_SIZE) % FRAME_BUFFER_SIZE))
-	{
-		return -1; // FrameBuffer Full
-	}
-
-	FrameBuffer[FrameBufferIn] = new;
-	FrameBufferIn = (FrameBufferIn + 1) % FRAME_BUFFER_SIZE;
-	FrameBufferUse++;
-	return 0; // No errors
-}
-
-int FrameBufferGet(uint8_t *old)
-{
-	if(FrameBufferIn == FrameBufferOut)
-	{
-		return -1; // FrameBuffer Empty - nothing to get
-	}
-
-	*old = FrameBuffer[FrameBufferOut];
-	FrameBufferOut = (FrameBufferOut + 1) % FRAME_BUFFER_SIZE;
-	FrameBufferUse--;
-	return 0; // No errors
-}
-*/
