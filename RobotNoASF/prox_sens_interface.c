@@ -7,6 +7,7 @@
  */ 
 
 #include "prox_sens_interface.h"
+#include "twimux_interface.h"
 
 /******** Proximity Sensor Registry Setup ********/
 //This function will pass the desired channel to the Multiplexer and setup an *individual* proximity sensor

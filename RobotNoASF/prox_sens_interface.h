@@ -2,7 +2,8 @@
  * prox_sens_interface.h
  *
  * Created: 11/07/2017 10:05:52 AM
- *  Author: Matthew
+ *  Author: Matthew Witt
+ *	Desc: Defines and function prototypes for initialising and accessing the proximity sensors go here
  */ 
 
 

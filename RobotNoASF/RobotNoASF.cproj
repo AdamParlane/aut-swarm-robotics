@@ -175,6 +175,9 @@
     <Compile Include="communication.c">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="fc_interface.c">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="fc_interface.h">
       <SubType>compile</SubType>
     </Compile>
@@ -194,6 +197,9 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="IMU-DMP\inv_mpu_dmp_motion_driver_CUSTOM.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="light_sens_interface.c">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="light_sens_interface.h">
@@ -233,9 +239,6 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="twi0_interface.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="twi0_interface.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="twimux_interface.c">
