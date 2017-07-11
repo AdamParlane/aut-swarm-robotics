@@ -1,7 +1,15 @@
+/*
+ * twimux_interface.c
+ *
+ * Created: 11/07/2017 10:41:59 AM
+ *  Author: Matthew Witt
+ *	Desc: Contains functions for initialising TWI0 hardware and controlling the TWI mux
+ */ 
 
-#include "twi0_interface.h"
+#include "twimux_interface.h"
 
-
+//Initialise the TWI0 hardware. No Parameters
+//Update to new code format necessary
 void twi0Init(void)
 {
 	/******** TWI0 SETUP ********/
@@ -20,63 +28,6 @@ void twi0Init(void)
 	REG_TWI0_CWGR |= (CLDIV<<0);			//Clock low period 1.3uSec
 	REG_TWI0_CR |= (1<<2)|(1<<5);			//Master mode enabled, Slave disabled
 	uint8_t dummy = REG_TWI0_RHR;			//Ensure RXRDY flag is cleared
-}
-
-/******** Fast Charge Controller Registry Setup ********/
-void FastChargeController_Setup(void)
-{
-	//Chip disable (CD) line on PB2 set to enable
-	REG_PIOB_PER |= (1<<2);		//Give control of PB2 to PIOB controller
-	REG_PIOB_OER |= (1<<2);		//Set PB2 as an output
-	REG_PIOB_CODR |= (1<<2);	//Set PB2 to low
-	TWI0_Write(TWI0_FastChargeChipAddress, controlReg, initControl);	// Ensures that CE bit is clear in case safety timer has gone off in previous charge.
-	TWI0_Write(TWI0_FastChargeChipAddress, battVReg, initBattV);		// Vreg = 4.0v, input current = 2.5A
-	TWI0_Write(TWI0_FastChargeChipAddress, chargeReg, initCharge);		// charge current set to max Ic=2875mA, termination current Iterm=100mA (default)
-}
-
-/******** Light Sensor Registry Setup ********/
-//White Light Detection Enabled with low lux (40ms integration time), No Trigger, Auto Mode
-//Only sets up one light sensor at a time, not both
-void LightSensor_Setup(uint8_t channel)
-{
-	TWI0_MuxSwitch(channel); //Set multiplexer address to correct device
-	TWI0_Write(TWI0_LightSensorAddress, LightSens_Config, LightSens_Auto_LowLux);
-}
-
-/******** Proximity Sensor Registry Setup ********/
-//This function will pass the desired channel to the Multiplexer and setup an *individual* proximity sensor
-void Proximity_Setup(uint8_t channel)
-{
-	TWI0_MuxSwitch(channel); //Set multiplexer address to correct device
-	TWI0_Write(TWI0_ProximitySensorAddress, Proximity_Command_REG_1Byte | Proximity_Enable, PDisable);			//Disable and Power down
-	TWI0_Write(TWI0_ProximitySensorAddress, Proximity_Command_REG_1Byte | Proximity_PTime, PTIME);				//Proximity ADC time: 2.73 ms, minimum proximity integration time
-	TWI0_Write(TWI0_ProximitySensorAddress, Proximity_Command_REG_1Byte | Proximity_PPulse, PPULSE);			//Sets the number of Proximity pulses that the LDR pin will generate during the prox Accum state: (recommended proximity pulse count = 8) PREVIOUSLY HAD BEEN SET TO 0X02
-	TWI0_Write(TWI0_ProximitySensorAddress, Proximity_Command_REG_1Byte | Proximity_GainControl, PDiode);		//Gain Control register: LED = 100mA, Proximity diode select, Proximity gain x1, recommended settings
-	TWI0_Write(TWI0_ProximitySensorAddress, Proximity_Command_REG_1Byte | Proximity_Enable, PEnable);			//Power ON, Proximity Enable
-}
-
-/******** Proximity Sensor Data Read ********/
-//Retrieves the Proximity Sensor (16-bit) data from the selected Sensor
-//After the programmed number of proximity pulses have been generated, the proximity ADC converts and scales the proximity measurement to a 16-bit value,
-//then stores the result in two 8-bit proximity data (PDATAx) registers. Therefore, the TWI must read/retrieve both 8-bit registers.
-uint16_t Proximity_Data_Read(uint8_t channel)
-{
-	uint16_t data;
-	TWI0_MuxSwitch(channel);	//Set multiplexer address to correct device
-	data = TWI0_ReadDB(TWI0_ProximitySensorAddress, Proximity_Command_REG_Increment | Proximity_DataLow);
-	//NOTE: Command_REG of the ProxSensor must be written to, as part of R/W functions.
-	//Low data register is read, auto-increment occurs and high data register is read.
-	return data;
-}
-
-/******** Light Sensor Data Read ********/
-//Retrieves the White Light (16-bit) data from the selected Light Sensor
-uint16_t LightSensor_Data_Read(uint8_t channel)
-{
-	uint16_t data;
-	TWI0_MuxSwitch(channel);	//Set multiplexer address to correct device
-	data = TWI0_ReadDB(TWI0_LightSensorAddress, LightSensorWhite);
-	return data;
 }
 
 /******** TWI0 Multiplexer Channel Select ********/
@@ -160,9 +111,4 @@ uint16_t TWI0_ReadDB(uint8_t SlaveAddress, uint8_t intAddress)
 	while(!(twi0TXCOMP));				//While transmit not complete. wait.
 	data = (data2 << 8) | data1;		//Puts the two 8 bits into 16 bits
 	return data;
-}
-
-void FastChargeController_WatchDogReset(void)
-{
-	TWI0_Write(TWI0_FastChargeChipAddress, statusReg, watchdreset);	//Resets the FCC watch dog timer. Must be done once every 30s or else registers will reset
 }

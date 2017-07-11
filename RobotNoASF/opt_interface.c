@@ -25,7 +25,7 @@
 *
 */ 
 
-
+#include "spi.h"
 #include "sam.h"
 #include <math.h>
 #include "opt_interface.h"
