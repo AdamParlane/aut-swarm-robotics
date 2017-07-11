@@ -11,10 +11,11 @@
  * Author : adamParlane
  */ 
 
-
+#include "spi.h"
 #include "sam.h"
 #include <math.h>
 #include "opt_interface.h"
+
 
 void SPI_Init(void)
 {

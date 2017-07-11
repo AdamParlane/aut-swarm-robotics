@@ -7,8 +7,11 @@
  */ 
 
 
+
 #ifndef LIGHT_SENS_INTERFACE_H_
 #define LIGHT_SENS_INTERFACE_H_
+
+#include "sam.h"
 
 /*** Light Sensor ***/
 /* Register addresses for reading Colour */

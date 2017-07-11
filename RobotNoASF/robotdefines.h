@@ -11,11 +11,14 @@
 */
 #include "spi.h"
 #include "sam.h"
-//#include "robotdefines.h" //Not sure if this line is constructive!
 #include "imu_interface.h"
 #include "opt_interface.h"
 #include "motor_driver.h"
-#include "twi0_interface.h"
+#include "twimux_interface.h"
+#include "fc_interface.h"
+#include "prox_sens_interface.h"
+#include "light_sens_interface.h"
+#include "line_sens_interface.h"
 #include "communication.h"
 
 /*######## DEFINES ########*/

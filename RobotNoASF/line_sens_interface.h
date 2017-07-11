@@ -9,7 +9,7 @@
 #ifndef LINE_SENS_INTERFACE_H_
 #define LINE_SENS_INTERFACE_H_
 
-
+#include "sam.h"
 
 
 

@@ -10,6 +10,8 @@
 #ifndef PROX_SENS_INTERFACE_H_
 #define PROX_SENS_INTERFACE_H_
 
+#include "sam.h"
+
 ///////////////////Defines//////////////////////////
 /* Register addresses for reading data. (NOTE: Ch0 and Ch1 are two 16-bit registers) */
 #define Proximity_Ch0_DATA_L 0x14	//Ch0 ADC low data register

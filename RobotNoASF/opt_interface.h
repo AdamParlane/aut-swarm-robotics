@@ -3,15 +3,8 @@
 
 #include "robotdefines.h"
 
-#define resolution 0.00125
 
-struct Position
-{
-	float dx;
-	float dy;
-	float x;
-	float y;
-};
+#define resolution 0.00125
 
 /******** Function Prototypes ********/
 void SPI_Write(char writeAddress, char spiData);
