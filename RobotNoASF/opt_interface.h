@@ -110,7 +110,7 @@ void mouseInit(void);
 * To check measurements use mouseTestAdvanced which will retrieve measurements
 *
 */
-int mouseTestBasic(void);
+char mouseTestBasic(void);
 
 /*
 * Function: void getMouseXY(struct Position*)

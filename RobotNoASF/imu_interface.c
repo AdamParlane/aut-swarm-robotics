@@ -43,7 +43,7 @@
 
 //Flags and system globals
 uint32_t systemTimestamp = 0,	//Number of ms since powerup
-uint32_t check_IMU_FIFO	= 0;	//At what time will the IMUs FIFO next be read?
+check_IMU_FIFO	= 0;	//At what time will the IMUs FIFO next be read?
 
 
 /*
