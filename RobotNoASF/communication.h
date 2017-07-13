@@ -41,7 +41,7 @@
 #define NAV_OPT_HDG			0x18
 //More to come
 
-
+int MessageBufferIn, MessageBufferOut, MessageBufferUse;
 //Structures for information about the primary buffers
 struct frame_info
 {

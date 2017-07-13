@@ -5,10 +5,10 @@ void setup(void);
 
 #define		batteryLow	1
 
-enum ROBOT_STATES{TEST, MANUAL, FORMATION, DOCKING}; //main loop functionality
-enum FORMATION_STATES{FOLLOW_THE_LEADER, V, HORIZONTAL_LINE}; //subset of formation (more proof of concept at this stage than actual formations)
-char robotState = MANUAL;
-char formationState = FOLLOW_THE_LEADER;
+//enum ROBOT_STATES{TEST, MANUAL, FORMATION, DOCKING}; //main loop functionality
+//enum FORMATION_STATES{FOLLOW_THE_LEADER, V, HORIZONTAL_LINE}; //subset of formation (more proof of concept at this stage than actual formations)
+//char robotState = MANUAL;
+//char formationState = FOLLOW_THE_LEADER;
 
 /******** Global Variables ********/
 uint8_t SBtest, SBtest1;
@@ -25,33 +25,15 @@ int main(void)
 	struct Position robotPosition;
 	robotPosition.x = 0;
 	robotPosition.y = 0;
-		
 	while(1)
-	{		
-		switch(robotState)
+	{
+		if(testCommandFlag == 1 || message.command == STREAM_DATA)
 		{
-			case TEST: 
-			break;
-			
-			case MANUAL:
-				//accepts manual movement commands from the PC and executes them
-				//TO DO:
-				//Interpret the command (consult Mansel)
-				//most likely will be move, rotate, stop. could be to a set point we havnt added that in yet
-				//use a struct for the command
-			break;
-			
-			case FORMATION:
-			break;
-			
-			case DOCKING:
-			break;
+			testCommandFlag = 0;
+			testManager(message);
 		}
-		
-		
-		
 		if(batteryLow)
-		{			
+		{
 			//moveRobot(0, 50);
 			dockRobot();
 		}
@@ -65,10 +47,7 @@ int main(void)
 				InterpretSwarmMessage(message);	//Interpret the message
 			}
 		}
-
-
 	}
-
 }
 
 void setup(void)

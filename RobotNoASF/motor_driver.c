@@ -7,6 +7,17 @@
  
 #include "motor_driver.h"
 
+/// <summary> 
+///ndlkjjdn
+/// </summary>
+
+/**
+ * \brief 
+ * 
+ * \param 
+ * 
+ * \return void
+ */
 void motor_init(void)
 {
 	REG_CCFG_SYSIO |= CCFG_SYSIO_SYSIO12; //disable erase pin to give access to PB12 via PIO
@@ -69,6 +80,15 @@ void motor_init(void)
 	REG_PWM_ENA |= PWM_ENA_CHID3;	//Enable PWM on channel 3
 }
 
+/**
+ * \brief 
+ * 
+ * \param direction 
+ * chooses the direction
+ * \param speed
+ * 
+ * \return void
+ */
 void moveRobot(float direction, unsigned char speed)
 {
 	float motor1Speed, motor2Speed, motor3Speed;
