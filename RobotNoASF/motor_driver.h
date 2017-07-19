@@ -53,5 +53,6 @@ void moveRobot(float direction, unsigned char speed);
 void stopRobot(void);
 void rotateRobot(char direction, unsigned char speed);
 void dockRobot(void);
+void setTestMotors(uint8_t motorData[]);
 
 #endif /* MOTOR_DRIVER_H_ */

@@ -77,7 +77,7 @@ struct frame_info FrameBufferInfo[FRAME_BUFFER_INFO_SIZE];
 int FrameBufferInfoIn, FrameBufferInfoOut, FrameBufferInfoUse;
 
 uint8_t MessageBuffer[MESSAGE_BUFFER_SIZE];
-int MessageBufferIn, MessageBufferOut, MessageBufferUse;
+//int MessageBufferIn, MessageBufferOut, MessageBufferUse;
 
 struct message_info MessageBufferInfo[MESSAGE_BUFFER_INFO_SIZE];
 int MessageBufferInfoIn, MessageBufferInfoOut, MessageBufferInfoUse;
@@ -106,41 +106,10 @@ void InterpretSwarmMessage(struct message_info message)
 {
 	//copy information from the message info structure to local variables
 	int index = message.index;
-	uint8_t message_command = message.command;
 	int length = message.length;
-	
-	uint8_t data[50];			//Array used to form reply message
-	uint16_t batteryVoltage;	//Variable to store battery voltage
-	
-	//Behaviour depends on type of message received
-	switch(message_command)
-	{
-		case COMMUNICATION_TEST:
-			//Replies with simple ACK
-			//Forms the message to send to the PC/GUI
-			data[0] = 0x00;	
-			SendXbeeAPITransmitRequest(BROADCAST_64,UNKNOWN_16,data,1);  //Send the Message
-			break;
-
-		case BATTERY_DATA:
-
-			batteryVoltage = ADC_ReadCH(BV); //Reads the battery voltage using the ADC
-
-			//Forms the message to send to the PC/GUI
-			data[0] = BATTERY_DATA;
-			data[1] = (batteryVoltage & (0xFF00)) >> 8;
-			data[2] = batteryVoltage & (0xFF);
-			SendXbeeAPITransmitRequest(BROADCAST_64,UNKNOWN_16,data,3); //Send the formed Message, NOTE: To convert this number to voltage multiply by 5/1000
-			break;
-		
-		case NAV_IMU_QW:
-			
-			break;
-
-		default:
-
-			break;
-	}
+	newDataFlag = 1;
+	if(message.command >= 0xE0)
+		robotState = TEST;
 }
 
 
