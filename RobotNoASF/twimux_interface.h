@@ -16,9 +16,9 @@
 * void twi0Init(void)
 * void twi0MuxSwitch(uint8_t channel)
 * uint8_t twi0ReadMuxChannel(void)
-* void twi0Write(uint8_t SlaveAddress, uint8_t intAddress, uint8_t Data)
-* uint8_t twi0ReadSingle(uint8_t SlaveAddress, uint8_t intAddress)
-* uint16_t twi0ReadDouble(uint8_t SlaveAddress, uint8_t intAddress)
+* void twi0Write(uint8_t slaveAddress, uint8_t intAddress, uint8_t data)
+* uint8_t twi0ReadSingle(uint8_t slaveAddress, uint8_t intAddress)
+* uint16_t twi0ReadDouble(uint8_t slaveAddress, uint8_t intAddress)
 *
 */
 
@@ -99,32 +99,32 @@ uint8_t twi0ReadMuxChannel(void);
 
 /*
 * Function:
-* void twi0Write(uint8_t SlaveAddress, uint8_t intAddress, uint8_t Data)
+* void twi0Write(uint8_t slaveAddress, uint8_t intAddress, uint8_t data)
 *
 * Will write a byte on TWI0 to the slave device and internal register specified in the parameters
 *
 * Inputs:
-* uint8_t SlaveAddress:
+* uint8_t slaveAddress:
 *    The address of the slave device on TWI0 to write to
 * uint8_t intAddress:
 *    The internal address of the register to write to
-* uint8_t Data:
+* uint8_t data:
 *    The byte to write
 *
 * Returns:
 * none
 *
 */
-void twi0Write(uint8_t SlaveAddress, uint8_t intAddress, uint8_t Data);
+void twi0Write(uint8_t slaveAddress, uint8_t intAddress, uint8_t data);
 
 /*
 * Function:
-* uint8_t twi0ReadSingle(uint8_t SlaveAddress, uint8_t intAddress)
+* uint8_t twi0ReadSingle(uint8_t slaveAddress, uint8_t intAddress)
 *
 * Will read a single byte from a TWI slave device that has 8bit internal register addresses
 *
 * Inputs:
-* uint8_t SlaveAddress:
+* uint8_t slaveAddress:
 *    The address of the slave device on TWI0 to read from
 * uint8_t intAddress:
 *    The internal address of the register to read from
@@ -133,16 +133,16 @@ void twi0Write(uint8_t SlaveAddress, uint8_t intAddress, uint8_t Data);
 * a byte containing the contents of the internal register on the slave device specified.
 *
 */
-uint8_t twi0ReadSingle(uint8_t SlaveAddress, uint8_t intAddress);
+uint8_t twi0ReadSingle(uint8_t slaveAddress, uint8_t intAddress);
 
 /*
 * Function:
-* uint8_t twi0ReadDouble(uint8_t SlaveAddress, uint8_t intAddress)
+* uint8_t twi0ReadDouble(uint8_t slaveAddress, uint8_t intAddress)
 *
 * Will read two bytes from a TWI slave device that has 8bit internal register addresses
 *
 * Inputs:
-* uint8_t SlaveAddress:
+* uint8_t slaveAddress:
 *    The address of the slave device on TWI0 to read from
 * uint8_t intAddress:
 *    The internal address of the register to read from
@@ -151,7 +151,7 @@ uint8_t twi0ReadSingle(uint8_t SlaveAddress, uint8_t intAddress);
 * a 16bit integer containing the contents of the internal register on the slave device specified.
 *
 */
-uint16_t twi0ReadDouble(uint8_t SlaveAddress, uint8_t intAddress);
+uint16_t twi0ReadDouble(uint8_t slaveAddress, uint8_t intAddress);
 
 
 #endif /* TWIMUX_INTERFACE_H_ */

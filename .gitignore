@@ -78,3 +78,6 @@ RobotNoASF/Debug/Makefile
 *.bin
 RobotNoASF/Debug/Makefile
 *.mk
+RobotNoASF/Debug/RobotNoASF.srec
+RobotNoASF/Debug/RobotNoASF.bin
+RobotNoASF/Debug/RobotNoASF.lss

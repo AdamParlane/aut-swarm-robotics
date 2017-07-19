@@ -87,8 +87,7 @@ int initImu(void)
 	//Initialise the IMU's driver	
 	result += mpu_init(0);								// Initialise the MPU with no interrupts
 	result += mpu_set_sensors(INV_XYZ_GYRO | INV_XYZ_ACCEL | INV_XYZ_COMPASS);// Wake up all sensors
-	result += mpu_set_sample_rate(200);				// Set 200Hz sample rate (for accel and gyro)
-														
+	result += mpu_set_sample_rate(200);					// Set 200Hz samplerate (for accel and gyro)											
 	result += mpu_set_compass_sample_rate(100);			// Set 100Hz compass sample rate (max)
 	
 	//Read back configuration in case it was set improperly.
