@@ -1,7 +1,7 @@
 /*
 * twimux_interface.c
 *
-* Author : Esmond Mathers and Matthew Witt
+* Author : Esmond Mather and Matthew Witt
 * Created: 11/07/2017 10:41:59 AM
 *
 * Project Repository: https://github.com/AdamParlane/aut-swarm-robotics
@@ -14,11 +14,11 @@
 *
 * Functions:
 * void twi0Init(void)
-* void TWI0_MuxSwitch(uint8_t channel)
-* uint8_t TWI0_ReadMuxChannel(void)
-* void TWI0_Write(uint8_t SlaveAddress, uint8_t intAddress, uint8_t Data)
-* uint8_t TWI0_ReadSB(uint8_t SlaveAddress, uint8_t intAddress)
-* uint16_t TWI0_ReadDB(uint8_t SlaveAddress, uint8_t intAddress)
+* void twi0MuxSwitch(uint8_t channel)
+* uint8_t twi0ReadMuxChannel(void)
+* void twi0Write(uint8_t SlaveAddress, uint8_t intAddress, uint8_t Data)
+* uint8_t twi0ReadSingle(uint8_t SlaveAddress, uint8_t intAddress)
+* uint16_t twi0ReadDouble(uint8_t SlaveAddress, uint8_t intAddress)
 *
 */
 
@@ -67,7 +67,7 @@ void twi0Init(void)
 
 /*
 * Function:
-* void TWI0_MuxSwitch(uint8_t channel);
+* void twi0MuxSwitch(uint8_t channel);
 *
 * Sets the I2C multiplexer to desired channel.
 *
@@ -86,20 +86,20 @@ void twi0Init(void)
 * - Wait for transmission to complete before exiting function.
 *
 */
-void TWI0_MuxSwitch(uint8_t channel)
+void twi0MuxSwitch(uint8_t channel)
 {
 	REG_TWI0_CR |= (1<<2)|(1<<5);			//Master mode enabled, Slave disabled
-	REG_TWI0_MMR = (TWI0_Mux_Address<<16);	//Set Slave Device address
+	REG_TWI0_MMR = (TWI0_MUX_ADDR<<16);	//Set Slave Device address
 	//No internal address and set to master write mode by default of zero
 	REG_TWI0_THR = channel;					//Load THR and writing to THR causes start to be sent
 	REG_TWI0_CR |= (1<<1);					//Set STOP bit after tx
-	while(!(twi0TXRDY));					//wait for start and data to be shifted out of holding register
-	while(!(twi0TXCOMP));					//Communication complete, holding and shifting registers empty, Stop sent
+	while(!(TWI0_TXRDY));					//wait for start and data to be shifted out of holding register
+	while(!(TWI0_TXCOMP));					//Communication complete, holding and shifting registers empty, Stop sent
 }
 
 /*
 * Function:
-* uint8_t TWI0_ReadMuxChannel(void)
+* uint8_t twi0ReadMuxChannel(void)
 *
 * Returns the channel the Mux is currently set to.
 *
@@ -120,23 +120,23 @@ void TWI0_MuxSwitch(uint8_t channel)
 * - Wait for transmission to finish before exiting function and returning value
 *
 */
-uint8_t TWI0_ReadMuxChannel(void)
+uint8_t twi0ReadMuxChannel(void)
 {
 	/*** This read function tells you the selected Mux channel (8 bits of data, no internal address) ***/
 	uint8_t returnVal;
 	REG_TWI0_CR |= (1<<2)|(1<<5);			//Enable master mode and disable slave mode
-	REG_TWI0_MMR = (TWI0_Mux_Address<<16);	//Device Slave address
+	REG_TWI0_MMR = (TWI0_MUX_ADDR<<16);	//Device Slave address
 	REG_TWI0_MMR |= (1<<12);				//Master read direction = 1
 	REG_TWI0_CR = 0x3;						//Send a START|STOP bit as required (single byte read)
-	while(!(twi0RXRDY));					//While Receive Holding Register not ready. wait.
+	while(!(TWI0_RXRDY));					//While Receive Holding Register not ready. wait.
 	returnVal = REG_TWI0_RHR;				//Store data received
-	while(!(twi0TXCOMP));					//Wait for transmission complete
+	while(!(TWI0_TXCOMP));					//Wait for transmission complete
 	return returnVal;
 }
 
 /*
 * Function:
-* void TWI0_Write(uint8_t SlaveAddress, uint8_t intAddress, uint8_t Data)
+* void twi0Write(uint8_t SlaveAddress, uint8_t intAddress, uint8_t Data)
 *
 * Will write a byte on TWI0 to the slave device and internal register specified in the parameters
 *
@@ -161,7 +161,7 @@ uint8_t TWI0_ReadMuxChannel(void)
 * - Wait for transmission to complete before exiting function.
 *
 */
-void TWI0_Write(uint8_t SlaveAddress, uint8_t intAddress, uint8_t Data)
+void twi0Write(uint8_t SlaveAddress, uint8_t intAddress, uint8_t Data)
 {
 	REG_TWI0_CR |= (1<<2)|(1<<5);		//Enable master mode and disable slave mode
 	REG_TWI0_MMR = (SlaveAddress<<16);	//Slave address (eg. Mux or Fast Charge Chip)
@@ -170,13 +170,13 @@ void TWI0_Write(uint8_t SlaveAddress, uint8_t intAddress, uint8_t Data)
 	REG_TWI0_IADR = intAddress;			//Set up the address to write to
 	REG_TWI0_THR = Data;				//Load the transmit holding register with data to send (start bit is also sent)
 	REG_TWI0_CR |= (1<<1);				//Set the STOP bit
-	while(!(twi0TXRDY));				//while Transmit Holding Register not ready. wait.
-	while(!(twi0TXCOMP));				//while transmit not complete. wait.
+	while(!(TWI0_TXRDY));				//while Transmit Holding Register not ready. wait.
+	while(!(TWI0_TXCOMP));				//while transmit not complete. wait.
 }
 
 /*
 * Function:
-* uint8_t TWI0_ReadSB(uint8_t SlaveAddress, uint8_t intAddress)
+* uint8_t twi0ReadSingle(uint8_t SlaveAddress, uint8_t intAddress)
 *
 * Will read a single byte from a TWI slave device that has 8bit internal register addresses
 *
@@ -201,7 +201,7 @@ void TWI0_Write(uint8_t SlaveAddress, uint8_t intAddress, uint8_t Data)
 * - Wait for transmission to finish before exiting function and returning value
 *
 */
-uint8_t TWI0_ReadSB(uint8_t SlaveAddress, uint8_t intAddress)
+uint8_t twi0ReadSingle(uint8_t SlaveAddress, uint8_t intAddress)
 {
 	uint8_t data;
 	REG_TWI0_CR |= (1<<2)|(1<<5);		//Enable master mode and disable slave mode
@@ -210,15 +210,15 @@ uint8_t TWI0_ReadSB(uint8_t SlaveAddress, uint8_t intAddress)
 	REG_TWI0_MMR |= (1<<12);			//Master read direction = 1
 	REG_TWI0_IADR = intAddress;			//Set up device internal address to read from
 	REG_TWI0_CR = 0x3;					//Send a START|STOP bit as required (single byte read)
-	while(!(twi0RXRDY));				//While Receive Holding Register not ready. wait.
+	while(!(TWI0_RXRDY));				//While Receive Holding Register not ready. wait.
 	data = REG_TWI0_RHR;				//Store data received (the lower byte of 16-bit data)
-	while(!(twi0TXCOMP));				//Wait for transmission complete
+	while(!(TWI0_TXCOMP));				//Wait for transmission complete
 	return data;
 }
 
 /*
 * Function:
-* uint8_t TWI0_ReadDB(uint8_t SlaveAddress, uint8_t intAddress)
+* uint8_t twi0ReadDouble(uint8_t SlaveAddress, uint8_t intAddress)
 *
 * Will read two bytes from a TWI slave device that has 8bit internal register addresses
 *
@@ -249,7 +249,7 @@ uint8_t TWI0_ReadSB(uint8_t SlaveAddress, uint8_t intAddress)
 * Eliminate data1 and data2 (just have returnVal)
 *
 */
-uint16_t TWI0_ReadDB(uint8_t SlaveAddress, uint8_t intAddress)
+uint16_t twi0ReadDouble(uint8_t SlaveAddress, uint8_t intAddress)
 {
 	uint8_t dataL, dataH;
 	uint16_t returnVal;
@@ -259,12 +259,12 @@ uint16_t TWI0_ReadDB(uint8_t SlaveAddress, uint8_t intAddress)
 	REG_TWI0_MMR |= (1<<12);			//Master read direction = 1
 	REG_TWI0_IADR = intAddress;			//Set up device internal address to read from
 	REG_TWI0_CR |= (1<<0);				//Send a START bit as required (single byte read)
-	while(!(twi0RXRDY));				//While Receive Holding Register not ready. wait.
+	while(!(TWI0_RXRDY));				//While Receive Holding Register not ready. wait.
 	dataL = REG_TWI0_RHR;				//Store data received (the lower byte of 16-bit data)
 	REG_TWI0_CR |= (1<<1);				//Set STOP bit as required
-	while(!(twi0RXRDY));				//While Receive Holding Register not ready. wait.
+	while(!(TWI0_RXRDY));				//While Receive Holding Register not ready. wait.
 	dataH = REG_TWI0_RHR;				//Store data received (the upper byte of 16-bit data)
-	while(!(twi0TXCOMP));				//While transmit not complete. wait.
+	while(!(TWI0_TXCOMP));				//While transmit not complete. wait.
 	returnVal = (dataH << 8) | dataL;	//Puts the two 8 bits into 16 bits
 	return returnVal;
 }

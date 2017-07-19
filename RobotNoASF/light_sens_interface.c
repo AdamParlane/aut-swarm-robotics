@@ -14,8 +14,8 @@
 //Only sets up one light sensor at a time, not both
 void LightSensor_Setup(uint8_t channel)
 {
-	TWI0_MuxSwitch(channel); //Set multiplexer address to correct device
-	TWI0_Write(TWI0_LightSensorAddress, LightSens_Config, LightSens_Auto_LowLux);
+	twi0MuxSwitch(channel); //Set multiplexer address to correct device
+	twi0Write(TWI0_LIGHTSENS_ADDR, LightSens_Config, LightSens_Auto_LowLux);
 }
 
 /******** Light Sensor Data Read ********/
@@ -23,7 +23,7 @@ void LightSensor_Setup(uint8_t channel)
 uint16_t LightSensor_Data_Read(uint8_t channel)
 {
 	uint16_t data;
-	TWI0_MuxSwitch(channel);	//Set multiplexer address to correct device
-	data = TWI0_ReadDB(TWI0_LightSensorAddress, LightSensorWhite);
+	twi0MuxSwitch(channel);	//Set multiplexer address to correct device
+	data = twi0ReadDouble(TWI0_LIGHTSENS_ADDR, LightSensorWhite);
 	return data;
 }

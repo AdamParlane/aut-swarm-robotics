@@ -162,14 +162,14 @@ void setup(void)
 	|=	TC_CCR_CLKEN						//Enable the timer clk.
 	|	TC_CCR_SWTRG;
 
-	LightSensor_Setup(Mux_RHS_LightSens);
-	LightSensor_Setup(Mux_LHS_LightSens);
-	Proximity_Setup(Mux_ProximityA);
-	Proximity_Setup(Mux_ProximityB);
-	Proximity_Setup(Mux_ProximityC);
-	Proximity_Setup(Mux_ProximityD);
-	Proximity_Setup(Mux_ProximityE);
-	Proximity_Setup(Mux_ProximityF);
+	LightSensor_Setup(MUX_LIGHTSENS_R);
+	LightSensor_Setup(MUX_LIGHTSENS_L);
+	Proximity_Setup(MUX_PROXSENS_A);
+	Proximity_Setup(MUX_PROXSENS_B);
+	Proximity_Setup(MUX_PROXSENS_C);
+	Proximity_Setup(MUX_PROXSENS_D);
+	Proximity_Setup(MUX_PROXSENS_E);
+	Proximity_Setup(MUX_PROXSENS_F);
 	FastChargeController_Setup(); //Sets Voltage and Current registers on FCC
 }
 
