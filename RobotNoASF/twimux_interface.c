@@ -131,7 +131,6 @@ void twi0MuxSwitch(uint8_t channel)
 */
 uint8_t twi0ReadMuxChannel(void)
 {
-	/*** This read function tells you the selected Mux channel (8 bits of data, no internal address) ***/
 	uint8_t returnVal;
 	REG_TWI0_CR
 	|=	TWI_CR_MSEN							//Master mode enabled
