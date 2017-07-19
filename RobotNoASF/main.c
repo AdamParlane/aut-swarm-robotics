@@ -4,7 +4,7 @@
 void setup(void);
 
 #define		batteryLow	1
-
+#define		streamIntervalFlag	1
 //enum ROBOT_STATES{TEST, MANUAL, FORMATION, DOCKING}; //main loop functionality
 //enum FORMATION_STATES{FOLLOW_THE_LEADER, V, HORIZONTAL_LINE}; //subset of formation (more proof of concept at this stage than actual formations)
 //char robotState = MANUAL;
@@ -27,14 +27,14 @@ int main(void)
 	robotPosition.y = 0;
 	while(1)
 	{
-		if(testCommandFlag == 1 || message.command == STREAM_DATA)
+		//Run the testManager if there is a new test command OR its time to stream more data
+		if(testCommandFlag == 1 || (message.command == STREAM_DATA && streamIntervalFlag))
 		{
 			testCommandFlag = 0;
 			testManager(message);
 		}
 		if(batteryLow)
 		{
-			//moveRobot(0, 50);
 			dockRobot();
 		}
 		

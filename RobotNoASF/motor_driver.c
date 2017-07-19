@@ -260,3 +260,45 @@ void stopRobot(void)
 	FIN_3_Low;
 	RIN_3_Low;
 }
+
+
+///TODO comment function
+void setTestMotors(uint8_t motorData[])
+{
+	if(motorData[0] == MOTOR_1 && (motorData[1] & 0x80))//check if bit 7 is set meaning forward
+	{
+		FIN_1_High;
+		RIN_1_Low;
+		REG_PWM_CUPD1 = (motorData[1] & 0x7F);
+	}
+	else if(motorData[0] == MOTOR_1 && ~(motorData[1] & 0x80))
+	{
+		FIN_1_Low;
+		RIN_1_High;
+		REG_PWM_CUPD1 = (motorData[1] & 0x7F);
+	}
+	else if(motorData[0] == MOTOR_2 && (motorData[1] & 0x80))//check if bit 7 is set meaning forward
+	{
+		FIN_2_High;
+		RIN_2_Low;
+		REG_PWM_CUPD2 = (motorData[1] & 0x7F);
+	}
+	else if(motorData[0] == MOTOR_2 && ~(motorData[1] & 0x80))
+	{
+		FIN_2_Low;
+		RIN_2_High;
+		REG_PWM_CUPD2 = (motorData[1] & 0x7F);
+	}
+	else if(motorData[0] == MOTOR_3 && (motorData[1] & 0x80))//check if bit 7 is set meaning forward
+	{
+		FIN_3_High;
+		RIN_3_Low;
+		REG_PWM_CUPD3 = (motorData[1] & 0x7F);
+	}
+	else if(motorData[0] == MOTOR_1 && ~(motorData[1] & 0x80))
+	{
+		FIN_3_Low;
+		RIN_3_High;
+		REG_PWM_CUPD3 = (motorData[1] & 0x7F);
+	}
+}
