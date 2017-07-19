@@ -107,9 +107,9 @@ void InterpretSwarmMessage(struct message_info message)
 	//copy information from the message info structure to local variables
 	int index = message.index;
 	int length = message.length;
-	
+	newDataFlag = 1;
 	if(message.command >= 0xE0)
-		testCommandFlag = 1;
+		robotState = TEST;
 }
 
 

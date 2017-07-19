@@ -74,7 +74,9 @@ struct Command
 	char command[10];
 };
 //used for test function calling
-uint8_t testCommandFlag;
+char newDataFlag; //used for test function probably temporary
+enum ROBOT_STATES{TEST, TEST_ALL, MANUAL, FORMATION, DOCKING, IDLE}; //main loop functionality
+char robotState ;
 /*************FUNCTIONS*************/
 uint16_t ADC_ReadCH(uint8_t channel);
 

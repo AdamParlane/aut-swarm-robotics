@@ -5,10 +5,7 @@ void setup(void);
 
 #define		batteryLow	1
 #define		streamIntervalFlag	1
-//enum ROBOT_STATES{TEST, MANUAL, FORMATION, DOCKING}; //main loop functionality
-//enum FORMATION_STATES{FOLLOW_THE_LEADER, V, HORIZONTAL_LINE}; //subset of formation (more proof of concept at this stage than actual formations)
-//char robotState = MANUAL;
-//char formationState = FOLLOW_THE_LEADER;
+
 
 /******** Global Variables ********/
 uint8_t SBtest, SBtest1;
@@ -27,15 +24,33 @@ int main(void)
 	robotPosition.y = 0;
 	while(1)
 	{
-		//Run the testManager if there is a new test command OR its time to stream more data
-		if(testCommandFlag == 1 || (message.command == STREAM_DATA && streamIntervalFlag))
+		switch (robotState)
 		{
-			testCommandFlag = 0;
-			testManager(message);
-		}
-		if(batteryLow)
-		{
-			dockRobot();
+			case TEST:
+			if(message.command == STOP_STREAMING)
+				robotState = IDLE;
+			if(streamIntervalFlag)
+				testManager(message);	
+			break;
+			
+			case TEST_ALL:
+			break;
+			
+			case MANUAL:
+			break;
+			
+			case DOCKING:
+			//if battery low or manual command set
+				dockRobot();
+			break;
+			
+			case FORMATION:
+			//placeholder
+			break;
+			
+			case IDLE:
+			//idle
+			break;
 		}
 		
 		if(FrameBufferInfoGetFull(&frame) == 0)	//Check for a received XBee Message
