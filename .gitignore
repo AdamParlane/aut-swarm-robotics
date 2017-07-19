@@ -73,3 +73,8 @@ Makefile
 
 RobotNoASF/Debug/Makefile
 *.mk
+*.srec
+*.lss
+*.bin
+RobotNoASF/Debug/Makefile
+*.mk
