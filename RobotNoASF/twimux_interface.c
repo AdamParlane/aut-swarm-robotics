@@ -6,7 +6,8 @@
 *
 * Project Repository: https://github.com/AdamParlane/aut-swarm-robotics
 *
-* Defines macros for TWI0 status and multiplexer addresses. Function definitions for TWI0 and mux
+* Functions for reading and writing I2C devices on TWI0 bus. Functions for controlling I2C
+* multiplexer on TWI0.
 *
 * More Info:
 * Atmel SAM 4N Processor Datasheet: http://www.atmel.com/Images/Atmel-11158-32-bit%20Cortex-M4-Microcontroller-SAM4N16-SAM4N8_Datasheet.pdf

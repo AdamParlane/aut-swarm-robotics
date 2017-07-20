@@ -33,10 +33,12 @@
 *
 */
 
-////////////////Includes/////////////////
+///////////////Includes/////////////////////////////////////////////////////////////////////////////
 #include "imu_interface.h"
 #include <tgmath.h>				//Required for atan2 in GetEulerAngles()
 #include "sam.h"				//System header
+#include "robotdefines.h"		//Global robot defines
+
 //Invensense Direct Motion Processing Driver Files
 #include "IMU-DMP/inv_mpu_dmp_motion_driver_CUSTOM.h"//Direct Motion Processing setup functions
 #include "IMU-DMP/inv_mpu_CUSTOM.h"//IMU basic setup and initialisation functions
@@ -45,7 +47,7 @@
 uint32_t systemTimestamp = 0,	//Number of ms since powerup
 check_IMU_FIFO	= 0;	//At what time will the IMUs FIFO next be read?
 
-
+///////////////Functions////////////////////////////////////////////////////////////////////////////
 /*
 * Function: int initImu(void)
 *

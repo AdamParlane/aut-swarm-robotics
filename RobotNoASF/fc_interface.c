@@ -1,15 +1,28 @@
 /*
- * fc_interface.c
- *
- * Created: 11/07/2017 11:21:08 AM
- *  Author: Matthew Witt
- *	Desc: Functions for initialising and controlling the fast charge chip
- */ 
+* fc_interface.c
+*
+* Author : Esmond Mather and Matthew Witt
+* Created: 11/07/2017 11:21:08 AM
+*
+* Project Repository: https://github.com/AdamParlane/aut-swarm-robotics
+*
+* Functions for accessing and controlling the fast charge chip.
+*
+* More Info:
+* Atmel SAM 4N Processor Datasheet: http://www.atmel.com/Images/Atmel-11158-32-bit%20Cortex-M4-Microcontroller-SAM4N16-SAM4N8_Datasheet.pdf
+* TI Battery charger Datasheet:http://www.ti.com/lit/ds/symlink/bq24160.pdf
+*
+* Functions:
+* void FastChargeController_Setup(void)
+* void FastChargeController_WatchDogReset(void)
+*
+*/
 
+///////////////Includes/////////////////////////////////////////////////////////////////////////////
 #include "fc_interface.h"
 #include "twimux_interface.h"
 
-
+///////////////Functions////////////////////////////////////////////////////////////////////////////
 /******** Fast Charge Controller Registry Setup ********/
 void FastChargeController_Setup(void)
 {

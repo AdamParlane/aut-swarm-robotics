@@ -22,13 +22,12 @@
 #ifndef IMU_INTERFACE_H_
 #define IMU_INTERFACE_H_
 
-#include "robotdefines.h"
-
+///////////////Defines//////////////////////////////////////////////////////////////////////////////
 //TWI2 Status registers for the IMU driver
-#define IMU_TXCOMP				(REG_TWI2_SR & TWI_SR_TXCOMP)
-#define IMU_RXRDY				(REG_TWI2_SR & TWI_SR_RXRDY)
-#define IMU_TXRDY				(REG_TWI2_SR & TWI_SR_TXRDY)
-#define IMU_NACK				(REG_TWI2_SR & TWI_SR_NACK)
+#define IMU_TXCOMP	(REG_TWI2_SR & TWI_SR_TXCOMP)	
+#define IMU_RXRDY	(REG_TWI2_SR & TWI_SR_RXRDY)	//if 1, RHR has new byte to be read
+#define IMU_TXRDY	(REG_TWI2_SR & TWI_SR_TXRDY)	//if 1, THR is empty or NACK error occurred
+#define IMU_NACK	(REG_TWI2_SR & TWI_SR_NACK)		//Check TWI2 Status register for Not Acknowledgd
 
 //Some other status flags that were taken from the ASF TWI library. I don't think these are
 //needed any longer, but will keep for now
@@ -44,13 +43,14 @@
 #define TWI_ERROR_TIMEOUT        9
 
 //Structure that stores converted Euler angles of rotation. Parameter of GetEulerAngles
-typedef struct euler_packet {
+typedef struct euler_packet 
+{
 	double pitch;
 	double roll;
 	double yaw;
 } euler_packet_t;
 
-////////////////Functions///////////////////
+///////////////Functions////////////////////////////////////////////////////////////////////////////
 /*
 * Function: int initImu(void)
 *

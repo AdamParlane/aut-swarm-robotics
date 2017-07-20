@@ -31,10 +31,10 @@
 ///////////////Defines//////////////////////////////////////////////////////////////////////////////
 //General Commands
 //RHR: Receive holding register, THR: Transmit holding register, NACK: Not acknowledge
-#define TWI0_RXRDY	REG_TWI0_SR & TWI_SR_RXRDY	//if 1, RHR has new byte to be read
-#define TWI0_TXRDY	REG_TWI0_SR & TWI_SR_TXRDY	//if 1, THR is empty or NACK error occurred
-#define TWI0_TXCOMP	REG_TWI0_SR & TWI_SR_TXCOMP
-#define TWI0_NACK	REG_TWI0_SR & TWI_SR_NACK	//Check TWI0 Status register for Not Acknowledged
+#define TWI0_RXRDY	(REG_TWI0_SR & TWI_SR_RXRDY)//if 1, RHR has new byte to be read
+#define TWI0_TXRDY	(REG_TWI0_SR & TWI_SR_TXRDY)//if 1, THR is empty or NACK error occurred
+#define TWI0_TXCOMP	(REG_TWI0_SR & TWI_SR_TXCOMP)
+#define TWI0_NACK	(REG_TWI0_SR & TWI_SR_NACK)	//Check TWI0 Status register for Not Acknowledged
 //Device slave addresses
 #define TWI0_MUX_ADDR				0xE0		//Mux Address 000
 #define TWI0_LIGHTSENS_ADDR			0x10		//Light sensors
