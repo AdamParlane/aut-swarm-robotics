@@ -34,7 +34,7 @@
 
 //Function Prototypes
 void setTestMotors(uint8_t motorData[]);
-void convertData(struct message_info message, char *data);
+void convertData(struct message_info message, uint8_t *data);
 void testManager(struct message_info message);
 
 #endif /* TESTFUNCTIONS_H_ */

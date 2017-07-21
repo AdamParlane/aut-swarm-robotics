@@ -170,9 +170,9 @@ void testManager(struct message_info message)
 		//To test the Mux the channel is changed to one set by the PC
 		//Then the channel is read off the Mux it should match what was instructed
 		//Matching will be checked on the PC side, will appear as an echo if test passes		
-		TWI0_MuxSwitch(receivedTestData[1]);//Set the Mux to the specified channel
+		twi0MuxSwitch(receivedTestData[1]);//Set the Mux to the specified channel
 		transmitTestData[1] = DATA_RETURN;//sending data out
-		transmitTestData[2] = TWI0_ReadMuxChannel();//Return the channel the Mux is currently set to
+		transmitTestData[2] = twi0ReadMuxChannel();//Return the channel the Mux is currently set to
 		transmitTestDataSize = 3;
 		break;
 		
@@ -208,7 +208,7 @@ void testManager(struct message_info message)
 * This function will quit on a failed return
 *
 */
-void convertData(struct message_info message, char *data)
+void convertData(struct message_info message, uint8_t *data)
 {
 	char dataByte;
 	char messageError;

@@ -44,7 +44,7 @@
 #include "IMU-DMP/inv_mpu_CUSTOM.h"//IMU basic setup and initialisation functions
 
 //Flags and system globals
-uint32_t systemTimestamp = 0,	//Number of ms since powerup
+uint32_t systemTimestamp = 0;	//Number of ms since powerup
 uint32_t check_IMU_FIFO	= 0;	//At what time will the IMUs FIFO next be read?
 
 ///////////////Functions////////////////////////////////////////////////////////////////////////////
@@ -63,7 +63,8 @@ uint32_t check_IMU_FIFO	= 0;	//At what time will the IMUs FIFO next be read?
 * MASTER CLOCK NEEDS TO BE SETUP FOR 100MHZ FIRST.
 * First the pins required are assigned to TWI2. Then TWI2 is initialised to 400kHz for communication
 * with the IMU. After that, TIMER0 is initialised in register compare mode. This will provide a 
-* system time stamp that is incremented every millisecond and is necessart for the IMU driver.
+* system time stamp that is incremented every millisecond and is necessary for delay_ms() used by 
+* the IMU driver.
 * gyro_orientation is a matrix that modifies the output of the IMU to suit its physical orientation.
 * The IMU drive is initialised first. The driver is told which sensors want to be used as well as
 * the desired sample rates. The configuration is read back for debug purposes.
