@@ -109,7 +109,7 @@ void testManager(struct message_info message)
 		
 		case TEST_LIGHT_SENSORS:
 		//2 Light Sensors (LHS & RHS) Identified by their Mux channels
-		peripheralReturnData = lightSensRead(receivedTestData[0]);
+		peripheralReturnData = lightSensRead(receivedTestData[0], LS_WHITE_REG);
 		transmitTestData[1] = receivedTestData[0];//Transmit the specific light sensor ID
 		transmitTestData[2] = DATA_RETURN; //sending data out
 		transmitTestData[3] = peripheralReturnData >> 8; //upper byte

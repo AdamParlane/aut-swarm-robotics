@@ -26,19 +26,19 @@
 
 ///////////////Defines//////////////////////////////////////////////////////////////////////////////
 //Register addresses for reading Colour
-#define LightSensorRed			0x08
-#define LightSensorGreen		0x09
-#define LightSensorBlue			0x0A
-#define LightSensorWhite		0x0B	//White light is detected at the tower for docking alignment
+#define LS_RED_REG			0x08
+#define LS_GREEN_REG		0x09
+#define LS_BLUE_REG			0x0A
+#define LS_WHITE_REG		0x0B	//White light is detected at the tower for docking alignment
 //Register address for configuration
-#define LightSens_Config		0x00
+#define LS_CONFIG_REG		0x00
 //General Commands
-#define LightSens_DetectLowLux	0x06		//40ms integration time, Trigger one time, Force Mode
-#define LightSens_DetectMedLux	0x26		//80ms integration time, Trigger one time, Force Mode
-#define LightSens_DetectHighLux 0x46		//160ms integration time, Trigger one time, Force Mode
-#define LightSens_DetectMaxLux	0x56		//1280ms integration time, Trigger one time, Force Mode
-#define LightSens_Auto_LowLux	0x00		//40ms integration time, No Trigger, Auto Mode
-#define LightSens_Disable		0x03		//Force Mode, Disable Sensor
+#define LS_DETECT_LOW_LUX	0x06		//40ms integration time, Trigger one time, Force Mode
+#define LS_DETECT_MED_LUX	0x26		//80ms integration time, Trigger one time, Force Mode
+#define LS_DETECT_HI_LUX	0x46		//160ms integration time, Trigger one time, Force Mode
+#define LS_DETECT_MAX_LUX	0x56		//1280ms integration time, Trigger one time, Force Mode
+#define LS_AUTO_LOW_LUX		0x00		//40ms integration time, No Trigger, Auto Mode
+#define LS_DISABLE			0x03		//Force Mode, Disable Sensor
 
 ///////////////Functions////////////////////////////////////////////////////////////////////////////
 /*
@@ -70,10 +70,10 @@ void lightSensInit(uint8_t channel);
 *   MUX_LIGHTSENS_R for the right sensor or MUX_LIGHTSENS_L for the left
 * uint8_t colour:
 *   The colour channel to read from.
-*   LightSensorRed for red
-*   LightSensorGreen for green
-*   LightSensorBlue for blue
-*   LightSensorWhite for white
+*   LS_RED_REG for red
+*   LS_GREEN_REG for green
+*   LS_BLUE_REG for blue
+*   LS_WHITE_REG for white
 *
 * Returns:
 * a 16bit unsigned integer containing the light level value from the sensor

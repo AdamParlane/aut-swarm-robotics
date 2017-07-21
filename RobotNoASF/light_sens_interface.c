@@ -39,7 +39,7 @@
 *
 * Implementation:
 * - Sets I2C multiplexer to the channel that the desired light sensor is connected to.
-* - Writes out initial settings defined in LightSens_Auto_LowLux; (White Light Detection Enabled
+* - Writes out initial settings defined in LS_AUTO_LOW_LUX; (White Light Detection Enabled
 *   with low lux (40ms integration time), No Trigger, Auto Mode)
 *
 * Improvements:
@@ -50,7 +50,7 @@
 void lightSensInit(uint8_t channel)
 {
 	twi0MuxSwitch(channel); //Set multiplexer address to correct device
-	twi0Write(TWI0_LIGHTSENS_ADDR, LightSens_Config, LightSens_Auto_LowLux);
+	twi0Write(TWI0_LIGHTSENS_ADDR, LS_CONFIG_REG, LS_AUTO_LOW_LUX);
 }
 
 /*
@@ -65,10 +65,10 @@ void lightSensInit(uint8_t channel)
 *   MUX_LIGHTSENS_R for the right sensor or MUX_LIGHTSENS_L for the left
 * uint8_t colour:
 *   The colour channel to read from.
-*   LightSensorRed for red
-*   LightSensorGreen for green
-*   LightSensorBlue for blue
-*   LightSensorWhite for white
+*   LS_RED_REG for red
+*   LS_GREEN_REG for green
+*   LS_BLUE_REG for blue
+*   LS_WHITE_REG for white
 *
 * Returns:
 * a 16bit unsigned integer containing the light level value from the sensor

@@ -221,8 +221,8 @@ void dockRobot(void)
 	float diff = 0;
 	float rightBrightnessScaled, leftBrightnessScaled;
 	
-	leftBrightness = lightSensRead(MUX_LIGHTSENS_L);
-	rightBrightness = lightSensRead(MUX_LIGHTSENS_R);
+	leftBrightness = lightSensRead(MUX_LIGHTSENS_L, LS_WHITE_REG);
+	rightBrightness = lightSensRead(MUX_LIGHTSENS_R, LS_WHITE_REG);
 	
 	//frontProximity = Proximity_Data_Read(MUX_PROXSENS_A); //need to test this
 	
