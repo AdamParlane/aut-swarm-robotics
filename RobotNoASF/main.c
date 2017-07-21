@@ -112,49 +112,7 @@ void setup(void)
 	REG_PMC_PCER0 |= (1<<29);						//Enable peripheral clock on ADC
 	REG_ADC_MR |= ((49<<8) | (3<<16) | (2<<28));	//Prescale ADC conversion by 49 (100MHZ/((49+1)x2))=1MHZ. Startup time is 24 ADC clock cycles. Field 28 must be programmed with value 2.
 	
-	/****************TWI2(ID22) SETUP***************/
-	REG_PMC_PCER0
-	|=	(1<<ID_TWI2);						//Enable clock access to TWI2, Peripheral TWI2_ID = 22
-	REG_PIOB_PDR
-	|=	PIO_PDR_P0							//Enable peripheralB control of PB0 (TWD2)
-	|	PIO_PDR_P1;							//Enable peripheralB control of PB1 (TWCK2)
-	REG_PIOB_ABCDSR
-	|=	PIO_ABCDSR_P0						//Set peripheral B
-	|	PIO_ABCDSR_P1;
-	REG_TWI2_CR
-	=	TWI_CR_SWRST;						//Software Reset
-	
-	//TWI2 Clock Waveform Setup.
-	//1.3uSec = ((x * 2^CKDIV)+4) * 10nSec[100MHz]
-	//0.6uSec = ((x * 2^CKDIV)+4) * 10nSec[100MHz]
-	REG_TWI2_CWGR
-	|=	TWI_CWGR_CKDIV(1)					//Clock speed 400000, fast mode
-	|	TWI_CWGR_CLDIV(63)					//Clock low period 1.3uSec
-	|	TWI_CWGR_CHDIV(28);					//Clock high period  0.6uSec
-	REG_TWI2_CR
-	|=	TWI_CR_MSEN							//Master mode enabled
-	|	TWI_CR_SVDIS;						//Slave disabled
 
-	/****************TIMER0 SETUP***************/
-	//Timer0 is used for delay_ms and get_ms functions required by the imu driver
-	//TC Channel Mode Register (Pg877)
-	REG_PMC_PCER0
-	|=	(1<<ID_TC0);						//Enable TC clock (ID_TC0 is the peripheral identifier for timer counter 0)
-	NVIC_EnableIRQ(ID_TC0);
-	REG_TC0_CMR0
-	|=	TC_CMR_TCCLKS_TIMER_CLOCK3			//Prescaler MCK/32
-	|	TC_CMR_WAVE							//Waveform mode
-	|	TC_CMR_WAVSEL_UP_RC;				//Clear on RC compare
-	//TC interrupt enable register
-	REG_TC0_IER0
-	|=	TC_IER_CPCS;						//Enable Register C compare interrupt
-	//Set Register C
-	REG_TC0_RC0
-	=	3125;								//Trigger once every 1/1000th of a second (100Mhz/32/1000)
-	//Clock control register
-	REG_TC0_CCR0
-	|=	TC_CCR_CLKEN						//Enable the timer clk.
-	|	TC_CCR_SWTRG;
 
 	LightSensor_Setup(MUX_LIGHTSENS_R);
 	LightSensor_Setup(MUX_LIGHTSENS_L);
