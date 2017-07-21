@@ -114,8 +114,8 @@ void setup(void)
 	
 
 
-	LightSensor_Setup(MUX_LIGHTSENS_R);
-	LightSensor_Setup(MUX_LIGHTSENS_L);
+	lightSensInit(MUX_LIGHTSENS_R);
+	lightSensInit(MUX_LIGHTSENS_L);
 	Proximity_Setup(MUX_PROXSENS_A);
 	Proximity_Setup(MUX_PROXSENS_B);
 	Proximity_Setup(MUX_PROXSENS_C);
