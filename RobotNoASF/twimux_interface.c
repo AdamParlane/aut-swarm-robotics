@@ -4,13 +4,13 @@
 * Author : Esmond Mather and Matthew Witt
 * Created: 11/07/2017 10:41:59 AM
 *
-* Project Repository: https://github.com/AdamParlane/aut-swarm-robotics
+* Project Repository:https://github.com/AdamParlane/aut-swarm-robotics
 *
 * Functions for reading and writing I2C devices on TWI0 bus. Functions for controlling I2C
 * multiplexer on TWI0.
 *
 * More Info:
-* Atmel SAM 4N Processor Datasheet: http://www.atmel.com/Images/Atmel-11158-32-bit%20Cortex-M4-Microcontroller-SAM4N16-SAM4N8_Datasheet.pdf
+* Atmel SAM 4N Processor Datasheet:http://www.atmel.com/Images/Atmel-11158-32-bit%20Cortex-M4-Microcontroller-SAM4N16-SAM4N8_Datasheet.pdf
 * Farnell I2C Mux Datasheet:http://www.farnell.com/datasheets/1815500.pdf
 *
 * Functions:
@@ -103,8 +103,10 @@ void twi0MuxSwitch(uint8_t channel)
 	REG_TWI0_THR = channel;					//Load THR and writing to THR causes start to be sent
 	REG_TWI0_CR
 	|=	TWI_CR_STOP;						//Set STOP bit after tx
-	while(!(TWI0_TXRDY));					//wait for start and data to be shifted out of holding register
-	while(!(TWI0_TXCOMP));					//Communication complete, holding and shifting registers empty, Stop sent
+	while(!(TWI0_TXRDY));					//wait for start and data to be shifted out of holding
+											//register
+	while(!(TWI0_TXCOMP));					//Communication complete, holding and shifting registers
+											//empty, Stop sent
 }
 
 /*

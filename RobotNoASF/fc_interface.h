@@ -4,13 +4,13 @@
 * Author : Esmond Mather and Matthew Witt
 * Created: 11/07/2017 10:23:08 AM
 *
-* Project Repository: https://github.com/AdamParlane/aut-swarm-robotics
+* Project Repository:https://github.com/AdamParlane/aut-swarm-robotics
 *
 * Defines register addresses and states for the fast charge chip. Defines functions for accessing
 * and controlling the fast charge chip.
 *
 * More Info:
-* Atmel SAM 4N Processor Datasheet: http://www.atmel.com/Images/Atmel-11158-32-bit%20Cortex-M4-Microcontroller-SAM4N16-SAM4N8_Datasheet.pdf
+* Atmel SAM 4N Processor Datasheet:http://www.atmel.com/Images/Atmel-11158-32-bit%20Cortex-M4-Microcontroller-SAM4N16-SAM4N8_Datasheet.pdf
 * TI Battery charger Datasheet:http://www.ti.com/lit/ds/symlink/bq24160.pdf
 *
 * Functions:
@@ -35,16 +35,42 @@
 								//(statusReg)
 #define initControl		0x04    //Ensures that CE bit is clear in case safety timer has gone off in
 								//previous charge.
-#define initBattV		0x66	//Vreg = 4.0v, input current = 2.5A (battVReg)
+#define initBattV		0x66	//Vreg = 3.98v, input current = 2.5A (battVReg)
 #define initCharge		0xFA	//charge current set to max Ic=2875mA, termination current
 								//Iterm=100mA (default) (chargeReg)
 
 ///////////////Functions////////////////////////////////////////////////////////////////////////////
-
-
+/*
+* Function:
+* void FastChargeController_Setup(void)
+*
+* Initialises chip disable PIO output on microntroller and loads initial settings into fast charge
+* chip. TWI0 must be initialised first.
+*
+* Inputs:
+* none
+*
+* Returns:
+* none
+*
+*/
 void FastChargeController_Setup(void);
 
-
+/*
+* Function:
+* void FastChargeController_WatchDogReset(void)
+*
+* Resets the watchdog timer on the fast charge chip. Presumable this is so that the chip knows that
+* it is being monitored by its master. If watchdog timer is not reset in 30sec, the chip resets to
+* default settings.
+*
+* Inputs:
+* none
+*
+* Returns:
+* none
+*
+*/
 void FastChargeController_WatchDogReset(void);
 
 
