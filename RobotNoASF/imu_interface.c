@@ -45,13 +45,13 @@
 
 //Flags and system globals
 uint32_t systemTimestamp = 0,	//Number of ms since powerup
-check_IMU_FIFO	= 0;	//At what time will the IMUs FIFO next be read?
+uint32_t check_IMU_FIFO	= 0;	//At what time will the IMUs FIFO next be read?
 
 ///////////////Functions////////////////////////////////////////////////////////////////////////////
 /*
 * Function: int initImu(void)
 *
-* Initialise the IMU. Masterclock and TWI2 MUST be setup first.
+* Initialise TWI2, TIMER0 and the IMU. Masterclock MUST be setup first.
 *
 * No input values
 *
@@ -60,9 +60,10 @@ check_IMU_FIFO	= 0;	//At what time will the IMUs FIFO next be read?
 * zero if no problems encountered)
 *
 * Implementation:
-* Master clock needs to be setup for 100MHz first. TWI2 setup will be added in here.
-* accel_fsr, gyro_rate, gyro_fsr store retrieved sample rates from IMU after settings have been
-* written to it to confirm successful write-out.
+* MASTER CLOCK NEEDS TO BE SETUP FOR 100MHZ FIRST.
+* First the pins required are assigned to TWI2. Then TWI2 is initialised to 400kHz for communication
+* with the IMU. After that, TIMER0 is initialised in register compare mode. This will provide a 
+* system time stamp that is incremented every millisecond and is necessart for the IMU driver.
 * gyro_orientation is a matrix that modifies the output of the IMU to suit its physical orientation.
 * The IMU drive is initialised first. The driver is told which sensors want to be used as well as
 * the desired sample rates. The configuration is read back for debug purposes.
@@ -75,9 +76,7 @@ check_IMU_FIFO	= 0;	//At what time will the IMUs FIFO next be read?
 */
 int initImu(void)
 {
-	unsigned char accel_fsr;
-	unsigned short gyro_rate, gyro_fsr;
-	int result = 0;
+	int result = 0;		//Return value (when not 0, errors are present)
 	
 	//Orientation correction matrix for the IMU
 	static signed char gyro_orientation[9] =
@@ -86,16 +85,55 @@ int initImu(void)
 		0,	 0,	 1
 	};
 
+	//MICROCONTROLLER HW SETUP
+	/////TWI2////
+	REG_PMC_PCER0
+	|=	(1<<ID_TWI2);						//Enable clock access to TWI2, Peripheral TWI2_ID = 22
+	REG_PIOB_PDR
+	|=	PIO_PDR_P0							//Enable peripheralB control of PB0 (TWD2)
+	|	PIO_PDR_P1;							//Enable peripheralB control of PB1 (TWCK2)
+	REG_PIOB_ABCDSR
+	|=	PIO_ABCDSR_P0						//Set peripheral B
+	|	PIO_ABCDSR_P1;
+	REG_TWI2_CR
+	=	TWI_CR_SWRST;						//Software Reset
+	//TWI2 Clock Waveform Setup.
+	//1.3uSec = ((x * 2^CKDIV)+4) * 10nSec[100MHz]
+	//0.6uSec = ((x * 2^CKDIV)+4) * 10nSec[100MHz]
+	REG_TWI2_CWGR
+	|=	TWI_CWGR_CKDIV(1)					//Clock speed 400000, fast mode
+	|	TWI_CWGR_CLDIV(63)					//Clock low period 1.3uSec
+	|	TWI_CWGR_CHDIV(28);					//Clock high period  0.6uSec
+	REG_TWI2_CR
+	|=	TWI_CR_MSEN							//Master mode enabled
+	|	TWI_CR_SVDIS;						//Slave disabled
+
+	////TIMER0////
+	//Timer0 is used for delay_ms and get_ms functions required by the imu driver
+	REG_PMC_PCER0
+	|=	(1<<ID_TC0);						//Enable TC clock (ID_TC0 is the peripheral identifier 
+											//for timer counter 0)
+	NVIC_EnableIRQ(ID_TC0);					//Enable interrupt vector for TIMER0
+	REG_TC0_CMR0							//TC Channel Mode Register (Pg877)
+	|=	TC_CMR_TCCLKS_TIMER_CLOCK3			//Prescaler MCK/32 (100MHz/32 = 3.125MHz)
+	|	TC_CMR_WAVE							//Waveform mode
+	|	TC_CMR_WAVSEL_UP_RC;				//Clear on RC compare
+	REG_TC0_IER0							//TC interrupt enable register
+	|=	TC_IER_CPCS;						//Enable Register C compare interrupt
+	REG_TC0_RC0								//Set Register C (the timer counter value at which the
+											//interrupt will be triggered)
+	=	3125;								//Trigger once every 1/1000th of a second 
+											//(100Mhz/32/1000)
+	REG_TC0_CCR0							//Clock control register
+	|=	TC_CCR_CLKEN						//Enable the timer clk.
+	|	TC_CCR_SWTRG;
+
+	//IMU INITIALISATION
 	//Initialise the IMU's driver	
 	result += mpu_init(0);								// Initialise the MPU with no interrupts
 	result += mpu_set_sensors(INV_XYZ_GYRO | INV_XYZ_ACCEL | INV_XYZ_COMPASS);// Wake up all sensors
 	result += mpu_set_sample_rate(200);					// Set 200Hz samplerate (for accel and gyro)											
 	result += mpu_set_compass_sample_rate(100);			// Set 100Hz compass sample rate (max)
-	
-	//Read back configuration in case it was set improperly.
-	result += mpu_get_sample_rate(&gyro_rate);
-	result += mpu_get_gyro_fsr(&gyro_fsr);
-	result += mpu_get_accel_fsr(&accel_fsr);
 	
 	result += dmp_load_motion_driver_firmware();		// Load the DMP firmware
 	//Send the orientation correction matrix
@@ -367,32 +405,35 @@ char twi_write_imu(unsigned char slave_addr, unsigned char reg_addr,
 char twi_read_imu(unsigned char slave_addr, unsigned char reg_addr, 
 					unsigned char length, unsigned char *data)
 {
-	REG_TWI2_CR |= TWI_CR_MSEN | TWI_CR_SVDIS;	//Enable master mode
+	REG_TWI2_CR
+	|=	TWI_CR_MSEN						//Enable master mode
+	|	TWI_CR_SVDIS;					//Disable slave mode
 	REG_TWI2_MMR
-		=	TWI_MMR_DADR(slave_addr)			//Slave device address
-		|	(TWI_MMR_MREAD)						//Set to read from register
-		|	TWI_MMR_IADRSZ_1_BYTE;				//Register addr byte length (0-3)
-	REG_TWI2_IADR = reg_addr;					//set up address to read from
+	=	TWI_MMR_DADR(slave_addr)		//Slave device address
+	|	(TWI_MMR_MREAD)					//Set to read from register
+	|	TWI_MMR_IADRSZ_1_BYTE;			//Register addr byte length (0-3)
+	REG_TWI2_IADR = reg_addr;			//set up address to read from
 	
-	if (length == 1)							//If only ready one byte, then START and STOP bits need to be set at the same time
+	if (length == 1)					//If reading one byte, then START and STOP bits need to be
+										//set at the same time
 	{
 		REG_TWI2_CR
-			=	TWI_CR_START
-			|	TWI_CR_STOP;					//Send a START and STOP condition as required (single byte read)	
-		while(!IMU_RXRDY);						//while Receive Holding Register not ready. wait.
-		data[0] = REG_TWI2_RHR;					//store data received		
-		while(!IMU_TXCOMP);						//while transmit not complete. wait.
+		=	TWI_CR_START
+		|	TWI_CR_STOP;				//Send START & STOP condition as required (single byte read)	
+		while(!IMU_RXRDY);				//while Receive Holding Register not ready. wait.
+		data[0] = REG_TWI2_RHR;			//store data received		
+		while(!IMU_TXCOMP);				//while transmit not complete. wait.
 		return 0;
 	} else {
-		REG_TWI2_CR = TWI_CR_START;				//Send start bit
+		REG_TWI2_CR = TWI_CR_START;		//Send start bit
 		for(unsigned char b = 0; b < length; b++)
 		{
 			while(!IMU_RXRDY);
 			data[b] = REG_TWI2_RHR;
 			if(b == length-2)
-				REG_TWI2_CR = TWI_CR_STOP;	//Send stop on reception of 2nd to last byte
+				REG_TWI2_CR = TWI_CR_STOP;//Send stop on reception of 2nd to last byte
 		}
-		while(!IMU_TXCOMP);							//while transmit not complete. wait.
+		while(!IMU_TXCOMP);				//while transmit not complete. wait.
 	}
 	return 0;
 }
