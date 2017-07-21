@@ -4,12 +4,12 @@
 * Author : Esmond Mather and Matthew Witt
 * Created: 11/07/2017 10:03:32 AM
 *
-* Project Repository: https://github.com/AdamParlane/aut-swarm-robotics
+* Project Repository:https://github.com/AdamParlane/aut-swarm-robotics
 *
 * Defines macros for TWI0 status and multiplexer addresses. Function definitions for TWI0 and mux
 *
 * More Info:
-* Atmel SAM 4N Processor Datasheet: http://www.atmel.com/Images/Atmel-11158-32-bit%20Cortex-M4-Microcontroller-SAM4N16-SAM4N8_Datasheet.pdf
+* Atmel SAM 4N Processor Datasheet:http://www.atmel.com/Images/Atmel-11158-32-bit%20Cortex-M4-Microcontroller-SAM4N16-SAM4N8_Datasheet.pdf
 * Farnell I2C Mux Datasheet:http://www.farnell.com/datasheets/1815500.pdf
 *
 * Functions:
@@ -31,10 +31,10 @@
 ///////////////Defines//////////////////////////////////////////////////////////////////////////////
 //General Commands
 //RHR: Receive holding register, THR: Transmit holding register, NACK: Not acknowledge
-#define TWI0_RXRDY	REG_TWI0_SR & TWI_SR_RXRDY	//if 1, RHR has new byte to be read
-#define TWI0_TXRDY	REG_TWI0_SR & TWI_SR_TXRDY	//if 1, THR is empty or NACK error occurred
-#define TWI0_TXCOMP	REG_TWI0_SR & TWI_SR_TXCOMP
-#define TWI0_NACK	REG_TWI0_SR & TWI_SR_NACK	//Check TWI0 Status register for Not Acknowledged
+#define TWI0_RXRDY	(REG_TWI0_SR & TWI_SR_RXRDY)//if 1, RHR has new byte to be read
+#define TWI0_TXRDY	(REG_TWI0_SR & TWI_SR_TXRDY)//if 1, THR is empty or NACK error occurred
+#define TWI0_TXCOMP	(REG_TWI0_SR & TWI_SR_TXCOMP)
+#define TWI0_NACK	(REG_TWI0_SR & TWI_SR_NACK)	//Check TWI0 Status register for Not Acknowledged
 //Device slave addresses
 #define TWI0_MUX_ADDR				0xE0		//Mux Address 000
 #define TWI0_LIGHTSENS_ADDR			0x10		//Light sensors
