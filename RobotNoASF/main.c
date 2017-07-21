@@ -164,6 +164,6 @@ void setup(void)
 	Proximity_Setup(MUX_PROXSENS_D);
 	Proximity_Setup(MUX_PROXSENS_E);
 	Proximity_Setup(MUX_PROXSENS_F);
-	FastChargeController_Setup(); //Sets Voltage and Current registers on FCC
+	fcInit(); //Sets Voltage and Current registers on FCC
 }
 

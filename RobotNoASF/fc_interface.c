@@ -13,19 +13,19 @@
 * TI Battery charger Datasheet:http://www.ti.com/lit/ds/symlink/bq24160.pdf
 *
 * Functions:
-* void FastChargeController_Setup(void)
-* void FastChargeController_WatchDogReset(void)
+* void fcInit(void)
+* void fcWatchdogReset(void)
 *
 */
 
 ///////////////Includes/////////////////////////////////////////////////////////////////////////////
 #include "fc_interface.h"
-#include "twimux_interface.h"
+#include "twimux_interface.h"	//Needed for TWI0 read and write functions
 
 ///////////////Functions////////////////////////////////////////////////////////////////////////////
 /*
 * Function:
-* void FastChargeController_Setup(void)
+* void fcInit(void)
 *
 * Initialises chip disable PIO output on microntroller and loads initial settings into fast charge
 * chip. TWI0 must be initialised first.
@@ -45,29 +45,28 @@
 *   terminates.
 *
 */
-void FastChargeController_Setup(void)
+void fcInit(void)
 {
 	//Initialise Chip disable (CD) line on PB2 (PIO setup)
-	REG_PIOB_PER |= PIO_PER_P2;		//Give control of PB2 to PIOB controller
+	REG_PIOB_PER |=	PIO_PER_P2;		//Give control of PB2 to PIOB controller
 	REG_PIOB_OER |= PIO_OER_P2;		//Set PB2 as an output
 	REG_PIOB_CODR |= PIO_CODR_P2;	//Set PB2 to low
 	
 	//NOT SHURE IF THIS LINE IS NEEDED BE CAUSE ACCORDING TO DATASHEET CE IS INVERTED, THEREFORE THE
 	//DEFAULT VALUE 0 WOULD MEAN THAT CHARGING IS ENABLED NOT 1. TESTING REQUIRED.
-	twi0Write(TWI0_FCHARGE_ADDR, controlReg, initControl);	//Ensures that CE bit is clear in case
-															//safety timer has gone off in previous
-															//charge.
+	//Ensures that CE bit is clear in case safety timer has gone off in previous charge.
+	twi0Write(TWI0_FCHARGE_ADDR, FC_CONTROL_REG, FC_CONTROL_INIT);
 															
-	twi0Write(TWI0_FCHARGE_ADDR, battVReg, initBattV);		//Vreg = 3.98v, input current = 2.5A
+	//Vreg = 3.98v, input current = 2.5A
+	twi0Write(TWI0_FCHARGE_ADDR, FC_BATVOL_REG, FC_BATTVOL_INIT);
 	
-	twi0Write(TWI0_FCHARGE_ADDR, chargeReg, initCharge);	//Charge current set to max Ic=2875mA,
-															//termination current Iterm=100mA
-															//(default)
+	//Charge current set to max Ic=2875mA, termination current Iterm=100mA (default)
+	twi0Write(TWI0_FCHARGE_ADDR, FC_CHARGE_REG, FC_CHARGE_INIT);
 }
 
 /*
 * Function:
-* void FastChargeController_WatchDogReset(void)
+* void fcWatchdogReset(void)
 *
 * Resets the watchdog timer on the fast charge chip. Presumable this is so that the chip knows that
 * it is being monitored by its master. If watchdog timer is not reset in 30sec, the chip resets to
@@ -83,9 +82,8 @@ void FastChargeController_Setup(void)
 * Writes the reset bit to the status register on the chip
 *
 */
-void FastChargeController_WatchDogReset(void)
+void fcWatchdogReset(void)
 {
-	twi0Write(TWI0_FCHARGE_ADDR, statusReg, watchdreset);	//Resets the FCC watch dog timer. Must
-															//be done once every 30s or else 
-															//registers will reset
+	//Resets the FCC watchdog timer. Must be done once every 30s or else registers will reset.
+	twi0Write(TWI0_FCHARGE_ADDR, FC_STATUS_REG, FC_STATUS_WDRESET);
 }
