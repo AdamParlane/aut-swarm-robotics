@@ -99,7 +99,7 @@ void testManager(struct message_info message)
 	{
 		case TEST_PROXIMITY_SENSORS: //0xE4
 		//6 Proximtiy Sensors (A-F) Identified by their Mux channels
-		peripheralReturnData = Proximity_Data_Read(receivedTestData[0]);
+		peripheralReturnData = proxSensRead(receivedTestData[0]);
 		transmitTestData[1] = receivedTestData[0];//Transmit the specific proximity sensor ID
 		transmitTestData[2] = DATA_RETURN; //sending data out
 		transmitTestData[3] = peripheralReturnData >> 8; //upper data byte

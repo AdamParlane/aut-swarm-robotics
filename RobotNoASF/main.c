@@ -116,12 +116,12 @@ void setup(void)
 
 	lightSensInit(MUX_LIGHTSENS_R);
 	lightSensInit(MUX_LIGHTSENS_L);
-	Proximity_Setup(MUX_PROXSENS_A);
-	Proximity_Setup(MUX_PROXSENS_B);
-	Proximity_Setup(MUX_PROXSENS_C);
-	Proximity_Setup(MUX_PROXSENS_D);
-	Proximity_Setup(MUX_PROXSENS_E);
-	Proximity_Setup(MUX_PROXSENS_F);
+	proxSensInit(MUX_PROXSENS_A);
+	proxSensInit(MUX_PROXSENS_B);
+	proxSensInit(MUX_PROXSENS_C);
+	proxSensInit(MUX_PROXSENS_D);
+	proxSensInit(MUX_PROXSENS_E);
+	proxSensInit(MUX_PROXSENS_F);
 	fcInit(); //Sets Voltage and Current registers on FCC
 }
 
