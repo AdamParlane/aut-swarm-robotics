@@ -224,7 +224,7 @@ void dockRobot(void)
 	leftBrightness = lightSensRead(MUX_LIGHTSENS_L, LS_WHITE_REG);
 	rightBrightness = lightSensRead(MUX_LIGHTSENS_R, LS_WHITE_REG);
 	
-	//frontProximity = Proximity_Data_Read(MUX_PROXSENS_A); //need to test this
+	//frontProximity = proxSensRead(MUX_PROXSENS_A); //need to test this
 	
 	if(rightBrightness > 0x0200 && leftBrightness > 0x0200)//if there is more light than ambient
 	{
