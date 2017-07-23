@@ -265,6 +265,9 @@
     <Compile Include="robot_defines.h">
       <SubType>compile</SubType>
     </Compile>
+    <None Include="swarm_robot_V2.cproj">
+      <SubType>compile</SubType>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Device_Startup\" />
