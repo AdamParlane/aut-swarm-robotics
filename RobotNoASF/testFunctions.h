@@ -9,7 +9,7 @@
 #ifndef TESTFUNCTIONS_H_
 #define TESTFUNCTIONS_H_
 
-#include "robotdefines.h"
+#include "robot_defines.h"
 
 #define TEST_COMMUNICATIONS		0xE1
 #define TEST_PROXIMITY_SENSORS	0xE4

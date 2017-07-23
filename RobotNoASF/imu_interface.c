@@ -37,7 +37,7 @@
 #include "imu_interface.h"
 #include <tgmath.h>				//Required for atan2 in GetEulerAngles()
 #include "sam.h"				//System header
-#include "robotdefines.h"		//Global robot defines
+#include "robot_defines.h"		//Global robot defines
 
 //Invensense Direct Motion Processing Driver Files
 #include "IMU-DMP/inv_mpu_dmp_motion_driver_CUSTOM.h"//Direct Motion Processing setup functions
