@@ -30,7 +30,7 @@
 #ifndef OPT_INTERFACE_H_
 #define OPT_INTERFACE_H_
 
-#include "robotdefines.h"
+#include "robot_defines.h"
 
 /************* Defines ***************/
 #define RESOLUTION			0.00125

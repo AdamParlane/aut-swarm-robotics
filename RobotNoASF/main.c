@@ -1,4 +1,4 @@
-#include "robotdefines.h"
+#include "robot_defines.h"
 
 
 void setup(void);
@@ -103,9 +103,9 @@ void setup(void)
 	REG_PIOC_PER |= (1<<8);					//Enable PIO control of D2
 	REG_PIOA_OER |= ((1<<28) | (1<<27));	//Set D1 & D3 as outputs
 	REG_PIOC_OER |= (1<<8);					//Set D2 as an output
-	D1off;									//D1 starts up off
-	D2off;									//D2 starts up off
-	D3off;									//D3 starts up off
+	ledOff1;									//D1 starts up off
+	ledOff2;									//D2 starts up off
+	ledOff3;									//D3 starts up off
 	
 	/******** ADC SETUP, 10 bit default SINGLE CONVERSION SINGLE CHANNEL MODE  ********/
 	REG_ADC_WPMR = 0x41444300;						//Disable ADC write protect
