@@ -13,7 +13,7 @@
     <OutputFileExtension>.elf</OutputFileExtension>
     <OutputDirectory>$(MSBuildProjectDirectory)\$(Configuration)</OutputDirectory>
     <AssemblyName>RobotNoASF</AssemblyName>
-    <Name>RobotNoASF</Name>
+    <Name>swarm_robot_V1</Name>
     <RootNamespace>RobotNoASF</RootNamespace>
     <ToolchainFlavour>Native</ToolchainFlavour>
     <KeepTimersRunning>true</KeepTimersRunning>
