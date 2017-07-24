@@ -7,7 +7,8 @@
 * Project Repository: https://github.com/AdamParlane/aut-swarm-robotics
 *
 * Contains the misc defines that havnt been modularised as of yet (6/7)
-* Also has all the headers so it can just be included in every header giving access to everything
+* Also has all the headers so it can just be included in every header giving access to everything.
+* There are compiler directives that will compile defines specific to each version of the robot.
 *
 * More Info:
 * Atmel SAM 4N Processor Datasheet:http://www.atmel.com/Images/Atmel-11158-32-bit%20Cortex-M4-Microcontroller-SAM4N16-SAM4N8_Datasheet.pdf
@@ -51,17 +52,30 @@
 #define adcData					(REG_ADC_LCDR)					//Last sampled ADC value
 #define adcDataReady			(REG_ADC_ISR & ADC_ISR_DRDY)	//ADC conversion complete
 //	ADC channel defines
-//		Line follower ADC channels
+//		Line follower ADC channels version 1 robot
+#if defined ROBOT_TARGET_V1
 #define LF0_ADC_CH			13	// Far left
 #define LF1_ADC_CH			15	// Center left
 #define LF2_ADC_CH			0	// Center right
 #define LF3_ADC_CH			8	// Far right
+#endif
+//		Line follower ADC channels version 2 robot
+#if defined ROBOT_TARGET_V2
+#define LF0_ADC_CH			13	// Far left
+#define LF1_ADC_CH			15	// Center left
+#define LF2_ADC_CH			0	// Center right
+#define LF3_ADC_CH			7	// Far right
+#endif
 //		Fast charge chip ADC channels
 #define FC_BATVOLT_ADC_CH	14	// Battery voltage level
 #define FC_BATTEMP_ADC_CH	9	// Battery temperature
 
 //Universal Asynchronous Receiver/Transmitter
 #define TXRDY (REG_UART3_SR & UART_SR_TXRDY)		//UART TX READY flag
+
+#if !defined ROBOT_TARGET_V1 && !defined ROBOT_TARGET_V2
+#error  Robot version has not been set in compiler options. (set ROBOT_TARGET_V1 or ROBOT_TARGET_V2)
+#endif
 
 ///////////////Type Definitions/////////////////////////////////////////////////////////////////////
 struct Position
