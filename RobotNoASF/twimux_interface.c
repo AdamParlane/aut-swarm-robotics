@@ -102,9 +102,9 @@ void twi0MuxSwitch(uint8_t channel)
 	REG_TWI0_THR = channel;					//Load THR and writing to THR causes start to be sent
 	REG_TWI0_CR
 	|=	TWI_CR_STOP;						//Set STOP bit after tx
-	while(!(TWI0_TXRDY));					//wait for start and data to be shifted out of holding
+	while(!(twi0TxReady));					//wait for start and data to be shifted out of holding
 											//register
-	while(!(TWI0_TXCOMP));					//Communication complete, holding and shifting registers
+	while(!(twi0TxComplete));					//Communication complete, holding and shifting registers
 											//empty, Stop sent
 }
 
@@ -134,19 +134,14 @@ void twi0MuxSwitch(uint8_t channel)
 uint8_t twi0ReadMuxChannel(void)
 {
 	uint8_t returnVal;
-	REG_TWI0_CR
-	|=	TWI_CR_MSEN							//Master mode enabled
-	|	TWI_CR_SVDIS;						//Slave disabled
-	REG_TWI0_MMR
-	=	TWI_MMR_DADR(TWI0_MUX_ADDR);		//Device Slave address
-	REG_TWI0_MMR
-	|=	TWI_MMR_MREAD;						//Master read direction = 1
-	REG_TWI0_CR
-	=	TWI_CR_START
-	|	TWI_CR_STOP;						//Send a START|STOP bit as required (single byte read)
-	while(!(TWI0_RXRDY));					//While Receive Holding Register not ready. wait.
-	returnVal = REG_TWI0_RHR;				//Store data received
-	while(!(TWI0_TXCOMP));					//Wait for transmission complete
+	twi0MasterMode;					//Master mode enabled, slave disabled
+	twi0SetSlave(TWI0_MUX_ADDR);	//Slave address (eg. Mux or Fast Charge Chip)
+	twi0RegAddrSize(0);				//Set single internal device register
+	twi0SetReadMode;				//Master read direction = 1
+	twi0StartSingle;				//Send a START|STOP bit as required (single byte read)
+	while(!twi0RxReady);			//While Receive Holding Register not ready. wait.
+	returnVal = twi0Receive;		//Store data received (the lower byte of 16-bit data)
+	while(!twi0TxComplete);			//Wait for transmission complete
 	return returnVal;
 }
 
@@ -179,21 +174,15 @@ uint8_t twi0ReadMuxChannel(void)
 */
 void twi0Write(uint8_t slaveAddress, uint8_t intAddress, uint8_t data)
 {
-	REG_TWI0_CR
-	|=	TWI_CR_MSEN						//Master mode enabled
-	|	TWI_CR_SVDIS;					//Slave disabled
-	REG_TWI0_MMR
-	=	TWI_MMR_DADR(slaveAddress);		//Slave address (eg. Mux or Fast Charge Chip)
-	REG_TWI0_MMR
-	|=	TWI_MMR_IADRSZ_1_BYTE;			//Set one-byte internal device address
+	twi0MasterMode;					//Master mode enabled, slave disabled
+	twi0SetSlave(slaveAddress);		//Slave address (eg. Mux or Fast Charge Chip)
+	twi0RegAddrSize(1);				//Set one-byte internal device address
 	//Master write direction default by 0
-	REG_TWI0_IADR
-	=	intAddress;						//Set up the address to write to
-	REG_TWI0_THR = data;				//Load the transmit holding register with data to send 
-	REG_TWI0_CR							//(start bit is also sent)
-	|=	TWI_CR_STOP;					//Set the STOP bit
-	while(!(TWI0_TXRDY));				//while Transmit Holding Register not ready. wait.
-	while(!(TWI0_TXCOMP));				//while transmit not complete. wait.
+	twi0RegAddr	= intAddress;		//Set up the address to write to
+	twi0Send = data;				//Load the transmit holding register with data to send 
+	twi0Stop;						//Set the STOP bit
+	while(!twi0TxReady);			//while Transmit Holding Register not ready. wait.
+	while(!twi0TxComplete);			//while transmit not complete. wait.
 }
 
 /*
@@ -226,23 +215,15 @@ void twi0Write(uint8_t slaveAddress, uint8_t intAddress, uint8_t data)
 uint8_t twi0ReadSingle(uint8_t slaveAddress, uint8_t intAddress)
 {
 	uint8_t data;
-	REG_TWI0_CR
-	|=	TWI_CR_MSEN						//Master mode enabled
-	|	TWI_CR_SVDIS;					//Slave disabled
-	REG_TWI0_MMR
-	=	TWI_MMR_DADR(slaveAddress);		//Slave address (eg. Mux or Fast Charge Chip)
-	REG_TWI0_MMR
-	|=	TWI_MMR_IADRSZ_1_BYTE;			//Set one-byte internal device address
-	REG_TWI0_MMR
-	|=	TWI_MMR_MREAD;					//Master read direction = 1
-	REG_TWI0_IADR
-	=	intAddress;						//Set up device internal address to read from
-	REG_TWI0_CR
-	=	TWI_CR_START
-	|	TWI_CR_STOP;					//Send a START|STOP bit as required (single byte read)
-	while(!(TWI0_RXRDY));				//While Receive Holding Register not ready. wait.
-	data = REG_TWI0_RHR;				//Store data received (the lower byte of 16-bit data)
-	while(!(TWI0_TXCOMP));				//Wait for transmission complete
+	twi0MasterMode;					//Master mode enabled, slave disabled
+	twi0SetSlave(slaveAddress);		//Slave address (eg. Mux or Fast Charge Chip)
+	twi0RegAddrSize(1);				//Set one-byte internal device address
+	twi0SetReadMode;				//Master read direction = 1
+	twi0RegAddr = intAddress;		//Set up device internal address to read from
+	twi0StartSingle;				//Send a START|STOP bit as required (single byte read)
+	while(!twi0RxReady);			//While Receive Holding Register not ready. wait.
+	data = twi0Receive;				//Store data received (the lower byte of 16-bit data)
+	while(!twi0TxComplete);			//Wait for transmission complete
 	return data;
 }
 
@@ -283,26 +264,18 @@ uint16_t twi0ReadDouble(uint8_t slaveAddress, uint8_t intAddress)
 {
 	uint8_t dataL, dataH;
 	uint16_t returnVal;
-	REG_TWI0_CR
-	|=	TWI_CR_MSEN						//Master mode enabled
-	|	TWI_CR_SVDIS;					//Slave disabled
-	REG_TWI0_MMR
-	=	TWI_MMR_DADR(slaveAddress);		//Slave address (eg. Mux or Fast Charge Chip)
-	REG_TWI0_MMR
-	|=	TWI_MMR_IADRSZ_1_BYTE;			//Set one-byte internal device address
-	REG_TWI0_MMR
-	|=	TWI_MMR_MREAD;					//Master read direction = 1
-	REG_TWI0_IADR
-	=	intAddress;						//Set up device internal address to read from
-	REG_TWI0_CR
-	=	TWI_CR_START;					//Send a START bit as required (multi-byte read)
-	while(!(TWI0_RXRDY));				//While Receive Holding Register not ready. wait.
-	dataL = REG_TWI0_RHR;				//Store data received (the lower byte of 16-bit data)
-	REG_TWI0_CR 
-	|=	TWI_CR_STOP;					//Set STOP bit as required
-	while(!(TWI0_RXRDY));				//While Receive Holding Register not ready. wait.
-	dataH = REG_TWI0_RHR;				//Store data received (the upper byte of 16-bit data)
-	while(!(TWI0_TXCOMP));				//While transmit not complete. wait.
-	returnVal = (dataH << 8) | dataL;	//Puts the two 8 bits into 16 bits
+	twi0MasterMode;					//Master mode enabled, slave disabled
+	twi0SetSlave(slaveAddress);		//Slave address (eg. Mux or Fast Charge Chip)
+	twi0RegAddrSize(1);				//Set one-byte internal device address
+	twi0SetReadMode;				//Master read direction = 1
+	twi0RegAddr = intAddress;		//Set up device internal address to read from
+	twi0Start;						//Send a START bit as required (multi-byte read)
+	while(!twi0RxReady);			//While Receive Holding Register not ready. wait.
+	dataL = twi0Receive;			//Store data received (the lower byte of 16-bit data)
+	twi0Stop;						//Set STOP bit as required
+	while(!(twi0RxReady));			//While Receive Holding Register not ready. wait.
+	dataH = twi0Receive;			//Store data received (the upper byte of 16-bit data)
+	while(!twi0TxComplete);			//While transmit not complete. wait.
+	returnVal = (dataH << 8) | dataL;//Puts the two 8 bits into 16 bits
 	return returnVal;
 }

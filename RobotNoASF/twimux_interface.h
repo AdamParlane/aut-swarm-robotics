@@ -6,7 +6,8 @@
 *
 * Project Repository:https://github.com/AdamParlane/aut-swarm-robotics
 *
-* Defines macros for TWI0 status and multiplexer addresses. Function definitions for TWI0 and mux
+* Defines macros for TWI0 status, control and multiplexer addresses. Function definitions for TWI0
+* and mux
 *
 * More Info:
 * Atmel SAM 4N Processor Datasheet:http://www.atmel.com/Images/Atmel-11158-32-bit%20Cortex-M4-Microcontroller-SAM4N16-SAM4N8_Datasheet.pdf
@@ -29,18 +30,55 @@
 #include "sam.h"
 
 ///////////////Defines//////////////////////////////////////////////////////////////////////////////
-//General Commands
-//RHR: Receive holding register, THR: Transmit holding register, NACK: Not acknowledge
-#define TWI0_RXRDY	(REG_TWI0_SR & TWI_SR_RXRDY)//if 1, RHR has new byte to be read
-#define TWI0_TXRDY	(REG_TWI0_SR & TWI_SR_TXRDY)//if 1, THR is empty or NACK error occurred
-#define TWI0_TXCOMP	(REG_TWI0_SR & TWI_SR_TXCOMP)
-#define TWI0_NACK	(REG_TWI0_SR & TWI_SR_NACK)	//Check TWI0 Status register for Not Acknowledged
-//Device slave addresses
+////General Commands
+//if returns 1, then the receive holding register has a new byte to be read
+#define twi0RxReady			(REG_TWI0_SR & TWI_SR_RXRDY)	
+
+//if returns 1, then the transmit holding register empty or not acknowledged error occurred
+#define twi0TxReady			(REG_TWI0_SR & TWI_SR_TXRDY)
+
+//returns 1 when transmission is complete
+#define twi0TxComplete		(REG_TWI0_SR & TWI_SR_TXCOMP)
+
+//returns 1 when not acknowledged error occurred
+#define twi0NotAcknowledged	(REG_TWI0_SR & TWI_SR_NACK)
+
+//Enable master mode and disable slave mode
+#define twi0MasterMode		(REG_TWI0_CR |= TWI_CR_MSEN|TWI_CR_SVDIS)
+
+//Set address of desired slave device to talk to
+#define twi0SetSlave(value)	(REG_TWI0_MMR = TWI_MMR_DADR(value))
+
+//Transmit holding register
+#define twi0Send			REG_TWI0_THR
+
+//Receive holding register
+#define twi0Receive			REG_TWI0_RHR
+
+//Initiates single byte data read
+#define twi0StartSingle		(REG_TWI0_CR = TWI_CR_START|TWI_CR_STOP)
+
+//Initiates multi byte data read
+#define twi0Start			(REG_TWI0_CR = TWI_CR_START)
+
+//Stops data transmission after next byte
+#define twi0Stop			(REG_TWI0_CR |= TWI_CR_STOP)
+
+//Read from slave registers
+#define twi0SetReadMode		(REG_TWI0_MMR |= TWI_MMR_MREAD)
+
+//Address of slave internal register to read/write
+#define twi0RegAddr			(REG_TWI0_IADR)
+
+//Set slave register address size (0-3) 0 means no internal registers
+#define twi0RegAddrSize(value) (REG_TWI0_MMR |= TWI_MMR_IADRSZ(value))
+
+////Device slave addresses
 #define TWI0_MUX_ADDR				0xE0		//Mux Address 000
 #define TWI0_LIGHTSENS_ADDR			0x10		//Light sensors
 #define TWI0_PROXSENS_ADDR			0x39		//Proximity sensors
 #define TWI0_FCHARGE_ADDR			0x6B		//Battery Charger (Fast Charge Controller)
-//TWI Mux channels
+////TWI Mux channels
 //Only one active at a time
 #define MUX_LIGHTSENS_R				0xF8		//Mux Channel 0, Side Panel A
 #define MUX_LIGHTSENS_L				0xF9		//Mux Channel 1, Side Panel A
