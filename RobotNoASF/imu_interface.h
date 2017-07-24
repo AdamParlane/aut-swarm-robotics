@@ -55,7 +55,7 @@ typedef struct euler_packet
 
 ///////////////Functions////////////////////////////////////////////////////////////////////////////
 /*
-* Function: int initImu(void)
+* Function: int imuInit(void)
 *
 * Initialise the IMU. Masterclock and TWI2 MUST be setup first.
 *
@@ -66,7 +66,7 @@ typedef struct euler_packet
 * zero if no problems encountered)
 *
 */
-int initImu(void);
+int imuInit(void);
 
 /*
 * Function:

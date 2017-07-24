@@ -95,7 +95,7 @@ void setup(void)
 	SPI_Init();
 	//mouseInit(); //May require further testing - Adam
 	CommunicationSetup();
-	initImu();
+	imuInit();
 	twi0Init();
 
 	/******** LED Setup ********/

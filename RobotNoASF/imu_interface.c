@@ -18,7 +18,7 @@
 * can just email me.
 * 
 * Functions:
-* int initImu(void);
+* int imuInit(void);
 * char twi_write_imu(unsigned char slave_addr, unsigned char reg_addr, 
 *						unsigned char length, unsigned char const *data);
 * char twi_read_imu(unsigned char slave_addr, unsigned char reg_addr, 
@@ -49,7 +49,7 @@ uint32_t check_IMU_FIFO	= 0;	//At what time will the IMUs FIFO next be read?
 
 ///////////////Functions////////////////////////////////////////////////////////////////////////////
 /*
-* Function: int initImu(void)
+* Function: int imuInit(void)
 *
 * Initialise TWI2, TIMER0 and the IMU. Masterclock MUST be setup first.
 *
@@ -75,7 +75,7 @@ uint32_t check_IMU_FIFO	= 0;	//At what time will the IMUs FIFO next be read?
 * the IMU.
 *
 */
-int initImu(void)
+int imuInit(void)
 {
 	int result = 0;		//Return value (when not 0, errors are present)
 	
