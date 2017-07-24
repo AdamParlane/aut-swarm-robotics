@@ -70,8 +70,11 @@
 //Address of slave internal register to read/write
 #define twi0RegAddr			(REG_TWI0_IADR)
 
-//Set slave register address size (0-3) 0 means no internal registers
+//Set slave register address size (0-3 bytes) 0 means no internal registers
 #define twi0RegAddrSize(value) (REG_TWI0_MMR |= TWI_MMR_IADRSZ(value))
+
+//Perform software reset
+#define twi0Reset			(REG_TWI0_CR = TWI_CR_SWRST)
 
 ////Device slave addresses
 #define TWI0_MUX_ADDR				0xE0		//Mux Address 000

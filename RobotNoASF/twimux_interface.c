@@ -58,16 +58,14 @@ void twi0Init(void)
 	|=	PIO_PDR_P3;							// Enable peripheralA control of PA3 (TWD0)
 	REG_PIOA_PDR
 	|=	PIO_PDR_P4;							// Enable peripheralA control of PA4 (TWCK0)
-	REG_TWI0_CR
-	=	TWI_CR_SWRST;						//Software Reset
+	twi0Reset;								//Software reset
+
 	//TWI0 Clock Waveform Setup
 	REG_TWI0_CWGR
 	|=	TWI_CWGR_CKDIV(1)					//Clock speed 400000, fast mode
 	|	TWI_CWGR_CLDIV(63)					//Clock low period 1.3uSec
 	|	TWI_CWGR_CHDIV(28);					//Clock high period  0.6uSec
-	REG_TWI0_CR
-	|=	TWI_CR_MSEN							//Master mode enabled
-	|	TWI_CR_SVDIS;						//Slave disabled
+	twi0MasterMode;							//Master mode enabled, slave disabled
 }
 
 /*
@@ -93,19 +91,14 @@ void twi0Init(void)
 */
 void twi0MuxSwitch(uint8_t channel)
 {
-	REG_TWI0_CR
-	|=	TWI_CR_MSEN							//Master mode enabled
-	|	TWI_CR_SVDIS;						//Slave disabled
-	REG_TWI0_MMR 
-	=	TWI_MMR_DADR(TWI0_MUX_ADDR);		//Set Slave Device address
+	twi0MasterMode;					//Master mode enabled, slave disabled
+	twi0SetSlave(TWI0_MUX_ADDR);	//Slave address (eg. Mux or Fast Charge Chip)
 	//No internal address and set to master write mode by default of zero
-	REG_TWI0_THR = channel;					//Load THR and writing to THR causes start to be sent
-	REG_TWI0_CR
-	|=	TWI_CR_STOP;						//Set STOP bit after tx
-	while(!(twi0TxReady));					//wait for start and data to be shifted out of holding
-											//register
-	while(!(twi0TxComplete));					//Communication complete, holding and shifting registers
-											//empty, Stop sent
+	twi0Send = channel;				//Load THR and writing to THR causes start to be sent
+	twi0Stop;						//Set STOP bit after tx
+	while(!twi0TxReady);			//wait for start and data to be shifted out of holding register
+	while(!twi0TxComplete);			//Communication complete, holding and shifting registers
+									//empty, Stop sent
 }
 
 /*
