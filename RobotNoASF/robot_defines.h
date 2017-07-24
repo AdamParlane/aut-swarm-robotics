@@ -73,8 +73,9 @@
 //Universal Asynchronous Receiver/Transmitter
 #define TXRDY (REG_UART3_SR & UART_SR_TXRDY)		//UART TX READY flag
 
+//If robot target compiler symbol is not present, then throw an error.
 #if !defined ROBOT_TARGET_V1 && !defined ROBOT_TARGET_V2
-#error  Robot version has not been set in compiler options. (set ROBOT_TARGET_V1 or ROBOT_TARGET_V2)
+#error  Robot version has not been set in compiler symbols. (set ROBOT_TARGET_V1 or ROBOT_TARGET_V2)
 #endif
 
 ///////////////Type Definitions/////////////////////////////////////////////////////////////////////
