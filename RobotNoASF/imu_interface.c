@@ -11,24 +11,25 @@
 * well as functions required by the IMU DMP driver. Additionally it will provide
 * the setup routine for TWI2
 *
-* IMU Datasheet:
+* More info:
 * https://www.invensense.com/wp-content/uploads/2015/02/PS-MPU-9250A-01-v1.1.pdf
 * https://cdn.sparkfun.com/assets/learn_tutorials/5/5/0/MPU-9250-Register-Map.pdf
 * DMP manual requires registration on Invensense website and permission. Or you
 * can just email me.
 * 
 * Functions:
-* int imuInit(void);
+* int imuInit(void)
 * char twi_write_imu(unsigned char slave_addr, unsigned char reg_addr, 
-*						unsigned char length, unsigned char const *data);
+*						unsigned char length, unsigned char const *data)
 * char twi_read_imu(unsigned char slave_addr, unsigned char reg_addr, 
-*						unsigned char length,	unsigned char *data);
-* int get_ms(uint32_t *timestamp);
-* int delay_ms(uint32_t period_ms);
-* unsigned short invOrientationMatrixToScalar(const signed char *mtx);
-* unsigned short invRow2Scale(const signed char *row);
-* void getEulerAngles(long *ptQuat, euler_packet_t *eulerAngle);
-* void TC0_Handler();
+*						unsigned char length,	unsigned char *data)
+* int get_ms(uint32_t *timestamp)
+* int delay_ms(uint32_t period_ms)
+* unsigned short invOrientationMatrixToScalar(const signed char *mtx)
+* unsigned short invRow2Scale(const signed char *row)
+* void getEulerAngles(long *ptQuat, euler_packet_t *eulerAngle)
+* uint8_t imuCommTest(void)
+* void TC0_Handler()
 *
 *
 */
@@ -437,6 +438,46 @@ char twi_read_imu(unsigned char slave_addr, unsigned char reg_addr,
 		while(!IMU_TXCOMP);				//while transmit not complete. wait.
 	}
 	return 0;
+}
+
+/*
+* Function:
+* char imuCommTest(void)
+*
+* Accesses the IMU on TWI2 to retrieve test character from test register....
+*
+* Inputs:
+* none
+*
+* Returns:
+* should return 0x71 if communication working.
+*
+* Implementation:
+* - Disable DMP if necessary
+* - Send byte to desired register
+* - Reenable DMP if enabled beforehand
+* - Return value retrieved from IMU. Should return 0x71 if communication successful.
+*
+* Improvements:
+* [Ideas for improvements that are yet to be made](optional)
+*
+*/
+uint8_t imuCommTest(void)
+{
+	int* dmpEnabled = 0;
+	char* returnVal = 0;
+	
+	mpu_get_dmp_state(dmpEnabled);				//See if DMP was running
+	if (*dmpEnabled == 1)						//If it was
+		mpu_set_dmp_state(0);					//Disable DMP
+		
+	//Request test byte
+	twi_read_imu(TWI2_IMU_ADDR, IMU_WHOAMI_REG, 1, returnVal);
+
+	if (*dmpEnabled == 1)						//If DMP was running before this function began
+		mpu_set_dmp_state(1);					//Re-enable DMP
+		
+	return returnVal;
 }
 
 /*

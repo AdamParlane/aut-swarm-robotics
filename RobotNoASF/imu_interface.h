@@ -11,11 +11,25 @@
 * well as functions required by the IMU DMP driver. Additionally it will provide
 * the setup routine for TWI2
 *
-* IMU Datasheet:
+* More info:
 * https://www.invensense.com/wp-content/uploads/2015/02/PS-MPU-9250A-01-v1.1.pdf
 * https://cdn.sparkfun.com/assets/learn_tutorials/5/5/0/MPU-9250-Register-Map.pdf
 * DMP manual requires registration on Invensense website and permission. Or you
 * can just email me.
+*
+* Functions:
+* int imuInit(void)
+* char twi_write_imu(unsigned char slave_addr, unsigned char reg_addr,
+*						unsigned char length, unsigned char const *data)
+* char twi_read_imu(unsigned char slave_addr, unsigned char reg_addr,
+*						unsigned char length,	unsigned char *data)
+* int get_ms(uint32_t *timestamp)
+* int delay_ms(uint32_t period_ms)
+* unsigned short invOrientationMatrixToScalar(const signed char *mtx)
+* unsigned short invRow2Scale(const signed char *row)
+* void getEulerAngles(long *ptQuat, euler_packet_t *eulerAngle)
+* uint8_t imuCommTest(void)
+* void TC0_Handler()
 *
 */
 
@@ -34,16 +48,22 @@
 
 //Some other status flags that were taken from the ASF TWI library. I don't think these are
 //needed any longer, but will keep for now
-#define TWI_SUCCESS              0
-#define TWI_INVALID_ARGUMENT     1
-#define TWI_ARBITRATION_LOST     2
-#define TWI_NO_CHIP_FOUND        3
-#define TWI_RECEIVE_OVERRUN      4
-#define TWI_RECEIVE_NACK         5
-#define TWI_SEND_OVERRUN         6
-#define TWI_SEND_NACK            7
-#define TWI_BUSY                 8
-#define TWI_ERROR_TIMEOUT        9
+#define TWI_SUCCESS             0
+#define TWI_INVALID_ARGUMENT    1
+#define TWI_ARBITRATION_LOST    2
+#define TWI_NO_CHIP_FOUND       3
+#define TWI_RECEIVE_OVERRUN     4
+#define TWI_RECEIVE_NACK        5
+#define TWI_SEND_OVERRUN        6
+#define TWI_SEND_NACK           7
+#define TWI_BUSY                8
+#define TWI_ERROR_TIMEOUT       9
+
+////TWI2 slave device addresses
+#define TWI2_IMU_ADDR			0x68
+
+////MPU9250 register addresses
+#define IMU_WHOAMI_REG			0x75
 
 //Structure that stores converted Euler angles of rotation. Parameter of GetEulerAngles
 typedef struct euler_packet 
@@ -185,6 +205,21 @@ char twi_write_imu(unsigned char slave_addr, unsigned char reg_addr,
 */
 char twi_read_imu(unsigned char slave_addr, unsigned char reg_addr, 
 					unsigned char length, unsigned char *data);
+
+/*
+* Function:
+* char imuCommTest(void)
+*
+* Accesses the IMU on TWI2 to retrieve test character from test register....
+*
+* Inputs:
+* none
+*
+* Returns:
+* should return 0x77 if communication working.
+*
+*/
+uint8_t imuCommTest(void);
 
 /*
 * Function: void TC0_Handler()
