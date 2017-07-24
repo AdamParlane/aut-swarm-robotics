@@ -68,7 +68,6 @@ void twi0Init(void)
 	REG_TWI0_CR
 	|=	TWI_CR_MSEN							//Master mode enabled
 	|	TWI_CR_SVDIS;						//Slave disabled
-	uint8_t dummy = REG_TWI0_RHR;			//Ensure RXRDY flag is set
 }
 
 /*
