@@ -50,7 +50,7 @@
 #define twi0SetSlave(value)	(REG_TWI0_MMR = TWI_MMR_DADR(value))
 
 //Transmit holding register
-#define twi0Send			REG_TWI0_THR
+#define twi0Send(value)		(REG_TWI0_THR = value)
 
 //Receive holding register
 #define twi0Receive			REG_TWI0_RHR
@@ -64,11 +64,11 @@
 //Stops data transmission after next byte
 #define twi0Stop			(REG_TWI0_CR |= TWI_CR_STOP)
 
-//Read from slave registers
+//Call this macro to read from slave registers
 #define twi0SetReadMode		(REG_TWI0_MMR |= TWI_MMR_MREAD)
 
 //Address of slave internal register to read/write
-#define twi0RegAddr			(REG_TWI0_IADR)
+#define twi0RegAddr(value)	(REG_TWI0_IADR = value)
 
 //Set slave register address size (0-3 bytes) 0 means no internal registers
 #define twi0RegAddrSize(value) (REG_TWI0_MMR |= TWI_MMR_IADRSZ(value))
