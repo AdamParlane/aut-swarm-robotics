@@ -9,7 +9,7 @@
 * SPI driver for optical mouse sensor ADNS-7530 used for navigation
 * in the 2017 swarm robotics project for Mark Beckerleg, AUT
 *
-* Mouse Sensor Datasheet: //http://www.pixart.com.tw/upload/ADNS-7530%20DS_S_V1.0_20130514110834.pdf
+* Mouse Sensor Data sheet: http://www.pixart.com.tw/upload/ADNS-7530%20DS_S_V1.0_20130514110834.pdf
 *
 * Contains the following functions: 
 * void SPI_Write(char writeAddress, char spiData);
@@ -25,12 +25,13 @@
 *
 */ 
 
+///////////////Includes/////////////////////////////////////////////////////////////////////////////
 #include "spi.h"
 #include "sam.h"
 #include <math.h>
 #include "opt_interface.h"
 
-
+///////////////Functions////////////////////////////////////////////////////////////////////////////
 /*
 * Function: void SPI_Init(void)
 *
@@ -46,7 +47,8 @@
 *	MISO PA12
 *	MOSI PA13
 *	SCLK PA14
-*	Chip Select (Active Low) PB14
+*	Chip Select (Active Low) PB14 - VERSION1
+							 PA30 - VERSION2
 * Put the micro in SPI master mode using the SPI_MR register
 * Set salve to PB14
 * Set CPOL = 1, 500k baud rate and a 6us timeout in CSR1
@@ -60,7 +62,11 @@
 *	should be added to the lower part of the defines
 * This will correctly declare the address for the CSR1 register
 * In this Swarm robotics project this is already handled by the included spi.h header file
-* If this was not included it either needs to be added or the host PC version of spi.h for the SAM4N8C needs to be updated
+* If this was not included it either needs to be added 
+* or the host PC version of spi.h for the SAM4N8C needs to be updated
+*
+* Improvements:
+* [Ideas for improvements that are yet to be made](optional)
 *
 */
 void SPI_Init(void)
@@ -74,12 +80,19 @@ void SPI_Init(void)
 	REG_PIOA_PDR |= PIO_PDR_P12;			//Give control of MISO to SPI
 	REG_PIOA_PDR |= PIO_PDR_P13;			//Give control of MOSI to SPI
 	REG_PIOA_PDR |= PIO_PDR_P14;			//Give control of SCLK to SPI
+#if defined ROBOT_TARGET_V1
 	REG_PIOB_PER |= (1<<14);				//Enable PIO control of PB14
 	REG_PIOB_OER |= (1<<14);				//Set PB14 as output
+#endif
+#if defined ROBOT_TARGET_V2
+	REG_PIOA_PER |= (1<<30);				//Enable PIO control of PA30
+	REG_PIOA_OER |= (1<<30);				//Set PA30 as output
+#endif
 	REG_SPI_CR |= SPI_CR_SPIEN; 	
 	//REG_PIOB_PDR |= PIO_PDR_P14; //Give control of NPCS1 (on PB14/Pin 99) to SPI
 	REG_SPI_MR |= SPI_MR_MSTR;				//SPI in Master Mode
-	REG_SPI_MR &= ~SPI_MR_PS;				//set fixed peripheral select(peripheral chosen in SP_MR.PCS instead of SPI_THR.PCS)
+	//set fixed peripheral select(peripheral chosen in SP_MR.PCS instead of SPI_THR.PCS)
+	REG_SPI_MR &= ~SPI_MR_PS;				
 	REG_SPI_MR |= SPI_MR_PCS(0b1101); //set slave to NPCS1 (only works while SPI_MR_PS = 0)	
 	REG_SPI_CSR1 |= (1<<0) | (0xF0<<8) | (0x17<<24); // CPOL=1, 500k baud (2us period), 6us DLYBCT
 }
@@ -100,21 +113,30 @@ void SPI_Init(void)
 * Several reserved registers are written to
 * Laser Current is set to full with range of 4-10mA, inverse of laser current must also be set 
 *
+* Improvements:
+* [Ideas for improvements that are yet to be made](optional)
+*
 */
 void mouseInit(void)
 {
-	char tempObs, temp02, temp03, temp04, temp05; //temporary variables used to read the observation register on mouse startup
+	//temporary variables used to read the observation register on mouse startup
+	char tempObs, temp02, temp03, temp04, temp05;
 	
 	//Reset SPI Port
+#if defined ROBOT_TARGET_V1
 	REG_PIOB_SODR |= (1<<14);				//Drive NCS High	
 	REG_PIOB_CODR |= (1<<14);				//Drive NCS Low
-	
+#endif
+#if defined ROBOT_TARGET_V2
+	REG_PIOC_SODR |= (1<<30);				//Drive NCS High
+	REG_PIOC_CODR |= (1<<30);				//Drive NCS Low	
+#endif
 	//initialize mouse sensor
 	SPI_Write(OPT_PWR_UP_RESET, 0x5A);		//Power Up Reset
 	delay();
 	SPI_Write(OPT_OBSERVATION, 0x00);		//clear observation register
 	delay();								//wait at least 1 frame
-	tempObs = SPI_Read(OPT_OBSERVATION);	//read observation register to check all bits 0-3 are set	
+	tempObs = SPI_Read(OPT_OBSERVATION);	//read observation register to check bits 0-3 are set	
 	while((tempObs & 0x0F) != 0x0F)			//check if bits 0-3 have been set
 	{
 		tempObs = SPI_Read(OPT_OBSERVATION);
@@ -132,9 +154,9 @@ void mouseInit(void)
 	SPI_Write(0x3C, 0x05);					//reserved 
 	SPI_Write(0x37, 0xB9);					//reserved 
 	SPI_Write(OPT_LSRPWR_CFG0, 0xFF);		//set laser current to full
-	SPI_Write(OPT_LSRPWR_CFG1, 0x00);		//complement of set laser current to full so that it works
+	SPI_Write(OPT_LSRPWR_CFG1, 0x00);		//complement of set laser current to full
 	SPI_Write(OPT_LASER_CTRL0, 0xC0);		//set laser current range to 4-10mA
-	SPI_Write(OPT_LASER_CTRL1, 0x00);		//complement of set laser current range to 4-10mA so that it works
+	SPI_Write(OPT_LASER_CTRL1, 0x00);		//complement of set laser current range to 4-10mA
 	delay();								//allow everything to settle after being initialized
 }
 
@@ -157,6 +179,9 @@ void mouseInit(void)
 * the top register is read and then split into its x and y components
 * this is then combined with the lower values and given the correct sign (using 2s complement)
 * before being written to the opticaldx and opticaldy members of the position structure
+*
+* Improvements:
+* [Ideas for improvements that are yet to be made](optional)
 *
 */
 void getMouseXY(struct Position *mousePos)
@@ -201,12 +226,16 @@ void getMouseXY(struct Position *mousePos)
 * Inverse Revision ID	0xFC
 *
 * Returns 1 if all values were correct
-* Returns 0 if any value was incorrect, this indicates a problem with the mouse or communication with the mouse
+* Returns 0 if any value was incorrect, this indicates a problem with the mouse 
+* or communication with the mouse
 *
 * Implementation:
 * Uses SPI_Read to read all 4 registers
 * Compares the returned values with the expected values
 * Returns either 1 (all match) or 0 (at least 1 didn't match)
+*
+* Improvements:
+* [Ideas for improvements that are yet to be made](optional)
 *
 */
 char mouseTestBasic(void)
@@ -234,15 +263,20 @@ char mouseTestBasic(void)
 *
 * Implementation:
 * Waits for the transmit data register empty flag to be set
-* Loads the Transmit data register with the address of the register to be written to, bit 7 is 1 to indicate writing
+* Loads the Transmit data register with the address of the register to be written to,
+* bit 7 is 1 to indicate writing
 * Waits for the transmit data register empty flag to be set
 * Loads the Transmit data register with the data to written
+*
+* Improvements:
+* [Ideas for improvements that are yet to be made](optional)
 *
 */
 void SPI_Write(char writeAddress, char spiData)
 {
 	while(!(REG_SPI_SR & SPI_SR_TDRE));		//Wait for address to move out of TDR
-	REG_SPI_TDR |= (writeAddress |= (1<<7));//Load TDR with peripheral register to be written to. Puts 1 into bit 7 to indicates writing to register
+	//Load TDR with peripheral register to be written to.
+	REG_SPI_TDR |= (writeAddress |= (1<<7));//Puts 1 into bit 7 to indicates writing to register
 	//wait for received data to be ready to be read
 	while(!(REG_SPI_SR & SPI_SR_TDRE));		//Wait for address to move out of TDR
 	REG_SPI_TDR |= spiData;					//Load data to be sent
@@ -259,21 +293,25 @@ void SPI_Write(char writeAddress, char spiData)
 * Returns a char with the data from the requested register
 *
 * Implementation:
-* Reads the receivied data register to ensure there is no data to be read
+* Reads the received data register to ensure there is no data to be read
 * Loads the Transmit data register with the address of the register to be read
 * Reads the return data once the received flag is set and discards it
 * This first bit of data will be incorrect due to the way SPI pushes data from the slave to master
 * Repeat the process
 * When the flag is set the received data register will contain the desired data
 * 
+* Improvements:
+* [Ideas for improvements that are yet to be made](optional)
+*
 */
 char SPI_Read(char readAddress)
 {
 	char data;
 	data = REG_SPI_RDR;						//Read the RDR to ensure that the RDRF flag is reset.
-	REG_SPI_TDR |= (readAddress);			//Load TDR with peripheral register to be read from. 0  in bit 7 which indicates a reading operation.
+	//Load TDR with peripheral register to be read from. 
+	REG_SPI_TDR |= (readAddress);			//0 in bit 7 which indicates a reading operation.
 	while(!(REG_SPI_SR & (1<<0)));			//Wait for first RDRF flag.
-	data = REG_SPI_RDR;						//First lot of data which will be incorrect. Its only being read to reset the RDRF flag.
+	data = REG_SPI_RDR;						//First lot of data which will be incorrect. 
 	REG_SPI_TDR |= (readAddress);			//Load TDR again.
 	while(!(REG_SPI_SR & (1<<0)));			//Wait for second RDRF flag.
 	data = REG_SPI_RDR;						//Read the correct data
@@ -291,6 +329,10 @@ char SPI_Read(char readAddress)
 * This program uses a 100MHz Clock making the delay approx 0.66ms
 * 
 * No return value
+*
+* Improvements:
+* [Ideas for improvements that are yet to be made](optional)
+*
 */
 void delay (void)
 {
