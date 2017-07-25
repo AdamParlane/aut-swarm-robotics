@@ -19,6 +19,7 @@
 * 
 * Functions:
 * int imuInit(void)
+* int imuDmpInit(void)
 * void imuDmpStop(void)
 * void imuDmpStart(void)
 * char twi_write_imu(unsigned char slave_addr, unsigned char reg_addr, 
@@ -175,7 +176,7 @@ int imuDmpInit(void)
 	result += dmp_enable_feature(DMP_FEATURE_6X_LP_QUAT);//Enable 6 axis low power quaternions
 	result += dmp_set_fifo_rate(200);					//200Hz update rate from the FIFO
 	result += mpu_set_dmp_state(1);						//Start DMP
-	return result
+	return result;
 }
 
 /*
