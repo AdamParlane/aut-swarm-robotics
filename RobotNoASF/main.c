@@ -107,10 +107,7 @@ void setup(void)
 	ledOff2;									//D2 starts up off
 	ledOff3;									//D3 starts up off
 	
-	/******** ADC SETUP, 10 bit default SINGLE CONVERSION SINGLE CHANNEL MODE  ********/
-	REG_ADC_WPMR = 0x41444300;						//Disable ADC write protect
-	REG_PMC_PCER0 |= (1<<29);						//Enable peripheral clock on ADC
-	REG_ADC_MR |= ((49<<8) | (3<<16) | (2<<28));	//Prescale ADC conversion by 49 (100MHZ/((49+1)x2))=1MHZ. Startup time is 24 ADC clock cycles. Field 28 must be programmed with value 2.
+
 	
 
 
