@@ -19,6 +19,8 @@
 *
 * Functions:
 * int imuInit(void)
+* void imuDmpStop(void)
+* void imuDmpStart(void)
 * char twi_write_imu(unsigned char slave_addr, unsigned char reg_addr,
 *						unsigned char length, unsigned char const *data)
 * char twi_read_imu(unsigned char slave_addr, unsigned char reg_addr,
@@ -87,6 +89,55 @@ typedef struct euler_packet
 *
 */
 int imuInit(void);
+
+/*
+* Function:
+* void imuDmpStop(void)
+*
+* If Digital Motion Processing is running on the IMU then stop it. imuDmpInit() MUST be run
+* first! (only once)
+*
+* Inputs:
+* none
+*
+* Returns:
+* none
+*
+* Implementation:
+* Both imuInit() and imuDmpInit() have to have been run first before this function will can run.
+* First check if the DMP is running. If so then stop it, otherwise exit the function.
+*
+* Improvements:
+* Have a global flag that indicates that the IMU has been initialised and the DMP firmware loaded
+* so that this function won't run without that having being done so. Have an error return value.
+*
+*/
+void imuDmpStop(void)
+
+/*
+* Function:
+* void imuDmpStart(void)
+*
+* If Digital Motion Processing is not running on the IMU then Start it. imuDmpInit() MUST be run
+* first! (only once)
+*
+* Inputs:
+* none
+*
+* Returns:
+* none
+*
+* Implementation:
+* Both imuInit() and imuDmpInit() have to have been run first before this function will can run.
+* First check if the DMP isn't running. If so then start it, otherwise exit the function.
+*
+* Improvements:
+* Have a global flag that indicates that the IMU has been initialised and the DMP firmware loaded
+* so that this function won't run without that having being done so. Have an error return value.
+*
+*/
+void imuDmpStart(void)
+
 
 /*
 * Function:
