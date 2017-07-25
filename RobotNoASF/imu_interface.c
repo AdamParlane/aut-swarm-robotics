@@ -9,7 +9,9 @@
 * Description:
 * imu_interface provides functions that allow both retrieval of data from IMU as
 * well as functions required by the IMU DMP driver. Additionally it will provide
-* the setup routine for TWI2
+* the setup routine for TWI2 on robot V1. There are two different versions of imuInit(),
+* twi_write_imu(..) and twi_read_imu(..); one for each revision of the PCB because V2 has the IMU
+* connected to TWI0 instead of TWI2 on the V1
 *
 * More info:
 * https://www.invensense.com/wp-content/uploads/2015/02/PS-MPU-9250A-01-v1.1.pdf
@@ -41,7 +43,7 @@
 #include "imu_interface.h"
 #include <tgmath.h>				//Required for atan2 in GetEulerAngles()
 #include "sam.h"				//System header
-#include "robot_defines.h"		//Global robot defines
+#include "twimux_interface.h"	//twi and multiplexer
 
 //Invensense Direct Motion Processing Driver Files
 #include "IMU-DMP/inv_mpu_dmp_motion_driver_CUSTOM.h"//Direct Motion Processing setup functions
@@ -49,13 +51,17 @@
 
 //Flags and system globals
 uint32_t systemTimestamp = 0;	//Number of ms since powerup
-uint32_t check_IMU_FIFO	= 0;	//At what time will the IMUs FIFO next be read?
+
+#if defined ROBOT_TARGET_V1
+uint32_t checkImuFifo	= 0;	//A flag to determine that the IMU's FIFO is ready to be read again
+								//This is only used on V1 robot as V2 uses external interrupt.
+#endif
 
 ///////////////Functions////////////////////////////////////////////////////////////////////////////
 /*
 * Function: int imuInit(void)
 *
-* Initialise TWI2, TIMER0 and the IMU. Masterclock MUST be setup first.
+* Initialise TIMER0 and the IMU. Masterclock MUST be setup first.
 *
 * No input values
 *
@@ -65,18 +71,11 @@ uint32_t check_IMU_FIFO	= 0;	//At what time will the IMUs FIFO next be read?
 *
 * Implementation:
 * MASTER CLOCK NEEDS TO BE SETUP FOR 100MHZ FIRST.
-* First the pins required are assigned to TWI2. Then TWI2 is initialised to 400kHz for communication
-* with the IMU. After that, TIMER0 is initialised in register compare mode. This will provide a 
+* TIMER0 is initialised in register compare mode. This will provide a 
 * system time stamp that is incremented every millisecond and is necessary for delay_ms() used by 
 * the IMU driver.
-* gyro_orientation is a matrix that modifies the output of the IMU to suit its physical orientation.
-* The IMU drive is initialised first. The driver is told which sensors want to be used as well as
-* the desired sample rates. The configuration is read back for debug purposes.
-* Next the Direct Motion Processing firmware is loaded into the IMU. The orientation matrix is
-* converted to scalar format and sent to the IMU. Then the DMP is told to send low power quaternion
-* data obtained from 6 axes (3x accelerometer axes + 3x gyro axes)
-* Next the update rate of the first in first out buffer is set, and the DMP system is started on
-* the IMU.
+* Next, the IMU driver is initialised. The driver is told which sensors want to be used as well as
+* the desired sample rates.
 *
 */
 int imuInit(void)
@@ -84,28 +83,6 @@ int imuInit(void)
 	int result = 0;		//Return value (when not 0, errors are present)
 	
 	//MICROCONTROLLER HW SETUP
-	/////TWI2////
-	REG_PMC_PCER0
-	|=	(1<<ID_TWI2);						//Enable clock access to TWI2, Peripheral TWI2_ID = 22
-	REG_PIOB_PDR
-	|=	PIO_PDR_P0							//Enable peripheralB control of PB0 (TWD2)
-	|	PIO_PDR_P1;							//Enable peripheralB control of PB1 (TWCK2)
-	REG_PIOB_ABCDSR
-	|=	PIO_ABCDSR_P0						//Set peripheral B
-	|	PIO_ABCDSR_P1;
-	REG_TWI2_CR
-	=	TWI_CR_SWRST;						//Software Reset
-	//TWI2 Clock Waveform Setup.
-	//1.3uSec = ((x * 2^CKDIV)+4) * 10nSec[100MHz]
-	//0.6uSec = ((x * 2^CKDIV)+4) * 10nSec[100MHz]
-	REG_TWI2_CWGR
-	|=	TWI_CWGR_CKDIV(1)					//Clock speed 400000, fast mode
-	|	TWI_CWGR_CLDIV(63)					//Clock low period 1.3uSec
-	|	TWI_CWGR_CHDIV(28);					//Clock high period  0.6uSec
-	REG_TWI2_CR
-	|=	TWI_CR_MSEN							//Master mode enabled
-	|	TWI_CR_SVDIS;						//Slave disabled
-
 	////TIMER0////
 	//Timer0 is used for delay_ms and get_ms functions required by the imu driver
 	REG_PMC_PCER0
@@ -150,8 +127,6 @@ int imuInit(void)
 * Implementation:
 * imuInit() NEEDS TO BE RUN FIRST.
 * gyro_orientation is a matrix that modifies the output of the IMU to suit its physical orientation.
-* The IMU drive is initialised first. The driver is told which sensors want to be used as well as
-* the desired sample rates. The configuration is read back for debug purposes.
 * Next the Direct Motion Processing firmware is loaded into the IMU. The orientation matrix is
 * converted to scalar format and sent to the IMU. Then the DMP is told to send low power quaternion
 * data obtained from 6 axes (3x accelerometer axes + 3x gyro axes)
@@ -181,7 +156,7 @@ int imuDmpInit(void)
 
 /*
 * Function:
-* void imuDmpStop(void)
+* unsigned char imuDmpStop(void)
 *
 * If Digital Motion Processing is running on the IMU then stop it. imuDmpInit() MUST be run
 * first! (only once)
@@ -190,7 +165,7 @@ int imuDmpInit(void)
 * none
 *
 * Returns:
-* none
+* 1 if the DMP was running before disabling it.
 *
 * Implementation:
 * Both imuInit() and imuDmpInit() have to have been run first before this function will can run.
@@ -201,18 +176,19 @@ int imuDmpInit(void)
 * so that this function won't run without that having being done so. Have an error return value.
 *
 */
-void imuDmpStop(void)
+unsigned char imuDmpStop(void)
 {
-	int* dmpEnabled = 0;
+	unsigned char* dmpEnabled = 0;
 		
 	mpu_get_dmp_state(dmpEnabled);				//See if DMP was running
 	if (*dmpEnabled == 1)						//If it was
 		mpu_set_dmp_state(0);					//Stop DMP
+	return *dmpEnabled;
 }
 
 /*
 * Function: 
-* void imuDmpStart(void)
+* unsigned char imuDmpStart(void)
 *
 * If Digital Motion Processing is not running on the IMU then Start it. imuDmpInit() MUST be run
 * first! (only once)
@@ -221,7 +197,7 @@ void imuDmpStop(void)
 * none
 *
 * Returns:
-* none
+* 1 if the DMP was already running before starting it.
 *
 * Implementation:
 * Both imuInit() and imuDmpInit() have to have been run first before this function will can run.
@@ -232,13 +208,14 @@ void imuDmpStop(void)
 * so that this function won't run without that having being done so. Have an error return value.
 *
 */
-void imuDmpStart(void)
+unsigned char imuDmpStart(void)
 {
-	int* dmpEnabled = 0;
+	unsigned char* dmpEnabled = 0;
 	
 	mpu_get_dmp_state(dmpEnabled);				//See if DMP was already running
 	if (*dmpEnabled == 0)						//If it wasn't
-		mpu_set_dmp_state(1);						//Start DMP
+		mpu_set_dmp_state(1);					//Start DMP
+	return *dmpEnabled;	
 }
 
 /*
@@ -437,33 +414,61 @@ int delay_ms(uint32_t period_ms)
 * flag isn't set until all bytes have been sent and the transmission holding register is clear.
 *
 */
+#if defined ROBOT_TARGET_V1
 char twi_write_imu(unsigned char slave_addr, unsigned char reg_addr, 
 					unsigned char length, unsigned char const *data)
 {
 	//note txcomp MUST = 1 before writing (according to datasheet)
-	REG_TWI2_CR |= TWI_CR_MSEN | TWI_CR_SVDIS;	//Enable master mode
-	REG_TWI2_MMR
-		=	TWI_MMR_DADR(slave_addr)			//Slave device address
-		|	TWI_MMR_IADRSZ_1_BYTE;				//Set register address length to 1 byte
-	REG_TWI2_IADR = reg_addr;					//set register address to write to
+	twi2MasterMode;								//Enable master mode
+	twi2SetSlave(slave_addr);					//Slave device address
+	twi2RegAddrSize(1);							//Set register address length to 1 byte
+	twi2RegAddr(reg_addr);						//set register address to write to
 
 	if(length == 1)
 	{
-		REG_TWI2_THR = data[0];					//set up data to transmit
-		REG_TWI2_CR = TWI_CR_STOP;				// Send a stop bit
-		while(!IMU_TXRDY);						//while Transmit Holding Register not ready. wait.
+		twi2Send(data[0]);						//set up data to transmit
+		twi2Stop;								// Send a stop bit
+		while(!twi2TxReady);					//while Transmit Holding Register not ready. wait.
+		} else {
+		for(unsigned char b = 0; b < length; b++)//Send data bit by bit until data length is reached
+		{
+			twi2Send(data[b]);					//set up data to transmit
+			while(!twi2TxReady);				//while Transmit Holding Register not ready. wait.
+		}
+		twi2Stop;								// Send a stop bit
+	}
+	while(!twi2TxComplete);						//while transmit not complete. wait.
+	return 0;
+}
+#endif
+
+#if defined ROBOT_TARGET_V2
+char twi_write_imu(unsigned char slave_addr, unsigned char reg_addr,
+					unsigned char length, unsigned char const *data)
+{
+	//note txcomp MUST = 1 before writing (according to datasheet)
+	twi0MasterMode;								//Enable master mode
+	twi0SetSlave(slave_addr);					//Slave device address
+	twi0RegAddrSize(1);							//Set register address length to 1 byte
+	twi0RegAddr(reg_addr);						//set register address to write to
+
+	if(length == 1)
+	{
+		twi0Send(data[0]);						//set up data to transmit
+		twi0Stop;								// Send a stop bit
+		while(!twi0TxReady);					//while Transmit Holding Register not ready. wait.
 	} else {
 		for(unsigned char b = 0; b < length; b++)//Send data bit by bit until data length is reached
 		{
-			REG_TWI2_THR = data[b];				//set up data to transmit
-			while(!IMU_TXRDY);					//while Transmit Holding Register not ready. wait.
+			twi0Send(data[b]);					//set up data to transmit
+			while(!twi0TxReady);				//while Transmit Holding Register not ready. wait.
 		}
-	
-		REG_TWI2_CR = TWI_CR_STOP;				// Send a stop bit
+		twi0Stop;								// Send a stop bit
 	}
-	while(!IMU_TXCOMP);							//while transmit not complete. wait.
+	while(!twi0TxComplete);						//while transmit not complete. wait.
 	return 0;
 }
+#endif
 
 /*
 * Function: char twi_read_imu(unsigned char slave_addr, unsigned char reg_addr,
@@ -494,48 +499,78 @@ char twi_write_imu(unsigned char slave_addr, unsigned char reg_addr,
 * Improvements:
 * Could use a timeout feature with the return of a non-zero value if the slave device doesn't
 * reply in time (TXCOMP loops). This would stop the code hanging in an endless loop if the IMU 
-* decides to stop talking.
+* decides to stop talking. Additionally, non zero value returned on error.
 *
 */
-char twi_read_imu(unsigned char slave_addr, unsigned char reg_addr, 
+#if defined ROBOT_TARGET_V1
+char twi_read_imu(unsigned char slave_addr, unsigned char reg_addr,
 					unsigned char length, unsigned char *data)
 {
-	REG_TWI2_CR
-	|=	TWI_CR_MSEN						//Enable master mode
-	|	TWI_CR_SVDIS;					//Disable slave mode
-	REG_TWI2_MMR
-	=	TWI_MMR_DADR(slave_addr)		//Slave device address
-	|	(TWI_MMR_MREAD)					//Set to read from register
-	|	TWI_MMR_IADRSZ_1_BYTE;			//Register addr byte length (0-3)
-	REG_TWI2_IADR = reg_addr;			//set up address to read from
+	twi2MasterMode;						//Enable master mode
+	twi2SetSlave(slave_addr);			//Slave device address
+	twi2SetReadMode;					//Set to read from register
+	twi2RegAddrSize(1);					//Register addr byte length (0-3)
+	twi2RegAddr(reg_addr);				//set up address to read from
+	
+	if (length == 1)					//If reading one byte, then START and STOP bits need to be
+	//set at the same time
+	{
+		twi2StartSingle;				//Send START & STOP condition as required (single byte read)
+		while(!twi2RxReady);			//while Receive Holding Register not ready. wait.
+		data[0] = twi2Receive;			//store data received
+		while(!twi2TxComplete);			//while transmit not complete. wait.
+		return 0;
+	} else {
+		twi2Start;						//Send start bit
+		for(unsigned char b = 0; b < length; b++)
+		{
+			while(!twi0RxReady);
+			data[b] = twi2Receive;
+			if(b == length - 2)
+			twi2Stop;					//Send stop on reception of 2nd to last byte
+		}
+		while(!twi2TxComplete);				//while transmit not complete. wait.
+	}
+	return 0;
+}
+#endif
+
+#if defined ROBOT_TARGET_V2
+char twi_read_imu(unsigned char slave_addr, unsigned char reg_addr,
+					unsigned char length, unsigned char *data)
+{
+	twi0MasterMode;						//Enable master mode
+	twi0SetSlave(slave_addr);			//Slave device address
+	twi0SetReadMode;					//Set to read from register
+	twi0RegAddrSize(1);					//Register addr byte length (0-3)
+	twi0RegAddr(reg_addr);				//set up address to read from
 	
 	if (length == 1)					//If reading one byte, then START and STOP bits need to be
 										//set at the same time
 	{
-		REG_TWI2_CR
-		=	TWI_CR_START
-		|	TWI_CR_STOP;				//Send START & STOP condition as required (single byte read)	
-		while(!IMU_RXRDY);				//while Receive Holding Register not ready. wait.
-		data[0] = REG_TWI2_RHR;			//store data received		
-		while(!IMU_TXCOMP);				//while transmit not complete. wait.
+		twi0StartSingle;				//Send START & STOP condition as required (single byte read)
+		while(!twi0RxReady);			//while Receive Holding Register not ready. wait.
+		data[0] = twi0Receive;			//store data received
+		while(!twi0TxComplete);			//while transmit not complete. wait.
 		return 0;
 	} else {
-		REG_TWI2_CR = TWI_CR_START;		//Send start bit
+		twi0Start;						//Send start bit
 		for(unsigned char b = 0; b < length; b++)
 		{
-			while(!IMU_RXRDY);
-			data[b] = REG_TWI2_RHR;
-			if(b == length-2)
-				REG_TWI2_CR = TWI_CR_STOP;//Send stop on reception of 2nd to last byte
+			while(!twi0RxReady);
+			data[b] = twi0Receive;
+			if(b == length - 2)
+			twi0Stop;					//Send stop on reception of 2nd to last byte
 		}
-		while(!IMU_TXCOMP);				//while transmit not complete. wait.
+		while(!twi0TxComplete);				//while transmit not complete. wait.
 	}
 	return 0;
 }
+#endif
 
 /*
 * Function:
-* char imuCommTest(void)
+* uint8_t imuCommTest(void)
 *
 * Accesses the IMU on TWI2 to retrieve test character from test register....
 *
@@ -547,30 +582,25 @@ char twi_read_imu(unsigned char slave_addr, unsigned char reg_addr,
 *
 * Implementation:
 * - Disable DMP if necessary
-* - Send byte to desired register
-* - Reenable DMP if enabled beforehand
+* - Send byte to WHO AM I register on IMU
+* - Re-enable DMP if enabled beforehand
 * - Return value retrieved from IMU. Should return 0x71 if communication successful.
-*
-* Improvements:
-* [Ideas for improvements that are yet to be made](optional)
 *
 */
 uint8_t imuCommTest(void)
 {
-	int* dmpEnabled = 0;
-	char* returnVal = 0;
+	int dmpEnabled = 0;
+	unsigned char* returnVal = 0;
 	
-	mpu_get_dmp_state(dmpEnabled);				//See if DMP was running
-	if (*dmpEnabled == 1)						//If it was
-		mpu_set_dmp_state(0);					//Disable DMP
+	dmpEnabled = imuDmpStop();		//Stop DMP. Returns 1 if DMP was running.
 		
 	//Request test byte
 	twi_read_imu(TWI2_IMU_ADDR, IMU_WHOAMI_REG, 1, returnVal);
 
-	if (*dmpEnabled == 1)						//If DMP was running before this function began
-		mpu_set_dmp_state(1);					//Re-enable DMP
+	if (dmpEnabled == 1)			//If DMP was running before this function began
+		imuDmpStart();				//Restart the DMP
 		
-	return returnVal;
+	return *returnVal;				//return 0x71 on success
 }
 
 /*
@@ -599,11 +629,15 @@ void TC0_Handler()
 	if(REG_TC0_SR0 & TC_SR_CPCS)									//If RC compare flag
 	{
 		systemTimestamp++;
+//V1 robot doesn't have the IMU's interrupt pin tied in to the uC, so the FIFO will have to be
+//polled. V2 does utilise an external interrupt, so this code is not necessary.
+#if defined ROBOT_TARGET_V1
 		//Read IMUs FIFO every 5ms. In future this will be done from an external interrupt.
-		if(systemTimestamp >= (check_IMU_FIFO + 5))					
+		if(systemTimestamp >= (checkImuFifo + 5))					
 		{
-			check_IMU_FIFO = systemTimestamp;
+			checkImuFifo = systemTimestamp;
 		}
+#endif
 	}
 }
 

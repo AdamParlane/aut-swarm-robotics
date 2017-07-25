@@ -47,7 +47,7 @@
 *	and Light Sensors
 *	1.3uSec = ((x * 2^CKDIV)+4) * 10nSec[100MHz]
 *	0.6uSec = ((x * 2^CKDIV)+4) * 10nSec[100MHz]
-* - Make TWI0 master on the TWI bus
+* - Make uC master on the TWI bus
 *
 */
 void twi0Init(void)
@@ -55,9 +55,8 @@ void twi0Init(void)
 	REG_PMC_PCER0
 	|=	(1<<ID_TWI0);						//Enable clock access to TWI0, Peripheral TWI0_ID = 19
 	REG_PIOA_PDR
-	|=	PIO_PDR_P3;							// Enable peripheralA control of PA3 (TWD0)
-	REG_PIOA_PDR
-	|=	PIO_PDR_P4;							// Enable peripheralA control of PA4 (TWCK0)
+	|=	PIO_PDR_P3							// Enable peripheralA control of PA3 (TWD0)
+	|	PIO_PDR_P4;							// Enable peripheralA control of PA4 (TWCK0)
 	twi0Reset;								//Software reset
 
 	//TWI0 Clock Waveform Setup
@@ -66,6 +65,48 @@ void twi0Init(void)
 	|	TWI_CWGR_CLDIV(63)					//Clock low period 1.3uSec
 	|	TWI_CWGR_CHDIV(28);					//Clock high period  0.6uSec
 	twi0MasterMode;							//Master mode enabled, slave disabled
+}
+
+/*
+* Function:
+* void twi2Init(void);
+*
+* Initialises TWI2. Master clock should be setup first.
+*
+* Inputs:
+* none
+*
+* Returns:
+* none
+*
+* Implementation:
+* - Supply master clock to TWI2 peripheral
+* - Set PB0(Data) and PB1(Clock) to peripheral B mode (TWI)
+* - Set the high and low periods of the TWI clock signal using formula from datasheet
+*	NOTE: A high period of 0.6uSec and a low period of 1.3uSec is required by IMU on TWI2
+*	1.3uSec = ((x * 2^CKDIV)+4) * 10nSec[100MHz]
+*	0.6uSec = ((x * 2^CKDIV)+4) * 10nSec[100MHz]
+* - Make uC master on the TWI bus
+*
+*/
+void twi2Init(void)
+{
+	REG_PMC_PCER0
+	|=	(1<<ID_TWI2);						//Enable clock access to TWI2, Peripheral TWI2_ID = 22
+	REG_PIOB_PDR
+	|=	PIO_PDR_P0							//Enable peripheralB control of PB0 (TWD2)
+	|	PIO_PDR_P1;							//Enable peripheralB control of PB1 (TWCK2)
+	REG_PIOB_ABCDSR
+	|=	PIO_ABCDSR_P0						//Set peripheral B
+	|	PIO_ABCDSR_P1;
+	twi2Reset;								//Software Reset
+	
+	//TWI2 Clock Waveform Setup.
+	REG_TWI2_CWGR
+	|=	TWI_CWGR_CKDIV(1)					//Clock speed 400000, fast mode
+	|	TWI_CWGR_CLDIV(63)					//Clock low period 1.3uSec
+	|	TWI_CWGR_CHDIV(28);					//Clock high period  0.6uSec
+	twi2MasterMode;							//Master mode enabled, slave disabled
 }
 
 /*
