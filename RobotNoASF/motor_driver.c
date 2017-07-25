@@ -9,8 +9,10 @@
 * Provides functions for controlling the motors and moving the robot.
 *
 * More Info:
-* Atmel SAM 4N Processor Datasheet:http://www.atmel.com/Images/Atmel-11158-32-bit%20Cortex-M4-Microcontroller-SAM4N16-SAM4N8_Datasheet.pdf
-* BD6211 Motor driver Datasheet:http://rohmfs.rohm.com/en/products/databook/datasheet/ic/motor/dc/bd621x-e.pdf
+* Atmel SAM 4N Processor Datasheet:
+http://www.atmel.com/Images/Atmel-11158-32-bit%20Cortex-M4-Microcontroller-SAM4N16-SAM4N8_Datasheet.pdf
+* BD6211 Motor driver Datasheet:
+http://rohmfs.rohm.com/en/products/databook/datasheet/ic/motor/dc/bd621x-e.pdf
 *
 * Functions:
 * void motor_init(void);
@@ -20,6 +22,13 @@
 * void dockRobot(void);
 * void setTestMotors(uint8_t motorData[]);
 *
+* The 3 motors are driven by 1 H-Bridge each with a differential output on pins OUT1 & OUT2
+* This controls the speed and direction of the motor
+* The H-Bridges are controlled by the micro using 3 Pins per H-Bridge and PWM
+* Each H-Bridge uses FIN_x, RIN_x & VREF_x (where x is the motor number)
+* FIN and RIN control the motor direction, 1 and only 1 must be high to enable the desired direction
+* VREF uses PWM with duty cycle 0-100(%) to set the speed of the motor
+* 
 */
  
 ///////////////Includes/////////////////////////////////////////////////////////////////////////////
@@ -30,7 +39,7 @@
 * Function:
 * void motor_init(void)
 *
-* Initialises microcontroller's PWM feature and PIO on the pins connected to the motor drivers.
+* Initializes micro controller's PWM feature and PIO on the pins connected to the motor drivers.
 *
 * Inputs:
 * none
@@ -39,11 +48,28 @@
 * none
 *
 * Implementation:
-* [explain key steps of function]
-* [use heavy detail for anything complicated]
+* Firstly for ROBOT V1 PB12 is used as FIN_1, this is the erase pin
+* so the erase functionality is disabled to allow PIO access of PB12
+* The PMC is then given master clock access to PWM (PCER0 PID31)
+* Motor 1 uses channel 3, motor 2 on channel 2 and motor 3 on channel 1
+* In the PWM Channel Mode Register (PWM_CMRx) the following are set
+* For each channel the prescale is set to CLK/1
+* The PWM output starts at high level (this shouldnt make a difference in the program, high or low)
+* The output is left aligned (again this could go either way as long as its consistent)
+* Most importantly we want to update the DUTY CYCLE not the period in order to change the motors'
+* speeds easily
+* The starting duty cycle is set to 0 in PWM_CDTYx as the motors are to initialize as off
+* The PWM counter is set to 100, this allows the duty cycle to simply be a percentage
+* Using the PIOx_PDR control of VREFx is given to the peripheral, 
+* the next line states that peripheral is PWM peripheral B (same for all channels)
 *
+* Now that PWM is setup PIO is used to PIO control of FIN_x and RIN_x 
+* Then the Output Enable Register (OER) is used to enable FIN_x and RIN_x as outputs
+* 
+* Now that everything is setup the PWM channels are enabled with the PWM_ENA registers
+
 * Improvements:
-* [Ideas for improvements that are yet to be made](optional)
+* TODO: convert code to be using the SAM4N macros
 *
 */
 void motor_init(void)
@@ -51,7 +77,7 @@ void motor_init(void)
 #if defined ROBOT_TARGET_V1
 	REG_CCFG_SYSIO |= CCFG_SYSIO_SYSIO12; //disable erase pin to give access to PB12 via PIO
 #endif
-	REG_PMC_PCER0 |= (1<<31);		//Enable clock access for PWM
+	REG_PMC_PCER0 |= PMC_PCER0_PID31;	//Enable clock access for PWM
 	
 	//****Channel 3 (Motor 1)****//
 	REG_PWM_CMR3 |= (0x4<<0);		//Channel pre scale CLK by 16 = 24.4KHz
@@ -138,11 +164,24 @@ void motor_init(void)
 *	none
 *
 * Implementation:
-* [explain key steps of function]
-* [use heavy detail for anything complicated]
+* The direction is kept in range of +/-180 by removing whole chunks of 360 deg to it
+* The speed is also limited at 100, so any speed over 100 is set to 100
+* The direction is then converted to radians to allow smooth working with cos()
+* Each motors' speed is calculated using the FORWARD DRIVE DIRECTION of the motor, with respect to
+* the front face of the robot
+* These are:	Motor 1		270 deg
+*				Motor 2		30  deg
+*				Motor 3		150 deg
+* The robot speed is then cos(motor direction - desired robot direction) (performed in radians)
+* This will produce a ratio up to 1 of the full speed in order to achieve the correct direction
+* This is also multiplied by the desired speed to achieve an overall robot speed
+* The long part with if statments simply turns on the correct FIN and RIN pins to achieve the 
+* desired MOTOR direction, this is based off the speed calculation which could return negative
+* Finally the ABSOLUTE value of the motorxspeed is written to the PWM_CUPD register to update
+* the duty cycle.
 *
 * Improvements:
-* [Ideas for improvements that are yet to be made](optional)
+* None as of 26/7/17
 *
 */
 void moveRobot(float direction, unsigned char speed)
@@ -243,11 +282,14 @@ void moveRobot(float direction, unsigned char speed)
 * none
 *
 * Implementation:
-* [explain key steps of function]
-* [use heavy detail for anything complicated]
+* To rotate Clockwise (CW) all FIN should be LOW and all RIN HIGH (all motors spin in reverse)
+* To rotate Counterclockwise (CCW) all FIN should be HIGH and all RIN LOW (all motors forward)
+* This is set with 2 simple if statements
+* All motors should spin at the same speed which is simply the input arguement speed
+* This is used to update the duty cycle using PWM_CUPD
 *
 * Improvements:
-* [Ideas for improvements that are yet to be made](optional)
+* None as of 26/7/17
 *
 */
 void rotateRobot(char direction, unsigned char speed)
@@ -274,11 +316,12 @@ void rotateRobot(char direction, unsigned char speed)
 	REG_PWM_CUPD1 = speed;
 	REG_PWM_CUPD2 = speed;
 	REG_PWM_CUPD3 = speed;	
-	char hello;
 }
 
 /*
-* Function:
+*******************WIP******************
+* 
+Function:
 * void dockRobot(void)
 *
 * Function to guide the robot to the dock.
@@ -392,8 +435,14 @@ void stopRobot(void)
 * none
 *
 * Implementation:
-* [explain key steps of function]
-* [use heavy detail for anything complicated]
+* For the robot test motorData[0] describes which motor to test
+* motorData[1] describes both the speed (bits 0-6) and direction (bit 7) of the motor
+* The speed must be 0-100
+* The direction can be set meaning forward or cleared meaning reverse
+* Each if statement is checking which motor and which direction
+* Once the correct if statement is entered it will set the correct motor and direction
+* The speed will be used to update the duty cycle 
+* with bit masking to ensure only the first 7 bits are used
 *
 * Improvements:
 * Maybe some of the PWM registers could be given more read-friendly names?
@@ -431,7 +480,7 @@ void setTestMotors(uint8_t motorData[])
 		RIN_3_L;
 		REG_PWM_CUPD3 = (motorData[1] & 0x7F);
 	}
-	else if(motorData[0] == MOTOR_1 && ~(motorData[1] & 0x80))
+	else if(motorData[0] == MOTOR_3 && ~(motorData[1] & 0x80))
 	{
 		FIN_3_L;
 		RIN_3_H;

@@ -43,15 +43,15 @@
 #define	RIN_1_L	(REG_PIOC_CODR |= (1<<22))
 #define	RIN_1_H	(REG_PIOC_SODR |= (1<<22))
 //Motor 2
-#define	RIN_2_L	(REG_PIOA_CODR |= (1<<31))
-#define	RIN_2_H	(REG_PIOA_SODR |= (1<<31))
 #define	FIN_2_L	(REG_PIOC_CODR |= (1<<19))
 #define	FIN_2_H	(REG_PIOC_SODR |= (1<<19))
+#define	RIN_2_L	(REG_PIOA_CODR |= (1<<31))
+#define	RIN_2_H	(REG_PIOA_SODR |= (1<<31))
 //Motor 3
-#define	RIN_3_L	(REG_PIOA_CODR |= (1<<29))
-#define	RIN_3_H	(REG_PIOA_SODR |= (1<<29))
-#define	FIN_3_L	(REG_PIOA_CODR |= (1<<30))
-#define	FIN_3_H	(REG_PIOA_SODR |= (1<<30))
+#define	FIN_3_L	(REG_PIOA_CODR |= (1<<29))
+#define	FIN_3_H	(REG_PIOA_SODR |= (1<<29))
+#define	RIN_3_L	(REG_PIOA_CODR |= (1<<30))
+#define	RIN_3_H	(REG_PIOA_SODR |= (1<<30))
 #endif
 //	Robot Version 2 pin assignment
 #if defined ROBOT_TARGET_V2
@@ -61,15 +61,15 @@
 #define	RIN_1_L	(REG_PIOC_CODR |= (1<<22))
 #define	RIN_1_H	(REG_PIOC_SODR |= (1<<22))
 //Motor 2
-#define	RIN_2_L	(REG_PIOA_CODR |= (1<<31))
-#define	RIN_2_H	(REG_PIOA_SODR |= (1<<31))
 #define	FIN_2_L	(REG_PIOC_CODR |= (1<<19))
 #define	FIN_2_H	(REG_PIOC_SODR |= (1<<19))
+#define	RIN_2_L	(REG_PIOA_CODR |= (1<<31))
+#define	RIN_2_H	(REG_PIOA_SODR |= (1<<31))
 //Motor 3
-#define	FIN_3_L	(REG_PIOC_CODR |= (1<<10))
-#define	FIN_3_H	(REG_PIOC_SODR |= (1<<10))
-#define	RIN_3_L	(REG_PIOA_CODR |= (1<<29))
-#define	RIN_3_H	(REG_PIOA_SODR |= (1<<29))
+#define	FIN_3_L	(REG_PIOA_CODR |= (1<<29))
+#define	FIN_3_H	(REG_PIOA_SODR |= (1<<29))
+#define	RIN_3_L	(REG_PIOC_CODR |= (1<<10))
+#define	RIN_3_H	(REG_PIOC_SODR |= (1<<10))
 #endif
 
 
@@ -112,7 +112,7 @@ void moveRobot(float direction, unsigned char speed);
 * Function:
 * void rotateRobot(char direction, unsigned char speed)
 *
-* Will rotate the robot on the spot in the given direcion and relative speed.
+* Will rotate the robot on the spot in the given direction and relative speed.
 *
 * Inputs:
 * char direction
@@ -126,9 +126,6 @@ void moveRobot(float direction, unsigned char speed);
 * Implementation:
 * [explain key steps of function]
 * [use heavy detail for anything complicated]
-*
-* Improvements:
-* [Ideas for improvements that are yet to be made](optional)
 *
 */
 void rotateRobot(char direction, unsigned char speed);
