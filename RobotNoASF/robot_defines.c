@@ -59,7 +59,7 @@ void masterClockInit(void)
 {
 	REG_EFC_FMR
 	=	(1<<26)					//Opcode loop optimisation enabled
-	|	(5<<8));				//Set Flash Wait State for 100MHz (5 cycles for read write
+	|	(5<<8);				//Set Flash Wait State for 100MHz (5 cycles for read write
 	//operations to flash
 	REG_PMC_WPMR
 	=	0x504D4300;				//Disable PMC write protect
