@@ -66,10 +66,10 @@
 #define	FIN_2_L	(REG_PIOC_CODR |= (1<<19))
 #define	FIN_2_H	(REG_PIOC_SODR |= (1<<19))
 //Motor 3
-#define	RIN_3_L	(REG_PIOC_CODR |= (1<<10))
-#define	RIN_3_H	(REG_PIOC_SODR |= (1<<10))
-#define	FIN_3_L	(REG_PIOA_CODR |= (1<<30))
-#define	FIN_3_H	(REG_PIOA_SODR |= (1<<30))
+#define	FIN_3_L	(REG_PIOC_CODR |= (1<<10))
+#define	FIN_3_H	(REG_PIOC_SODR |= (1<<10))
+#define	RIN_3_L	(REG_PIOA_CODR |= (1<<29))
+#define	RIN_3_H	(REG_PIOA_SODR |= (1<<29))
 #endif
 
 

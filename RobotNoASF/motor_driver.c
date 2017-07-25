@@ -48,7 +48,9 @@
 */
 void motor_init(void)
 {
+#if defined ROBOT_TARGET_V1
 	REG_CCFG_SYSIO |= CCFG_SYSIO_SYSIO12; //disable erase pin to give access to PB12 via PIO
+#endif
 	REG_PMC_PCER0 |= (1<<31);		//Enable clock access for PWM
 	
 	//****Channel 3 (Motor 1)****//
@@ -61,8 +63,14 @@ void motor_init(void)
 		
 	REG_PIOC_PDR |= (1<<21);		//Enable peripheral control of PC21
 	REG_PIOC_ABCDSR = (1<<21);		//Assign PC21 to PWM Peripheral B		
+#if defined ROBOT_TARGET_V1
 	REG_PIOB_PER |= (1<<12);		//Enable PIO control of PB12
 	REG_PIOB_OER |= (1<<12);		//Set PB12 as output
+#endif
+#if defined ROBOT_TARGET_V2
+	REG_PIOC_PER |= (1<<23);		//Enable PIO control of PB12
+	REG_PIOC_OER |= (1<<23);		//Set PB12 as output
+#endif
 	FIN_1_L;		
 	REG_PIOC_PER |= (1<<22);		//Enable PIO control of PC22
 	REG_PIOC_OER |= (1<<22);		//Set PC22 as output
@@ -95,11 +103,17 @@ void motor_init(void)
 		
 	REG_PIOC_PDR |= (1<<9);			//Enable peripheral control of PC9
 	REG_PIOC_ABCDSR = (1<<9);		//Assign PC9 to PWM Peripheral B		
-	REG_PIOA_PER |= (1<<30);		//Enable PIO control of PA30
-	REG_PIOA_OER |= (1<<30);		//Set PA30 as output
+	REG_PIOA_PER |= (1<<29);		//Enable PIO control of PA30
+	REG_PIOA_OER |= (1<<29);		//Set PA30 as output
 	RIN_3_L;		
-	REG_PIOA_PER |= (1<<29);		//Enable PIO control of PA29
-	REG_PIOA_OER |= (1<<29);		//Set PA29 as output
+#if defined ROBOT_TARGET_V1
+	REG_PIOA_PER |= (1<<30);		//Enable PIO control of PA29
+	REG_PIOA_OER |= (1<<30);		//Set PA29 as output
+#endif
+#if defined ROBOT_TARGET_V2
+	REG_PIOC_PER |= (1<<10);		//Enable PIO control of PC10
+	REG_PIOC_OER |= (1<<10);		//Set PC10 as output
+#endif
 	FIN_3_L;
 	
 	//****Enable PWM Channels as last step of setup****//	
@@ -260,6 +274,7 @@ void rotateRobot(char direction, unsigned char speed)
 	REG_PWM_CUPD1 = speed;
 	REG_PWM_CUPD2 = speed;
 	REG_PWM_CUPD3 = speed;	
+	char hello;
 }
 
 /*
