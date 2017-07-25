@@ -1,16 +1,68 @@
+/*
+* main.c
+*
+* Author : et. al
+* Created: Unknown
+*
+* Project Repository: https://github.com/AdamParlane/aut-swarm-robotics
+*
+* main c file for robot source code for BE (Hons) / BEng Tech Final year industrial project 2017
+*
+* More Info:
+* Atmel SAM 4N Processor Datasheet:http://www.atmel.com/Images/Atmel-11158-32-bit%20Cortex-M4-Microcontroller-SAM4N16-SAM4N8_Datasheet.pdf
+* Relevant reference materials or datasheets if applicable
+*
+* Functions:
+* int main(void)
+* void setup(void)
+*/
+
+///////////////Includes/////////////////////////////////////////////////////////////////////////////
 #include "robot_defines.h"
 
-
-void setup(void);
-
+///////////////Defines//////////////////////////////////////////////////////////////////////////////
 #define		batteryLow	1
 #define		streamIntervalFlag	1
 
-
-/******** Global Variables ********/
+///////////////Global variables/////////////////////////////////////////////////////////////////////
 uint8_t SBtest, SBtest1;
 uint16_t DBtest, DBtest1, DBtest2;
 
+///////////////Functions////////////////////////////////////////////////////////////////////////////
+/*
+* Function:
+* void setup(void)
+*
+* The initialisation routine for all hardware in the robot.
+*
+* Inputs:
+* none
+*
+* Returns:
+* none
+*
+*/
+void setup(void);
+
+/*
+* Function:
+* int main(void)
+*
+* Overview of robot code execution
+*
+* Inputs:
+* none
+*
+* Returns:
+* N/A
+*
+* Implementation:
+* [[[[[WIP]]]]]
+*
+* Improvements:
+* Yes.
+*
+*/
 int main(void)
 {
 	setup();
@@ -79,10 +131,11 @@ int main(void)
 *
 * Implementation:
 * Contains functions which systematically set up each peripheral and hardware device connected to
-* the robot's micro controller.
+* the robot's micro controller. Click on a function and press 'Alt + G' to open the file where it
+* is kept (if using Atmel Studio)
 *
 * Improvements:
-* 
+* Maybe
 *
 */
 void setup(void)
@@ -95,7 +148,6 @@ void setup(void)
 	ledInit();							//Initialise the LEDs on the mid board
 	motor_init();						//Initialise the motor driver chips
 	SPI_Init();							//Initialise SPI for talking with optical sensor
-	CommunicationSetup();				//Initialise communication system
 	twi0Init();							//Initialise TWI0 interface
 	twi2Init();							//Initialise TWI2 interface
 	lightSensInit(MUX_LIGHTSENS_R);		//Initialise Right Light/Colour sensor
@@ -107,7 +159,8 @@ void setup(void)
 	proxSensInit(MUX_PROXSENS_E);		//Initialise proximity sensor on panel E
 	proxSensInit(MUX_PROXSENS_F);		//Initialise proximity sensor on panel F
 	fcInit();							//Initialise the fast charge chip
-	imuInit();							//Initialise IMU
+	CommunicationSetup();				//Initialise communication system
+	//imuInit();						//Initialise IMU [WIP/Untested]
 	//mouseInit();						//May require further testing - Adam
 }
 
