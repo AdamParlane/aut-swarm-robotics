@@ -14,7 +14,9 @@
 * Atmel SAM 4N Processor Datasheet:http://www.atmel.com/Images/Atmel-11158-32-bit%20Cortex-M4-Microcontroller-SAM4N16-SAM4N8_Datasheet.pdf
 *
 * Functions:
-* uint16_t adcRead(uint8_t channel)
+* void masterClockInit(void)
+* void pioInit(void)
+* void ledInit(void)
 *
 */
 
@@ -24,6 +26,7 @@
 ///////////////Includes/////////////////////////////////////////////////////////////////////////////
 #include "spi.h"
 #include "sam.h"
+#include "adc_interface.h"
 #include "imu_interface.h"
 #include "opt_interface.h"
 #include "motor_driver.h"
@@ -34,6 +37,7 @@
 #include "line_sens_interface.h"
 #include "communication.h"
 #include "testFunctions.h"
+#include "docking_functions.h"
 
 ///////////////Defines//////////////////////////////////////////////////////////////////////////////
 //LED control macros
@@ -44,34 +48,8 @@
 #define	ledOn2 		(REG_PIOC_SODR |= (1<<8))
 #define	ledOn3 		(REG_PIOA_SODR |= (1<<27))
 
-//Analogue to digital conversion
-//	Macros
-#define adcStartConv			(REG_ADC_CR |= ADC_CR_START)	//Start ADC conversion
-#define adcEnableChan(value)	(REG_ADC_CHER = (1<<(value)))	//Enable ADC channel for conversion
-#define adcDisableChan(value)	(REG_ADC_CHDR = (1<<(value)))	//Disable ADC channel
-#define adcData					(REG_ADC_LCDR)					//Last sampled ADC value
-#define adcDataReady			(REG_ADC_ISR & ADC_ISR_DRDY)	//ADC conversion complete
-//	ADC channel defines
-//		Line follower ADC channels version 1 robot
-#if defined ROBOT_TARGET_V1
-#define LF0_ADC_CH			13	// Far left
-#define LF1_ADC_CH			15	// Center left
-#define LF2_ADC_CH			0	// Center right
-#define LF3_ADC_CH			8	// Far right
-#endif
-//		Line follower ADC channels version 2 robot
-#if defined ROBOT_TARGET_V2
-#define LF0_ADC_CH			13	// Far left
-#define LF1_ADC_CH			15	// Center left
-#define LF2_ADC_CH			0	// Center right
-#define LF3_ADC_CH			7	// Far right
-#endif
-//		Fast charge chip ADC channels
-#define FC_BATVOLT_ADC_CH	14	// Battery voltage level
-#define FC_BATTEMP_ADC_CH	9	// Battery temperature
-
 //Universal Asynchronous Receiver/Transmitter
-#define TXRDY (REG_UART3_SR & UART_SR_TXRDY)		//UART TX READY flag
+#define TXRDY (REG_UART3_SR & UART_SR_TXRDY)	//UART TX READY flag [SHOULD BE IN COMMUNICATIONS]
 
 //If robot target compiler symbol is not present, then throw an error.
 #if !defined ROBOT_TARGET_V1 && !defined ROBOT_TARGET_V2
@@ -114,18 +92,49 @@ char robotState ;
 ///////////////Functions////////////////////////////////////////////////////////////////////////////
 /*
 * Function:
-* uint16_t adcRead(uint8_t channel)
+* void masterClockInit(void)
 *
-* Will read the instantaneous value of the given analogue to digital converter channel.
+* Initialises the master clock to 100MHz. The master clock is the clock source that drives all the
+* peripherals in the micro controller.
 *
 * Inputs:
-* uint8_t channel
-*   Channel number of the desired ADC channel (0-15)
+* none
 *
 * Returns:
-* 12bit value of the ADC channel in question (0-4095)
+* none
 *
 */
-uint16_t adcRead(uint8_t channel);
+void masterClockInit(void);
+
+/*
+* Function:
+* void pioInit(void)
+*
+* Supplies master clock to the three parallel I/O controllers (A, B and C) and disables write
+* protection on their configuration registers.
+*
+* Inputs:
+* none
+*
+* Returns:
+* none
+*
+*/
+void pioInit(void);
+
+/*
+* Function:
+* void ledInit(void)
+*
+* Initialises the PIO pins needed to use the LEDs. pioInit() MUST be run first.
+*
+* Inputs:
+* none
+*
+* Returns:
+* none
+*
+*/
+void ledInit(void);
 
 #endif /* ROBOTDEFINES_H_ */
