@@ -53,11 +53,11 @@
 #define	FIN_3_L	(REG_PIOA_CODR |= (1<<30))
 #define	FIN_3_H	(REG_PIOA_SODR |= (1<<30))
 #endif
-//	Robot Version 2 pin assignment (currently the same as V1. PLEASE UPDATE)
+//	Robot Version 2 pin assignment
 #if defined ROBOT_TARGET_V2
 //Motor 1
-#define	FIN_1_L	(REG_PIOB_CODR |= (1<<12))
-#define	FIN_1_H	(REG_PIOB_SODR |= (1<<12))
+#define	FIN_1_L	(REG_PIOC_CODR |= (1<<23))
+#define	FIN_1_H	(REG_PIOC_SODR |= (1<<23))
 #define	RIN_1_L	(REG_PIOC_CODR |= (1<<22))
 #define	RIN_1_H	(REG_PIOC_SODR |= (1<<22))
 //Motor 2
@@ -66,8 +66,8 @@
 #define	FIN_2_L	(REG_PIOC_CODR |= (1<<19))
 #define	FIN_2_H	(REG_PIOC_SODR |= (1<<19))
 //Motor 3
-#define	RIN_3_L	(REG_PIOA_CODR |= (1<<29))
-#define	RIN_3_H	(REG_PIOA_SODR |= (1<<29))
+#define	RIN_3_L	(REG_PIOC_CODR |= (1<<10))
+#define	RIN_3_H	(REG_PIOC_SODR |= (1<<10))
 #define	FIN_3_L	(REG_PIOA_CODR |= (1<<30))
 #define	FIN_3_H	(REG_PIOA_SODR |= (1<<30))
 #endif
