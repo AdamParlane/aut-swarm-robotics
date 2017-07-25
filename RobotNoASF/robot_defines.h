@@ -34,6 +34,7 @@
 #include "line_sens_interface.h"
 #include "communication.h"
 #include "testFunctions.h"
+#include "docking_functions.h"
 
 ///////////////Defines//////////////////////////////////////////////////////////////////////////////
 //LED control macros
