@@ -19,6 +19,8 @@
 * 
 * Functions:
 * int imuInit(void)
+* void imuDmpStop(void)
+* void imuDmpStart(void)
 * char twi_write_imu(unsigned char slave_addr, unsigned char reg_addr, 
 *						unsigned char length, unsigned char const *data)
 * char twi_read_imu(unsigned char slave_addr, unsigned char reg_addr, 
@@ -80,13 +82,6 @@ int imuInit(void)
 {
 	int result = 0;		//Return value (when not 0, errors are present)
 	
-	//Orientation correction matrix for the IMU
-	static signed char gyro_orientation[9] =
-	{	-1,	 0,	 0,
-		0,	-1,	 0,
-		0,	 0,	 1
-	};
-
 	//MICROCONTROLLER HW SETUP
 	/////TWI2////
 	REG_PMC_PCER0
@@ -137,15 +132,112 @@ int imuInit(void)
 	result += mpu_set_sample_rate(200);					// Set 200Hz samplerate (for accel and gyro)											
 	result += mpu_set_compass_sample_rate(100);			// Set 100Hz compass sample rate (max)
 	
+	return result;
+}
+
+/*
+* Function: int imuDmpInit(void)
+*
+* Initialises the DMP system and starts it on the IMU
+*
+* No input values
+*
+* Returns:
+* an integer that is the sum of the error values returned by the IMU and DMP drivers. (Should be
+* zero if no problems encountered)
+*
+* Implementation:
+* imuInit() NEEDS TO BE RUN FIRST.
+* gyro_orientation is a matrix that modifies the output of the IMU to suit its physical orientation.
+* The IMU drive is initialised first. The driver is told which sensors want to be used as well as
+* the desired sample rates. The configuration is read back for debug purposes.
+* Next the Direct Motion Processing firmware is loaded into the IMU. The orientation matrix is
+* converted to scalar format and sent to the IMU. Then the DMP is told to send low power quaternion
+* data obtained from 6 axes (3x accelerometer axes + 3x gyro axes)
+* Next the update rate of the first in first out buffer is set, and the DMP system is started on
+* the IMU.
+*
+*/
+int imuDmpInit(void)
+{
+	int result = 0;			//If > 0 then error has occurred
+	//Orientation correction matrix for the IMU
+	static signed char gyro_orientation[9] =
+	{	-1,	 0,	 0,
+		0,	-1,	 0,
+		0,	 0,	 1
+	};
 	result += dmp_load_motion_driver_firmware();		// Load the DMP firmware
 	//Send the orientation correction matrix
 	result += dmp_set_orientation(invOrientationMatrixToScalar(gyro_orientation));
-	//result += dmp_enable_feature(DMP_FEATURE_6X_LP_QUAT | DMP_FEATURE_SEND_RAW_ACCEL | 
+	//result += dmp_enable_feature(DMP_FEATURE_6X_LP_QUAT | DMP_FEATURE_SEND_RAW_ACCEL |
 	//								DMP_FEATURE_SEND_CAL_GYRO | DMP_FEATURE_GYRO_CAL);
 	result += dmp_enable_feature(DMP_FEATURE_6X_LP_QUAT);//Enable 6 axis low power quaternions
 	result += dmp_set_fifo_rate(200);					//200Hz update rate from the FIFO
 	result += mpu_set_dmp_state(1);						//Start DMP
-	return result;
+	return result
+}
+
+/*
+* Function:
+* void imuDmpStop(void)
+*
+* If Digital Motion Processing is running on the IMU then stop it. imuDmpInit() MUST be run
+* first! (only once)
+*
+* Inputs:
+* none
+*
+* Returns:
+* none
+*
+* Implementation:
+* Both imuInit() and imuDmpInit() have to have been run first before this function will can run.
+* First check if the DMP is running. If so then stop it, otherwise exit the function.
+*
+* Improvements:
+* Have a global flag that indicates that the IMU has been initialised and the DMP firmware loaded
+* so that this function won't run without that having being done so. Have an error return value.
+*
+*/
+void imuDmpStop(void)
+{
+	int* dmpEnabled = 0;
+		
+	mpu_get_dmp_state(dmpEnabled);				//See if DMP was running
+	if (*dmpEnabled == 1)						//If it was
+		mpu_set_dmp_state(0);					//Stop DMP
+}
+
+/*
+* Function: 
+* void imuDmpStart(void)
+*
+* If Digital Motion Processing is not running on the IMU then Start it. imuDmpInit() MUST be run
+* first! (only once)
+*
+* Inputs:
+* none
+*
+* Returns:
+* none
+*
+* Implementation:
+* Both imuInit() and imuDmpInit() have to have been run first before this function will can run.
+* First check if the DMP isn't running. If so then start it, otherwise exit the function.
+*
+* Improvements:
+* Have a global flag that indicates that the IMU has been initialised and the DMP firmware loaded
+* so that this function won't run without that having being done so. Have an error return value.
+*
+*/
+void imuDmpStart(void)
+{
+	int* dmpEnabled = 0;
+	
+	mpu_get_dmp_state(dmpEnabled);				//See if DMP was already running
+	if (*dmpEnabled == 0)						//If it wasn't
+		mpu_set_dmp_state(1);						//Start DMP
 }
 
 /*
