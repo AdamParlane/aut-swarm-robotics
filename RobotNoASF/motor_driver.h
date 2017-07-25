@@ -123,10 +123,6 @@ void moveRobot(float direction, unsigned char speed);
 * Returns:
 * none
 *
-* Implementation:
-* [explain key steps of function]
-* [use heavy detail for anything complicated]
-*
 */
 void rotateRobot(char direction, unsigned char speed);
 
@@ -141,14 +137,6 @@ void rotateRobot(char direction, unsigned char speed);
 *
 * Returns:
 * none
-*
-* Implementation:
-* assume max brightness is 0-100 (scale it to make this work)
-* [explain key steps of function]
-* [use heavy detail for anything complicated]
-*
-* Improvements:
-* [Ideas for improvements that are yet to be made](optional)
 *
 */
 void dockRobot(void);
