@@ -173,6 +173,12 @@
     </ToolchainSettings>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="adc_interface.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="adc_interface.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="communication.c">
       <SubType>compile</SubType>
     </Compile>

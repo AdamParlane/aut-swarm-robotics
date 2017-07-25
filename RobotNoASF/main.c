@@ -1,16 +1,68 @@
+/*
+* main.c
+*
+* Author : et. al
+* Created: Unknown
+*
+* Project Repository: https://github.com/AdamParlane/aut-swarm-robotics
+*
+* main c file for robot source code for BE (Hons) / BEng Tech Final year industrial project 2017
+*
+* More Info:
+* Atmel SAM 4N Processor Datasheet:http://www.atmel.com/Images/Atmel-11158-32-bit%20Cortex-M4-Microcontroller-SAM4N16-SAM4N8_Datasheet.pdf
+* Relevant reference materials or datasheets if applicable
+*
+* Functions:
+* int main(void)
+* void setup(void)
+*/
+
+///////////////Includes/////////////////////////////////////////////////////////////////////////////
 #include "robot_defines.h"
 
-
-void setup(void);
-
+///////////////Defines//////////////////////////////////////////////////////////////////////////////
 #define		batteryLow	1
 #define		streamIntervalFlag	1
 
-
-/******** Global Variables ********/
+///////////////Global variables/////////////////////////////////////////////////////////////////////
 uint8_t SBtest, SBtest1;
 uint16_t DBtest, DBtest1, DBtest2;
 
+///////////////Functions////////////////////////////////////////////////////////////////////////////
+/*
+* Function:
+* void setup(void)
+*
+* The initialisation routine for all hardware in the robot.
+*
+* Inputs:
+* none
+*
+* Returns:
+* none
+*
+*/
+void setup(void);
+
+/*
+* Function:
+* int main(void)
+*
+* Overview of robot code execution
+*
+* Inputs:
+* none
+*
+* Returns:
+* N/A
+*
+* Implementation:
+* [[[[[WIP]]]]]
+*
+* Improvements:
+* Yes.
+*
+*/
 int main(void)
 {
 	setup();
@@ -65,60 +117,50 @@ int main(void)
 	}
 }
 
+/*
+* Function:
+* void setup(void)
+*
+* The initialisation routine for all hardware in the robot.
+*
+* Inputs:
+* none
+*
+* Returns:
+* none
+*
+* Implementation:
+* Contains functions which systematically set up each peripheral and hardware device connected to
+* the robot's micro controller. Click on a function and press 'Alt + G' to open the file where it
+* is kept (if using Atmel Studio)
+*
+* Improvements:
+* Maybe
+*
+*/
 void setup(void)
 {
-	REG_WDT_MR = (1 << 15); 				//WDT Disable
+	REG_WDT_MR = WDT_MR_WDDIS; 			//Disable system watchdog timer.
 
-	/******** CLOCK Setup @ 100MHz ********/
-	REG_EFC_FMR = ((1<<26) | (5<<8));		//Set Flash Wait State for 100MHz
-	REG_PMC_WPMR = 0x504D4300;				//Disable PMC write protect
-	REG_CKGR_MOR |= (0x37<<16) | (0x14<<8); //Set 5ms main xtal osc. Start up time. Start Up Time = 8 * MOSCXTST / SLCK => MOSCXTST = 20
-	REG_CKGR_MOR |= (0x37<<16) | (1<<0);	//Enable the external crystal connected to XIN and XOUT
-	while(!(REG_PMC_SR & 0x01));			//Wait for the main crystal oscillator to stabilize
-	REG_CKGR_MOR |= (0x37<<16) | (1<<24);	//MAINCK source set to external xtal
-	while(!(REG_PMC_SR & 0x10000));			//Wait for the source changeover to be complete
-	REG_CKGR_MOR = 0x01371401;				//Disable the RC oscillator
-	REG_CKGR_PLLAR |= (1<<29) | (0x03<<0) | (0x18<<16) | (0x3F<<8); //Sets PLL to Divide by 3, Multiply by 25 and wait 63 SLCK cycles
-	while(!(REG_PMC_SR & 0x02));			//Wait for PLL LOCKA bit to be set
-	REG_PMC_MCKR = (2<<0);					//Set PLLA_CLK as MCK
-	while(!(REG_PMC_SR & 0x08));			//Wait for MCK ready
-	
-	/******** PIO Controller Setup ********/
-	REG_PMC_PCER0 |= (1<<11);	//Enable clock access to PIO controller A
-	REG_PMC_PCER0 |= (1<<12);	//Enable clock access to PIO controller B
-	REG_PMC_PCER0 |= (1<<13);	//Enable clock access to PIO controller C
-	REG_PIOA_WPMR = 0x50494F00; //Disable PIOA write protect
-	REG_PIOB_WPMR = 0x50494F00; //Disable PIOB write protect
-	REG_PIOC_WPMR = 0x50494F00; //Disable PIOC write protect
-	
-	motor_init();
-	SPI_Init();
-	//mouseInit(); //May require further testing - Adam
-	CommunicationSetup();
-	imuInit();
-	twi0Init();
-
-	/******** LED Setup ********/
-	REG_PIOA_PER |= ((1<<28) | (1<<27));	//Enable PIO control of D1 & D3.
-	REG_PIOC_PER |= (1<<8);					//Enable PIO control of D2
-	REG_PIOA_OER |= ((1<<28) | (1<<27));	//Set D1 & D3 as outputs
-	REG_PIOC_OER |= (1<<8);					//Set D2 as an output
-	ledOff1;									//D1 starts up off
-	ledOff2;									//D2 starts up off
-	ledOff3;									//D3 starts up off
-	
-
-	
-
-
-	lightSensInit(MUX_LIGHTSENS_R);
-	lightSensInit(MUX_LIGHTSENS_L);
-	proxSensInit(MUX_PROXSENS_A);
-	proxSensInit(MUX_PROXSENS_B);
-	proxSensInit(MUX_PROXSENS_C);
-	proxSensInit(MUX_PROXSENS_D);
-	proxSensInit(MUX_PROXSENS_E);
-	proxSensInit(MUX_PROXSENS_F);
-	fcInit(); //Sets Voltage and Current registers on FCC
+	masterClockInit();					//Initialise the master clock to 100MHz
+	pioInit();							//Initialise the PIO controllers
+	adcSingleConvInit();				//Initialise ADC for single conversion mode
+	ledInit();							//Initialise the LEDs on the mid board
+	motor_init();						//Initialise the motor driver chips
+	SPI_Init();							//Initialise SPI for talking with optical sensor
+	twi0Init();							//Initialise TWI0 interface
+	twi2Init();							//Initialise TWI2 interface
+	lightSensInit(MUX_LIGHTSENS_R);		//Initialise Right Light/Colour sensor
+	lightSensInit(MUX_LIGHTSENS_L);		//Initialise Left Light/Colour sensor
+	proxSensInit(MUX_PROXSENS_A);		//Initialise proximity sensor on panel A
+	proxSensInit(MUX_PROXSENS_B);		//Initialise proximity sensor on panel B
+	proxSensInit(MUX_PROXSENS_C);		//Initialise proximity sensor on panel C
+	proxSensInit(MUX_PROXSENS_D);		//Initialise proximity sensor on panel D
+	proxSensInit(MUX_PROXSENS_E);		//Initialise proximity sensor on panel E
+	proxSensInit(MUX_PROXSENS_F);		//Initialise proximity sensor on panel F
+	fcInit();							//Initialise the fast charge chip
+	CommunicationSetup();				//Initialise communication system
+	//imuInit();						//Initialise IMU [WIP/Untested]
+	//mouseInit();						//May require further testing - Adam
 }
 

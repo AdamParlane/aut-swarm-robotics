@@ -14,7 +14,9 @@
 * Atmel SAM 4N Processor Datasheet:http://www.atmel.com/Images/Atmel-11158-32-bit%20Cortex-M4-Microcontroller-SAM4N16-SAM4N8_Datasheet.pdf
 *
 * Functions:
-* 
+* void masterClockInit(void)
+* void pioInit(void)
+* void ledInit(void)
 *
 */
 
@@ -47,7 +49,7 @@
 #define	ledOn3 		(REG_PIOA_SODR |= (1<<27))
 
 //Universal Asynchronous Receiver/Transmitter
-#define TXRDY (REG_UART3_SR & UART_SR_TXRDY)		//UART TX READY flag
+#define TXRDY (REG_UART3_SR & UART_SR_TXRDY)	//UART TX READY flag [SHOULD BE IN COMMUNICATIONS]
 
 //If robot target compiler symbol is not present, then throw an error.
 #if !defined ROBOT_TARGET_V1 && !defined ROBOT_TARGET_V2
@@ -86,5 +88,53 @@ struct Command
 char newDataFlag; //used for test function probably temporary
 enum ROBOT_STATES{TEST, TEST_ALL, MANUAL, FORMATION, DOCKING, IDLE}; //main loop functionality
 char robotState ;
+
+///////////////Functions////////////////////////////////////////////////////////////////////////////
+/*
+* Function:
+* void masterClockInit(void)
+*
+* Initialises the master clock to 100MHz. The master clock is the clock source that drives all the
+* peripherals in the micro controller.
+*
+* Inputs:
+* none
+*
+* Returns:
+* none
+*
+*/
+void masterClockInit(void);
+
+/*
+* Function:
+* void pioInit(void)
+*
+* Supplies master clock to the three parallel I/O controllers (A, B and C) and disables write
+* protection on their configuration registers.
+*
+* Inputs:
+* none
+*
+* Returns:
+* none
+*
+*/
+void pioInit(void);
+
+/*
+* Function:
+* void ledInit(void)
+*
+* Initialises the PIO pins needed to use the LEDs. pioInit() MUST be run first.
+*
+* Inputs:
+* none
+*
+* Returns:
+* none
+*
+*/
+void ledInit(void);
 
 #endif /* ROBOTDEFINES_H_ */
