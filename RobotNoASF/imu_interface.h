@@ -9,7 +9,9 @@
 * Description:
 * imu_interface provides functions that allow both retrieval of data from IMU as
 * well as functions required by the IMU DMP driver. Additionally it will provide
-* the setup routine for TWI2
+* the setup routine for TWI2 on robot V1. There are two different versions of imuInit(),
+* twi_write_imu(..) and twi_read_imu(..); one for each revision of the PCB because V2 has the IMU
+* connected to TWI0 instead of TWI2 on the V1
 *
 * More info:
 * https://www.invensense.com/wp-content/uploads/2015/02/PS-MPU-9250A-01-v1.1.pdf
@@ -20,19 +22,20 @@
 * Functions:
 * int imuInit(void)
 * int imuDmpInit(void)
-* void imuDmpStop(void)
-* void imuDmpStart(void)
-* char twi_write_imu(unsigned char slave_addr, unsigned char reg_addr,
-*						unsigned char length, unsigned char const *data)
-* char twi_read_imu(unsigned char slave_addr, unsigned char reg_addr,
-*						unsigned char length,	unsigned char *data)
+* int imuDmpStop(void)
+* int imuDmpStart(void)
 * int get_ms(uint32_t *timestamp)
 * int delay_ms(uint32_t period_ms)
 * unsigned short invOrientationMatrixToScalar(const signed char *mtx)
 * unsigned short invRow2Scale(const signed char *row)
 * void getEulerAngles(long *ptQuat, euler_packet_t *eulerAngle)
+* char twi_write_imu(unsigned char slave_addr, unsigned char reg_addr,
+*						unsigned char length, unsigned char const *data)
+* char twi_read_imu(unsigned char slave_addr, unsigned char reg_addr,
+*						unsigned char length,	unsigned char *data)
 * uint8_t imuCommTest(void)
 * void TC0_Handler()
+*
 *
 */
 
@@ -63,7 +66,7 @@
 #define TWI_ERROR_TIMEOUT       9
 
 ////TWI2 slave device addresses
-#define TWI2_IMU_ADDR			0x68
+
 
 ////MPU9250 register addresses
 #define IMU_WHOAMI_REG			0x75
@@ -107,7 +110,7 @@ int imuDmpInit(void);
 
 /*
 * Function:
-* void imuDmpStop(void)
+* int imuDmpStop(void)
 *
 * If Digital Motion Processing is running on the IMU then stop it. imuDmpInit() MUST be run
 * first! (only once)
@@ -116,14 +119,14 @@ int imuDmpInit(void);
 * none
 *
 * Returns:
-* none
+* 1 if the DMP was running before disabling it.
 *
 */
-void imuDmpStop(void);
+int imuDmpStop(void);
 
 /*
 * Function:
-* void imuDmpStart(void)
+* int imuDmpStart(void)
 *
 * If Digital Motion Processing is not running on the IMU then Start it. imuDmpInit() MUST be run
 * first! (only once)
@@ -132,10 +135,10 @@ void imuDmpStop(void);
 * none
 *
 * Returns:
-* none
+* 1 if the DMP was already running before starting it.
 *
 */
-void imuDmpStart(void);
+int imuDmpStart(void);
 
 
 /*

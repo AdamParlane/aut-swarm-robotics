@@ -15,6 +15,7 @@
 *
 * Functions:
 * void twi0Init(void)
+* void twi2Init(void)
 * void twi0MuxSwitch(uint8_t channel)
 * uint8_t twi0ReadMuxChannel(void)
 * void twi0Write(uint8_t slaveAddress, uint8_t intAddress, uint8_t data)
@@ -32,55 +33,73 @@
 ///////////////Defines//////////////////////////////////////////////////////////////////////////////
 ////General Commands
 //if returns 1, then the receive holding register has a new byte to be read
-#define twi0RxReady			(REG_TWI0_SR & TWI_SR_RXRDY)	
+#define twi0RxReady			(REG_TWI0_SR & TWI_SR_RXRDY)
+#define twi2RxReady			(REG_TWI2_SR & TWI_SR_RXRDY)
 
 //if returns 1, then the transmit holding register empty or not acknowledged error occurred
 #define twi0TxReady			(REG_TWI0_SR & TWI_SR_TXRDY)
+#define twi2TxReady			(REG_TWI2_SR & TWI_SR_TXRDY)
 
 //returns 1 when transmission is complete
 #define twi0TxComplete		(REG_TWI0_SR & TWI_SR_TXCOMP)
+#define twi2TxComplete		(REG_TWI2_SR & TWI_SR_TXCOMP)
 
 //returns 1 when not acknowledged error occurred
 #define twi0NotAcknowledged	(REG_TWI0_SR & TWI_SR_NACK)
+#define twi2NotAcknowledged	(REG_TWI2_SR & TWI_SR_NACK)
 
 //Enable master mode and disable slave mode
 #define twi0MasterMode		(REG_TWI0_CR |= TWI_CR_MSEN|TWI_CR_SVDIS)
+#define twi2MasterMode		(REG_TWI2_CR |= TWI_CR_MSEN|TWI_CR_SVDIS)
 
 //Set address of desired slave device to talk to
 #define twi0SetSlave(value)	(REG_TWI0_MMR = TWI_MMR_DADR(value))
+#define twi2SetSlave(value)	(REG_TWI2_MMR = TWI_MMR_DADR(value))
 
 //Transmit holding register
 #define twi0Send(value)		(REG_TWI0_THR = value)
+#define twi2Send(value)		(REG_TWI2_THR = value)
 
 //Receive holding register
 #define twi0Receive			REG_TWI0_RHR
+#define twi2Receive			REG_TWI2_RHR
 
 //Initiates single byte data read
 #define twi0StartSingle		(REG_TWI0_CR = TWI_CR_START|TWI_CR_STOP)
+#define twi2StartSingle		(REG_TWI2_CR = TWI_CR_START|TWI_CR_STOP)
 
 //Initiates multi byte data read
 #define twi0Start			(REG_TWI0_CR = TWI_CR_START)
+#define twi2Start			(REG_TWI2_CR = TWI_CR_START)
 
 //Stops data transmission after next byte
 #define twi0Stop			(REG_TWI0_CR |= TWI_CR_STOP)
+#define twi2Stop			(REG_TWI2_CR |= TWI_CR_STOP)
 
 //Call this macro to read from slave registers
 #define twi0SetReadMode		(REG_TWI0_MMR |= TWI_MMR_MREAD)
+#define twi2SetReadMode		(REG_TWI2_MMR |= TWI_MMR_MREAD)
 
 //Address of slave internal register to read/write
 #define twi0RegAddr(value)	(REG_TWI0_IADR = value)
+#define twi2RegAddr(value)	(REG_TWI2_IADR = value)
 
 //Set slave register address size (0-3 bytes) 0 means no internal registers
 #define twi0RegAddrSize(value) (REG_TWI0_MMR |= TWI_MMR_IADRSZ(value))
+#define twi2RegAddrSize(value) (REG_TWI2_MMR |= TWI_MMR_IADRSZ(value))
 
 //Perform software reset
 #define twi0Reset			(REG_TWI0_CR = TWI_CR_SWRST)
+#define twi2Reset			(REG_TWI2_CR = TWI_CR_SWRST)
 
 ////Device slave addresses
 #define TWI0_MUX_ADDR				0xE0		//Mux Address 000
 #define TWI0_LIGHTSENS_ADDR			0x10		//Light sensors
 #define TWI0_PROXSENS_ADDR			0x39		//Proximity sensors
 #define TWI0_FCHARGE_ADDR			0x6B		//Battery Charger (Fast Charge Controller)
+#define TWI0_IMU_ADDR				0x68		//IMU
+#define TWI2_IMU_ADDR				0x68		//IMU
+
 ////TWI Mux channels
 //Only one active at a time
 #define MUX_LIGHTSENS_R				0xF8		//Mux Channel 0, Side Panel A
@@ -107,6 +126,21 @@
 *
 */
 void twi0Init(void);
+
+/*
+* Function:
+* void twi2Init(void);
+*
+* Initialises TWI2. Master clock should be setup first.
+*
+* Inputs:
+* none
+*
+* Returns:
+* none
+*
+*/
+void twi2Init(void);
 
 /*
 * Function:
