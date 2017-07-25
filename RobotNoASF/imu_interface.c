@@ -570,7 +570,7 @@ char twi_read_imu(unsigned char slave_addr, unsigned char reg_addr,
 
 /*
 * Function:
-* char imuCommTest(void)
+* uint8_t imuCommTest(void)
 *
 * Accesses the IMU on TWI2 to retrieve test character from test register....
 *
@@ -582,31 +582,25 @@ char twi_read_imu(unsigned char slave_addr, unsigned char reg_addr,
 *
 * Implementation:
 * - Disable DMP if necessary
-* - Send byte to desired register
-* - Reenable DMP if enabled beforehand
+* - Send byte to WHO AM I register on IMU
+* - Re-enable DMP if enabled beforehand
 * - Return value retrieved from IMU. Should return 0x71 if communication successful.
-*
-* Improvements:
-* [Ideas for improvements that are yet to be made](optional)
 *
 */
 uint8_t imuCommTest(void)
 {
-	int* dmpEnabled = 0;
+	int dmpEnabled = 0;
 	char* returnVal = 0;
 	
-
-	mpu_get_dmp_state(dmpEnabled);				//See if DMP was running
-	if (*dmpEnabled == 1)						//If it was
-		mpu_set_dmp_state(0);					//Disable DMP
+	dmpEnabled = imuDmpStop();		//Stop DMP. Returns 1 if DMP was running.
 		
 	//Request test byte
 	twi_read_imu(TWI2_IMU_ADDR, IMU_WHOAMI_REG, 1, returnVal);
 
-	if (*dmpEnabled == 1)						//If DMP was running before this function began
-		mpu_set_dmp_state(1);					//Re-enable DMP
+	if (dmpEnabled == 1)			//If DMP was running before this function began
+		imuDmpStart();				//Restart the DMP
 		
-	return returnVal;
+	return *returnVal;				//return 0x71 on success
 }
 
 /*
