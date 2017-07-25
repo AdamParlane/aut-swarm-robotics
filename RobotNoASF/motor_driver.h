@@ -128,21 +128,6 @@ void rotateRobot(char direction, unsigned char speed);
 
 /*
 * Function:
-* void dockRobot(void)
-*
-* Function to guide the robot to the dock.
-*
-* Inputs:
-* none
-*
-* Returns:
-* none
-*
-*/
-void dockRobot(void);
-
-/*
-* Function:
 * void stopRobot(void)
 *
 * Stop all motors
