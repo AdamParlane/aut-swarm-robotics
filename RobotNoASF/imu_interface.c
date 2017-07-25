@@ -156,7 +156,7 @@ int imuDmpInit(void)
 
 /*
 * Function:
-* void imuDmpStop(void)
+* unsigned char imuDmpStop(void)
 *
 * If Digital Motion Processing is running on the IMU then stop it. imuDmpInit() MUST be run
 * first! (only once)
@@ -176,9 +176,9 @@ int imuDmpInit(void)
 * so that this function won't run without that having being done so. Have an error return value.
 *
 */
-int imuDmpStop(void)
+unsigned char imuDmpStop(void)
 {
-	int* dmpEnabled = 0;
+	unsigned char* dmpEnabled = 0;
 		
 	mpu_get_dmp_state(dmpEnabled);				//See if DMP was running
 	if (*dmpEnabled == 1)						//If it was
@@ -188,7 +188,7 @@ int imuDmpStop(void)
 
 /*
 * Function: 
-* void imuDmpStart(void)
+* unsigned char imuDmpStart(void)
 *
 * If Digital Motion Processing is not running on the IMU then Start it. imuDmpInit() MUST be run
 * first! (only once)
@@ -208,9 +208,9 @@ int imuDmpStop(void)
 * so that this function won't run without that having being done so. Have an error return value.
 *
 */
-int imuDmpStart(void)
+unsigned char imuDmpStart(void)
 {
-	int* dmpEnabled = 0;
+	unsigned char* dmpEnabled = 0;
 	
 	mpu_get_dmp_state(dmpEnabled);				//See if DMP was already running
 	if (*dmpEnabled == 0)						//If it wasn't
@@ -590,7 +590,7 @@ char twi_read_imu(unsigned char slave_addr, unsigned char reg_addr,
 uint8_t imuCommTest(void)
 {
 	int dmpEnabled = 0;
-	char* returnVal = 0;
+	unsigned char* returnVal = 0;
 	
 	dmpEnabled = imuDmpStop();		//Stop DMP. Returns 1 if DMP was running.
 		

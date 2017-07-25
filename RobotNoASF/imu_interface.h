@@ -22,8 +22,8 @@
 * Functions:
 * int imuInit(void)
 * int imuDmpInit(void)
-* int imuDmpStop(void)
-* int imuDmpStart(void)
+* unsigned char imuDmpStop(void)
+* unsigned char imuDmpStart(void)
 * int get_ms(uint32_t *timestamp)
 * int delay_ms(uint32_t period_ms)
 * unsigned short invOrientationMatrixToScalar(const signed char *mtx)
@@ -110,7 +110,7 @@ int imuDmpInit(void);
 
 /*
 * Function:
-* int imuDmpStop(void)
+* unsigned char imuDmpStop(void)
 *
 * If Digital Motion Processing is running on the IMU then stop it. imuDmpInit() MUST be run
 * first! (only once)
@@ -122,11 +122,11 @@ int imuDmpInit(void);
 * 1 if the DMP was running before disabling it.
 *
 */
-int imuDmpStop(void);
+unsigned char imuDmpStop(void);
 
 /*
 * Function:
-* int imuDmpStart(void)
+* unsigned char imuDmpStart(void)
 *
 * If Digital Motion Processing is not running on the IMU then Start it. imuDmpInit() MUST be run
 * first! (only once)
@@ -138,7 +138,7 @@ int imuDmpStop(void);
 * 1 if the DMP was already running before starting it.
 *
 */
-int imuDmpStart(void);
+unsigned char imuDmpStart(void);
 
 
 /*
