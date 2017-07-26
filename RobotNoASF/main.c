@@ -163,7 +163,7 @@ void setup(void)
 	//uint8_t result = fcVersionRead();
 	//uint8_t result = imuCommTest();						//TEMP IMU communication test
 	//uint8_t result = twi0ReadSingle(TWI0_IMU_ADDR, IMU_WHOAMI_REG);
-	
+	uint16_t result = proxSensRead(MUX_PROXSENS_A);
 	//imuInit();						//Initialise IMU [WIP/Untested]
 	//mouseInit();						//May require further testing - Adam
 	return;

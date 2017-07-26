@@ -93,7 +93,7 @@
 #define twi2Reset			(REG_TWI2_CR = TWI_CR_SWRST)
 
 ////Device slave addresses
-#define TWI0_MUX_ADDR				0xE0		//Mux Address 000
+#define TWI0_MUX_ADDR				0x70		//Mux Address 000
 #define TWI0_LIGHTSENS_ADDR			0x10		//Light sensors
 #define TWI0_PROXSENS_ADDR			0x39		//Proximity sensors
 #define TWI0_FCHARGE_ADDR			0x6B		//Battery Charger (Fast Charge Controller)
