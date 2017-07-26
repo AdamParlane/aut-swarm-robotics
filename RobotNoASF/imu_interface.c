@@ -45,6 +45,8 @@
 #include "sam.h"				//System header
 #include "twimux_interface.h"	//twi and multiplexer
 
+#include "robot_defines.h"
+
 //Invensense Direct Motion Processing Driver Files
 #include "IMU-DMP/inv_mpu_dmp_motion_driver_CUSTOM.h"//Direct Motion Processing setup functions
 #include "IMU-DMP/inv_mpu_CUSTOM.h"//IMU basic setup and initialisation functions
@@ -629,6 +631,8 @@ void TC0_Handler()
 	if(REG_TC0_SR0 & TC_SR_CPCS)									//If RC compare flag
 	{
 		systemTimestamp++;
+		if(systemTimestamp % 100) //used for streaming data
+			streamIntervalFlag = 1;
 //V1 robot doesn't have the IMU's interrupt pin tied in to the uC, so the FIFO will have to be
 //polled. V2 does utilise an external interrupt, so this code is not necessary.
 #if defined ROBOT_TARGET_V1
