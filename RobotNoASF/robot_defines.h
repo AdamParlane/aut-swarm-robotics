@@ -86,8 +86,9 @@ struct Command
 ///////////////Global variables/////////////////////////////////////////////////////////////////////
 //used for test function calling
 char newDataFlag; //used for test function probably temporary
-enum ROBOT_STATES{TEST, TEST_ALL, MANUAL, FORMATION, DOCKING, IDLE}; //main loop functionality
-char robotState ;
+enum ROBOT_STATES{TEST, TEST_ALL, MANUAL, FORMATION, DOCKING, IDLE, PAUSE}; //main loop functionality
+char robotState;
+char streamIntervalFlag;
 
 ///////////////Functions////////////////////////////////////////////////////////////////////////////
 /*

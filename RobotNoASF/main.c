@@ -22,7 +22,7 @@
 
 ///////////////Defines//////////////////////////////////////////////////////////////////////////////
 #define		batteryLow	1
-#define		streamIntervalFlag	1
+
 
 ///////////////Global variables/////////////////////////////////////////////////////////////////////
 uint8_t SBtest, SBtest1;
@@ -74,21 +74,24 @@ int main(void)
 	struct Position robotPosition;
 	robotPosition.x = 0;
 	robotPosition.y = 0;
+	robotState = IDLE;
 	while(1)
 	{
 		switch (robotState)
 		{
 			case TEST:
-			if(message.command == STOP_STREAMING)
-				robotState = IDLE;
-			if(streamIntervalFlag)
-				testManager(message);	
+			if(newDataFlag || streamIntervalFlag)
+				testManager(message);
 			break;
 			
 			case TEST_ALL:
 			break;
 			
 			case MANUAL:
+			moveRobot(90, 50);
+			delay_ms(10000);
+			stopRobot();
+			robotState = IDLE;
 			break;
 			
 			case DOCKING:
@@ -161,7 +164,7 @@ void setup(void)
 	fcInit();							//Initialise the fast charge chip
 	CommunicationSetup();				//Initialise communication system
 	imuInit();							//Initialise IMU
-	//mouseInit();						//May require further testing - Adam
+	mouseInit();						//May require further testing - Adam
 	return;
 }
 

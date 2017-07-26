@@ -92,15 +92,20 @@ void testManager(struct message_info message)
 		convertData(message, receivedTestData);//converts the Xbee data to the receivedTestData array
 		newDataFlag = 0;
 	}
-	testMode = receivedTestData[1];
+	testMode = receivedTestData[0];
 	//Declare a new instance of the Position structure for test purposes only for mouse and IMU results
 	transmitTestData[0] = testType; //First return value is the testType so the PC knows what it is receiving
 	switch(testType)
 	{
+		case TEST_COMMUNICATIONS:
+		transmitTestData[1] = 0x01;
+		transmitTestDataSize = 2;		
+		break;
+		
 		case TEST_PROXIMITY_SENSORS: //0xE4
 		//6 Proximtiy Sensors (A-F) Identified by their Mux channels
-		peripheralReturnData = proxSensRead(receivedTestData[0]);
-		transmitTestData[1] = receivedTestData[0];//Transmit the specific proximity sensor ID
+		peripheralReturnData = proxSensRead(receivedTestData[1]);
+		transmitTestData[1] = receivedTestData[1];//Transmit the specific proximity sensor ID
 		transmitTestData[2] = DATA_RETURN; //sending data out
 		transmitTestData[3] = peripheralReturnData >> 8; //upper data byte
 		transmitTestData[4] = peripheralReturnData & 0xFF; //lower data byte
@@ -109,8 +114,8 @@ void testManager(struct message_info message)
 		
 		case TEST_LIGHT_SENSORS:
 		//2 Light Sensors (LHS & RHS) Identified by their Mux channels
-		peripheralReturnData = lightSensRead(receivedTestData[0], LS_WHITE_REG);
-		transmitTestData[1] = receivedTestData[0];//Transmit the specific light sensor ID
+		peripheralReturnData = lightSensRead(receivedTestData[1], LS_WHITE_REG);
+		transmitTestData[1] = receivedTestData[1];//Transmit the specific light sensor ID
 		transmitTestData[2] = DATA_RETURN; //sending data out
 		transmitTestData[3] = peripheralReturnData >> 8; //upper byte
 		transmitTestData[4] = peripheralReturnData & 0xFF; //lower byte
@@ -122,7 +127,7 @@ void testManager(struct message_info message)
 		//The motors need to be turned on individually at a set direction and speed as commanded by the PC
 		//This is done with a different setTestMotors function, found in motorDriver.c
 		setTestMotors(receivedTestData); //Turn on the require motor at the set speed and direction
-		transmitTestData[1] = receivedTestData[0];//Transmit the specific motor ID
+		transmitTestData[1] = receivedTestData[1];//Transmit the specific motor ID
 		transmitTestData[2] = DATA_RETURN; //Sending Data Out
 		transmitTestData[3] = receivedTestData[2];//Echo's the command
 		//TO DO: instead of echo read what motor is on with direction and speed and return it
@@ -185,7 +190,18 @@ void testManager(struct message_info message)
 		break;
 
 	}
-	SendXbeeAPITransmitRequest(BROADCAST_64,UNKNOWN_16,transmitTestData,transmitTestDataSize);  //Send the Message
+	if(testMode == STOP_STREAMING)
+		robotState = IDLE;
+	if(streamIntervalFlag && testMode == STREAM_DATA)
+	{
+		SendXbeeAPITransmitRequest(BROADCAST_64,UNKNOWN_16,transmitTestData,transmitTestDataSize);  //Send the Message
+		streamIntervalFlag = 0;
+	}
+	if(testMode == SINGLE_SAMPLE)
+	{
+		SendXbeeAPITransmitRequest(BROADCAST_64,UNKNOWN_16,transmitTestData,transmitTestDataSize);  //Send the Message
+		robotState = IDLE;
+	}
 }
 
 /*
@@ -225,4 +241,3 @@ void convertData(struct message_info message, uint8_t *data)
 			return;
 	}
 }
-
