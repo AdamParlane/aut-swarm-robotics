@@ -1,8 +1,8 @@
-<B>The code format should be as below,
-Excessive commenting and documentations is encouraged as this project is multi-year, in the future a new group of
-students will need to pick this project up as quickly as possible.
+//The code format should be as below,
+//Excessive commenting and documentations is encouraged as this project is multi-year, in the future a new group of
+//students will need to pick this project up as quickly as possible.
 
-Also Note the Max line width should be 100</B>
+//Also Note the Max line width should be 100
 
 /*
 * formatting.c
@@ -14,9 +14,6 @@ Also Note the Max line width should be 100</B>
 *
 * SPI driver for optical mouse sensor ADNS-7530 used for navigation
 * in the 2017 swarm robotics project for Mark Beckerleg, AUT
-*
-* More info:
-* https://onedrive.live.com/edit.aspx?cid=57d208c4ae4cbf19&id=documents&resid=57D208C4AE4CBF19!266869&app=OneNote&&wd=target%28%2F%2FRobot%20Software.one%7Cb762fa97-b3f2-40cd-867f-3e26a41df72e%2FCode%20Formatting%20Guidelines%7C2c2b7deb-6808-4cf0-ac9c-e4ad4223891f%2F%29
 *
 * Functions: 
 * int functionName(char paramOne, int paramTwo, unsigned int paramThree)
@@ -66,12 +63,15 @@ Also Note the Max line width should be 100</B>
 *
 */
 //^^Template c file function header
+
 //^^H file function header will be the same without the implementation/improvement section
 
 ///////////////Includes/////////////////////////////////////////////////////////////////////////////
+
 #include <libHeader1>
 
 ///////////////Defines//////////////////////////////////////////////////////////////////////////////
+
 //Tabs keep values in line and easy to read
 #define macroOne	(REG_PIOB_CODR |= (1<<12))	//Macros camelCase because they are executing code
 #define macroTwo	(REG_PIOB_SODR |= (1<<12))
@@ -80,6 +80,7 @@ Also Note the Max line width should be 100</B>
 #define CONST_ONE	0x00			//Constants use CAPS_UNDERSCORE_SPACE_FORMAT
 
 ///////////////Functions////////////////////////////////////////////////////////////////////////////
+
 /*
 * Function: 
 * int functionName(char paramOne, int paramTwo, unsigned int paramThree)
@@ -140,12 +141,15 @@ int functionName(char paramOne, int paramTwo, unsigned int paramThree)
 * no doubt there will be. Hit us up (Adam or Matt)
 */
 void registerAccess(void)
+
 {
-	//Register names begin with REG. The second part is the peripheral and the third is the name
+
+	//Register names begin with REG. The second part is the peripheral and the third is the name	
 	//of the specific register being accessed (separated by underscores).
-	//Register name is on the first line, then subsequent bitfields being set are on following lines.
-	//Tabs are used to space things out evenly to keep them neat and readable.
+	//Register name is on the first line, then subsequent bitfields being set are on following lines.	
+	//Tabs are used to space things out evenly to keep them neat and readable.	
 	REG_PMC_PCER0
+	
 	|=	(1<<ID_TWI1);					//Sometimes there isn't a macro for a bit field
 
 	//Bit field macros are as follows: The first part of the name is the peripheral catergory.
@@ -156,9 +160,9 @@ void registerAccess(void)
 	|	TWI_CWGR_CKDIV(0);
 	
 	REG_TWI1_CR 
-	=	TWI_CR_MSEN						//These will turn specific bits on and off
+	=	TWI_CR_MSEN					//These will turn specific bits on and off
 	|	TWI_CR_SVDIS;
 	
-										//Inline comments kept straight in a row with tabs
-										//By keeping them in line they become easier to read
+								//Inline comments kept straight in a row with tabs
+								//By keeping them in line they become easier to read
 }
