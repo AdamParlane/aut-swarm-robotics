@@ -524,7 +524,7 @@ char twi_read_imu(unsigned char slave_addr, unsigned char reg_addr,
 		twi2Start;						//Send start bit
 		for(unsigned char b = 0; b < length; b++)
 		{
-			while(!twi0RxReady);
+			while(!twi2RxReady);
 			data[b] = twi2Receive;
 			if(b == length - 2)
 			twi2Stop;					//Send stop on reception of 2nd to last byte
