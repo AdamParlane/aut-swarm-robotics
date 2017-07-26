@@ -160,7 +160,8 @@ void setup(void)
 	proxSensInit(MUX_PROXSENS_F);		//Initialise proximity sensor on panel F
 	fcInit();							//Initialise the fast charge chip
 	CommunicationSetup();				//Initialise communication system
-	//imuInit();						//Initialise IMU [WIP/Untested]
+	imuInit();							//Initialise IMU
 	//mouseInit();						//May require further testing - Adam
+	return;
 }
 

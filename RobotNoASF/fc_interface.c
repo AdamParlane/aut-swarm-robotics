@@ -87,3 +87,40 @@ void fcWatchdogReset(void)
 	//Resets the FCC watchdog timer. Must be done once every 30s or else registers will reset.
 	twi0Write(TWI0_FCHARGE_ADDR, FC_STATUS_REG, FC_STATUS_WDRESET);
 }
+
+/*
+* Function:
+* uint8_t fcVersionRead(void)
+*
+* Returns revision number from version register on FC chip
+*
+* Inputs:
+* none
+*
+* Returns:
+* Returns a 3 bit value with the version number of the chip
+*   0x00: Rev 1.0
+*   0x01: Rev 1.1
+*   0x02: Rev 2.0
+*   0x03: Rev 2.1
+*   0x04: Rev 2.2
+*   0x05: Rev 2.3
+*   0x06+: Future revisions
+*
+* Implementation:
+* Reads the data stored in the version register of the fast charge chip and returns the first three
+* bits (the revision number)
+*
+* Improvements:
+* Have a data structure that contains all data about the chip and load all 8bits from the version
+* register into it (instead of just revision number)
+*
+*/
+uint8_t fcVersionRead(void)
+{
+	//Reset state for this register is 0x40 according to datasheet
+	uint8_t returnVal = 0;
+	returnVal = twi0ReadSingle(TWI0_FCHARGE_ADDR, FC_VERSION_REG);
+	//Return just the revision number (first 3 bits)
+	return (0x07 & returnVal);
+}

@@ -180,7 +180,7 @@ unsigned char imuDmpStop(void)
 {
 	unsigned char* dmpEnabled = 0;
 		
-	mpu_get_dmp_state(dmpEnabled);				//See if DMP was running
+	mpu_get_dmp_state(&dmpEnabled);				//See if DMP was running
 	if (*dmpEnabled == 1)						//If it was
 		mpu_set_dmp_state(0);					//Stop DMP
 	return *dmpEnabled;
@@ -212,7 +212,7 @@ unsigned char imuDmpStart(void)
 {
 	unsigned char* dmpEnabled = 0;
 	
-	mpu_get_dmp_state(dmpEnabled);				//See if DMP was already running
+	mpu_get_dmp_state(&dmpEnabled);				//See if DMP was already running
 	if (*dmpEnabled == 0)						//If it wasn't
 		mpu_set_dmp_state(1);					//Start DMP
 	return *dmpEnabled;	
@@ -524,7 +524,7 @@ char twi_read_imu(unsigned char slave_addr, unsigned char reg_addr,
 		twi2Start;						//Send start bit
 		for(unsigned char b = 0; b < length; b++)
 		{
-			while(!twi0RxReady);
+			while(!twi2RxReady);
 			data[b] = twi2Receive;
 			if(b == length - 2)
 			twi2Stop;					//Send stop on reception of 2nd to last byte
@@ -590,17 +590,17 @@ char twi_read_imu(unsigned char slave_addr, unsigned char reg_addr,
 uint8_t imuCommTest(void)
 {
 	int dmpEnabled = 0;
-	unsigned char* returnVal = 0;
+	unsigned char returnVal = 0;
 	
 	dmpEnabled = imuDmpStop();		//Stop DMP. Returns 1 if DMP was running.
 		
 	//Request test byte
-	twi_read_imu(TWI2_IMU_ADDR, IMU_WHOAMI_REG, 1, returnVal);
+	twi_read_imu(TWI2_IMU_ADDR, IMU_WHOAMI_REG, 1, &returnVal);
 
 	if (dmpEnabled == 1)			//If DMP was running before this function began
 		imuDmpStart();				//Restart the DMP
 		
-	return *returnVal;				//return 0x71 on success
+	return returnVal;				//return 0x71 on success
 }
 
 /*
