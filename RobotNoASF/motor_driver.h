@@ -158,4 +158,24 @@ void stopRobot(void);
 */
 void setTestMotors(uint8_t motorData[]);
 
+/*
+*
+* Function:
+* void motorPWMcurve(void)
+*
+* Runs motor 2 at 10% duty cycle steps for 5 seconds each
+*
+* Inputs:
+* none
+*
+* Returns:
+* none
+*
+* Implementation:
+* Powers motor 2 0-100% duty cycle in 5 second 10% steps
+* Purpose is to test the PWM curve on each robot
+*
+*/
+void PWMSpeedTest(void);
+
 #endif /* MOTOR_DRIVER_H_ */
