@@ -105,6 +105,7 @@ int main(void)
 			
 			case IDLE:
 			//idle
+			PWMSpeedTest();
 			break;
 		}
 		
