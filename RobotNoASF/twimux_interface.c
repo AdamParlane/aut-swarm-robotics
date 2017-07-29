@@ -45,8 +45,14 @@
 * - Set the high and low periods of the TWI clock signal using formula from datasheet
 *	NOTE: A high period of 0.6uSec and a low period of 1.3uSec is required by both the Proximity
 *	and Light Sensors
-*	1.3uSec = ((x * 2^CKDIV)+4) * 10nSec[100MHz]
-*	0.6uSec = ((x * 2^CKDIV)+4) * 10nSec[100MHz]
+*                t_low
+*   CLDIV =  --------------  - 2
+*            2(t_masterclk)
+*
+*                t_high
+*   CHDIV =  --------------  - 2
+*            2(t_masterclk)
+*
 * - Make uC master on the TWI bus
 *
 */
@@ -60,10 +66,16 @@ void twi0Init(void)
 	twi0Reset;								//Software reset
 
 	//TWI0 Clock Waveform Setup
+	//REG_TWI0_CWGR
+	//|=	TWI_CWGR_CKDIV(1)					//Clock speed 400000, fast mode
+	//|	TWI_CWGR_CLDIV(73)					//Clock low period 1.5uSec
+	//|	TWI_CWGR_CHDIV(48);					//Clock high period  1.0uSec
+	//twi0MasterMode;							//Master mode enabled, slave disabled
+
 	REG_TWI0_CWGR
 	|=	TWI_CWGR_CKDIV(1)					//Clock speed 400000, fast mode
-	|	TWI_CWGR_CLDIV(63)					//Clock low period 1.3uSec
-	|	TWI_CWGR_CHDIV(28);					//Clock high period  0.6uSec
+	|	TWI_CWGR_CLDIV(148)					//Clock low period 1.5uSec
+	|	TWI_CWGR_CHDIV(98);					//Clock high period  1.0uSec
 	twi0MasterMode;							//Master mode enabled, slave disabled
 }
 
