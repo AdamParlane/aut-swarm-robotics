@@ -66,7 +66,7 @@ void setup(void);
 int main(void)
 {
 	setup();
-
+	uint8_t testMode;
 	//Comms
 	struct frame_info frame;
 	struct message_info message;
@@ -74,14 +74,29 @@ int main(void)
 	struct Position robotPosition;
 	robotPosition.x = 0;
 	robotPosition.y = 0;
+	struct transmitDataStructure transmitMessage;
 	robotState = IDLE;
 	while(1)
 	{
 		switch (robotState)
 		{
 			case TEST:
-			if(newDataFlag || streamIntervalFlag)
-				testManager(message);
+				if(newDataFlag || streamIntervalFlag)//get the new test data
+				{
+					testMode = testManager(message, &transmitMessage);//get the new test data
+				}
+				if(testMode == STOP_STREAMING)
+					robotState = IDLE;
+				else if(testMode == SINGLE_SAMPLE)
+				{
+					robotState = IDLE;
+					SendXbeeAPITransmitRequest(BROADCAST_64,UNKNOWN_16, transmitMessage.Data, transmitMessage.DataSize);  //Send the Message
+				}
+				else if(streamIntervalFlag && testMode == STREAM_DATA)
+				{
+					streamIntervalFlag = 0;
+					SendXbeeAPITransmitRequest(BROADCAST_64,UNKNOWN_16, transmitMessage.Data, transmitMessage.DataSize);  //Send the Message
+				}
 			break;
 			
 			case TEST_ALL:

@@ -78,48 +78,44 @@
 *		The order will be [3] Data1_High, [4] Data1_Low, [5] Data2_High and so on
 * The transmit array sie must also be calculated and sent with the XBee Transmit Request
 */
-void testManager(struct message_info message)
+uint8_t testManager(struct message_info message, struct transmitDataStructure *transmit)
 {
-	struct Position testPosition;
+	struct Position testPosition;	//Declare a new instance of the Position structure for test purposes only for mouse and IMU results
 	static uint8_t receivedTestData[50]; //array for data coming into the robot AFTER Xbee framing has been stripped
-	uint8_t transmitTestData[50]; //array for data to be transmitted to PC BEFORE XBee framing has been added
 	uint16_t peripheralReturnData; //the test data returned from eh relevant peripheral
 	char testType = message.command;//what peripheral is being tested
-	uint8_t testMode;
-	uint8_t transmitTestDataSize;//size of the transmit array
-	if (newDataFlag)
+	if (newDataFlag)//only reconvert the data if we are in this function for new data not streaming again
 	{
 		convertData(message, receivedTestData);//converts the Xbee data to the receivedTestData array
 		newDataFlag = 0;
 	}
-	testMode = receivedTestData[0];
-	//Declare a new instance of the Position structure for test purposes only for mouse and IMU results
-	transmitTestData[0] = testType; //First return value is the testType so the PC knows what it is receiving
+	uint8_t testMode = receivedTestData[0];
+	transmit->Data[0] = testType; //First return value is the testType so the PC knows what it is receiving
 	switch(testType)
 	{
 		case TEST_COMMUNICATIONS:
-		transmitTestData[1] = 0x01;
-		transmitTestDataSize = 2;		
+		transmit->Data[1] = 0x01;
+		transmit->DataSize = 2;		
 		break;
 		
 		case TEST_PROXIMITY_SENSORS: //0xE4
 		//6 Proximtiy Sensors (A-F) Identified by their Mux channels
 		peripheralReturnData = proxSensRead(receivedTestData[1]);
-		transmitTestData[1] = receivedTestData[1];//Transmit the specific proximity sensor ID
-		transmitTestData[2] = DATA_RETURN; //sending data out
-		transmitTestData[3] = peripheralReturnData >> 8; //upper data byte
-		transmitTestData[4] = peripheralReturnData & 0xFF; //lower data byte
-		transmitTestDataSize = 5;
+		transmit->Data[1] = receivedTestData[1];//Transmit the specific proximity sensor ID
+		transmit->Data[2] = DATA_RETURN; //sending data out
+		transmit->Data[3] = peripheralReturnData >> 8; //upper data byte
+		transmit->Data[4] = peripheralReturnData & 0xFF; //lower data byte
+		transmit->DataSize = 5;
 		break;
 		
 		case TEST_LIGHT_SENSORS:
 		//2 Light Sensors (LHS & RHS) Identified by their Mux channels
 		peripheralReturnData = lightSensRead(receivedTestData[1], LS_WHITE_REG);
-		transmitTestData[1] = receivedTestData[1];//Transmit the specific light sensor ID
-		transmitTestData[2] = DATA_RETURN; //sending data out
-		transmitTestData[3] = peripheralReturnData >> 8; //upper byte
-		transmitTestData[4] = peripheralReturnData & 0xFF; //lower byte
-		transmitTestDataSize = 5;
+		transmit->Data[1] = receivedTestData[1];//Transmit the specific light sensor ID
+		transmit->Data[2] = DATA_RETURN; //sending data out
+		transmit->Data[3] = peripheralReturnData >> 8; //upper byte
+		transmit->Data[4] = peripheralReturnData & 0xFF; //lower byte
+		transmit->DataSize = 5;
 		break;
 		
 		case TEST_MOTORS:
@@ -127,12 +123,12 @@ void testManager(struct message_info message)
 		//The motors need to be turned on individually at a set direction and speed as commanded by the PC
 		//This is done with a different setTestMotors function, found in motorDriver.c
 		setTestMotors(receivedTestData); //Turn on the require motor at the set speed and direction
-		transmitTestData[1] = receivedTestData[1];//Transmit the specific motor ID
-		transmitTestData[2] = DATA_RETURN; //Sending Data Out
-		transmitTestData[3] = receivedTestData[2];//Echo's the command
+		transmit->Data[1] = receivedTestData[1];//Transmit the specific motor ID
+		transmit->Data[2] = DATA_RETURN; //Sending Data Out
+		transmit->Data[3] = receivedTestData[2];//Echo's the command
 		//TO DO: instead of echo read what motor is on with direction and speed and return it
 		//TO DO: turn off motors after test is finished 
-		transmitTestDataSize = 4;
+		transmit->DataSize = 4;
 
 		break;
 		
@@ -140,12 +136,12 @@ void testManager(struct message_info message)
 		//Only 1 mouse sensor just trying to attain dx & dy
 		//getMouseXY will will the structure testPosition (using pointers) with dx and dy
 		getMouseXY(&testPosition);
-		transmitTestData[1] = DATA_RETURN; //sending data out
-		transmitTestData[2] = testPosition.opticaldx >> 8; //upper byte
-		transmitTestData[3] = testPosition.opticaldx & 0xFF; //lower byte
-		transmitTestData[4] = testPosition.opticaldy >> 8; //upper byte
-		transmitTestData[5] = testPosition.opticaldy & 0xFF; //lower byte
-		transmitTestDataSize = 6;
+		transmit->Data[1] = DATA_RETURN; //sending data out
+		transmit->Data[2] = testPosition.opticaldx >> 8; //upper byte
+		transmit->Data[3] = testPosition.opticaldx & 0xFF; //lower byte
+		transmit->Data[4] = testPosition.opticaldy >> 8; //upper byte
+		transmit->Data[5] = testPosition.opticaldy & 0xFF; //lower byte
+		transmit->DataSize = 6;
 		break;
 		
 		case TEST_IMU:
@@ -160,7 +156,7 @@ void testManager(struct message_info message)
 		transmitTestData[7] = testPosition.IMUqy & 0xFF;	//lower byte
 		transmitTestData[8] = testPosition.IMUqz >> 8;		//upper byte
 		transmitTestData[9] = testPosition.IMUqz & 0xFF;	//lower byte*/
-		transmitTestDataSize = 10;
+		transmit->DataSize = 10;
 		break;
 		
 		case TEST_LINE_FOLLOWERS:
@@ -176,9 +172,9 @@ void testManager(struct message_info message)
 		//Then the channel is read off the Mux it should match what was instructed
 		//Matching will be checked on the PC side, will appear as an echo if test passes		
 		twi0MuxSwitch(receivedTestData[1]);//Set the Mux to the specified channel
-		transmitTestData[1] = DATA_RETURN;//sending data out
-		transmitTestData[2] = twi0ReadMuxChannel();//Return the channel the Mux is currently set to
-		transmitTestDataSize = 3;
+		transmit->Data[1] = DATA_RETURN;//sending data out
+		transmit->Data[2] = twi0ReadMuxChannel();//Return the channel the Mux is currently set to
+		transmit->DataSize = 3;
 		break;
 		
 		case TEST_TWI_EXTERNAL:
@@ -190,18 +186,7 @@ void testManager(struct message_info message)
 		break;
 
 	}
-	if(testMode == STOP_STREAMING)
-		robotState = IDLE;
-	if(streamIntervalFlag && testMode == STREAM_DATA)
-	{
-		SendXbeeAPITransmitRequest(BROADCAST_64,UNKNOWN_16,transmitTestData,transmitTestDataSize);  //Send the Message
-		streamIntervalFlag = 0;
-	}
-	if(testMode == SINGLE_SAMPLE)
-	{
-		SendXbeeAPITransmitRequest(BROADCAST_64,UNKNOWN_16,transmitTestData,transmitTestDataSize);  //Send the Message
-		robotState = IDLE;
-	}
+	return testMode;
 }
 
 /*
