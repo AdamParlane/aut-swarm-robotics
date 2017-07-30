@@ -46,28 +46,6 @@
 #include "sam.h"									//System header
 
 ///////////////Defines//////////////////////////////////////////////////////////////////////////////
-//TWI2 Status registers for the IMU driver
-#define IMU_TXCOMP	(REG_TWI2_SR & TWI_SR_TXCOMP)	
-#define IMU_RXRDY	(REG_TWI2_SR & TWI_SR_RXRDY)	//if 1, RHR has new byte to be read
-#define IMU_TXRDY	(REG_TWI2_SR & TWI_SR_TXRDY)	//if 1, THR is empty or NACK error occurred
-#define IMU_NACK	(REG_TWI2_SR & TWI_SR_NACK)		//Check TWI2 Status register for Not Acknowledgd
-
-//Some other status flags that were taken from the ASF TWI library. I don't think these are
-//needed any longer, but will keep for now
-#define TWI_SUCCESS             0
-#define TWI_INVALID_ARGUMENT    1
-#define TWI_ARBITRATION_LOST    2
-#define TWI_NO_CHIP_FOUND       3
-#define TWI_RECEIVE_OVERRUN     4
-#define TWI_RECEIVE_NACK        5
-#define TWI_SEND_OVERRUN        6
-#define TWI_SEND_NACK           7
-#define TWI_BUSY                8
-#define TWI_ERROR_TIMEOUT       9
-
-////TWI2 slave device addresses
-
-
 ////MPU9250 register addresses
 #define IMU_WHOAMI_REG			0x75
 
