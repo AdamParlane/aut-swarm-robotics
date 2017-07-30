@@ -10,7 +10,7 @@
 * imu_interface provides functions that allow both retrieval of data from IMU as
 * well as functions required by the IMU DMP driver. Additionally it will provide
 * the setup routine for TWI2 on robot V1. There are two different versions of imuInit(),
-* twi_write_imu(..) and twi_read_imu(..); one for each revision of the PCB because V2 has the IMU
+* twiWriteImu(..) and twiReadImu(..); one for each revision of the PCB because V2 has the IMU
 * connected to TWI0 instead of TWI2 on the V1
 *
 * More info:
@@ -29,9 +29,9 @@
 * unsigned short invOrientationMatrixToScalar(const signed char *mtx)
 * unsigned short invRow2Scale(const signed char *row)
 * void getEulerAngles(long *ptQuat, euler_packet_t *eulerAngle)
-* char twi_write_imu(unsigned char slave_addr, unsigned char reg_addr,
+* char twiWriteImu(unsigned char slave_addr, unsigned char reg_addr,
 *						unsigned char length, unsigned char const *data)
-* char twi_read_imu(unsigned char slave_addr, unsigned char reg_addr,
+* char twiReadImu(unsigned char slave_addr, unsigned char reg_addr,
 *						unsigned char length,	unsigned char *data)
 * uint8_t imuCommTest(void)
 * void TC0_Handler()
@@ -219,7 +219,7 @@ int get_ms(uint32_t *timestamp);
 int delay_ms(uint32_t period_ms);
 
 /*
-* Function: char twi_write_imu(unsigned char slave_addr, unsigned char reg_addr,
+* Function: char twiWriteImu(unsigned char slave_addr, unsigned char reg_addr,
 *								unsigned char length, unsigned char const *data)
 *
 * Required by the IMU drivers (hence naming convention). Writes the specified number of bytes to a
@@ -235,11 +235,11 @@ int delay_ms(uint32_t period_ms);
 * returns 0 on success.
 *
 */
-char twi_write_imu(unsigned char slave_addr, unsigned char reg_addr, 
+char twiWriteImu(unsigned char slave_addr, unsigned char reg_addr, 
 					unsigned char length, unsigned char const *data);
 
 /*
-* Function: char twi_read_imu(unsigned char slave_addr, unsigned char reg_addr,
+* Function: char twiReadImu(unsigned char slave_addr, unsigned char reg_addr,
 *								unsigned char length, unsigned char const *data)
 *
 * Required by the IMU drivers (hence naming convention). Reads the specified number of bytes from a
@@ -256,7 +256,7 @@ char twi_write_imu(unsigned char slave_addr, unsigned char reg_addr,
 * returns 0 on success.
 *
 */
-char twi_read_imu(unsigned char slave_addr, unsigned char reg_addr, 
+char twiReadImu(unsigned char slave_addr, unsigned char reg_addr, 
 					unsigned char length, unsigned char *data);
 
 /*

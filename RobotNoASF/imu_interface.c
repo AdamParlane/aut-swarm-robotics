@@ -10,7 +10,7 @@
 * imu_interface provides functions that allow both retrieval of data from IMU as
 * well as functions required by the IMU DMP driver. Additionally it will provide
 * the setup routine for TWI2 on robot V1. There are two different versions of imuInit(),
-* twi_write_imu(..) and twi_read_imu(..); one for each revision of the PCB because V2 has the IMU
+* twiWriteImu(..) and twiReadImu(..); one for each revision of the PCB because V2 has the IMU
 * connected to TWI0 instead of TWI2 on the V1
 *
 * More info:
@@ -24,9 +24,9 @@
 * int imuDmpInit(void)
 * void imuDmpStop(void)
 * void imuDmpStart(void)
-* char twi_write_imu(unsigned char slave_addr, unsigned char reg_addr, 
+* char twiWriteImu(unsigned char slave_addr, unsigned char reg_addr, 
 *						unsigned char length, unsigned char const *data)
-* char twi_read_imu(unsigned char slave_addr, unsigned char reg_addr, 
+* char twiReadImu(unsigned char slave_addr, unsigned char reg_addr, 
 *						unsigned char length,	unsigned char *data)
 * int get_ms(uint32_t *timestamp)
 * int delay_ms(uint32_t period_ms)
@@ -180,12 +180,12 @@ int imuDmpInit(void)
 */
 unsigned char imuDmpStop(void)
 {
-	unsigned char* dmpEnabled = 0;
+	unsigned char dmpEnabled = 0;
 		
 	mpu_get_dmp_state(&dmpEnabled);				//See if DMP was running
-	if (*dmpEnabled == 1)						//If it was
+	if (dmpEnabled == 1)						//If it was
 		mpu_set_dmp_state(0);					//Stop DMP
-	return *dmpEnabled;
+	return dmpEnabled;
 }
 
 /*
@@ -212,12 +212,12 @@ unsigned char imuDmpStop(void)
 */
 unsigned char imuDmpStart(void)
 {
-	unsigned char* dmpEnabled = 0;
+	unsigned char dmpEnabled = 0;
 	
 	mpu_get_dmp_state(&dmpEnabled);				//See if DMP was already running
-	if (*dmpEnabled == 0)						//If it wasn't
+	if (dmpEnabled == 0)						//If it wasn't
 		mpu_set_dmp_state(1);					//Start DMP
-	return *dmpEnabled;	
+	return dmpEnabled;	
 }
 
 /*
@@ -392,7 +392,7 @@ int delay_ms(uint32_t period_ms)
 }
 
 /*
-* Function: char twi_write_imu(unsigned char slave_addr, unsigned char reg_addr, 
+* Function: char twiWriteImu(unsigned char slave_addr, unsigned char reg_addr, 
 *								unsigned char length, unsigned char const *data)
 *
 * Required by the IMU drivers (hence naming convention). Writes the specified number of bytes to a
@@ -416,9 +416,10 @@ int delay_ms(uint32_t period_ms)
 * flag isn't set until all bytes have been sent and the transmission holding register is clear.
 *
 */
-#if defined ROBOT_TARGET_V1
-char twi_write_imu(unsigned char slave_addr, unsigned char reg_addr, 
+
+char twiWriteImu(unsigned char slave_addr, unsigned char reg_addr, 
 					unsigned char length, unsigned char const *data)
+#if defined ROBOT_TARGET_V1
 {
 	//note txcomp MUST = 1 before writing (according to datasheet)
 	twi2MasterMode;								//Enable master mode
@@ -445,8 +446,6 @@ char twi_write_imu(unsigned char slave_addr, unsigned char reg_addr,
 #endif
 
 #if defined ROBOT_TARGET_V2
-char twi_write_imu(unsigned char slave_addr, unsigned char reg_addr,
-					unsigned char length, unsigned char const *data)
 {
 	//note txcomp MUST = 1 before writing (according to datasheet)
 	twi0MasterMode;								//Enable master mode
@@ -473,7 +472,7 @@ char twi_write_imu(unsigned char slave_addr, unsigned char reg_addr,
 #endif
 
 /*
-* Function: char twi_read_imu(unsigned char slave_addr, unsigned char reg_addr,
+* Function: char twiReadImu(unsigned char slave_addr, unsigned char reg_addr,
 *								unsigned char length, unsigned char const *data)
 *
 * Required by the IMU drivers (hence naming convention). Reads the specified number of bytes from a
@@ -504,9 +503,10 @@ char twi_write_imu(unsigned char slave_addr, unsigned char reg_addr,
 * decides to stop talking. Additionally, non zero value returned on error.
 *
 */
-#if defined ROBOT_TARGET_V1
-char twi_read_imu(unsigned char slave_addr, unsigned char reg_addr,
+
+char twiReadImu(unsigned char slave_addr, unsigned char reg_addr,
 					unsigned char length, unsigned char *data)
+#if defined ROBOT_TARGET_V1
 {
 	twi2MasterMode;						//Enable master mode
 	twi2SetSlave(slave_addr);			//Slave device address
@@ -538,8 +538,6 @@ char twi_read_imu(unsigned char slave_addr, unsigned char reg_addr,
 #endif
 
 #if defined ROBOT_TARGET_V2
-char twi_read_imu(unsigned char slave_addr, unsigned char reg_addr,
-					unsigned char length, unsigned char *data)
 {
 	twi0MasterMode;						//Enable master mode
 	twi0SetSlave(slave_addr);			//Slave device address
@@ -597,7 +595,7 @@ uint8_t imuCommTest(void)
 	dmpEnabled = imuDmpStop();		//Stop DMP. Returns 1 if DMP was running.
 		
 	//Request test byte
-	twi_read_imu(TWI2_IMU_ADDR, IMU_WHOAMI_REG, 1, &returnVal);
+	twiReadImu(TWI2_IMU_ADDR, IMU_WHOAMI_REG, 1, &returnVal);
 
 	if (dmpEnabled == 1)			//If DMP was running before this function began
 		imuDmpStart();				//Restart the DMP

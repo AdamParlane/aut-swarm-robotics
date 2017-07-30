@@ -121,8 +121,8 @@ static inline int reg_int_cb(struct int_param_s *int_param)
 #define labs			abs
 #define fabs(x)			(((x)>0)?(x):-(x))
 #define min(a,b)		((a<b)?a:b)
-#define i2c_write		twi_write_imu
-#define i2c_read		twi_read_imu
+#define i2c_write		twiWriteImu
+#define i2c_read		twiReadImu
 
 #endif
 
