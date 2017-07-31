@@ -163,7 +163,7 @@ void InterpretXbeeAPIFrame(struct frame_info frame)
 			//Received Data
 			if(FrameBufferGet(&temp) == 0)
 			{
-				MessageBufferInfoPut(MessageBufferIn,temp,1); //Store information about received message
+				MessageBufferInfoPut(MessageBufferIn,temp,length-12); //Store information about received message
 				for(int i = 1; i <= length-12; i++)
 				{
 					//Take data from FrameBuffer and put it into the MessageBuffer 

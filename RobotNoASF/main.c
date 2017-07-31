@@ -65,8 +65,9 @@ void setup(void);
 */
 int main(void)
 {
+	//const char streamIntervalFlag = 1;
 	setup();
-	uint8_t testMode;
+	uint8_t testMode = 0x00;
 	//Comms
 	struct frame_info frame;
 	struct message_info message;
@@ -90,12 +91,13 @@ int main(void)
 				else if(testMode == SINGLE_SAMPLE)
 				{
 					robotState = IDLE;
-					SendXbeeAPITransmitRequest(BROADCAST_64,UNKNOWN_16, transmitMessage.Data, transmitMessage.DataSize);  //Send the Message
+					SendXbeeAPITransmitRequest(COORDINATOR_64,UNKNOWN_16, transmitMessage.Data, transmitMessage.DataSize);  //Send the Message
 				}
 				else if(streamIntervalFlag && testMode == STREAM_DATA)
 				{
 					streamIntervalFlag = 0;
-					SendXbeeAPITransmitRequest(BROADCAST_64,UNKNOWN_16, transmitMessage.Data, transmitMessage.DataSize);  //Send the Message
+					delay_ms(200);
+					SendXbeeAPITransmitRequest(COORDINATOR_64,UNKNOWN_16, transmitMessage.Data, transmitMessage.DataSize);  //Send the Message
 				}
 			break;
 			
@@ -120,7 +122,10 @@ int main(void)
 			
 			case IDLE:
 			//idle
-			PWMSpeedTest();
+			stopRobot();
+			//delay_ms(10000);
+			//robotState = MANUAL;
+			//PWMSpeedTest();
 			break;
 		}
 		
