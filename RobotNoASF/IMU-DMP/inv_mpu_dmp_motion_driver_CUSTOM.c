@@ -66,7 +66,6 @@
 #else
 #define __no_operation()	__asm__ __volatile__ ("nop")
 //SWARM ROBOT CONFIGURATION/////////////////////////////////////////////
-
 #define delay_ms    delay_ms
 #define get_ms      get_ms
 #define log_i(...)     do {} while (0)

@@ -344,6 +344,9 @@ void stopRobot(void)
 	RIN_2_L;
 	FIN_3_L;
 	RIN_3_L;
+	REG_PWM_CUPD1 = 0;
+	REG_PWM_CUPD2 = 0;
+	REG_PWM_CUPD3 = 0;
 }
 
 /*
@@ -412,4 +415,72 @@ void setTestMotors(uint8_t motorData[])
 		RIN_3_H;
 		REG_PWM_CUPD3 = (motorData[1] & 0x7F);
 	}
+}
+
+/*
+*
+* Function:
+* void motorPWMcurve(void)
+*
+* Runs motor 2 at 10% duty cycle steps for 5 seconds each
+*
+* Inputs:
+* none
+*
+* Returns:
+* none
+*
+* Implementation:
+* Powers motor 2 0-100% duty cycle in 5 second 10% steps
+* Purpose is to test the PWM curve on each robot
+*
+*/
+void PWMSpeedTest(void)
+{
+	//Stops the robot from moving
+	FIN_2_H;
+	RIN_2_L;
+	REG_PWM_CUPD2 = 0;
+	delay_ms(5000);
+	REG_PWM_CUPD2 = 0;
+	delay_ms(5000);
+	REG_PWM_CUPD2 = 10;
+	delay_ms(5000);
+	REG_PWM_CUPD2 = 0;
+	delay_ms(5000);
+	REG_PWM_CUPD2 = 20;
+	delay_ms(5000);
+	REG_PWM_CUPD2 = 0;
+	delay_ms(5000);
+	REG_PWM_CUPD2 = 30;
+	delay_ms(5000);
+	REG_PWM_CUPD2 = 0;
+	delay_ms(5000);
+	REG_PWM_CUPD2 = 40;
+	delay_ms(5000);
+	REG_PWM_CUPD2 = 0;
+	delay_ms(5000);
+	REG_PWM_CUPD2 = 50;
+	delay_ms(5000);
+	REG_PWM_CUPD2 = 0;
+	delay_ms(5000);
+	REG_PWM_CUPD2 = 60;
+	delay_ms(5000);
+	REG_PWM_CUPD2 = 0;
+	delay_ms(5000);
+	REG_PWM_CUPD2 = 70;
+	delay_ms(5000);
+	REG_PWM_CUPD2 = 0;
+	delay_ms(5000);
+	REG_PWM_CUPD2 = 80;
+	delay_ms(5000);
+	REG_PWM_CUPD2 = 0;
+	delay_ms(5000);
+	REG_PWM_CUPD2 = 90;
+	delay_ms(5000);
+	REG_PWM_CUPD2 = 0;
+	delay_ms(5000);
+	REG_PWM_CUPD2 = 100;
+	delay_ms(5000);
+	stopRobot();
 }

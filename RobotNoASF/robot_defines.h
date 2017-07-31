@@ -76,11 +76,18 @@ struct Position
 };
 
 struct Command
+//is anyone using this???
 //structure to receive the command and interpret it to something useful
 {
 	char messageClass;
 	char commandCode;
 	char command[10];
+};
+
+struct transmitDataStructure
+{
+	uint8_t Data[50];//array for data to be transmitted to PC BEFORE XBee framing has been added
+	uint8_t DataSize;//size of the transmit array
 };
 
 ///////////////Global variables/////////////////////////////////////////////////////////////////////
