@@ -159,6 +159,7 @@ int main(void)
 */
 void setup(void)
 {
+	//////////////Setup routine has been modified to just test IMU in this branch./////////////////
 	REG_WDT_MR = WDT_MR_WDDIS; 			//Disable system watchdog timer.
 
 	masterClockInit();					//Initialise the master clock to 100MHz
