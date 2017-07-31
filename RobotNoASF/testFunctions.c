@@ -101,8 +101,8 @@ uint8_t testManager(struct message_info message, struct transmitDataStructure *t
 		case TEST_PROXIMITY_SENSORS: //0xE4
 		//6 Proximtiy Sensors (A-F) Identified by their Mux channels
 		peripheralReturnData = proxSensRead(receivedTestData[1]);
-		transmit->Data[1] = receivedTestData[1];//Transmit the specific proximity sensor ID
-		transmit->Data[2] = DATA_RETURN; //sending data out
+		transmit->Data[1] = DATA_RETURN; //sending data out
+		transmit->Data[2] = receivedTestData[1];//Transmit the specific proximity sensor ID
 		transmit->Data[3] = peripheralReturnData >> 8; //upper data byte
 		transmit->Data[4] = peripheralReturnData & 0xFF; //lower data byte
 		transmit->DataSize = 5;
@@ -111,8 +111,8 @@ uint8_t testManager(struct message_info message, struct transmitDataStructure *t
 		case TEST_LIGHT_SENSORS:
 		//2 Light Sensors (LHS & RHS) Identified by their Mux channels
 		peripheralReturnData = lightSensRead(receivedTestData[1], LS_WHITE_REG);
-		transmit->Data[1] = receivedTestData[1];//Transmit the specific light sensor ID
-		transmit->Data[2] = DATA_RETURN; //sending data out
+		transmit->Data[1] = DATA_RETURN; //sending data out
+		transmit->Data[2] = receivedTestData[1];//Transmit the specific light sensor ID
 		transmit->Data[3] = peripheralReturnData >> 8; //upper byte
 		transmit->Data[4] = peripheralReturnData & 0xFF; //lower byte
 		transmit->DataSize = 5;
@@ -123,11 +123,11 @@ uint8_t testManager(struct message_info message, struct transmitDataStructure *t
 		//The motors need to be turned on individually at a set direction and speed as commanded by the PC
 		//This is done with a different setTestMotors function, found in motorDriver.c
 		setTestMotors(receivedTestData); //Turn on the require motor at the set speed and direction
-		transmit->Data[1] = receivedTestData[1];//Transmit the specific motor ID
-		transmit->Data[2] = DATA_RETURN; //Sending Data Out
+		transmit->Data[1] = DATA_RETURN; //Sending Data Out
+		transmit->Data[2] = receivedTestData[1];//Transmit the specific motor ID
 		transmit->Data[3] = receivedTestData[2];//Echo's the command
-		//TO DO: instead of echo read what motor is on with direction and speed and return it
-		//TO DO: turn off motors after test is finished 
+		//TODO: instead of echo read what motor is on with direction and speed and return it
+		//TODO: turn off motors after test is finished 
 		transmit->DataSize = 4;
 
 		break;
