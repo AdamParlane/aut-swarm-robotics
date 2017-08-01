@@ -20,6 +20,7 @@
 
 ///////////////Includes/////////////////////////////////////////////////////////////////////////////
 #include "line_sens_interface.h"
+#include "component/pio.h"
 
 ///////////////Functions////////////////////////////////////////////////////////////////////////////
 
@@ -27,13 +28,13 @@ void lfInit(void)
 #if defined ROBOT_TARGET_V1
 {
 	//Setup LF sensor pins for (binary) input
-	LF0_PORT[PIO_PER]			//Enable port A sensor pins
+	LF0_PORT->PIO_PER			//Enable LF0 sensor pin
 	|=	LF0;
-	LF1_PORT[PIO_PER]			//Enable port C sensor pins
+	LF1_PORT->PIO_PER			//Enable LF1 sensor pin
 	|=	LF1;
-	LF2_PORT[PIO_PER]
+	LF2_PORT->PIO_PER			//Enable LF2 sensor pin
 	|=	LF2;
-	LF3_PORT[PIO_PER]
+	LF3_PORT->PIO_PER			//Enable LF3 sensor pin
 	|=	LF3;
 }
 #endif
@@ -41,9 +42,9 @@ void lfInit(void)
 #if defined ROBOT_TARGET_V2
 {
 	//Initialise PA8 (LFC) for output so LEDs can be turned on and off
-	LFC_PORT[PIO_PER]
+	LFC_PORT->PIO_PER
 	|=	LFC;
-	LFC_PORT[PIO_OER]
+	LFC_PORT->PIO_OER
 	|=	LFC;
 	
 	lfLedState(ON);
@@ -80,9 +81,9 @@ void lfLedState(uint8_t ledState)
 #if defined ROBOT_TARGET_V2
 {
 	if (ledState == OFF)
-		LFC_PORT[PIO_CODR] |= LFC;	//Turn LEDs off
+		LFC_PORT->PIO_CODR |= LFC;	//Turn LEDs off
 	if (ledState == ON)
-		LFC_PORT[PIO_SODR] |= LFC;	//Turn LEDs on
+		LFC_PORT->PIO_SODR |= LFC;	//Turn LEDs on
 }
 #endif
 
@@ -145,6 +146,7 @@ uint8_t lfLineDetected(uint8_t lfSensor)
 		return LINE;						
 	if (sensorData < LF_THRESHOLD_L)	//if below threshold then white floor detected.
 		return NO_LINE;
+		
 	return NO_CHANGE;
 }
 #endif

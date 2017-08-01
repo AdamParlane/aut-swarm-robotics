@@ -36,10 +36,10 @@
 //TODO: Layout defines for the PIO pins that the line followers are connected to. They aren't
 //connected to ADC channels, but they may still be able to work by setting the threshold through
 //their pull up resistors.
-#define LF0_PORT		PIOA
-#define LF1_PORT		PIOC
-#define LF2_PORT		PIOC
-#define LF3_PORT		PIOA
+#define LF0_PORT		PIOA			//Line follower 0 Port
+#define LF1_PORT		PIOC			//Line follower 1 Port
+#define LF2_PORT		PIOC			//Line follower 2 Port
+#define LF3_PORT		PIOA			//Line follower 3 Port
 #define LF0				PIO_PA5			//Line follower 0 PIO pin
 #define LF1				PIO_PC28		//Line follower 1 PIO pin
 #define LF2				PIO_PC10		//Line follower 2 PIO pin
@@ -53,7 +53,7 @@
 #define LF1				LF1_ADC_CH		//Line follower 1 ADC channel
 #define LF2				LF2_ADC_CH		//Line follower 2 ADC channel
 #define LF3				LF3_ADC_CH		//Line follower 3 ADC channel
-#define LFC_PORT		PIOA
+#define LFC_PORT		PIOA			//PIO Port def for the line follower LED control
 #define LFC				PIO_PA8			//PIO pin def for the line follower LED control
 #endif
 
