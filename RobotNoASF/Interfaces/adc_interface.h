@@ -34,8 +34,8 @@
 //	ADC channel defines
 //		Line follower ADC channels version 1 robot
 #if defined ROBOT_TARGET_V1
-//According to the schematic for V1, the line followers weren't connected to ADC channels.. Need to
-//ask the hardware boys about this.
+//It appears that the line follow sensors aren't connected to ADC channels on the V1, and that the
+//IR leds are always on.
 //#define LF0_ADC_CH			13	// Far left
 //#define LF1_ADC_CH			15	// Center left
 //#define LF2_ADC_CH			0	// Center right
