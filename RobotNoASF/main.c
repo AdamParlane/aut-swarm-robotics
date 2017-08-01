@@ -82,36 +82,36 @@ int main(void)
 		switch (robotState)
 		{
 			case TEST:
-				if(newDataFlag || streamIntervalFlag)//get the new test data
-				{
+			if(newDataFlag || streamIntervalFlag)//get the new test data
+			{
 
-					testMode = testManager(message, &transmitMessage);//get the new test data
-				}
-				if(testMode == STOP_STREAMING)
-					robotState = IDLE;
-				else if(testMode == SINGLE_SAMPLE)
-				{
-					robotState = IDLE;
-					SendXbeeAPITransmitRequest(COORDINATOR_64,UNKNOWN_16, transmitMessage.Data, transmitMessage.DataSize);  //Send the Message
-				}
-				else if(streamIntervalFlag && testMode == STREAM_DATA)
-				{
-					streamIntervalFlag = 0;
-					SendXbeeAPITransmitRequest(COORDINATOR_64,UNKNOWN_16, transmitMessage.Data, transmitMessage.DataSize);  //Send the Message
-				}
+				testMode = testManager(message, &transmitMessage);//get the new test data
+			}
+			if(testMode == STOP_STREAMING)
+			robotState = IDLE;
+			else if(testMode == SINGLE_SAMPLE)
+			{
+				robotState = IDLE;
+				SendXbeeAPITransmitRequest(COORDINATOR_64,UNKNOWN_16, transmitMessage.Data, transmitMessage.DataSize);  //Send the Message
+			}
+			else if(streamIntervalFlag && testMode == STREAM_DATA)
+			{
+				streamIntervalFlag = 0;
+				SendXbeeAPITransmitRequest(COORDINATOR_64,UNKNOWN_16, transmitMessage.Data, transmitMessage.DataSize);  //Send the Message
+			}
 			break;
 			
 			case TEST_ALL:
 			break;
 			
 			case MANUAL:
-				if(newDataFlag)
-					manualControl(message);
+			if(newDataFlag)
+			manualControl(message);
 			break;
 			
 			case DOCKING:
 			//if battery low or manual command set
-				dockRobot();
+			dockRobot();
 			break;
 			
 			case FORMATION:
@@ -159,7 +159,6 @@ int main(void)
 */
 void setup(void)
 {
-	//////////////Setup routine has been modified to just test IMU in this branch./////////////////
 	REG_WDT_MR = WDT_MR_WDDIS; 			//Disable system watchdog timer.
 
 	masterClockInit();					//Initialise the master clock to 100MHz
@@ -170,19 +169,17 @@ void setup(void)
 	SPI_Init();							//Initialise SPI for talking with optical sensor
 	twi0Init();							//Initialise TWI0 interface
 	twi2Init();							//Initialise TWI2 interface
-	//lightSensInit(MUX_LIGHTSENS_R);		//Initialise Right Light/Colour sensor
-	//lightSensInit(MUX_LIGHTSENS_L);		//Initialise Left Light/Colour sensor
-	//proxSensInit(MUX_PROXSENS_A);		//Initialise proximity sensor on panel A
-	//proxSensInit(MUX_PROXSENS_B);		//Initialise proximity sensor on panel B
-	//proxSensInit(MUX_PROXSENS_C);		//Initialise proximity sensor on panel C
-	//proxSensInit(MUX_PROXSENS_D);		//Initialise proximity sensor on panel D
-	//proxSensInit(MUX_PROXSENS_E);		//Initialise proximity sensor on panel E
-	//proxSensInit(MUX_PROXSENS_F);		//Initialise proximity sensor on panel F
-	//fcInit();							//Initialise the fast charge chip
-	//CommunicationSetup();				//Initialise communication system
-	//imuInit();							//Initialise IMU
-	int result = imuCommTest();
+	lightSensInit(MUX_LIGHTSENS_R);		//Initialise Right Light/Colour sensor
+	lightSensInit(MUX_LIGHTSENS_L);		//Initialise Left Light/Colour sensor
+	proxSensInit(MUX_PROXSENS_A);		//Initialise proximity sensor on panel A
+	proxSensInit(MUX_PROXSENS_B);		//Initialise proximity sensor on panel B
+	proxSensInit(MUX_PROXSENS_C);		//Initialise proximity sensor on panel C
+	proxSensInit(MUX_PROXSENS_D);		//Initialise proximity sensor on panel D
+	proxSensInit(MUX_PROXSENS_E);		//Initialise proximity sensor on panel E
+	proxSensInit(MUX_PROXSENS_F);		//Initialise proximity sensor on panel F
+	fcInit();							//Initialise the fast charge chip
+	CommunicationSetup();				//Initialise communication system
+	imuInit();							//Initialise IMU
 	mouseInit();						//May require further testing - Adam
 	return;
 }
-
