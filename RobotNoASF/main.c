@@ -84,6 +84,7 @@ int main(void)
 			case TEST:
 				if(newDataFlag || streamIntervalFlag)//get the new test data
 				{
+
 					testMode = testManager(message, &transmitMessage);//get the new test data
 				}
 				if(testMode == STOP_STREAMING)
@@ -96,7 +97,6 @@ int main(void)
 				else if(streamIntervalFlag && testMode == STREAM_DATA)
 				{
 					streamIntervalFlag = 0;
-					delay_ms(200);
 					SendXbeeAPITransmitRequest(COORDINATOR_64,UNKNOWN_16, transmitMessage.Data, transmitMessage.DataSize);  //Send the Message
 				}
 			break;
@@ -105,10 +105,8 @@ int main(void)
 			break;
 			
 			case MANUAL:
-			moveRobot(90, 50);
-			delay_ms(10000);
-			stopRobot();
-			robotState = IDLE;
+				if(newDataFlag)
+					manualControl(message);
 			break;
 			
 			case DOCKING:
@@ -123,9 +121,6 @@ int main(void)
 			case IDLE:
 			//idle
 			stopRobot();
-			//delay_ms(10000);
-			//robotState = MANUAL;
-			//PWMSpeedTest();
 			break;
 		}
 		

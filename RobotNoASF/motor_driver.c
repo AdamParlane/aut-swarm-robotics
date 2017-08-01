@@ -184,7 +184,7 @@ void motor_init(void)
 * None as of 26/7/17
 *
 */
-void moveRobot(float direction, unsigned char speed)
+void moveRobot(uint16_t direction, unsigned char speed)
 {
 	float motor1Speed = 20, motor2Speed = 20, motor3Speed = 20;
 	float unBalM1Speed, unBalM2Speed, unBalM3Speed;
@@ -484,4 +484,50 @@ void PWMSpeedTest(void)
 	REG_PWM_CUPD2 = 100;
 	delay_ms(5000);
 	stopRobot();
+}
+
+
+/*
+* Function:
+* void manualControl(struct message_info message)
+*
+* Runs the manual movement controls from the GUI
+* These are:
+*			move straight (N, NE, E, SE, S, SW, W, NW)
+*			rotate (CW, CCW)
+*			stop
+* Movements also have an assigned speed
+*
+* Inputs:
+* struct message_info message
+*			XBee message data
+*
+* Returns:
+* none
+*
+* Implementation:
+* uses convertData(message, receivedTestData); 
+* to fetch the received data information (speed and direction)
+* 
+*
+* Improvements:
+* TODO: Adam Comment this -AP
+*
+*/
+void manualControl(struct message_info message)
+{
+	static uint8_t receivedTestData[5];
+	newDataFlag = 0;
+	uint16_t straightDirection;
+	convertData(message, receivedTestData);
+	straightDirection = receivedTestData[0] + (receivedTestData[1] << 8);
+	if(message.command == MANUAL_STRAIGHT)
+		moveRobot(straightDirection, receivedTestData[3]);
+	else if(message.command == MANUAL_STOP)
+	{
+		stopRobot();
+		robotState = IDLE;
+	}
+	else
+		rotateRobot(message.command, receivedTestData[0]);
 }

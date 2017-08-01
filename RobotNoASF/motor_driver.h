@@ -31,8 +31,12 @@
 
 ///////////////Defines//////////////////////////////////////////////////////////////////////////////
 //Miscellaneous
-#define CW	0
-#define CCW 1
+#define CW	0xD2
+#define CCW 0xD3 // just changed these from 0 and 1, hopefully doesnt change anything
+
+#define MANUAL_STRAIGHT 0xD1
+#define MANUAL_STOP		0xD0
+
 
 //****Motor Pins***//
 //	Robot Version 1 pin assignment
@@ -106,7 +110,7 @@ void motor_init(void);
 *	none
 *
 */
-void moveRobot(float direction, unsigned char speed);
+void moveRobot(uint16_t direction, unsigned char speed);
 
 /*
 * Function:
@@ -177,5 +181,7 @@ void setTestMotors(uint8_t motorData[]);
 *
 */
 void PWMSpeedTest(void);
+
+void manualControl(struct message_info message);
 
 #endif /* MOTOR_DRIVER_H_ */

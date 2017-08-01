@@ -95,7 +95,8 @@ struct transmitDataStructure
 char newDataFlag; //used for test function probably temporary
 enum ROBOT_STATES{TEST, TEST_ALL, MANUAL, FORMATION, DOCKING, IDLE, PAUSE}; //main loop functionality
 char robotState;
-char streamIntervalFlag;
+char streamDelayCounter, streamIntervalFlag;
+
 
 ///////////////Functions////////////////////////////////////////////////////////////////////////////
 /*

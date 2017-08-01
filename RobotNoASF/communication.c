@@ -108,8 +108,10 @@ void InterpretSwarmMessage(struct message_info message)
 	int index = message.index;
 	int length = message.length;
 	newDataFlag = 1;
-	if(message.command >= 0xE0)
+	if(message.command >= 0xE0) //test command range 0xE0-0xEF
 		robotState = TEST;
+	else if(message.command >= 0xD0) //Manual command range 0xD0-0xDF
+		robotState = MANUAL;
 }
 
 
