@@ -24,21 +24,21 @@
 #define ROBOTDEFINES_H_
 
 ///////////////Includes/////////////////////////////////////////////////////////////////////////////
-#include "spi.h"
+#include "Interfaces/spi.h"
 #include "sam.h"
-#include "communication.h"
-#include "adc_interface.h"
-#include "imu_interface.h"
-#include "opt_interface.h"
-#include "motor_driver.h"
-#include "twimux_interface.h"
-#include "fc_interface.h"
-#include "prox_sens_interface.h"
-#include "light_sens_interface.h"
-#include "line_sens_interface.h"
-#include "testFunctions.h"
-#include "docking_functions.h"
-#include "manual_mode.h"
+#include "Interfaces/communication.h"
+#include "Interfaces/adc_interface.h"
+#include "Interfaces/imu_interface.h"
+#include "Interfaces/opt_interface.h"
+#include "Interfaces/motor_driver.h"
+#include "Interfaces/twimux_interface.h"
+#include "Interfaces/fc_interface.h"
+#include "Interfaces/prox_sens_interface.h"
+#include "Interfaces/light_sens_interface.h"
+#include "Interfaces/line_sens_interface.h"
+#include "Functions/testFunctions.h"
+#include "Functions/docking_functions.h"
+#include "Functions/manual_mode.h"
 
 ///////////////Defines//////////////////////////////////////////////////////////////////////////////
 //LED control macros

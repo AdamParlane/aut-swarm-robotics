@@ -45,11 +45,11 @@
 #include "sam.h"				//System header
 #include "twimux_interface.h"	//twi and multiplexer
 
-#include "robot_defines.h"
+#include "../robot_defines.h"
 
 //Invensense Direct Motion Processing Driver Files
-#include "IMU-DMP/inv_mpu_dmp_motion_driver_CUSTOM.h"//Direct Motion Processing setup functions
-#include "IMU-DMP/inv_mpu_CUSTOM.h"//IMU basic setup and initialisation functions
+#include "../IMU-DMP/inv_mpu_dmp_motion_driver_CUSTOM.h"//Direct Motion Processing setup functions
+#include "../IMU-DMP/inv_mpu_CUSTOM.h"//IMU basic setup and initialisation functions
 
 //Flags and system globals
 uint32_t systemTimestamp = 0;	//Number of ms since powerup. Used by delay_ms and get_ms functions

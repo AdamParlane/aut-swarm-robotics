@@ -13,7 +13,7 @@
 #ifndef COMMUNICATION_H_
 #define COMMUNICATION_H_
 
-#include "robot_defines.h"
+#include "../robot_defines.h"
 
 //64-bit robot addresses
 #define COORDINATOR_64 0x0000000000000000
