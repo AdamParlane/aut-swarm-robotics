@@ -184,7 +184,7 @@ void motor_init(void)
 * None as of 26/7/17
 *
 */
-void moveRobot(float direction, unsigned char speed)
+void moveRobot(uint16_t direction, unsigned char speed)
 {
 	float motor1Speed = 20, motor2Speed = 20, motor3Speed = 20;
 	float unBalM1Speed, unBalM2Speed, unBalM3Speed;
@@ -485,3 +485,5 @@ void PWMSpeedTest(void)
 	delay_ms(5000);
 	stopRobot();
 }
+
+
