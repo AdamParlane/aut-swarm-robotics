@@ -25,14 +25,25 @@
 #include "../robot_defines.h"
 
 ///////////////Defines//////////////////////////////////////////////////////////////////////////////
+#define ON				1
+#define OFF				0
+
+#define LINE			1
+#define NO_LINE			0
+#define NO_CHANGE		2
+
 #if defined ROBOT_TARGET_V1
 //TODO: Layout defines for the PIO pins that the line followers are connected to. They aren't
 //connected to ADC channels, but they may still be able to work by setting the threshold through
 //their pull up resistors.
-#define LF0				0				//Line follower 0 ADC channel
-#define LF1				0				//Line follower 1 ADC channel
-#define LF2				0				//Line follower 2 ADC channel
-#define LF3				0				//Line follower 3 ADC channel
+#define LF0_PORT		PIOA
+#define LF1_PORT		PIOC
+#define LF2_PORT		PIOC
+#define LF3_PORT		PIOA
+#define LF0				PIO_PA5			//Line follower 0 PIO pin
+#define LF1				PIO_PC28		//Line follower 1 PIO pin
+#define LF2				PIO_PC10		//Line follower 2 PIO pin
+#define LF3				PIO_PA2			//Line follower 3 PIO pin
 #endif
 
 #if defined ROBOT_TARGET_V2
@@ -42,10 +53,13 @@
 #define LF1				LF1_ADC_CH		//Line follower 1 ADC channel
 #define LF2				LF2_ADC_CH		//Line follower 2 ADC channel
 #define LF3				LF3_ADC_CH		//Line follower 3 ADC channel
-#define LFC				0				//TODO: PIO pin def for the line follower LED control
+#define LFC_PORT		PIOA
+#define LFC				PIO_PA8			//PIO pin def for the line follower LED control
 #endif
 
 ///////////////Functions////////////////////////////////////////////////////////////////////////////
+void lfInit(void);
+
 /*
 * Function:
 * void lfLedState(uint8_t ledState);
