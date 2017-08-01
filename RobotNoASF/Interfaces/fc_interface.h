@@ -42,6 +42,10 @@
 #define FC_BATTVOL_INIT	0x66	//Vreg = 3.98v, input current = 2.5A (FC_BATVOL_REG)
 #define FC_CHARGE_INIT	0xFA	//charge current set to max Ic=2875mA, termination current
 								//Iterm=100mA (default) (FC_CHARGE_REG)
+								
+//Misc
+//	ADC to battery voltage conversion factor
+#define FC_BATTVOL_CONV	ADC_VOLTAGE_REF/1023
 
 ///////////////Functions////////////////////////////////////////////////////////////////////////////
 /*

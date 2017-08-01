@@ -124,3 +124,32 @@ uint8_t fcVersionRead(void)
 	//Return just the revision number (first 3 bits)
 	return (0x07 & returnVal);
 }
+
+/*
+* Function:
+* float fcBatteryVoltage(void)
+*
+* Returns current battery voltage
+*
+* Inputs:
+* none
+*
+* Returns:
+* Returns a integer value of the current battery voltage in mV.
+*
+* Implementation:
+* Reads battery voltage ADC channel
+* Converts to millivolts using linear conversion factor set in fc_interface.h and returns
+*
+* Improvements:
+* TODO: fcBatteryVoltage(); Curently this function is not capable of returning a value greater than
+* 3396mV because the ADC's internal reference voltage is only 3396mV max. To return full battery
+* voltage, there needs to be a higher reference voltage that doesn't degrade as the battery does.
+*
+*/
+uint16_t fcBatteryVoltage(void)
+{
+	uint16_t rawBattReading = 0;
+	rawBattReading = adcRead(FC_BATVOLT_ADC_CH);
+	return rawBattReading*FC_BATTVOL_CONV;
+}
