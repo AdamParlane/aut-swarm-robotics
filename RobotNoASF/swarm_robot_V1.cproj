@@ -52,7 +52,8 @@
       <ToolNumber>J30200015825</ToolNumber>
       <ToolName>JTAGICE3</ToolName>
     </com_atmel_avrdbg_tool_jtagice3plus>
-    <avrtoolinterface>JTAG</avrtoolinterface>
+    <avrtoolinterface>
+    </avrtoolinterface>
     <avrtoolinterfaceclock>7500000</avrtoolinterfaceclock>
     <com_atmel_avrdbg_tool_atmelice>
       <ToolOptions>
@@ -219,6 +220,15 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="line_sens_interface.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="manual_mode.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="manual_mode.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="manul_mode.c">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="motor_driver.c">

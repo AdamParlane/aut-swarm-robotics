@@ -126,10 +126,10 @@ unsigned char imuDmpStart(void);
 * Converts the orientation matrix to a scalar value for passing to the IMU by the INV driver
 *
 * Inputs:
-* TODO
+* TODO: Inputs description for invOrientationMatrixToScalar()
 *
 * Returns:
-* TODO
+* TODO: Returns desc for invOrientationMatrixToScalar()
 *
 */
 unsigned short invOrientationMatrixToScalar(const signed char *mtx);
@@ -138,13 +138,13 @@ unsigned short invOrientationMatrixToScalar(const signed char *mtx);
 * Function:
 * unsigned short invRow2Scale(const signed char *row)
 *
-* !!!!!Not sure
+* TODO: short description for invRow2Scale()
 *
 * Inputs:
-* TODO
+* TODO: Inputs desc for invRow2Scale()
 *
 * Returns:
-* TODO
+* TODO: Return desc for invRow2Scale()
 *
 */
 unsigned short invRow2Scale(const signed char *row);
