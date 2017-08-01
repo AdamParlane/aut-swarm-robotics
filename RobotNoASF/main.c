@@ -82,36 +82,36 @@ int main(void)
 		switch (robotState)
 		{
 			case TEST:
-				if(newDataFlag || streamIntervalFlag)//get the new test data
-				{
+			if(newDataFlag || streamIntervalFlag)//get the new test data
+			{
 
-					testMode = testManager(message, &transmitMessage);//get the new test data
-				}
-				if(testMode == STOP_STREAMING)
-					robotState = IDLE;
-				else if(testMode == SINGLE_SAMPLE)
-				{
-					robotState = IDLE;
-					SendXbeeAPITransmitRequest(COORDINATOR_64,UNKNOWN_16, transmitMessage.Data, transmitMessage.DataSize);  //Send the Message
-				}
-				else if(streamIntervalFlag && testMode == STREAM_DATA)
-				{
-					streamIntervalFlag = 0;
-					SendXbeeAPITransmitRequest(COORDINATOR_64,UNKNOWN_16, transmitMessage.Data, transmitMessage.DataSize);  //Send the Message
-				}
+				testMode = testManager(message, &transmitMessage);//get the new test data
+			}
+			if(testMode == STOP_STREAMING)
+			robotState = IDLE;
+			else if(testMode == SINGLE_SAMPLE)
+			{
+				robotState = IDLE;
+				SendXbeeAPITransmitRequest(COORDINATOR_64,UNKNOWN_16, transmitMessage.Data, transmitMessage.DataSize);  //Send the Message
+			}
+			else if(streamIntervalFlag && testMode == STREAM_DATA)
+			{
+				streamIntervalFlag = 0;
+				SendXbeeAPITransmitRequest(COORDINATOR_64,UNKNOWN_16, transmitMessage.Data, transmitMessage.DataSize);  //Send the Message
+			}
 			break;
 			
 			case TEST_ALL:
 			break;
 			
 			case MANUAL:
-				if(newDataFlag)
-					manualControl(message);
+			if(newDataFlag)
+			manualControl(message);
 			break;
 			
 			case DOCKING:
 			//if battery low or manual command set
-				dockRobot();
+			dockRobot();
 			break;
 			
 			case FORMATION:
@@ -183,4 +183,3 @@ void setup(void)
 	mouseInit();						//May require further testing - Adam
 	return;
 }
-

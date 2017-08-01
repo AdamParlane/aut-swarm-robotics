@@ -45,8 +45,14 @@
 * - Set the high and low periods of the TWI clock signal using formula from datasheet
 *	NOTE: A high period of 0.6uSec and a low period of 1.3uSec is required by both the Proximity
 *	and Light Sensors
-*	1.3uSec = ((x * 2^CKDIV)+4) * 10nSec[100MHz]
-*	0.6uSec = ((x * 2^CKDIV)+4) * 10nSec[100MHz]
+*                t_low
+*   CLDIV =  --------------  - 2
+*            2(t_masterclk)
+*
+*                t_high
+*   CHDIV =  --------------  - 2
+*            2(t_masterclk)
+*
 * - Make uC master on the TWI bus
 *
 */
