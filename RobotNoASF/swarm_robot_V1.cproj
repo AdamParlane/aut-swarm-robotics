@@ -228,9 +228,6 @@
     <Compile Include="manual_mode.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="manul_mode.c">
-      <SubType>compile</SubType>
-    </Compile>
     <Compile Include="motor_driver.c">
       <SubType>compile</SubType>
     </Compile>
