@@ -26,6 +26,7 @@
 ///////////////Includes/////////////////////////////////////////////////////////////////////////////
 #include "spi.h"
 #include "sam.h"
+#include "communication.h"
 #include "adc_interface.h"
 #include "imu_interface.h"
 #include "opt_interface.h"
@@ -35,9 +36,9 @@
 #include "prox_sens_interface.h"
 #include "light_sens_interface.h"
 #include "line_sens_interface.h"
-#include "communication.h"
 #include "testFunctions.h"
 #include "docking_functions.h"
+#include "manual_mode.h"
 
 ///////////////Defines//////////////////////////////////////////////////////////////////////////////
 //LED control macros

@@ -34,10 +34,6 @@
 #define CW	0xD2
 #define CCW 0xD3 // just changed these from 0 and 1, hopefully doesnt change anything
 
-#define MANUAL_STRAIGHT 0xD1
-#define MANUAL_STOP		0xD0
-
-
 //****Motor Pins***//
 //	Robot Version 1 pin assignment
 #if defined ROBOT_TARGET_V1
@@ -181,7 +177,5 @@ void setTestMotors(uint8_t motorData[]);
 *
 */
 void PWMSpeedTest(void);
-
-void manualControl(struct message_info message);
 
 #endif /* MOTOR_DRIVER_H_ */
