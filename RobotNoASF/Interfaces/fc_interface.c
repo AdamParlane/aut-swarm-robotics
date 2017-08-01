@@ -15,6 +15,7 @@
 * Functions:
 * void fcInit(void)
 * void fcWatchdogReset(void)
+* uint16_t fcBatteryVoltage(void)
 *
 */
 

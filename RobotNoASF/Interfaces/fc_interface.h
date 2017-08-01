@@ -16,6 +16,7 @@
 * Functions:
 * void fcInit(void)
 * void fcWatchdogReset(void)
+* uint16_t fcBatteryVoltage(void)
 *
 */
 
@@ -102,5 +103,20 @@ void fcWatchdogReset(void);
 *
 */
 uint8_t fcVersionRead(void);
+
+/*
+* Function:
+* float fcBatteryVoltage(void)
+*
+* Returns current battery voltage
+*
+* Inputs:
+* none
+*
+* Returns:
+* Returns a integer value of the current battery voltage in mV.
+*
+*/
+uint16_t fcBatteryVoltage(void);
 
 #endif /* FC_INTERFACE_H_ */
