@@ -240,6 +240,9 @@
     <Compile Include="Interfaces\light_sens_interface.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="Interfaces\line_sens_interface.c">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="Interfaces\line_sens_interface.h">
       <SubType>compile</SubType>
     </Compile>

@@ -122,16 +122,16 @@ uint8_t lfLineDetected(uint8_t lfSensor)
 	switch (lfSensor)			//Pick the selected sensor and output it's value.
 	{
 		case LF0:
-			return LF0_PORT[PIO_IDR] & LF0;
+			return LF0_PORT->PIO_IDR & LF0;
 		
 		case LF1:
-			return LF1_PORT[PIO_IDR] & LF1;
+			return LF1_PORT->PIO_IDR & LF1;
 		
 		case LF2:
-			return LF2_PORT[PIO_IDR] & LF2;
+			return LF2_PORT->PIO_IDR & LF2;
 		
 		case LF3:
-			return LF3_PORT[PIO_IDR] & LF3;
+			return LF3_PORT->PIO_IDR & LF3;
 	}
 	return 0;
 }
