@@ -52,11 +52,16 @@
 #include "IMU-DMP/inv_mpu_CUSTOM.h"//IMU basic setup and initialisation functions
 
 //Flags and system globals
-uint32_t systemTimestamp = 0;	//Number of ms since powerup
+uint32_t systemTimestamp = 0;	//Number of ms since powerup. Used by delay_ms and get_ms functions
+								//Which in turn are used by the IMU drivers/DMP
+
+uint8_t checkImuFifo	= 0;	//A flag to determine that the IMU's FIFO is ready to be read again
 
 #if defined ROBOT_TARGET_V1
-uint32_t checkImuFifo	= 0;	//A flag to determine that the IMU's FIFO is ready to be read again
-								//This is only used on V1 robot as V2 uses external interrupt.
+uint32_t imuFifoNextReadTime = 0;//The system time at which the IMU will be read next (ie when 
+								//checkImuFifo will next be set to one. Used by the V1 robot
+								//only as the V2 sets checkImuInfo from external interrupt from
+								//The IMU.
 #endif
 
 ///////////////Functions////////////////////////////////////////////////////////////////////////////
@@ -227,13 +232,13 @@ unsigned char imuDmpStart(void)
 * Converts the orientation matrix to a scalar value for passing to the IMU by the INV driver
 *
 * Inputs:
-* TODO
+* TODO: input descriptions for invOrientationMatrixToScalar function
 *
 * Returns:
-* TODO
+* TODO: return value description for invOrientationMatrixToScalar function
 *
 * Implementation:
-* TODO
+* TODO: Implementation description for invOrientationMatrixToScalar function
 *
 */
 unsigned short invOrientationMatrixToScalar(const signed char *mtx)
@@ -260,16 +265,16 @@ unsigned short invOrientationMatrixToScalar(const signed char *mtx)
 * Function:
 * unsigned short invRow2Scale(const signed char *row)
 *
-* !!!!!Not sure
+* TODO: Short description for invRow2Scale() function
 *
 * Inputs:
-* TODO
+* TODO: Inputs description for invRow2Scale()
 *
 * Returns:
-* TODO
+* TODO: Return description for invRow2Scale()
 *
 * Implementation:
-* TODO
+* TODO: Implementation Description for invRow2Scale()
 *
 */
 unsigned short invRow2Scale(const signed char *row)
@@ -634,10 +639,10 @@ void TC0_Handler()
 //V1 robot doesn't have the IMU's interrupt pin tied in to the uC, so the FIFO will have to be
 //polled. V2 does utilise an external interrupt, so this code is not necessary.
 #if defined ROBOT_TARGET_V1
-		//Read IMUs FIFO every 5ms. In future this will be done from an external interrupt.
-		if(systemTimestamp >= (checkImuFifo + 5))					
+		//Read IMUs FIFO every 5ms on the V1 platform
+		if(systemTimestamp >= (imuFifoNextReadTime + 5))					
 		{
-			checkImuFifo = systemTimestamp;
+			imuFifoNextReadTime = systemTimestamp;
 		}
 #endif
 	}
