@@ -186,8 +186,7 @@ void motor_init(void)
 */
 void moveRobot(uint16_t direction, unsigned char speed)
 {
-	float motor1Speed = 20, motor2Speed = 20, motor3Speed = 20;
-	float unBalM1Speed, unBalM2Speed, unBalM3Speed;
+	uint16_t motor1Speed, motor2Speed, motor3Speed;
 	float directionRad;
 	//keep direction in range +/-180degrees
 	while(direction > 180) 
@@ -198,10 +197,9 @@ void moveRobot(uint16_t direction, unsigned char speed)
 	if(speed > 100)
 		speed = 100;
 	directionRad = (direction * M_PI) / 180; //convert desired direction to radians
-	unBalM1Speed = speed * cos ((270 * M_PI) / 180 - directionRad );//radians
-	unBalM2Speed = speed * cos ((30  * M_PI) / 180 - directionRad );
-	unBalM3Speed = speed * cos ((150 * M_PI) / 180 - directionRad );
-	
+	motor1Speed = speed * cos ((270 * M_PI) / 180 - directionRad );//radians
+	motor2Speed = speed * cos ((30  * M_PI) / 180 - directionRad );
+	motor3Speed = speed * cos ((150 * M_PI) / 180 - directionRad );
 	//motor 2 & 3 is wired backwards on test robot so forward and back is flipped
 	if(motor1Speed > 0)
 	{

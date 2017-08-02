@@ -52,8 +52,7 @@
       <ToolNumber>J30200015825</ToolNumber>
       <ToolName>JTAGICE3</ToolName>
     </com_atmel_avrdbg_tool_jtagice3plus>
-    <avrtoolinterface>
-    </avrtoolinterface>
+    <avrtoolinterface>JTAG</avrtoolinterface>
     <avrtoolinterfaceclock>7500000</avrtoolinterfaceclock>
     <com_atmel_avrdbg_tool_atmelice>
       <ToolOptions>
