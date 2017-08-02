@@ -36,14 +36,14 @@
 //TODO: Layout defines for the PIO pins that the line followers are connected to. They aren't
 //connected to ADC channels, but they may still be able to work by setting the threshold through
 //their pull up resistors.
-#define LF_OUTER_L_PORT	PIOA			//Line follower 0 Port
-#define LF_INNER_L_PORT	PIOC			//Line follower 1 Port
-#define LF_INNER_R_PORT	PIOC			//Line follower 2 Port
-#define LF_OUTER_R_PORT	PIOA			//Line follower 3 Port
-#define LF_OUTER_L		PIO_PA5			//Line follower 0 PIO pin
-#define LF_INNER_L		PIO_PC28		//Line follower 1 PIO pin
-#define LF_INNER_R		PIO_PC10		//Line follower 2 PIO pin
-#define LF_OUTER_R		PIO_PA2			//Line follower 3 PIO pin
+#define LF_OUTER_L_PORT	(PIOA)			//Line follower 0 Port
+#define LF_INNER_L_PORT	(PIOC)			//Line follower 1 Port
+#define LF_INNER_R_PORT	(PIOC)			//Line follower 2 Port
+#define LF_OUTER_R_PORT	(PIOA)			//Line follower 3 Port
+#define LF_OUTER_L		(PIO_PA5)		//Line follower 0 PIO pin
+#define LF_INNER_L		(PIO_PC28)		//Line follower 1 PIO pin
+#define LF_INNER_R		(PIO_PC10)		//Line follower 2 PIO pin
+#define LF_OUTER_R		(PIO_PA2)		//Line follower 3 PIO pin
 #endif
 
 #if defined ROBOT_TARGET_V2
@@ -52,12 +52,12 @@
 //Thresholds for insensitive sensor on Red V2
 #define LF_THRESHOLD_H	475				//Upper Threshold above which line is no longer detected
 #define LF_THRESHOLD_L	375				//Lower threshold below which line is detected
-#define LF_OUTER_L		LF0_ADC_CH		//Line follower 0 ADC channel
-#define LF_INNER_L		LF1_ADC_CH		//Line follower 1 ADC channel
-#define LF_INNER_R		LF2_ADC_CH		//Line follower 2 ADC channel
-#define LF_OUTER_R		LF3_ADC_CH		//Line follower 3 ADC channel
-#define LFC_PORT		PIOA			//PIO Port def for the line follower LED control
-#define LFC				PIO_PA8			//PIO pin def for the line follower LED control
+#define LF_OUTER_L		(LF0_ADC_CH)	//Line follower 0 ADC channel
+#define LF_INNER_L		(LF1_ADC_CH)	//Line follower 1 ADC channel
+#define LF_INNER_R		(LF2_ADC_CH)	//Line follower 2 ADC channel
+#define LF_OUTER_R		(LF3_ADC_CH)	//Line follower 3 ADC channel
+#define LFC_PORT		(PIOA)			//PIO Port def for the line follower LED control
+#define LFC				(PIO_PA8)		//PIO pin def for the line follower LED control
 #endif
 
 ///////////////Functions////////////////////////////////////////////////////////////////////////////

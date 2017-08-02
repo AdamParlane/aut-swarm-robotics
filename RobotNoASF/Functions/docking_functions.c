@@ -22,6 +22,10 @@
 ///////////////Includes/////////////////////////////////////////////////////////////////////////////
 #include "docking_functions.h"
 
+///////////////Global variables/////////////////////////////////////////////////////////////////////
+//Light follower sensor states.
+struct LineSensorArray lf;
+
 ///////////////Functions////////////////////////////////////////////////////////////////////////////
 /*
 * Function:
@@ -179,7 +183,7 @@ void updateLineSensorStates(void)
 int8_t getLineDirection(void)
 {
 	//Get updated sensor data
-	void updateLineSensorStates(void);
+	updateLineSensorStates();
 	//Combine sensor states from sensor structure into single byte that can be used by a switch
 	//statement. See above for description of each state.
 	uint8_t sensorStates
