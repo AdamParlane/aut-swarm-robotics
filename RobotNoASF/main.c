@@ -76,7 +76,7 @@ int main(void)
 	robotPosition.x = 0;
 	robotPosition.y = 0;
 	struct transmitDataStructure transmitMessage;
-	robotState = IDLE;
+	robotState = DOCKING;
 	while(1)
 	{
 		switch (robotState)
