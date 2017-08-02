@@ -256,8 +256,8 @@ void followLine(void)
 		FIN_1_L;
 		RIN_3_L;
 		FIN_3_H;
-		REG_PWM_CUPD3 = 25;			//Left Front
-		REG_PWM_CUPD1 = 25;			//Right front
+		REG_PWM_CUPD3 = 35;			//Left Front
+		REG_PWM_CUPD1 = 35;			//Right front
 		
 		RIN_2_L;
 		FIN_2_L;
