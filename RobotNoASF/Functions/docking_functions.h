@@ -16,6 +16,7 @@
 * void dockRobot(void)
 * void updateLineSensorStates(void)
 * int8_t getLineDirection(void)
+* void followLine(void)
 *
 */
 
@@ -94,5 +95,20 @@ void updateLineSensorStates(void);
 *
 */
 int8_t getLineDirection(void);
+
+/*
+* Function:
+* void followLine(void)
+*
+* A basic function to follow a line that seems to work ok
+*
+* Inputs:
+* none
+*
+* Returns:
+* none
+*
+*/
+void followLine(void);
 
 #endif /* DOCKING_FUNCTIONS_H_ */

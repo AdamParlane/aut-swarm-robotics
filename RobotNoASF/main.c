@@ -110,7 +110,8 @@ int main(void)
 			
 			case DOCKING:
 			//if battery low or manual command set
-			dockRobot();
+			//dockRobot();
+			followLine();
 			break;
 			
 			case FORMATION:
@@ -120,6 +121,7 @@ int main(void)
 			case IDLE:
 			//idle
 			stopRobot();
+			
 			break;
 		}
 		
@@ -168,6 +170,7 @@ void setup(void)
 	SPI_Init();							//Initialise SPI for talking with optical sensor
 	twi0Init();							//Initialise TWI0 interface
 	twi2Init();							//Initialise TWI2 interface
+	timer0Init();						//Initialise timer0
 	lightSensInit(MUX_LIGHTSENS_R);		//Initialise Right Light/Colour sensor
 	lightSensInit(MUX_LIGHTSENS_L);		//Initialise Left Light/Colour sensor
 	proxSensInit(MUX_PROXSENS_A);		//Initialise proximity sensor on panel A
@@ -178,7 +181,9 @@ void setup(void)
 	proxSensInit(MUX_PROXSENS_F);		//Initialise proximity sensor on panel F
 	fcInit();							//Initialise the fast charge chip
 	CommunicationSetup();				//Initialise communication system
-	imuInit();							//Initialise IMU
+#if defined ROBOT_TARGET_V1
+	imuInit();							//Initialise IMU. Only working on V1
+#endif
 	mouseInit();						//May require further testing - Adam
 #if defined ROBOT_TARGET_V2
 	lfInit();							//Initialise line follow sensors. Only tested on V2 so far.

@@ -21,6 +21,7 @@
 * 
 * Functions:
 * int imuInit(void)
+* void timer0Init(void)
 * int imuDmpInit(void)
 * void imuDmpStop(void)
 * void imuDmpStart(void)
@@ -90,25 +91,7 @@ int imuInit(void)
 	int result = 0;		//Return value (when not 0, errors are present)
 	
 	//MICROCONTROLLER HW SETUP
-	////TIMER0////
-	//Timer0 is used for delay_ms and get_ms functions required by the imu driver
-	REG_PMC_PCER0
-	|=	(1<<ID_TC0);						//Enable TC clock (ID_TC0 is the peripheral identifier 
-											//for timer counter 0)
-	NVIC_EnableIRQ(ID_TC0);					//Enable interrupt vector for TIMER0
-	REG_TC0_CMR0							//TC Channel Mode Register (Pg877)
-	|=	TC_CMR_TCCLKS_TIMER_CLOCK3			//Prescaler MCK/32 (100MHz/32 = 3.125MHz)
-	|	TC_CMR_WAVE							//Waveform mode
-	|	TC_CMR_WAVSEL_UP_RC;				//Clear on RC compare
-	REG_TC0_IER0							//TC interrupt enable register
-	|=	TC_IER_CPCS;						//Enable Register C compare interrupt
-	REG_TC0_RC0								//Set Register C (the timer counter value at which the
-											//interrupt will be triggered)
-	=	3125;								//Trigger once every 1/1000th of a second 
-											//(100Mhz/32/1000)
-	REG_TC0_CCR0							//Clock control register
-	|=	TC_CCR_CLKEN						//Enable the timer clk.
-	|	TC_CCR_SWTRG;
+
 
 	//IMU INITIALISATION
 	//Initialise the IMU's driver	
@@ -118,6 +101,49 @@ int imuInit(void)
 	result += mpu_set_compass_sample_rate(100);			// Set 100Hz compass sample rate (max)
 	
 	return result;
+}
+
+/*
+* Function:
+* void timer0Init(void)
+*
+* initialise timer0. will be moved to its own module soon
+*
+* Inputs:
+* none
+*
+* Returns:
+* none
+*
+* Implementation:
+* TODO:[explain key steps of function] timer0 init
+* [use heavy detail for anything complicated]
+*
+* Improvements:
+* Move to its own module.
+*
+*/
+void timer0Init(void)
+{	
+	////TIMER0////
+	//Timer0 is used for delay_ms and get_ms functions required by the imu driver
+	REG_PMC_PCER0
+	|=	(1<<ID_TC0);						//Enable TC clock (ID_TC0 is the peripheral identifier
+	//for timer counter 0)
+	NVIC_EnableIRQ(ID_TC0);					//Enable interrupt vector for TIMER0
+	REG_TC0_CMR0							//TC Channel Mode Register (Pg877)
+	|=	TC_CMR_TCCLKS_TIMER_CLOCK3			//Prescaler MCK/32 (100MHz/32 = 3.125MHz)
+	|	TC_CMR_WAVE							//Waveform mode
+	|	TC_CMR_WAVSEL_UP_RC;				//Clear on RC compare
+	REG_TC0_IER0							//TC interrupt enable register
+	|=	TC_IER_CPCS;						//Enable Register C compare interrupt
+	REG_TC0_RC0								//Set Register C (the timer counter value at which the
+	//interrupt will be triggered)
+	=	3125;								//Trigger once every 1/1000th of a second
+	//(100Mhz/32/1000)
+	REG_TC0_CCR0							//Clock control register
+	|=	TC_CCR_CLKEN						//Enable the timer clk.
+	|	TC_CCR_SWTRG;
 }
 
 /*

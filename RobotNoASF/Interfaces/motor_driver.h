@@ -15,6 +15,7 @@
 * Functions:
 * void motor_init(void);
 * void moveRobot(float direction, unsigned char speed);
+* void wiggleForward(uint8_t forwardSpeed, uint8_t lateralSpeed, uint8_t direction)
 * void stopRobot(void);
 * void rotateRobot(char direction, unsigned char speed);
 * void dockRobot(void);
@@ -125,6 +126,31 @@ void moveRobot(uint16_t direction, unsigned char speed);
 *
 */
 void rotateRobot(char direction, unsigned char speed);
+
+/*
+* Function:
+* void wiggleForward(uint8_t forwardSpeed, uint8_t lateralSpeed, uint8_t direction)
+*
+* Will move robot forward at desired speed forward, but will also allow front motor to be turned on
+* so that direction of travel will become an arc to the left or right. Allows for line following and
+* docking.
+*
+* Inputs:
+* uint8_t forwardSpeed:
+*   Percentage of full speed that the robot will move forward at (0-100)
+*
+* uint8_t lateralSpeed:
+*   Percentage of full speed that the lateral wheel will be allowed to spin at to steer robot left
+*   or right. (0-100)
+*
+* uint8_t direction:
+*   Direction that robot will rotate towards on its arc (CW and CCW)
+*
+* Returns:
+* none
+*
+*/
+void wiggleForward(uint8_t forwardSpeed, uint8_t lateralSpeed, uint8_t direction);
 
 /*
 * Function:

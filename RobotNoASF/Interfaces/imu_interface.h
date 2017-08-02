@@ -21,6 +21,7 @@
 *
 * Functions:
 * int imuInit(void)
+* void timer0Init(void)
 * int imuDmpInit(void)
 * unsigned char imuDmpStop(void)
 * unsigned char imuDmpStart(void)
@@ -71,6 +72,28 @@ typedef struct euler_packet
 *
 */
 int imuInit(void);
+
+/*
+* Function:
+* void timer0Init(void)
+*
+* initialise timer0. will be moved to its own module soon
+*
+* Inputs:
+* none
+*
+* Returns:
+* none
+*
+* Implementation:
+* TODO:[explain key steps of function] timer0 init
+* [use heavy detail for anything complicated]
+*
+* Improvements:
+* Move to its own module.
+*
+*/
+void timer0Init(void);
 
 /*
 * Function: int imuDmpInit(void)

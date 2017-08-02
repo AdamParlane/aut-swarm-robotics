@@ -9,18 +9,8 @@
 * Provides functions for controlling the motors and moving the robot.
 *
 * More Info:
-* Atmel SAM 4N Processor Datasheet:
-http://www.atmel.com/Images/Atmel-11158-32-bit%20Cortex-M4-Microcontroller-SAM4N16-SAM4N8_Datasheet.pdf
-* BD6211 Motor driver Datasheet:
-http://rohmfs.rohm.com/en/products/databook/datasheet/ic/motor/dc/bd621x-e.pdf
-*
-* Functions:
-* void motor_init(void);
-* void moveRobot(float direction, unsigned char speed);
-* void stopRobot(void);
-* void rotateRobot(char direction, unsigned char speed);
-* void dockRobot(void);
-* void setTestMotors(uint8_t motorData[]);
+* Atmel SAM 4N Processor Datasheet:http://www.atmel.com/Images/Atmel-11158-32-bit%20Cortex-M4-Microcontroller-SAM4N16-SAM4N8_Datasheet.pdf
+* BD6211 Motor driver Datasheet:http://rohmfs.rohm.com/en/products/databook/datasheet/ic/motor/dc/bd621x-e.pdf
 *
 * The 3 motors are driven by 1 H-Bridge each with a differential output on pins OUT1 & OUT2
 * This controls the speed and direction of the motor
@@ -28,6 +18,15 @@ http://rohmfs.rohm.com/en/products/databook/datasheet/ic/motor/dc/bd621x-e.pdf
 * Each H-Bridge uses FIN_x, RIN_x & VREF_x (where x is the motor number)
 * FIN and RIN control the motor direction, 1 and only 1 must be high to enable the desired direction
 * VREF uses PWM with duty cycle 0-100(%) to set the speed of the motor
+*
+* Functions:
+* void motor_init(void);
+* void moveRobot(float direction, unsigned char speed);
+* void wiggleForward(uint8_t forwardSpeed, uint8_t lateralSpeed, uint8_t direction)
+* void stopRobot(void);
+* void rotateRobot(char direction, unsigned char speed);
+* void dockRobot(void);
+* void setTestMotors(uint8_t motorData[]);
 * 
 */
  
@@ -318,6 +317,100 @@ void rotateRobot(char direction, unsigned char speed)
 }
 
 /*
+* Function:
+* void wiggleForward(uint8_t forwardSpeed, uint8_t lateralSpeed, uint8_t direction)
+*
+* Will move robot forward at desired speed forward, but will also allow front motor to be turned on
+* so that direction of travel will become an arc to the left or right. Allows for line following and
+* docking.
+*
+* Inputs:
+* uint8_t forwardSpeed:
+*   Percentage of full speed that the robot will move forward at (0-100)
+*
+* uint8_t lateralSpeed:
+*   Percentage of full speed that the lateral wheel will be allowed to spin at to steer robot left
+*   or right. (0-100)
+*
+* uint8_t direction:
+*   Direction that robot will rotate towards on its arc (CW and CCW)
+*
+* Returns:
+* none
+*
+* Implementation:
+* TODO: Better documentation, Tidier layout.
+* - Needs more work and fine tuning in general.
+* - Turn on front two motors and set their speed
+* - Turn on rear (lateral) motor and set its speed and direction.
+*
+* Improvements:
+* May add ability to move backwards in this manner too.
+*
+*/
+void wiggleForward(uint8_t forwardSpeed, uint8_t lateralSpeed, uint8_t direction)
+{
+	//Make sure parameters are within range.
+	if (forwardSpeed > 100)
+		forwardSpeed = 0;
+	if (lateralSpeed > 100)
+		lateralSpeed = 0;
+		
+	//lateralSpeed /= 2;						//Scale down lateral speed value so it doesn't overwhelm
+											//forward speed
+	switch(direction)
+	{
+		case CW:
+			RIN_2_H;
+			FIN_2_L;
+		break;
+		
+		case CCW:
+			RIN_2_L;
+			FIN_2_H;
+		break;
+	}
+
+	//Set front forward motion direction
+	RIN_1_H;
+	FIN_1_L;
+	RIN_3_L;
+	FIN_3_H;
+	
+	if (forwardSpeed+lateralSpeed > 100)		//If forwardSpeed+lateralSpeed will go over 100
+												//Then scale down speed values to fit
+	{
+		switch(direction)
+		{
+			case CW:
+				REG_PWM_CUPD3 = 100;							//Left Front
+				REG_PWM_CUPD1 = 100 - lateralSpeed*2;			//Right front
+			break;
+		
+			case CCW:
+				REG_PWM_CUPD1 = 100;							//Right front
+				REG_PWM_CUPD3 = 100 - lateralSpeed*2;			//Left front
+			break;
+		}		
+	} else {
+		switch(direction)
+		{
+			case CW:
+				REG_PWM_CUPD1 = forwardSpeed-lateralSpeed;		//Right front
+				REG_PWM_CUPD3 = forwardSpeed+lateralSpeed;		//Left front
+			break;
+			
+			case CCW:
+				REG_PWM_CUPD3 = forwardSpeed-lateralSpeed;		//Left front
+				REG_PWM_CUPD1 = forwardSpeed+lateralSpeed;		//Right front
+			break;
+		}
+	}
+	
+	REG_PWM_CUPD2 = lateralSpeed;		//Rear motor speed (Rear motor)
+}
+
+/*
 
 * Function:
 * void stopRobot(void)
@@ -419,7 +512,7 @@ void setTestMotors(uint8_t motorData[])
 /*
 *
 * Function:
-* void motorPWMcurve(void)
+* void PWMSpeedTest(void)
 *
 * Runs motor 2 at 10% duty cycle steps for 5 seconds each
 *
