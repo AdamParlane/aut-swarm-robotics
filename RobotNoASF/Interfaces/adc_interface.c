@@ -50,11 +50,12 @@ void adcSingleConvInit(void)
 	|=	ADC_MR_PRESCAL(49)				//Prescale ADC conversion by 49 (100MHZ/((49+1)x2))=1MHZ.
 	|	ADC_MR_STARTUP_SUT24			//Startup time is 24 ADC clock cycles.
 	|	ADC_MR_TRANSFER(2);				//Transfer field must be programmed with value 2.
-	REG_ADC_ACR							//Analogue control register
-	=	ADC_ACR_IRVCE					//Internal ref voltage change enable
-	|	ADC_ACR_IRVS(IRVS_3396)			//Mode 8 is 3.396V. If changed be sure to set 
-										//ADC_VOLTAGE_REF appropriately
-	|	ADC_ACR_ONREF;					//Internal reference voltage is on
+	//REG_ADC_ACR						//Analogue control register. Sets up internal voltage ref.
+										////Seems to be unnecessary.
+	//=	ADC_ACR_IRVCE					//Internal ref voltage change enable
+	//|	ADC_ACR_IRVS(IRVS_3396)			//Mode 8 is 3.396V. If changed be sure to set 
+										////ADC_VOLTAGE_REF appropriately
+	//|	ADC_ACR_ONREF;					//Internal reference voltage is on
 }
 
 /*
@@ -68,7 +69,7 @@ void adcSingleConvInit(void)
 *   Channel number of the desired ADC channel (0-15)
 *
 * Returns:
-* 12bit value of the ADC channel in question (0-4095)
+* 10bit value of the ADC channel in question (0-1023)
 *
 * Implementation:
 * - Sets the ADC mux channel to read

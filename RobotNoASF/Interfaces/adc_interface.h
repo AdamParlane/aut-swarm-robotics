@@ -64,7 +64,7 @@
 #define IRVS_3396			0x8	//3396mV
 
 //	ADC Reference Voltage Setting
-#define ADC_VOLTAGE_REF		3396	//Reference voltage (mV) used by ADC. Must be changed if 
+#define ADC_VOLTAGE_REF		3300	//Reference voltage (mV) used by ADC. Must be changed if 
 									//reference voltage is changed. Will be used for system wide ADC
 									//voltage conversions.
 ///////////////Functions////////////////////////////////////////////////////////////////////////////
@@ -94,7 +94,7 @@ void adcSingleConvInit(void);
 *   Channel number of the desired ADC channel (0-15)
 *
 * Returns:
-* 12bit value of the ADC channel in question (0-4095)
+* 10bit value of the ADC channel in question (0-1023)
 *
 */
 uint16_t adcRead(uint8_t channel);

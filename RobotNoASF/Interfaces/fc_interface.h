@@ -45,10 +45,12 @@
 								//Iterm=100mA (default) (FC_CHARGE_REG)
 								
 //Misc
-//	ADC to battery voltage conversion factor. The 3.7 is derived from a voltage divider formed by
-//	R54 and R55 on the top board that scales down the voltage to be within range of the ADVREF
-// (0V - 3.396V)
-#define FC_BATTVOL_CONV	3.7*ADC_VOLTAGE_REF/1023.0
+//	ADC to battery voltage conversion factor. The 1.515 is derived by dividing measured battery
+//	voltage by the voltage measured at BV on the top board. The voltage at BV is scaled down from
+//	the battery voltage by a voltage divider formed by R54 and R55 on the top board to be within
+//	range of the ADVREF (0V - 3.396V). This is giving an accurate battery voltage reading on the
+//	red robot at the time of writing 02/08/17
+#define FC_BATTVOL_CONV	1.515*ADC_VOLTAGE_REF/1023.0
 
 ///////////////Functions////////////////////////////////////////////////////////////////////////////
 /*
