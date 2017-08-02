@@ -142,11 +142,6 @@ uint8_t fcVersionRead(void)
 * Reads battery voltage ADC channel
 * Converts to millivolts using linear conversion factor set in fc_interface.h and returns
 *
-* Improvements:
-* TODO: fcBatteryVoltage(); Curently this function is not capable of returning a value greater than
-* 3396mV because the ADC's internal reference voltage is only 3396mV max. To return full battery
-* voltage, there needs to be a higher reference voltage that doesn't degrade as the battery does.
-*
 */
 uint16_t fcBatteryVoltage(void)
 {

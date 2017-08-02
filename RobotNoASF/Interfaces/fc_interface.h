@@ -45,8 +45,10 @@
 								//Iterm=100mA (default) (FC_CHARGE_REG)
 								
 //Misc
-//	ADC to battery voltage conversion factor
-#define FC_BATTVOL_CONV	ADC_VOLTAGE_REF/1023
+//	ADC to battery voltage conversion factor. The 3.7 is derived from a voltage divider formed by
+//	R54 and R55 on the top board that scales down the voltage to be within range of the ADVREF
+// (0V - 3.396V)
+#define FC_BATTVOL_CONV	3.7*ADC_VOLTAGE_REF/1023.0
 
 ///////////////Functions////////////////////////////////////////////////////////////////////////////
 /*
