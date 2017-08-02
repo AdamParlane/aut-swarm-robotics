@@ -28,14 +28,14 @@ void lfInit(void)
 #if defined ROBOT_TARGET_V1
 {
 	//Setup LF sensor pins for (binary) input
-	LF0_PORT->PIO_PER			//Enable LF0 sensor pin
-	|=	LF0;
-	LF1_PORT->PIO_PER			//Enable LF1 sensor pin
-	|=	LF1;
-	LF2_PORT->PIO_PER			//Enable LF2 sensor pin
-	|=	LF2;
-	LF3_PORT->PIO_PER			//Enable LF3 sensor pin
-	|=	LF3;
+	LF_OUTER_L_PORT->PIO_PER			//Enable LF_OUTER_L sensor pin
+	|=	LF_OUTER_L;
+	LF_INNER_L_PORT->PIO_PER			//Enable LF_INNER_L sensor pin
+	|=	LF_INNER_L;
+	LF_INNER_R_PORT->PIO_PER			//Enable LF_INNER_R sensor pin
+	|=	LF_INNER_R;
+	LF_OUTER_R_PORT->PIO_PER			//Enable LF_OUTER_R sensor pin
+	|=	LF_OUTER_R;
 }
 #endif
 
@@ -81,9 +81,9 @@ void lfLedState(uint8_t ledState)
 #if defined ROBOT_TARGET_V2
 {
 	if (ledState == OFF)
-		LFC_PORT->PIO_CODR |= LFC;	//Turn LEDs off
+		LFC_PORT->PIO_SODR |= LFC;	//Turn LEDs off
 	if (ledState == ON)
-		LFC_PORT->PIO_SODR |= LFC;	//Turn LEDs on
+		LFC_PORT->PIO_CODR |= LFC;	//Turn LEDs on
 }
 #endif
 
@@ -121,17 +121,17 @@ uint8_t lfLineDetected(uint8_t lfSensor)
 	//Thresholds are set in hardware by pull up resistors
 	switch (lfSensor)			//Pick the selected sensor and output it's value.
 	{
-		case LF0:
-			return LF0_PORT->PIO_IDR & LF0;
+		case LF_OUTER_L:
+			return LF_OUTER_L_PORT->PIO_IDR & LF_OUTER_L;
 		
-		case LF1:
-			return LF1_PORT->PIO_IDR & LF1;
+		case LF_INNER_L:
+			return LF_INNER_L_PORT->PIO_IDR & LF_INNER_L;
 		
-		case LF2:
-			return LF2_PORT->PIO_IDR & LF2;
+		case LF_INNER_R:
+			return LF_INNER_R_PORT->PIO_IDR & LF_INNER_R;
 		
-		case LF3:
-			return LF3_PORT->PIO_IDR & LF3;
+		case LF_OUTER_R:
+			return LF_OUTER_R_PORT->PIO_IDR & LF_OUTER_R;
 	}
 	return 0;
 }
