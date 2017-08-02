@@ -181,5 +181,8 @@ void setup(void)
 	CommunicationSetup();				//Initialise communication system
 	imuInit();							//Initialise IMU
 	mouseInit();						//May require further testing - Adam
+#if defined ROBOT_TARGET_V2
+	lfInit();							//Initialise line follow sensors. Only tested on V2 so far.
+#endif
 	return;
 }
