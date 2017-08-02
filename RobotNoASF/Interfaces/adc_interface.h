@@ -45,6 +45,28 @@
 #define FC_BATVOLT_ADC_CH	14	// Battery voltage level
 #define FC_BATTEMP_ADC_CH	9	// Battery temperature
 
+//	ADC Internal Reference Voltage Settings
+#define IRVS_1578			0x7	//1578mV
+#define IRVS_1699			0x6	//1699mV
+#define IRVS_1820			0x5	//1820mV
+#define IRVS_1941			0x4	//1941mV
+#define IRVS_2063			0x3	//2063mV
+#define IRVS_2184			0x2	//2184mV
+#define IRVS_2305			0x1	//2305mV
+#define IRVS_2426			0x0	//2426mV
+#define IRVS_2547			0xF	//2547mV
+#define IRVS_2669			0xE	//2669mV
+#define IRVS_2790			0xD	//2790mV
+#define IRVS_2911			0xC	//2790mV
+#define IRVS_3032			0xB	//3032mV
+#define IRVS_3154			0xA	//3154mV
+#define IRVS_3275			0x9	//3275mV
+#define IRVS_3396			0x8	//3396mV
+
+//	ADC Reference Voltage Setting
+#define ADC_VOLTAGE_REF		3300	//Reference voltage (mV) used by ADC. Must be changed if 
+									//reference voltage is changed. Will be used for system wide ADC
+									//voltage conversions.
 ///////////////Functions////////////////////////////////////////////////////////////////////////////
 /*
 * Function:
@@ -72,7 +94,7 @@ void adcSingleConvInit(void);
 *   Channel number of the desired ADC channel (0-15)
 *
 * Returns:
-* 12bit value of the ADC channel in question (0-4095)
+* 10bit value of the ADC channel in question (0-1023)
 *
 */
 uint16_t adcRead(uint8_t channel);

@@ -49,10 +49,10 @@
 * [brief purpose of function]
 *
 * Inputs:
-* [input arguments and any relevant explantion]
+* [input arguments and any relevant explanation]
 *
 * Returns:
-* [return values and any relevant explantion]
+* [return values and any relevant explanation]
 *
 * Implementation:
 * [explain key steps of function]

@@ -16,6 +16,7 @@
 * Functions:
 * void fcInit(void)
 * void fcWatchdogReset(void)
+* uint16_t fcBatteryVoltage(void)
 *
 */
 
@@ -42,6 +43,14 @@
 #define FC_BATTVOL_INIT	0x66	//Vreg = 3.98v, input current = 2.5A (FC_BATVOL_REG)
 #define FC_CHARGE_INIT	0xFA	//charge current set to max Ic=2875mA, termination current
 								//Iterm=100mA (default) (FC_CHARGE_REG)
+								
+//Misc
+//	ADC to battery voltage conversion factor. The 1.515 is derived by dividing measured battery
+//	voltage by the voltage measured at BV on the top board. The voltage at BV is scaled down from
+//	the battery voltage by a voltage divider formed by R54 and R55 on the top board to be within
+//	range of the ADVREF (0V - 3.396V). This is giving an accurate battery voltage reading on the
+//	red robot at the time of writing 02/08/17
+#define FC_BATTVOL_CONV	1.515*ADC_VOLTAGE_REF/1023.0
 
 ///////////////Functions////////////////////////////////////////////////////////////////////////////
 /*
@@ -98,5 +107,20 @@ void fcWatchdogReset(void);
 *
 */
 uint8_t fcVersionRead(void);
+
+/*
+* Function:
+* float fcBatteryVoltage(void)
+*
+* Returns current battery voltage
+*
+* Inputs:
+* none
+*
+* Returns:
+* Returns a integer value of the current battery voltage in mV.
+*
+*/
+uint16_t fcBatteryVoltage(void);
 
 #endif /* FC_INTERFACE_H_ */

@@ -15,6 +15,7 @@
 * Functions:
 * void fcInit(void)
 * void fcWatchdogReset(void)
+* uint16_t fcBatteryVoltage(void)
 *
 */
 
@@ -123,4 +124,28 @@ uint8_t fcVersionRead(void)
 	returnVal = twi0ReadSingle(TWI0_FCHARGE_ADDR, FC_VERSION_REG);
 	//Return just the revision number (first 3 bits)
 	return (0x07 & returnVal);
+}
+
+/*
+* Function:
+* float fcBatteryVoltage(void)
+*
+* Returns current battery voltage
+*
+* Inputs:
+* none
+*
+* Returns:
+* Returns a integer value of the current battery voltage in mV.
+*
+* Implementation:
+* Reads battery voltage ADC channel
+* Converts to millivolts using linear conversion factor set in fc_interface.h and returns
+*
+*/
+uint16_t fcBatteryVoltage(void)
+{
+	uint16_t rawBattReading = 0;
+	rawBattReading = adcRead(FC_BATVOLT_ADC_CH);
+	return rawBattReading*FC_BATTVOL_CONV;
 }
