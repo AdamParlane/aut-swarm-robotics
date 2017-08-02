@@ -13,12 +13,18 @@
 * Relevant reference materials or datasheets if applicable
 *
 * Functions:
-* void funcName(void)
+* void dockRobot(void)
+* void updateLineSensorStates(void)
+* int8_t getLineDirection(void)
 *
 */
 
 ///////////////Includes/////////////////////////////////////////////////////////////////////////////
 #include "docking_functions.h"
+
+///////////////Global variables/////////////////////////////////////////////////////////////////////
+//Light follower sensor states.
+struct LineSensorArray lf;
 
 ///////////////Functions////////////////////////////////////////////////////////////////////////////
 /*
@@ -92,4 +98,124 @@ void dockRobot(void)
 	{
 		rotateRobot(CCW, 30);//turn left
 	}
+}
+
+/*
+* Function:
+* void updateLineSensorStates(void)
+*
+* Sees if any sensors have made a definite state change and loads the states into the line sensor
+* state structure for use by other functions in this module.
+*
+* Inputs:
+* none
+*
+* Returns:
+* none
+*
+* Implementation:
+* - Read state value of sensor.
+* - if a state other than NO_CHANGE is returned then update the value stored in the line sensor
+*   data structure for the given sensor.
+* - Repeat until all four sensors have been read.
+*
+*/
+void updateLineSensorStates(void)
+{
+	uint8_t sensorValue;
+	
+	sensorValue = lfLineDetected(LF_OUTER_L);
+	if (sensorValue != NO_CHANGE)
+		lf.outerLeft = sensorValue;
+		
+	sensorValue = lfLineDetected(LF_INNER_L);
+	if (sensorValue != NO_CHANGE)
+		lf.innerLeft = sensorValue;
+		
+	sensorValue = lfLineDetected(LF_OUTER_R);
+	if (sensorValue != NO_CHANGE)
+		lf.outerRight = sensorValue;
+		
+	sensorValue = lfLineDetected(LF_INNER_R);
+	if (sensorValue != NO_CHANGE)
+		lf.innerRight = sensorValue;
+}
+
+/*
+* Function:
+* int8_t getLineDirection(void)
+*
+* This function examines the states of the line follower sensors and determines the direction and
+* urgency factor by which the robot should move to find its way to the centre of the line.
+*
+* Inputs:
+* none
+*
+* Returns:
+* returns a signed integer between -3 and 3 that determines the direction and speed magnitude that 
+* the robot should move to find the centre of the line.
+* A negative output means that the robot should move left to find the line and a positive output
+* means that the robot should move right. 0 means keep going straight because no direction data is
+* able to be derived from sensor array.
+*
+* Implementation:
+* All the line sensor states are loaded into a single byte so that they can easily managed by a
+* switch statement rather than a series of unwieldy if statements. A table describing the states
+* and there digital values can be seen below:
+*
+* Sensor array state descriptions:
+* _______________________________________________________________________________________
+*| State  | Outer left | Inner left | Inner right | Outer right | Function Output value: |
+*|________|_____8______|_____4______|______2______|______1______|________________________|
+*|__0x0___|____________|____________|_____________|_____________|__________0_____________|
+*|__0x8___|_____X______|____________|_____________|_____________|_________-3_____________|
+*|__0xC___|_____X______|_____X______|_____________|_____________|_________-2_____________|
+*|__0xE___|_____X______|_____X______|______X______|_____________|_________-1_____________|
+*|__0xF___|_____X______|_____X______|______X______|______X______|__________0_____________|
+*|__0x7___|____________|_____X______|______X______|______X______|__________1_____________|
+*|__0x3___|____________|____________|______X______|______X______|__________2_____________|
+*|__0x1___|____________|____________|_____________|______X______|__________3_____________|
+*|__0x2___|____________|____________|______X______|_____________|__________1_____________|
+*|__0x4___|____________|_____X______|_____________|_____________|_________-1_____________|
+*|__0x6___|____________|_____X______|______X______|_____________|__________0_____________|     
+*
+*/
+int8_t getLineDirection(void)
+{
+	//Get updated sensor data
+	updateLineSensorStates();
+	//Combine sensor states from sensor structure into single byte that can be used by a switch
+	//statement. See above for description of each state.
+	uint8_t sensorStates
+	=	(lf.outerLeft<<3)	//Outer left has binary weighting 8
+	|	(lf.innerLeft<<2)	//Inner left has binary weighting 4
+	|	(lf.innerRight<<1)	//Inner right has binary weighting 2
+	|	(lf.outerRight<<0);	//Outer right has binary weighting 1
+	
+	switch(sensorStates)
+	{
+		case 0x0:
+			return 0;		//Straight
+		case 0x8:
+			return -3;		//Move left by factor 3
+		case 0xC:
+			return -2;		//Move left by factor 2
+		case 0xE:
+			return -1;		//Move left by factor 1
+		case 0xF:
+			return 0;		//Straight
+		case 0x7:
+			return 1;		//Move right by factor 1
+		case 0x3:
+			return 2;		//Move right by factor 2
+		case 0x1:
+			return 3;		//Move right by factor 3
+		case 0x2:
+			return 1;		//Move right by factor 1
+		case 0x4:
+			return -1;		//Move left by factor 1
+		case 0x6:
+			return 0;		//Straight
+	}
+	return 0;
 }

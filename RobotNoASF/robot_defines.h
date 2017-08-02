@@ -77,7 +77,7 @@ struct Position
 };
 
 struct Command
-//is anyone using this???
+//is anyone using this??? not me -Matt
 //structure to receive the command and interpret it to something useful
 {
 	char messageClass;
