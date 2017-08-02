@@ -16,6 +16,7 @@
 * void dockRobot(void)
 * void updateLineSensorStates(void)
 * int8_t getLineDirection(void)
+* void followLine(void)
 *
 */
 
@@ -218,4 +219,48 @@ int8_t getLineDirection(void)
 			return 0;		//Straight
 	}
 	return 0;
+}
+
+/*
+* Function:
+* void followLine(void)
+*
+* A basic function to follow a line that seems to work ok
+*
+* Inputs:
+* none
+*
+* Returns:
+* none
+*
+* Implementation:
+* Get the direction of the detected line. If line is to the left, rotate left until it isn't. If
+* line is to the right then rotate to the right until it isn't. If no line detected or line is in
+* middle of sensor array then move straight.
+*
+* Improvements:
+* Would be better with the wiggleForward function once its working.
+*
+*/
+void followLine(void)
+{
+	int8_t lineDirection = getLineDirection();
+	if (lineDirection > 0)			//Turn right
+		rotateRobot(CW, abs(lineDirection)*10);
+	else if (lineDirection < 0)			//Turn left
+		rotateRobot(CCW, abs(lineDirection)*10);
+	else
+	{
+		// moveRobot(0, 25) didn't do anything, hence this block of code (move forward at 25%)
+		RIN_1_H;
+		FIN_1_L;
+		RIN_3_L;
+		FIN_3_H;
+		REG_PWM_CUPD3 = 25;			//Left Front
+		REG_PWM_CUPD1 = 25;			//Right front
+		
+		RIN_2_L;
+		FIN_2_L;
+		REG_PWM_CUPD2 = 0;			//rear
+	}
 }
