@@ -84,7 +84,6 @@ int main(void)
 			case TEST:
 			if(newDataFlag || streamIntervalFlag)//get the new test data
 			{
-
 				testMode = testManager(message, &transmitMessage);//get the new test data
 			}
 			if(testMode == STOP_STREAMING)
@@ -105,8 +104,8 @@ int main(void)
 			break;
 			
 			case MANUAL:
-			if(newDataFlag)
-			manualControl(message);
+				if(newDataFlag)
+					manualControl(message);
 			break;
 			
 			case DOCKING:
