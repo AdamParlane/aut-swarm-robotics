@@ -149,3 +149,16 @@ uint16_t fcBatteryVoltage(void)
 	rawBattReading = adcRead(FC_BATVOLT_ADC_CH);
 	return rawBattReading*FC_BATTVOL_CONV;
 }
+
+
+uint8_t chargeDetector(void)
+{
+	Register fcstatus;
+	fcstatus.status = twi0ReadSingle(TWI0_FCHARGE_ADDR, FC_STATUS_REG);
+	if(fcstatus.bit.b5 & fcstatus.bit.b4)
+		return CHARGING;
+	else if (fcstatus.bit.b6 & fcstatus.bit.b4)
+		return CHARGED;
+	else
+		return  fcstatus.status;
+}
