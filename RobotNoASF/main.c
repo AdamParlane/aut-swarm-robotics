@@ -68,6 +68,8 @@ int main(void)
 	//const char streamIntervalFlag = 1;
 	setup();
 	uint8_t testMode = 0x00;
+	char error; //used for developement to log and watch errors - AP
+	//TODO: Adam add error handling with GUI
 	//Comms
 	struct frame_info frame;
 	struct message_info message;
@@ -106,6 +108,14 @@ int main(void)
 			case MANUAL:
 				if(newDataFlag)
 					manualControl(message);
+				char chargeInfo = chargeDetector();
+				if (chargeInfo == CHARGING)
+					robotState = IDLE;
+				else if (chargeInfo == CHARGED)
+					robotState = FORMATION;
+				else
+					error = chargeInfo;
+				
 			break;
 			
 			case DOCKING:
