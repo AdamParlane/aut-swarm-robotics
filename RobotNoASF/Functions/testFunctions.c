@@ -127,8 +127,8 @@ uint8_t testManager(struct message_info message, struct transmitDataStructure *t
 		transmit->Data[2] = receivedTestData[1];//Transmit the specific motor ID
 		transmit->Data[3] = receivedTestData[2];//Echo's the command
 		//TODO: instead of echo read what motor is on with direction and speed and return it
-		//TODO: turn off motors after test is finished 
 		transmit->DataSize = 4;
+		stopRobot();
 
 		break;
 		
@@ -225,4 +225,53 @@ void convertData(struct message_info message, uint8_t *data)
 		//TO DO: prehaps add some sort of error flagging system??
 			return;
 	}
+}
+
+
+
+/*
+* Function: void testAll(struct transmitDataStructure *transmit)
+*
+* tests all the peripherals in a set order and returns them all back to the GUI in one packet
+* calling the appropriate test functions / performing tests
+* and returning to the PC the test return values
+*
+* Input is the transmit array
+*
+* No Return Values
+*
+*/
+void testAll(struct transmitDataStructure *transmit)
+{
+	//tests all the peripherals in a set order and returns them all back to the GUI in one packet
+	//Can only be used once comms test is performed
+	//[WIP] needs consultation with Mansel -AP
+	//Order will be
+	uint16_t doubleByteData; //used as an intermediate 
+	transmit->Data[0] = TEST_ALL_RETURN; //0xEF
+	doubleByteData = proxSensRead(MUX_PROXSENS_A);
+	transmit->Data[1] = doubleByteData >> 8;
+	transmit->Data[2] = doubleByteData & 0xFF;
+	doubleByteData = proxSensRead(MUX_PROXSENS_B);
+	transmit->Data[3] = doubleByteData >> 8;
+	transmit->Data[4] = doubleByteData & 0xFF;
+	doubleByteData = proxSensRead(MUX_PROXSENS_C);
+	transmit->Data[5] = doubleByteData >> 8;
+	transmit->Data[6] = doubleByteData & 0xFF;
+	doubleByteData = proxSensRead(MUX_PROXSENS_D);
+	transmit->Data[7] = doubleByteData >> 8;
+	transmit->Data[8] = doubleByteData & 0xFF;
+	doubleByteData = proxSensRead(MUX_PROXSENS_E);
+	transmit->Data[9] = doubleByteData >> 8;
+	transmit->Data[10] = doubleByteData & 0xFF;
+	doubleByteData = proxSensRead(MUX_PROXSENS_F);
+	transmit->Data[11] = doubleByteData >> 8;
+	transmit->Data[12] = doubleByteData & 0xFF;
+	doubleByteData = lightSensRead(MUX_LIGHTSENS_L, LS_WHITE_REG);
+	transmit->Data[13] = doubleByteData >> 8;
+	transmit->Data[14] = doubleByteData & 0xFF;
+	doubleByteData = lightSensRead(MUX_LIGHTSENS_R, LS_WHITE_REG);
+	transmit->Data[15] = doubleByteData >> 8;
+	transmit->Data[16] = doubleByteData & 0xFF;
+
 }

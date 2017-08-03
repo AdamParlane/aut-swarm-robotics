@@ -23,6 +23,10 @@
 #ifndef ROBOTDEFINES_H_
 #define ROBOTDEFINES_H_
 
+//TODO: change something so that this doesnt have to be first
+//Or maybe all defines should be before indludes
+enum ROBOT_STATES{TEST, TEST_ALL, MANUAL, FORMATION, DOCKING, IDLE, PAUSE}; //main loop functionality
+
 ///////////////Includes/////////////////////////////////////////////////////////////////////////////
 #include "Interfaces/spi.h"
 #include "sam.h"
@@ -94,7 +98,6 @@ struct transmitDataStructure
 ///////////////Global variables/////////////////////////////////////////////////////////////////////
 //used for test function calling
 char newDataFlag; //used for test function probably temporary
-enum ROBOT_STATES{TEST, TEST_ALL, MANUAL, FORMATION, DOCKING, IDLE, PAUSE}; //main loop functionality
 char robotState;
 char streamDelayCounter, streamIntervalFlag;
 

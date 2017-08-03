@@ -48,7 +48,9 @@
 #define CHARGING		0xDA
 #define CHARGED			0xDB
 
-
+//Union used to abstract the bit masking
+//At this stage just for the battery charging status
+//But I might look into using it more else where - AP
 typedef union
 {
 	struct  

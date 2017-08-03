@@ -103,6 +103,7 @@ int main(void)
 			break;
 			
 			case TEST_ALL:
+			//Place holder for state to test all peripherals at once
 			break;
 			
 			case MANUAL:
