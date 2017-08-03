@@ -208,7 +208,7 @@ void PWMSpeedTest(void);
 * Function:
 * void setTestMotors(uint8_t motorData[])
 *
-* [brief purpose of function]
+* sets test motors to perform motor test
 *
 * Inputs:
 * uint8_t motorData[]
