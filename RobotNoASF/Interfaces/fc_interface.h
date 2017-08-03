@@ -29,6 +29,7 @@
 ///////////////Defines//////////////////////////////////////////////////////////////////////////////
 //Fast charge chip registers
 #define FC_STATUS_REG	0x00	//Status register (Contains timer reset bit)
+#define FC_SUPPLY_REG	0x01
 #define FC_CONTROL_REG	0x02	//Control register (Contains CE bit)
 #define FC_VERSION_REG	0x04
 #define FC_BATVOL_REG	0x03	//Battery Voltage register
@@ -43,6 +44,27 @@
 #define FC_BATTVOL_INIT	0x66	//Vreg = 3.98v, input current = 2.5A (FC_BATVOL_REG)
 #define FC_CHARGE_INIT	0xFA	//charge current set to max Ic=2875mA, termination current
 								//Iterm=100mA (default) (FC_CHARGE_REG)
+
+#define CHARGING		0xDA
+#define CHARGED			0xDB
+
+
+typedef union
+{
+	struct  
+	{
+		unsigned char b0 : 1;
+		unsigned char b1 : 1;
+		unsigned char b2 : 1;
+		unsigned char b3 : 1;
+		unsigned char b4 : 1;
+		unsigned char b5 : 1;
+		unsigned char b6 : 1;
+		unsigned char b7 : 1;		
+	}bit;
+	unsigned char status;
+}Register;
+
 								
 //Misc
 //	ADC to battery voltage conversion factor. The 1.515 is derived by dividing measured battery
@@ -122,5 +144,22 @@ uint8_t fcVersionRead(void);
 *
 */
 uint16_t fcBatteryVoltage(void);
+
+/*
+* Function:
+* uint8_t chargeDetector(void)
+*
+* Returns battery charging status
+*
+* Inputs:
+* none
+*
+* Returns:
+* CHARGING for when a valid charging source is connected
+* CHARGED for when the battery is charged
+* the value of the status control register if there is an error or no charging
+*
+*/
+uint8_t chargeDetector(void);
 
 #endif /* FC_INTERFACE_H_ */
