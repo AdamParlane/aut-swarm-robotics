@@ -117,20 +117,7 @@ uint8_t testManager(struct message_info message, struct transmitDataStructure *t
 		transmit->Data[4] = peripheralReturnData & 0xFF; //lower byte
 		transmit->DataSize = 5;
 		break;
-		
-		case TEST_MOTORS:
-		//3 Motors (1:0x01, 2:0x02, 3:0x03)
-		//The motors need to be turned on individually at a set direction and speed as commanded by the PC
-		//This is done with a different setTestMotors function, found in motorDriver.c
-		setTestMotors(receivedTestData); //Turn on the require motor at the set speed and direction
-		transmit->Data[1] = DATA_RETURN; //Sending Data Out
-		transmit->Data[2] = receivedTestData[1];//Transmit the specific motor ID
-		transmit->Data[3] = receivedTestData[2];//Echo's the command
-		//TODO: instead of echo read what motor is on with direction and speed and return it
-		transmit->DataSize = 4;
-		stopRobot();
 
-		break;
 		
 		case TEST_MOUSE_SENSOR:
 		//Only 1 mouse sensor just trying to attain dx & dy
@@ -143,7 +130,7 @@ uint8_t testManager(struct message_info message, struct transmitDataStructure *t
 		transmit->Data[5] = testPosition.opticaldy & 0xFF; //lower byte
 		transmit->DataSize = 6;
 		break;
-		
+				
 		case TEST_IMU:
 		//TO DO Adam & Matt
 		//getIMUQuaterions(&testPosition);
@@ -176,13 +163,26 @@ uint8_t testManager(struct message_info message, struct transmitDataStructure *t
 		transmit->Data[2] = twi0ReadMuxChannel();//Return the channel the Mux is currently set to
 		transmit->DataSize = 3;
 		break;
-		
+
 		case TEST_TWI_EXTERNAL:
 		//TO DO Adam & Paul
 		break;
 		
 		case TEST_CAMERA:
 		//TO DO Adam & Brae
+		break;
+		
+		case TEST_MOTORS:
+		//3 Motors (1:0x01, 2:0x02, 3:0x03)
+		//The motors need to be turned on individually at a set direction and speed as commanded by the PC
+		//This is done with a different setTestMotors function, found in motorDriver.c
+		setTestMotors(receivedTestData); //Turn on the require motor at the set speed and direction
+		transmit->Data[1] = DATA_RETURN; //Sending Data Out
+		transmit->Data[2] = receivedTestData[1];//Transmit the specific motor ID
+		transmit->Data[3] = receivedTestData[2];//Echo's the command
+		//TODO: instead of echo read what motor is on with direction and speed and return it
+		transmit->DataSize = 4;
+		stopRobot();
 		break;
 
 	}
@@ -247,6 +247,7 @@ void testAll(struct transmitDataStructure *transmit)
 	//Can only be used once comms test is performed
 	//[WIP] needs consultation with Mansel -AP
 	//Order will be
+	struct Position testPosition;
 	uint16_t doubleByteData; //used as an intermediate 
 	transmit->Data[0] = TEST_ALL_RETURN; //0xEF
 	doubleByteData = proxSensRead(MUX_PROXSENS_A);
@@ -273,5 +274,10 @@ void testAll(struct transmitDataStructure *transmit)
 	doubleByteData = lightSensRead(MUX_LIGHTSENS_R, LS_WHITE_REG);
 	transmit->Data[15] = doubleByteData >> 8;
 	transmit->Data[16] = doubleByteData & 0xFF;
+	getMouseXY(&testPosition);
+	transmit->Data[17] = testPosition.opticaldx >> 8; //upper byte
+	transmit->Data[18] = testPosition.opticaldx & 0xFF; //lower byte
+	transmit->Data[19] = testPosition.opticaldy >> 8; //upper byte
+	transmit->Data[20] = testPosition.opticaldy & 0xFF; //lower byte
 
 }

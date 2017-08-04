@@ -79,7 +79,7 @@ int main(void)
 	robotPosition.x = 0;
 	robotPosition.y = 0;
 	struct transmitDataStructure transmitMessage;
-	robotState = MANUAL;
+	robotState = IDLE;
 	while(1)
 	{
 		switch (robotState)
@@ -122,8 +122,8 @@ int main(void)
 			
 			case DOCKING:
 			//if battery low or manual command set
-			dockRobot();
-			//followLine();
+			//dockRobot();
+			followLine();
 			break;
 			
 			case FORMATION:
