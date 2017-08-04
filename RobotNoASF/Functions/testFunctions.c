@@ -147,7 +147,7 @@ uint8_t testManager(struct message_info message, struct transmitDataStructure *t
 		break;
 		
 		case TEST_LINE_FOLLOWERS:
-		//TO DO Adam & Paul
+		//TO DO Adam & Matt
 		break;
 		
 		case TEST_FAST_CHARGE_CHIP:
@@ -275,9 +275,11 @@ void testAll(struct transmitDataStructure *transmit)
 	transmit->Data[15] = doubleByteData >> 8;
 	transmit->Data[16] = doubleByteData & 0xFF;
 	getMouseXY(&testPosition);
-	transmit->Data[17] = testPosition.opticaldx >> 8; //upper byte
+	transmit->Data[17] = testPosition.opticaldx >> 8;	//upper byte
 	transmit->Data[18] = testPosition.opticaldx & 0xFF; //lower byte
-	transmit->Data[19] = testPosition.opticaldy >> 8; //upper byte
+	transmit->Data[19] = testPosition.opticaldy >> 8;	//upper byte
 	transmit->Data[20] = testPosition.opticaldy & 0xFF; //lower byte
-
+	//[WIP] Need to check if our comms can handle this before finishing it
+	//If it goes well I might abstract the tests to functions that fill the array also
+	//TODO: Adam Parlane
 }
