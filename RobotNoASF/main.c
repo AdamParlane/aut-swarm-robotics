@@ -78,28 +78,28 @@ int main(void)
 	robotPosition.x = 0;
 	robotPosition.y = 0;
 	struct transmitDataStructure transmitMessage;
-	robotState = IDLE;
+	robotState = MANUAL;
 	while(1)
 	{
 		switch (robotState)
 		{
 			case TEST:
-			if(newDataFlag || streamIntervalFlag)//get the new test data
-			{
-				testMode = testManager(message, &transmitMessage);//get the new test data
-			}
-			if(testMode == STOP_STREAMING)
-			robotState = IDLE;
-			else if(testMode == SINGLE_SAMPLE)
-			{
+				if(newDataFlag || streamIntervalFlag)//get the new test data
+				{
+					testMode = testManager(message, &transmitMessage);//get the new test data
+				}
+				if(testMode == STOP_STREAMING)
 				robotState = IDLE;
-				SendXbeeAPITransmitRequest(COORDINATOR_64,UNKNOWN_16, transmitMessage.Data, transmitMessage.DataSize);  //Send the Message
-			}
-			else if(streamIntervalFlag && testMode == STREAM_DATA)
-			{
-				streamIntervalFlag = 0;
-				SendXbeeAPITransmitRequest(COORDINATOR_64,UNKNOWN_16, transmitMessage.Data, transmitMessage.DataSize);  //Send the Message
-			}
+				else if(testMode == SINGLE_SAMPLE)
+				{
+					robotState = IDLE;
+					SendXbeeAPITransmitRequest(COORDINATOR_64,UNKNOWN_16, transmitMessage.Data, transmitMessage.DataSize);  //Send the Message
+				}
+				else if(streamIntervalFlag && testMode == STREAM_DATA)
+				{
+					streamIntervalFlag = 0;
+					SendXbeeAPITransmitRequest(COORDINATOR_64,UNKNOWN_16, transmitMessage.Data, transmitMessage.DataSize);  //Send the Message
+				}
 			break;
 			
 			case TEST_ALL:
