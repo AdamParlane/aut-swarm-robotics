@@ -68,6 +68,7 @@ int main(void)
 	//const char streamIntervalFlag = 1;
 	setup();
 	uint8_t testMode = 0x00;
+	char chargeInfo;
 	char error; //used for developement to log and watch errors - AP
 	//TODO: Adam add error handling with GUI
 	//Comms
@@ -109,25 +110,42 @@ int main(void)
 			case MANUAL:
 				if(newDataFlag)
 					manualControl(message);
-				char chargeInfo = chargeDetector();
+				chargeInfo = chargeDetector();
 				if (chargeInfo == CHARGING)
-					robotState = IDLE;
-				else if (chargeInfo == CHARGED)
-					robotState = FORMATION;
+				{
+					previousState = robotState;
+					robotState = CHARGING;
+				}
 				else
-					error = chargeInfo;
-				
+					error = chargeInfo;			
 			break;
 			
 			case DOCKING:
 			//if battery low or manual command set
 			//dockRobot();
-			followLine();
+			//followLine();
 			break;
 			
 			case FORMATION:
 			//placeholder
 			break;
+			
+			case CHARGING:
+				ledOn1;
+				chargeInfo = chargeDetector();
+				if(chargeInfo == CHARGING)
+					break;
+				else if(chargeInfo == CHARGED)
+				{
+					ledOff1;
+					robotState = previousState;
+				}
+				else
+				{
+					ledOff1;
+					error = chargeInfo;
+				}
+				break;
 			
 			case IDLE:
 			//idle
