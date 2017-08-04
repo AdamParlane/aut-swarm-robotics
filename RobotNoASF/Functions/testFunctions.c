@@ -151,7 +151,11 @@ uint8_t testManager(struct message_info message, struct transmitDataStructure *t
 		break;
 		
 		case TEST_FAST_CHARGE_CHIP:
-		//TO DO Adam & Esmond
+		peripheralReturnData = fcBatteryVoltage();
+		transmit->Data[1] = DATA_RETURN; //sending data out
+		transmit->Data[2] = peripheralReturnData >> 8; //upper byte
+		transmit->Data[3] = peripheralReturnData & 0xFF; //lower byte		
+		transmit->DataSize = 4;
 		break;
 		
 		case TEST_TWI_MULTIPLEXOR:
