@@ -122,7 +122,7 @@ int main(void)
 			
 			case DOCKING:
 			//if battery low or manual command set
-			//dockRobot();
+			dockRobot();
 			//followLine();
 			break;
 			
@@ -144,6 +144,7 @@ int main(void)
 				{
 					ledOff1;
 					error = chargeInfo;
+					robotState = MANUAL;
 				}
 				break;
 			
