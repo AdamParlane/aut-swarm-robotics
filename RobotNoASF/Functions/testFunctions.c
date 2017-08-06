@@ -117,20 +117,7 @@ uint8_t testManager(struct message_info message, struct transmitDataStructure *t
 		transmit->Data[4] = peripheralReturnData & 0xFF; //lower byte
 		transmit->DataSize = 5;
 		break;
-		
-		case TEST_MOTORS:
-		//3 Motors (1:0x01, 2:0x02, 3:0x03)
-		//The motors need to be turned on individually at a set direction and speed as commanded by the PC
-		//This is done with a different setTestMotors function, found in motorDriver.c
-		setTestMotors(receivedTestData); //Turn on the require motor at the set speed and direction
-		transmit->Data[1] = DATA_RETURN; //Sending Data Out
-		transmit->Data[2] = receivedTestData[1];//Transmit the specific motor ID
-		transmit->Data[3] = receivedTestData[2];//Echo's the command
-		//TODO: instead of echo read what motor is on with direction and speed and return it
-		//TODO: turn off motors after test is finished 
-		transmit->DataSize = 4;
 
-		break;
 		
 		case TEST_MOUSE_SENSOR:
 		//Only 1 mouse sensor just trying to attain dx & dy
@@ -143,7 +130,7 @@ uint8_t testManager(struct message_info message, struct transmitDataStructure *t
 		transmit->Data[5] = testPosition.opticaldy & 0xFF; //lower byte
 		transmit->DataSize = 6;
 		break;
-		
+				
 		case TEST_IMU:
 		//TO DO Adam & Matt
 		//getIMUQuaterions(&testPosition);
@@ -160,11 +147,15 @@ uint8_t testManager(struct message_info message, struct transmitDataStructure *t
 		break;
 		
 		case TEST_LINE_FOLLOWERS:
-		//TO DO Adam & Paul
+		//TO DO Adam & Matt
 		break;
 		
 		case TEST_FAST_CHARGE_CHIP:
-		//TO DO Adam & Esmond
+		peripheralReturnData = fcBatteryVoltage();
+		transmit->Data[1] = DATA_RETURN; //sending data out
+		transmit->Data[2] = peripheralReturnData >> 8; //upper byte
+		transmit->Data[3] = peripheralReturnData & 0xFF; //lower byte		
+		transmit->DataSize = 4;
 		break;
 		
 		case TEST_TWI_MULTIPLEXOR:
@@ -176,13 +167,26 @@ uint8_t testManager(struct message_info message, struct transmitDataStructure *t
 		transmit->Data[2] = twi0ReadMuxChannel();//Return the channel the Mux is currently set to
 		transmit->DataSize = 3;
 		break;
-		
+
 		case TEST_TWI_EXTERNAL:
 		//TO DO Adam & Paul
 		break;
 		
 		case TEST_CAMERA:
 		//TO DO Adam & Brae
+		break;
+		
+		case TEST_MOTORS:
+		//3 Motors (1:0x01, 2:0x02, 3:0x03)
+		//The motors need to be turned on individually at a set direction and speed as commanded by the PC
+		//This is done with a different setTestMotors function, found in motorDriver.c
+		setTestMotors(receivedTestData); //Turn on the require motor at the set speed and direction
+		transmit->Data[1] = DATA_RETURN; //Sending Data Out
+		transmit->Data[2] = receivedTestData[1];//Transmit the specific motor ID
+		transmit->Data[3] = receivedTestData[2];//Echo's the command
+		//TODO: instead of echo read what motor is on with direction and speed and return it
+		transmit->DataSize = 4;
+		stopRobot();
 		break;
 
 	}
@@ -225,4 +229,61 @@ void convertData(struct message_info message, uint8_t *data)
 		//TO DO: prehaps add some sort of error flagging system??
 			return;
 	}
+}
+
+
+
+/*
+* Function: void testAll(struct transmitDataStructure *transmit)
+*
+* tests all the peripherals in a set order and returns them all back to the GUI in one packet
+* calling the appropriate test functions / performing tests
+* and returning to the PC the test return values
+*
+* Input is the transmit array
+*
+* No Return Values
+*
+*/
+void testAll(struct transmitDataStructure *transmit)
+{
+	//tests all the peripherals in a set order and returns them all back to the GUI in one packet
+	//Can only be used once comms test is performed
+	//[WIP] needs consultation with Mansel -AP
+	//Order will be
+	struct Position testPosition;
+	uint16_t doubleByteData; //used as an intermediate 
+	transmit->Data[0] = TEST_ALL_RETURN; //0xEF
+	doubleByteData = proxSensRead(MUX_PROXSENS_A);
+	transmit->Data[1] = doubleByteData >> 8;
+	transmit->Data[2] = doubleByteData & 0xFF;
+	doubleByteData = proxSensRead(MUX_PROXSENS_B);
+	transmit->Data[3] = doubleByteData >> 8;
+	transmit->Data[4] = doubleByteData & 0xFF;
+	doubleByteData = proxSensRead(MUX_PROXSENS_C);
+	transmit->Data[5] = doubleByteData >> 8;
+	transmit->Data[6] = doubleByteData & 0xFF;
+	doubleByteData = proxSensRead(MUX_PROXSENS_D);
+	transmit->Data[7] = doubleByteData >> 8;
+	transmit->Data[8] = doubleByteData & 0xFF;
+	doubleByteData = proxSensRead(MUX_PROXSENS_E);
+	transmit->Data[9] = doubleByteData >> 8;
+	transmit->Data[10] = doubleByteData & 0xFF;
+	doubleByteData = proxSensRead(MUX_PROXSENS_F);
+	transmit->Data[11] = doubleByteData >> 8;
+	transmit->Data[12] = doubleByteData & 0xFF;
+	doubleByteData = lightSensRead(MUX_LIGHTSENS_L, LS_WHITE_REG);
+	transmit->Data[13] = doubleByteData >> 8;
+	transmit->Data[14] = doubleByteData & 0xFF;
+	doubleByteData = lightSensRead(MUX_LIGHTSENS_R, LS_WHITE_REG);
+	transmit->Data[15] = doubleByteData >> 8;
+	transmit->Data[16] = doubleByteData & 0xFF;
+	getMouseXY(&testPosition);
+	transmit->Data[17] = testPosition.opticaldx >> 8;	//upper byte
+	transmit->Data[18] = testPosition.opticaldx & 0xFF; //lower byte
+	transmit->Data[19] = testPosition.opticaldy >> 8;	//upper byte
+	transmit->Data[20] = testPosition.opticaldy & 0xFF; //lower byte
+	//[WIP] Need to check if our comms can handle this before finishing it
+	//If it goes well I might abstract the tests to functions that fill the array also
+	//TODO: Adam Parlane
 }

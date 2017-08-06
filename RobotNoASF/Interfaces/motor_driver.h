@@ -204,4 +204,22 @@ void setTestMotors(uint8_t motorData[]);
 */
 void PWMSpeedTest(void);
 
+/*
+* Function:
+* void setTestMotors(uint8_t motorData[])
+*
+* sets test motors to perform motor test
+*
+* Inputs:
+* uint8_t motorData[]
+*   two element 8bit array that contains a data packet from PC GUI relevant to the motor test
+*   routine. (ie speed, direction and what motor to run)
+*
+* Returns:
+* none
+*
+*/
+void setTestMotors(uint8_t motorData[]);
+
+
 #endif /* MOTOR_DRIVER_H_ */

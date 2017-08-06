@@ -149,3 +149,35 @@ uint16_t fcBatteryVoltage(void)
 	rawBattReading = adcRead(FC_BATVOLT_ADC_CH);
 	return rawBattReading*FC_BATTVOL_CONV;
 }
+
+/*
+* Function:
+* uint8_t chargeDetector(void)
+*
+* Returns battery charging status
+*
+* Inputs:
+* none
+*
+* Returns:
+* CHARGING for when a valid charging source is connected
+* CHARGED for when the battery is charged
+* the value of the status control register if there is an error or no charging
+*
+* Implementation:
+* Uses the struct union Register to separate the individual bits
+* reads the status control register
+* returns whether CHARGING, CHARGED, or other
+*
+*/
+uint8_t chargeDetector(void)
+{
+	Register fcstatus;
+	fcstatus.status = twi0ReadSingle(TWI0_FCHARGE_ADDR, FC_STATUS_REG);
+	if(fcstatus.bit.b5 & fcstatus.bit.b4)
+		return CHARGING;
+	else if (fcstatus.bit.b6 & fcstatus.bit.b4)
+		return CHARGED;
+	else
+		return  fcstatus.status;
+}

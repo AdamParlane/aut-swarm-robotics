@@ -23,17 +23,66 @@
 #define TEST_TWI_EXTERNAL		0xEC
 #define TEST_CAMERA				0xED
 
+#define TEST_ALL				0xEE
+#define TEST_ALL_RETURN			0xEF
+
 #define DATA_RETURN				0x00
 #define SINGLE_SAMPLE			0x01
 #define STREAM_DATA				0x02
 #define STOP_STREAMING			0xFF
 
+
 #define MOTOR_1					0x01
 #define MOTOR_2					0x02
 #define MOTOR_3					0x03
 
-//Function Prototypes
-void setTestMotors(uint8_t motorData[]);
+
+/*
+*
+* Function: void convertData(struct message_info message, uint8_t* data[50])
+*
+* Converts the received message structure and pointer to an array with the required test command data
+*
+* Input is the message structure from the received data
+* after the XBee framing has been stripped
+* and a pointer to the array where the new data is to be copied to
+*
+* No Return Values
+*
+*/
 void convertData(struct message_info message, uint8_t *data);
+
+/*
+* Function: void testManager(struct message_info message)
+*
+* Handles the interpretation of received test commands,
+* calling the appropriate test functions / performing tests
+* and returning to the PC the test return value
+*
+* Input is the message structure from the received data
+* after the XBee framing has been stripped
+*
+* No Return Values
+*
+* Called in the main loop whenever a new command is received
+* OR in the case of streaming data it will be called at every streaming interval
+* ***Streaming Interval = 100ms***
+*
+*/
 uint8_t testManager(struct message_info message, struct transmitDataStructure *transmit);
+
+/*
+* Function: void testAll(struct transmitDataStructure *transmit)
+*
+* tests all the peripherals in a set order and returns them all back to the GUI in one packet
+* calling the appropriate test functions / performing tests
+* and returning to the PC the test return values
+*
+* Input is the transmit array
+*
+* No Return Values
+*
+*/
+void testAll(struct transmitDataStructure *transmit);
+
 #endif /* TESTFUNCTIONS_H_ */

@@ -266,6 +266,12 @@
     <Compile Include="Interfaces\spi.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="Interfaces\timer0.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="Interfaces\timer0.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="Interfaces\twimux_interface.c">
       <SubType>compile</SubType>
     </Compile>

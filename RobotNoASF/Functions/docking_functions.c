@@ -252,6 +252,8 @@ void followLine(void)
 	else
 	{
 		// moveRobot(0, 25) didn't do anything, hence this block of code (move forward at 25%)
+		//TODO: Want to replace this now Matt?
+		//moveRobot(0, 25);
 		RIN_1_H;
 		FIN_1_L;
 		RIN_3_L;

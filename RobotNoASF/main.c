@@ -68,6 +68,9 @@ int main(void)
 	//const char streamIntervalFlag = 1;
 	setup();
 	uint8_t testMode = 0x00;
+	char chargeInfo;
+	char error; //used for developement to log and watch errors - AP
+	//TODO: Adam add error handling with GUI
 	//Comms
 	struct frame_info frame;
 	struct message_info message;
@@ -82,30 +85,39 @@ int main(void)
 		switch (robotState)
 		{
 			case TEST:
-			if(newDataFlag || streamIntervalFlag)//get the new test data
-			{
-				testMode = testManager(message, &transmitMessage);//get the new test data
-			}
-			if(testMode == STOP_STREAMING)
-			robotState = IDLE;
-			else if(testMode == SINGLE_SAMPLE)
-			{
+				if(newDataFlag || streamIntervalFlag)//get the new test data
+				{
+					testMode = testManager(message, &transmitMessage);//get the new test data
+				}
+				if(testMode == STOP_STREAMING)
 				robotState = IDLE;
-				SendXbeeAPITransmitRequest(COORDINATOR_64,UNKNOWN_16, transmitMessage.Data, transmitMessage.DataSize);  //Send the Message
-			}
-			else if(streamIntervalFlag && testMode == STREAM_DATA)
-			{
-				streamIntervalFlag = 0;
-				SendXbeeAPITransmitRequest(COORDINATOR_64,UNKNOWN_16, transmitMessage.Data, transmitMessage.DataSize);  //Send the Message
-			}
+				else if(testMode == SINGLE_SAMPLE)
+				{
+					robotState = IDLE;
+					SendXbeeAPITransmitRequest(COORDINATOR_64,UNKNOWN_16, transmitMessage.Data, transmitMessage.DataSize);  //Send the Message
+				}
+				else if(streamIntervalFlag && testMode == STREAM_DATA)
+				{
+					streamIntervalFlag = 0;
+					SendXbeeAPITransmitRequest(COORDINATOR_64,UNKNOWN_16, transmitMessage.Data, transmitMessage.DataSize);  //Send the Message
+				}
 			break;
 			
 			case TEST_ALL:
+			//Place holder for state to test all peripherals at once
 			break;
 			
 			case MANUAL:
 				if(newDataFlag)
 					manualControl(message);
+				chargeInfo = chargeDetector();
+				if (chargeInfo == CHARGING)
+				{
+					previousState = robotState;
+					robotState = CHARGING;
+				}
+				else
+					error = chargeInfo;			
 			break;
 			
 			case DOCKING:
@@ -117,6 +129,24 @@ int main(void)
 			case FORMATION:
 			//placeholder
 			break;
+			
+			case CHARGING:
+				ledOn1;
+				chargeInfo = chargeDetector();
+				if(chargeInfo == CHARGING)
+					break;
+				else if(chargeInfo == CHARGED)
+				{
+					ledOff1;
+					robotState = previousState;
+				}
+				else
+				{
+					ledOff1;
+					error = chargeInfo;
+					robotState = MANUAL;
+				}
+				break;
 			
 			case IDLE:
 			//idle
