@@ -78,6 +78,20 @@ int get_ms(uint32_t *timestamp);
 int delay_ms(uint32_t period_ms);
 
 /*
+* Function: int delay_us(uint32_t period_us)
+*
+* micro second delay
+*
+* Inputs:
+* period_us is the number of microseconds to wait
+*
+* Returns:
+* Always returns 0
+*
+*/
+int delay_us(uint32_t period_us);
+
+/*
 * Function: void TC0_Handler()
 *
 * Interrupt handler for Timer0. Is used to help implement get_ms() and delay_ms() functions
@@ -92,6 +106,6 @@ int delay_ms(uint32_t period_ms);
 * Increments systemTimestamp once every millisecond.
 *
 */
-void TC0_Handler();
+void TC1_Handler();
 
 #endif /* TIMER0_H_ */
