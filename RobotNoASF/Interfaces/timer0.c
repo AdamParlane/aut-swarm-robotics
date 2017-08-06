@@ -1,9 +1,20 @@
 /*
- * timer0.c
- *
- * Created: 6/08/2017 1:23:13 PM
- *  Author: adams
- */ 
+* timer0.c
+*
+* Author : Adam Parlane and Matthew Witt
+* Created: 6/08/2017 2:01:45 PM
+*
+* Project Repository: https://github.com/AdamParlane/aut-swarm-robotics
+*
+* Provides functions for setting up the timer0 and delay functions
+*
+* More Info:
+* Atmel SAM 4N Processor Datasheet:http://www.atmel.com/Images/Atmel-11158-32-bit%20Cortex-M4-Microcontroller-SAM4N16-SAM4N8_Datasheet.pdf
+*
+* TODO: Provide details
+*
+*
+*/
 
 #include "timer0.h"
 
@@ -25,7 +36,7 @@
 * [use heavy detail for anything complicated]
 *
 * Improvements:
-* Move to its own module.
+* Commenting
 *
 */
 void timer0Init(void)
