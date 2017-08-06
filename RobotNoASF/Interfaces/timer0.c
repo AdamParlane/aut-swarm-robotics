@@ -35,21 +35,27 @@ void timer0Init(void)
 	REG_PMC_PCER0
 	|=	(1<<ID_TC0);						//Enable TC clock (ID_TC0 is the peripheral identifier
 	//for timer counter 0)
+	REG_PIOA_PDR |= (1<<0);					// enable TCO control of XCLK for Camera (PA0)
+
 	NVIC_EnableIRQ(ID_TC0);					//Enable interrupt vector for TIMER0
 	REG_TC0_CMR0							//TC Channel Mode Register (Pg877)
-	|=	TC_CMR_TCCLKS_TIMER_CLOCK3			//Prescaler MCK/32 (100MHz/32 = 3.125MHz)
+	|=	TC_CMR_TCCLKS_TIMER_CLOCK1			//Prescaler MCK/2 (100MHz/2 = 50MHz)
 	|	TC_CMR_WAVE							//Waveform mode
-	|	TC_CMR_WAVSEL_UP_RC;				//Clear on RC compare
+	|	TC_CMR_WAVSEL_UP_RC					//Clear on RC compare
+	|	TC_CMR_ACPA_SET						// Set pulse on RA compare
+	|	TC_CMR_ACPC_CLEAR;					// Clear pulse on RC compare
 	REG_TC0_IER0							//TC interrupt enable register
-	|=	TC_IER_CPCS;						//Enable Register C compare interrupt
-	REG_TC0_RC0								//Set Register C (the timer counter value at which the
+	|=	TC_IER_CPBS;						//Enable Register B compare interrupt
+	REG_TC0_RB0								//Set Register B (the timer counter value at which the
 	//interrupt will be triggered)
-	=	3125;								//Trigger once every 1/1000th of a second
-	//(100Mhz/32/1000)
+	=	50;									//Trigger once every us (100MHz/2/1M)
+	REG_TC0_RA0 |= (TC_RA_RA(2));			// RA set to 2 counts
+	REG_TC0_RC0 |= (TC_RC_RC(4));			// RC set to 4 counts (total square wave of 80ns period, 12.5MHZ)
 	REG_TC0_CCR0							//Clock control register
 	|=	TC_CCR_CLKEN						//Enable the timer clk.
-	|	TC_CCR_SWTRG;
+	|	TC_CCR_SWTRG;						//Start timer register counter
 }
+
 
 /*
 * Function: int get_ms(uint32_t *timestamp)
@@ -125,23 +131,27 @@ void TC0_Handler()
 {
 	//The interrupt handler for timer counter 0
 	//Triggers every 1ms
-	if(REG_TC0_SR0 & TC_SR_CPCS)									//If RC compare flag
+	if(REG_TC0_SR0 & TC_SR_CPBS)									//If RB compare flag
 	{
-		systemTimestamp++;
-		streamDelayCounter++;
-		if(streamDelayCounter == 100) //used for streaming data
+		usTimeStamp++;
+		if(usTimeStamp % 100)
 		{
-			streamDelayCounter = 0;
-			streamIntervalFlag = 1;
+			systemTimestamp++;
+			streamDelayCounter++;
+			if(streamDelayCounter == 100) //used for streaming data
+			{
+				streamDelayCounter = 0;
+				streamIntervalFlag = 1;
+			}
+			//V1 robot doesn't have the IMU's interrupt pin tied in to the uC, so the FIFO will have to be
+			//polled. V2 does utilize an external interrupt, so this code is not necessary.
+			#if defined ROBOT_TARGET_V1
+			//Read IMUs FIFO every 5ms on the V1 platform
+			if(systemTimestamp >= (imuFifoNextReadTime + 5))
+			{
+				imuFifoNextReadTime = systemTimestamp;
+			}
+			#endif		
 		}
-		//V1 robot doesn't have the IMU's interrupt pin tied in to the uC, so the FIFO will have to be
-		//polled. V2 does utilise an external interrupt, so this code is not necessary.
-		#if defined ROBOT_TARGET_V1
-		//Read IMUs FIFO every 5ms on the V1 platform
-		if(systemTimestamp >= (imuFifoNextReadTime + 5))
-		{
-			imuFifoNextReadTime = systemTimestamp;
-		}
-		#endif
 	}
 }

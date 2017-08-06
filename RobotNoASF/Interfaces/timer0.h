@@ -14,6 +14,9 @@
 //Flags and system globals
 uint32_t systemTimestamp = 0;	//Number of ms since powerup. Used by delay_ms and get_ms functions
 								//Which in turn are used by the IMU drivers/DMP
+								
+uint16_t usTimeStamp = 0;		//Number of us since last interrupt
+
 #if defined ROBOT_TARGET_V1
 uint32_t imuFifoNextReadTime = 0;//The system time at which the IMU will be read next (ie when
 //checkImuFifo will next be set to one. Used by the V1 robot
