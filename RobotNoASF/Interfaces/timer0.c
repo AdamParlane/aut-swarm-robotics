@@ -189,13 +189,13 @@ void TC1_Handler()
 			}
 			//V1 robot doesn't have the IMU's interrupt pin tied in to the uC, so the FIFO will have to be
 			//polled. V2 does utilize an external interrupt, so this code is not necessary.
-			#if defined ROBOT_TARGET_V1
+#if defined ROBOT_TARGET_V1
 			//Read IMUs FIFO every 5ms on the V1 platform
 			if(systemTimestamp >= (imuFifoNextReadTime + 5))
 			{
 				imuFifoNextReadTime = systemTimestamp;
 			}
-			#endif		
+#endif		
 		}
 	}
 }
