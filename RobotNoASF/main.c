@@ -201,14 +201,14 @@ void setup(void)
 	twi0Init();							//Initialise TWI0 interface
 	twi2Init();							//Initialise TWI2 interface
 	timer0Init();						//Initialise timer0
-//	lightSensInit(MUX_LIGHTSENS_R);		//Initialise Right Light/Colour sensor
-//	lightSensInit(MUX_LIGHTSENS_L);		//Initialise Left Light/Colour sensor
-	//proxSensInit(MUX_PROXSENS_A);		//Initialise proximity sensor on panel A
-	//proxSensInit(MUX_PROXSENS_B);		//Initialise proximity sensor on panel B
-	//proxSensInit(MUX_PROXSENS_C);		//Initialise proximity sensor on panel C
-	//proxSensInit(MUX_PROXSENS_D);		//Initialise proximity sensor on panel D
-	//proxSensInit(MUX_PROXSENS_E);		//Initialise proximity sensor on panel E
-	//proxSensInit(MUX_PROXSENS_F);		//Initialise proximity sensor on panel F
+	lightSensInit(MUX_LIGHTSENS_R);		//Initialise Right Light/Colour sensor
+	lightSensInit(MUX_LIGHTSENS_L);		//Initialise Left Light/Colour sensor
+	proxSensInit(MUX_PROXSENS_A);		//Initialise proximity sensor on panel A
+	proxSensInit(MUX_PROXSENS_B);		//Initialise proximity sensor on panel B
+	proxSensInit(MUX_PROXSENS_C);		//Initialise proximity sensor on panel C
+	proxSensInit(MUX_PROXSENS_D);		//Initialise proximity sensor on panel D
+	proxSensInit(MUX_PROXSENS_E);		//Initialise proximity sensor on panel E
+	proxSensInit(MUX_PROXSENS_F);		//Initialise proximity sensor on panel F
 	fcInit();							//Initialise the fast charge chip
 	CommunicationSetup();				//Initialise communication system
 #if defined ROBOT_TARGET_V1
