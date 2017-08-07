@@ -99,7 +99,7 @@ struct transmitDataStructure
 //used for test function calling
 char newDataFlag; //used for test function probably temporary
 char robotState, previousState;
-char streamDelayCounter, streamIntervalFlag;
+volatile char streamDelayCounter, streamIntervalFlag;
 
 
 ///////////////Functions////////////////////////////////////////////////////////////////////////////

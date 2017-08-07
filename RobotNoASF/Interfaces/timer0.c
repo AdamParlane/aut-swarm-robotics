@@ -63,7 +63,7 @@ void timer0Init(void)
 	|	TC_CMR_ACPC_CLEAR;					// Clear pulse on RC compare
 	REG_TC0_IER1							//TC interrupt enable register
 	|=	TC_IER_CPCS;						//Enable Register B compare interrupt
-	REG_TC0_RC1	|= (TC_RC_RC(50));							//Set Register B (the timer counter value at which the
+	REG_TC0_RC1	|= (TC_RC_RC(50));			//Set Register B (the timer counter value at which the
 	//interrupt will be triggered)
 	//=	50;									//Trigger once every us (100MHz/2/1M)
 	REG_TC0_RA0 |= (TC_RA_RA(2));			// RA set to 2 counts
@@ -123,8 +123,14 @@ int get_ms(uint32_t *timestamp)
 */
 int delay_ms(uint32_t period_ms)
 {
-	uint32_t startTime = systemTimestamp;
-	while(systemTimestamp < (startTime + period_ms));
+	while(period_ms > 0)
+	{
+		if(delaymsCounter)
+		{
+			delaymsCounter = 0;
+			period_ms --;
+		}
+	}
 	return 0;
 }
 
@@ -140,14 +146,20 @@ int delay_ms(uint32_t period_ms)
 * Always returns 0
 *
 * Implementation:
-* Stores usTimeStamp at the start of the function, then waits until systemTimestamp has
+* Stores usTimeStamp at the start of the function, then waits until usTimestamp has
 * increased by the amount given in period_us before continuing.
 *
 */
-int delay_us(uint32_t period_us)
+int delay_us(uint16_t period_us)
 {
-	uint32_t startTime = usTimeStamp;
-	while(systemTimestamp < (startTime + period_us));
+	while(period_us > 0)
+	{
+		if(delayusCounter)
+		{
+			delayusCounter = 0;
+			period_us --;
+		}
+	}
 	return 0;
 }
 
@@ -176,12 +188,14 @@ void TC1_Handler()
 	//Triggers every 1us
 	if(REG_TC0_SR1 & TC_SR_CPCS)	//If RC compare flag
 	{
-		usTimeStamp++;
-		if(usTimeStamp == 1000)
+		usTimeStamp++;//used to trigger 1ms
+		delayusCounter ++;//used for delay us
+		if(usTimeStamp == 1000) //every 1ms
 		{
-			usTimeStamp = 0;
-			systemTimestamp++;
-			streamDelayCounter++;
+			usTimeStamp = 0;//reset us counter every millisecond
+			systemTimestamp++;//used for getms
+			delaymsCounter++;//used for delay ms
+			streamDelayCounter++;//used for streaming data to pc every 100ms
 			if(streamDelayCounter == 100) //used for streaming data every 100ms
 			{
 				streamDelayCounter = 0;
