@@ -9,25 +9,10 @@
 #ifndef TIMER0_H_
 #define TIMER0_H_
 
+///////////////Includes/////////////////////////////////////////////////////////////////////////////
 #include "../robot_defines.h"
 
-//Flags and system globals
-volatile uint32_t systemTimestamp = 0;	//Number of ms since powerup. Used by delay_ms and get_ms functions
-								//Which in turn are used by the IMU drivers/DMP
-								
-volatile uint16_t usTimeStamp = 0;		//Number of us since last interrupt
-
-volatile uint16_t delayusCounter = 0;
-volatile uint16_t delaymsCounter = 0;
-
-#if defined ROBOT_TARGET_V1
-uint32_t imuFifoNextReadTime = 0;//The system time at which the IMU will be read next (ie when
-//checkImuFifo will next be set to one. Used by the V1 robot
-//only as the V2 sets checkImuInfo from external interrupt from
-//The IMU.
-#endif
-
-
+///////////////Functions////////////////////////////////////////////////////////////////////////////
 /*
 * Function:
 * void timer0Init(void)

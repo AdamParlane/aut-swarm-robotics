@@ -24,6 +24,7 @@
 #include <math.h>
 #include "inv_mpu_CUSTOM.h"
 #include "../Interfaces/imu_interface.h"
+#include "../Interfaces/timer0.h"
 
 /* The following functions must be defined for this platform:
  * i2c_write(unsigned char slave_addr, unsigned char reg_addr,
@@ -106,15 +107,13 @@ static inline int reg_int_cb(struct int_param_s *int_param)
 
 //SWARM ROBOT CONFIGURATION/////////////////////////////////////////////
 
-extern uint32_t systemTimestamp;
+extern uint32_t systemTimestamp;	//millisecs since power on. Declared in timer0.c
 
 static inline int reg_int_cb(struct int_param_s *int_param)
 {
 	//I guess we aren't using interrupt callback
 	return 0;
 }
-
-
 
 #define log_i(...)		do {} while (0)
 #define log_e(...)		do {} while (0)
