@@ -24,6 +24,7 @@
 #include "dmpKey_CUSTOM.h"
 #include "dmpmap_CUSTOM.h"
 #include "../Interfaces/imu_interface.h"
+#include "../Interfaces/timer0.h"
 
 /* The following functions must be defined for this platform:
  * i2c_write(unsigned char slave_addr, unsigned char reg_addr,
