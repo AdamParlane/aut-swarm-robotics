@@ -117,7 +117,7 @@ void SPI_Init(void)
 void mouseInit(void)
 {
 	//temporary variables used to read the observation register on mouse startup
-	char tempObs, temp02, temp03, temp04, temp05;
+	char dummyVar;
 	
 	//Reset SPI Port
 #if defined ROBOT_TARGET_V1
@@ -133,16 +133,16 @@ void mouseInit(void)
 	delay();
 	SPI_Write(OPT_OBSERVATION, 0x00);		//clear observation register
 	delay();								//wait at least 1 frame
-	tempObs = SPI_Read(OPT_OBSERVATION);	//read observation register to check bits 0-3 are set	
-	while((tempObs & 0x0F) != 0x0F)			//check if bits 0-3 have been set
+	dummyVar = SPI_Read(OPT_OBSERVATION);	//read observation register to check bits 0-3 are set	
+	while((dummyVar & 0x0F) != 0x0F)			//check if bits 0-3 have been set
 	{
-		tempObs = SPI_Read(OPT_OBSERVATION);
+		dummyVar = SPI_Read(OPT_OBSERVATION);
 		delay();
 	}
-	temp02 = SPI_Read(OPT_MOTION);
-	temp03 = SPI_Read(OPT_DELTA_X_L);
-	temp04 = SPI_Read(OPT_DELTA_Y_L);
-	temp05 = SPI_Read(OPT_DELTA_XY_H);
+	dummyVar = SPI_Read(OPT_MOTION);
+	dummyVar = SPI_Read(OPT_DELTA_X_L);
+	dummyVar = SPI_Read(OPT_DELTA_Y_L);
+	dummyVar = SPI_Read(OPT_DELTA_XY_H);
 	SPI_Write(0x3C, 0x27);					//reserved 
 	SPI_Write(0x22, 0x0A);					//reserved 
 	SPI_Write(0x21, 0x01);					//reserved 
