@@ -42,7 +42,4 @@
 */
 uint8_t scanProxSensors(uint8_t *obstacleDetected);
 
-
-
-
 #endif /* OBSTACLE_AVOIDANCE_H_ */

@@ -134,6 +134,10 @@ int main(void)
 			followLine();
 			break;
 			
+			case OBSTACLE_AVOIDANCE:
+				//Will execute code to guide robot around obstacles
+			break;
+			
 			case FORMATION:
 			//placeholder
 			break;
@@ -158,8 +162,8 @@ int main(void)
 			
 			case IDLE:
 			//idle
-			rotateRobot(CCW, 100);
-			//stopRobot();
+			//rotateRobot(CCW, 100);
+			stopRobot();
 			
 			break;
 		}
@@ -203,23 +207,23 @@ void setup(void)
 
 	masterClockInit();					//Initialise the master clock to 100MHz
 	pioInit();							//Initialise the PIO controllers
-	//adcSingleConvInit();				//Initialise ADC for single conversion mode
-	//ledInit();							//Initialise the LEDs on the mid board
+	adcSingleConvInit();				//Initialise ADC for single conversion mode
+	ledInit();							//Initialise the LEDs on the mid board
 	motor_init();						//Initialise the motor driver chips
-	//SPI_Init();							//Initialise SPI for talking with optical sensor
-	//twi0Init();							//Initialise TWI0 interface
-	//twi2Init();							//Initialise TWI2 interface
+	SPI_Init();							//Initialise SPI for talking with optical sensor
+	twi0Init();							//Initialise TWI0 interface
+	twi2Init();							//Initialise TWI2 interface
 	//timer0Init();						//Initialise timer0
-	//lightSensInit(MUX_LIGHTSENS_R);		//Initialise Right Light/Colour sensor
-	//lightSensInit(MUX_LIGHTSENS_L);		//Initialise Left Light/Colour sensor
-	//proxSensInit(MUX_PROXSENS_A);		//Initialise proximity sensor on panel A
-	//proxSensInit(MUX_PROXSENS_B);		//Initialise proximity sensor on panel B
-	//proxSensInit(MUX_PROXSENS_C);		//Initialise proximity sensor on panel C
-	//proxSensInit(MUX_PROXSENS_D);		//Initialise proximity sensor on panel D
-	//proxSensInit(MUX_PROXSENS_E);		//Initialise proximity sensor on panel E
-	//proxSensInit(MUX_PROXSENS_F);		//Initialise proximity sensor on panel F
-	//fcInit();							//Initialise the fast charge chip
-	//CommunicationSetup();				//Initialise communication system
+	lightSensInit(MUX_LIGHTSENS_R);		//Initialise Right Light/Colour sensor
+	lightSensInit(MUX_LIGHTSENS_L);		//Initialise Left Light/Colour sensor
+	proxSensInit(MUX_PROXSENS_A);		//Initialise proximity sensor on panel A
+	proxSensInit(MUX_PROXSENS_B);		//Initialise proximity sensor on panel B
+	proxSensInit(MUX_PROXSENS_C);		//Initialise proximity sensor on panel C
+	proxSensInit(MUX_PROXSENS_D);		//Initialise proximity sensor on panel D
+	proxSensInit(MUX_PROXSENS_E);		//Initialise proximity sensor on panel E
+	proxSensInit(MUX_PROXSENS_F);		//Initialise proximity sensor on panel F
+	fcInit();							//Initialise the fast charge chip
+	CommunicationSetup();				//Initialise communication system
 #if defined ROBOT_TARGET_V1
 	//imuInit();							//Initialise IMU. Only working on V1
 #endif
@@ -228,6 +232,7 @@ void setup(void)
 	lfInit();							//Initialise line follow sensors. Only tested on V2 so far.
 #endif
 	uint8_t obstacle = 0;
-	
+	uint16_t battVoltage = fcBatteryVoltage();	//Add to your watch to keep an eye on the battery
+	scanProxSensors(&obstacle);
 	return;
 }

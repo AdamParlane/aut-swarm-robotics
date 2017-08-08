@@ -48,14 +48,14 @@
 */
 uint8_t scanProxSensors(uint8_t *obstacleDetected)
 {
-	uint16_t result = 0;
-	obstacleDetected = 0;  
-	for(uint8_t sensor = MUX_PROXSENS_A; sensor <= MUX_PROXSENS_B; sensor++)
+	uint16_t sensorValue = 0;
+	*obstacleDetected = 0;  
+	for(uint16_t sensor = MUX_PROXSENS_A; sensor <= MUX_PROXSENS_B; sensor++)
 	{
-		result = proxSensRead(sensor);
-		if (result > PS_IN_RANGE)
+		sensorValue = proxSensRead(sensor);
+		if (sensorValue > PS_IN_RANGE)
 		{
-			obstacleDetected = 1;
+			*obstacleDetected = 1;
 			return 0;
 		}
 	} 
