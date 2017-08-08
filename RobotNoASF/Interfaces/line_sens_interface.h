@@ -32,21 +32,6 @@
 #define NO_LINE			0
 #define NO_CHANGE		2
 
-#if defined ROBOT_TARGET_V1
-//TODO: Layout defines for the PIO pins that the line followers are connected to. They aren't
-//connected to ADC channels, but they may still be able to work by setting the threshold through
-//their pull up resistors.
-#define LF_OUTER_L_PORT	(PIOA)			//Line follower 0 Port
-#define LF_INNER_L_PORT	(PIOC)			//Line follower 1 Port
-#define LF_INNER_R_PORT	(PIOC)			//Line follower 2 Port
-#define LF_OUTER_R_PORT	(PIOA)			//Line follower 3 Port
-#define LF_OUTER_L		(PIO_PA5)		//Line follower 0 PIO pin
-#define LF_INNER_L		(PIO_PC28)		//Line follower 1 PIO pin
-#define LF_INNER_R		(PIO_PC10)		//Line follower 2 PIO pin
-#define LF_OUTER_R		(PIO_PA2)		//Line follower 3 PIO pin
-#endif
-
-#if defined ROBOT_TARGET_V2
 //#define LF_THRESHOLD_H	545				//Upper Threshold above which line is no longer detected
 //#define LF_THRESHOLD_L	235				//Lower threshold below which line is detected
 //Thresholds for insensitive sensor on Red V2
@@ -58,9 +43,21 @@
 #define LF_OUTER_R		(LF3_ADC_CH)	//Line follower 3 ADC channel
 #define LFC_PORT		(PIOA)			//PIO Port def for the line follower LED control
 #define LFC				(PIO_PA8)		//PIO pin def for the line follower LED control
-#endif
 
 ///////////////Functions////////////////////////////////////////////////////////////////////////////
+/*
+* Function:
+* void lfInit(void)
+*
+* Initialises Line sensors on V2 robots
+*
+* Inputs:
+* none
+*
+* Returns:
+* none
+*
+*/
 void lfInit(void);
 
 /*

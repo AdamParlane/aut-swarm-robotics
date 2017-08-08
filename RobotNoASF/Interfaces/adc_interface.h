@@ -35,12 +35,11 @@
 //	It appears that the line follow sensors aren't connected to ADC channels on the V1, and that the
 //	IR leds are always on.
 //		Line follower ADC channels version 2 robot
-#if defined ROBOT_TARGET_V2
 #define LF0_ADC_CH			13	// Far left
 #define LF1_ADC_CH			15	// Center left
 #define LF2_ADC_CH			0	// Center right
 #define LF3_ADC_CH			7	// Far right
-#endif
+
 //		Fast charge chip ADC channels
 #define FC_BATVOLT_ADC_CH	14	// Battery voltage level
 #define FC_BATTEMP_ADC_CH	9	// Battery temperature
