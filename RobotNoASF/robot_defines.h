@@ -25,7 +25,7 @@
 
 //TODO: change something so that this doesnt have to be first
 //Or maybe all defines should be before indludes
-enum ROBOT_STATES{TEST, TEST_ALL, MANUAL, FORMATION, DOCKING, IDLE, CHARGING}; //main loop functionality
+enum ROBOT_STATES{TEST, TEST_ALL, MANUAL, FORMATION, DOCKING, OBSTACLE_AVOIDANCE, IDLE, CHARGING}; //main loop functionality
 
 
 
@@ -46,6 +46,7 @@ enum ROBOT_STATES{TEST, TEST_ALL, MANUAL, FORMATION, DOCKING, IDLE, CHARGING}; /
 #include "Functions/testFunctions.h"
 #include "Functions/docking_functions.h"
 #include "Functions/manual_mode.h"
+#include "Functions/obstacle_avoidance.h"
 
 ///////////////Defines//////////////////////////////////////////////////////////////////////////////
 //LED control macros

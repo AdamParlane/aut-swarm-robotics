@@ -185,6 +185,12 @@
     <Compile Include="Functions\manual_mode.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="Functions\obstacle_avoidance.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="Functions\obstacle_avoidance.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="Functions\testFunctions.c">
       <SubType>compile</SubType>
     </Compile>
