@@ -51,7 +51,7 @@ void manualControl(struct message_info tmessage)
 	newDataFlag = 0;
 	uint16_t straightDirection;
 	convertData(tmessage, receivedTestData);
-	straightDirection = receivedTestData[0] << 8 + (receivedTestData[1]);
+	straightDirection = (receivedTestData[0] << 8) + (receivedTestData[1]);
 	if(tmessage.command == MANUAL_STRAIGHT)
 	{
 		moveRobot(straightDirection, receivedTestData[2]);

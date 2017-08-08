@@ -74,6 +74,10 @@
 #define PS_ENABLE_STATE	0x05	//Power ON, Proximity Enable
 #define PS_DISABLE_STATE 0x00	//Power OFF, Proximity Disable
 
+//Distance Threshold values
+#define PS_IN_RANGE		0x0070	//Should be prox value when an object is around 100mm away. Value
+								//increases as object draws closer. Max is 0x03FF.
+
 ///////////////Functions////////////////////////////////////////////////////////////////////////////
 /*
 * Function:

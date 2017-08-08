@@ -23,24 +23,26 @@
 #include "component/pio.h"
 
 ///////////////Functions////////////////////////////////////////////////////////////////////////////
-
+/*
+* Function:
+* void lfInit(void)
+*
+* Initialises Line sensors on V2 robots
+*
+* Inputs:
+* none
+*
+* Returns:
+* none
+*
+* Implementation:
+* Configures the LED control pin for output so that the line sensor LEDs can be turned on
+*
+*/
 void lfInit(void)
-#if defined ROBOT_TARGET_V1
+//Line followers are incorrectly wired on the V1, and are therefore unavailable.
 {
-	//Setup LF sensor pins for (binary) input
-	LF_OUTER_L_PORT->PIO_PER			//Enable LF_OUTER_L sensor pin
-	|=	LF_OUTER_L;
-	LF_INNER_L_PORT->PIO_PER			//Enable LF_INNER_L sensor pin
-	|=	LF_INNER_L;
-	LF_INNER_R_PORT->PIO_PER			//Enable LF_INNER_R sensor pin
-	|=	LF_INNER_R;
-	LF_OUTER_R_PORT->PIO_PER			//Enable LF_OUTER_R sensor pin
-	|=	LF_OUTER_R;
-}
-#endif
-
 #if defined ROBOT_TARGET_V2
-{
 	//Initialise PA8 (LFC) for output so LEDs can be turned on and off
 	LFC_PORT->PIO_PER
 	|=	LFC;
@@ -48,8 +50,8 @@ void lfInit(void)
 	|=	LFC;
 	
 	lfLedState(ON);
-}
 #endif
+}
 
 /*
 * Function:
@@ -72,20 +74,15 @@ void lfInit(void)
 *
 */
 void lfLedState(uint8_t ledState)
-#if defined ROBOT_TARGET_V1
+//There is no ability to turn the LEDs on or off on the V1 (Hard wired on)
 {
-	//There is no ability to turn the LEDs on or off on the V1 (Hard wired on)
-}
-#endif
-
 #if defined ROBOT_TARGET_V2
-{
 	if (ledState == OFF)
 		LFC_PORT->PIO_SODR |= LFC;	//Turn LEDs off
 	if (ledState == ON)
 		LFC_PORT->PIO_CODR |= LFC;	//Turn LEDs on
-}
 #endif
+}
 
 /*
 * Function:
@@ -116,29 +113,8 @@ void lfLedState(uint8_t ledState)
 *
 */
 uint8_t lfLineDetected(uint8_t lfSensor)
-#if defined ROBOT_TARGET_V1
 {
-	//Thresholds are set in hardware by pull up resistors
-	switch (lfSensor)			//Pick the selected sensor and output it's value.
-	{
-		case LF_OUTER_L:
-			return LF_OUTER_L_PORT->PIO_IDR & LF_OUTER_L;
-		
-		case LF_INNER_L:
-			return LF_INNER_L_PORT->PIO_IDR & LF_INNER_L;
-		
-		case LF_INNER_R:
-			return LF_INNER_R_PORT->PIO_IDR & LF_INNER_R;
-		
-		case LF_OUTER_R:
-			return LF_OUTER_R_PORT->PIO_IDR & LF_OUTER_R;
-	}
-	return 0;
-}
-#endif
-
 #if defined ROBOT_TARGET_V2
-{
 	uint16_t sensorData = 0;
 	sensorData = adcRead(lfSensor);
 	
@@ -146,7 +122,6 @@ uint8_t lfLineDetected(uint8_t lfSensor)
 		return LINE;						
 	if (sensorData < LF_THRESHOLD_L)	//if below threshold then white floor detected.
 		return NO_LINE;
-		
+#endif
 	return NO_CHANGE;
 }
-#endif

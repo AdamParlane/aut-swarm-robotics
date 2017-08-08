@@ -22,6 +22,7 @@
 
 ///////////////Includes/////////////////////////////////////////////////////////////////////////////
 #include "docking_functions.h"
+#include <stdlib.h>				//abs() function in followLine()
 
 ///////////////Global variables/////////////////////////////////////////////////////////////////////
 //Light follower sensor states.
@@ -123,6 +124,7 @@ void dockRobot(void)
 */
 void updateLineSensorStates(void)
 {
+#if defined ROBOT_TARGET_V2
 	uint8_t sensorValue;
 	
 	sensorValue = lfLineDetected(LF_OUTER_L);
@@ -140,6 +142,7 @@ void updateLineSensorStates(void)
 	sensorValue = lfLineDetected(LF_INNER_R);
 	if (sensorValue != NO_CHANGE)
 		lf.innerRight = sensorValue;
+#endif
 }
 
 /*
@@ -183,6 +186,7 @@ void updateLineSensorStates(void)
 */
 int8_t getLineDirection(void)
 {
+#if defined ROBOT_TARGET_V2
 	//Get updated sensor data
 	updateLineSensorStates();
 	//Combine sensor states from sensor structure into single byte that can be used by a switch
@@ -218,6 +222,7 @@ int8_t getLineDirection(void)
 		case 0x6:
 			return 0;		//Straight
 	}
+#endif
 	return 0;
 }
 
@@ -244,6 +249,7 @@ int8_t getLineDirection(void)
 */
 void followLine(void)
 {
+#if defined ROBOT_TARGET_V2
 	int8_t lineDirection = getLineDirection();
 	if (lineDirection > 0)			//Turn right
 		rotateRobot(CW, abs(lineDirection)*10);
@@ -265,4 +271,5 @@ void followLine(void)
 		FIN_2_L;
 		REG_PWM_CUPD2 = 0;			//rear
 	}
+#endif
 }

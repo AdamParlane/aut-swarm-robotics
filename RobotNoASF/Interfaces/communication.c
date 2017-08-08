@@ -105,8 +105,8 @@ void SendXbeeAPIFrame(uint8_t * frame_data, int len);		//Sends an XBee API Frame
 void InterpretSwarmMessage(struct message_info message)
 {
 	//copy information from the message info structure to local variables
-	int index = message.index;
-	int length = message.length;
+	//int index = message.index;
+	//int length = message.length;
 	newDataFlag = 1;
 	if(message.command >= 0xE0) //test command range 0xE0-0xEF
 		robotState = TEST;

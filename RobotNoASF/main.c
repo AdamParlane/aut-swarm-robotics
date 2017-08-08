@@ -80,6 +80,8 @@ int main(void)
 	robotPosition.y = 0;
 	struct transmitDataStructure transmitMessage;
 	robotState = DOCKING;
+	uint16_t battVoltage = fcBatteryVoltage();	//Add to your watch to keep an eye on the battery
+
 	while(1)
 	{
 		switch (robotState)
@@ -124,6 +126,13 @@ int main(void)
 			//if battery low or manual command set
 			//dockRobot();
 			followLine();
+			break;
+			
+			case OBSTACLE_AVOIDANCE:
+				//Will execute code to guide robot around obstacles. Type of obstacle avoidance
+				//performed will depend on the previous state of the robot, ie docking will want
+				//to not move out of the way of other robots so as not to go out of alignment but
+				//still stop when the dock has been reached.
 			break;
 			
 			case FORMATION:
