@@ -27,9 +27,12 @@
 //Or maybe all defines should be before indludes
 enum ROBOT_STATES{TEST, TEST_ALL, MANUAL, FORMATION, DOCKING, IDLE, CHARGING}; //main loop functionality
 
+
+
 ///////////////Includes/////////////////////////////////////////////////////////////////////////////
 #include "Interfaces/spi.h"
 #include "sam.h"
+#include "Interfaces/timer0.h"
 #include "Interfaces/communication.h"
 #include "Interfaces/adc_interface.h"
 #include "Interfaces/imu_interface.h"
@@ -62,23 +65,7 @@ enum ROBOT_STATES{TEST, TEST_ALL, MANUAL, FORMATION, DOCKING, IDLE, CHARGING}; /
 #endif
 
 ///////////////Type Definitions/////////////////////////////////////////////////////////////////////
-struct Position
-//struture to store all the robot side navigation / positioning data
-//this will be written to by getMouseXY, getEulerAngles, and another navigation function which combines them
-//The struture will store the relevant info from both key sensors and fuse them in an additional function
-{
-	uint16_t opticaldx;
-	uint16_t opticaldy;
-	float opticalx;
-	float opticaly;
-	float IMUqw;
-	float IMUqx;
-	float IMUqy;
-	float IMUqz;
-	float x;
-	float y;
-	float h;
-};
+
 
 struct Command
 //is anyone using this??? not me -Matt
@@ -89,11 +76,7 @@ struct Command
 	char command[10];
 };
 
-struct transmitDataStructure
-{
-	uint8_t Data[50];//array for data to be transmitted to PC BEFORE XBee framing has been added
-	uint8_t DataSize;//size of the transmit array
-};
+
 
 ///////////////Global variables/////////////////////////////////////////////////////////////////////
 //used for test function calling

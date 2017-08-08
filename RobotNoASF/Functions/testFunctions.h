@@ -36,6 +36,11 @@
 #define MOTOR_2					0x02
 #define MOTOR_3					0x03
 
+struct transmitDataStructure
+{
+	uint8_t Data[50];//array for data to be transmitted to PC BEFORE XBee framing has been added
+	uint8_t DataSize;//size of the transmit array
+};
 
 /*
 *

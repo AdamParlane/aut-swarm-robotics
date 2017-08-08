@@ -15,6 +15,13 @@
 
 #include "../robot_defines.h"
 
+struct message_info
+{
+	int index;
+	uint8_t command;
+	int length;
+};
+
 //64-bit robot addresses
 #define COORDINATOR_64 0x0000000000000000
 #define BROADCAST_64 0x000000000000FFFF
@@ -50,12 +57,7 @@ struct frame_info
 	int length;
 };
 
-struct message_info
-{
-	int index;
-	uint8_t command;
-	int length;
-};
+
 
 /**** Public Function Prototypes ****/
 void CommunicationSetup(void);								// Sets up UART3 and the required buffers

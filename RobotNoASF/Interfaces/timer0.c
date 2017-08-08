@@ -167,7 +167,7 @@ int delay_ms(uint32_t period_ms)
 * increased by the amount given in period_us before continuing.
 *
 */
-int delay_us(uint16_t period_us)
+int delay_us(uint32_t period_us)
 {
 	while(period_us > 0)
 	{
