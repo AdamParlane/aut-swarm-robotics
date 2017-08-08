@@ -220,12 +220,11 @@ void setup(void)
 	proxSensInit(MUX_PROXSENS_F);		//Initialise proximity sensor on panel F
 	fcInit();							//Initialise the fast charge chip
 	CommunicationSetup();				//Initialise communication system
-#if defined ROBOT_TARGET_V1
-	imuInit();							//Initialise IMU. Only working on V1
-#endif
+	imuInit();							//Initialise IMU.
+	
 	mouseInit();						//May require further testing - Adam
 #if defined ROBOT_TARGET_V2
-	lfInit();							//Initialise line follow sensors. Only tested on V2 so far.
+	lfInit();							//Initialise line follow sensors. Only on V2.
 #endif
 	return;
 }

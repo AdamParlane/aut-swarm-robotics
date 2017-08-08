@@ -129,6 +129,7 @@ int get_ms(uint32_t *timestamp)
 * Always returns 0
 *
 * Implementation:
+* TODO: Adam; if you change something in the function you need to update implementation too plz :-)
 * Stores systemTimestamp at the start of the function, then waits until systemTimestamp has
 * increased by the amount given in period_ms before continuing.
 *

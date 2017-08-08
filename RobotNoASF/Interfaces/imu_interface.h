@@ -50,6 +50,17 @@
 ////MPU9250 register addresses
 #define IMU_WHOAMI_REG			0x75
 
+////IMU external interrupt pin define
+#if defined ROBOT_TARGET_V2
+//////Port that the IMU interrupt is on
+#define IMU_INT_PORT		(PIOA)
+//////Pin that the IMU interrupt is on
+#define IMU_INT_PIN			(PIO_PA5)
+//////IMU interrupt state (1 means data waiting to be read)
+#define imuIntState			(IMU_INT_PORT->PIO_PSR & IMU_INT_PIN)
+#endif
+
+///////////////Type definitions/////////////////////////////////////////////////////////////////////
 //Structure that stores converted Euler angles of rotation. Parameter of GetEulerAngles
 typedef struct euler_packet 
 {
