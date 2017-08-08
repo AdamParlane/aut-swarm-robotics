@@ -23,7 +23,24 @@
 #include "../robot_defines.h"
 
 ///////////////Functions////////////////////////////////////////////////////////////////////////////
-uint8_t scanProxSensors(uint8_t obstacleDetected);
+/*
+* Function:
+* uint8_t scanProxSensors(uint8_t obstacleDetected)
+*
+* Scans all proximity sensors. If any sensor has a value below the distance threshold then it
+* returns a 1. Tells the program when it should switch to the obstacle avoidance state.
+*
+* Inputs:
+* uint8_t obstacleDetected
+*   A reference parameter that returns a 1 if anything is detected by the proximity sensors,
+*   otherwise returns a 0.
+*
+* Returns:
+* Returns non zero on error when reading proximity sensors.
+* TODO: Define error codes for scanProxSensors()
+*
+*/
+uint8_t scanProxSensors(uint8_t *obstacleDetected);
 
 
 

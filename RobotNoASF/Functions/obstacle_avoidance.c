@@ -46,10 +46,11 @@
 * Add error code returns. (requires error returns for proxSensRead())
 *
 */
-uint8_t scanProxSensors(uint8_t obstacleDetected)
+uint8_t scanProxSensors(uint8_t *obstacleDetected)
 {
-	uint16_t result = 0;  
-	for(uint8_t sensor = MUX_PROXSENS_A; i <= MUX_PROXSENS_B; sensor++)
+	uint16_t result = 0;
+	obstacleDetected = 0;  
+	for(uint8_t sensor = MUX_PROXSENS_A; sensor <= MUX_PROXSENS_B; sensor++)
 	{
 		result = proxSensRead(sensor);
 		if (result > PS_IN_RANGE)

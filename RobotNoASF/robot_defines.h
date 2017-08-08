@@ -43,6 +43,7 @@ enum ROBOT_STATES{TEST, TEST_ALL, MANUAL, FORMATION, DOCKING, IDLE, CHARGING}; /
 #include "Functions/testFunctions.h"
 #include "Functions/docking_functions.h"
 #include "Functions/manual_mode.h"
+#include "Functions/obstacle_avoidance.h"
 
 ///////////////Defines//////////////////////////////////////////////////////////////////////////////
 //LED control macros

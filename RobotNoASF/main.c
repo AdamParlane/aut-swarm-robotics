@@ -218,5 +218,7 @@ void setup(void)
 #if defined ROBOT_TARGET_V2
 	lfInit();							//Initialise line follow sensors. Only tested on V2 so far.
 #endif
+	uint8_t obstacle = 0;
+	
 	return;
 }
