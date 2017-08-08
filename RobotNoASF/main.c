@@ -79,6 +79,7 @@ int main(void)
 	robotPosition.x = 0;
 	robotPosition.y = 0;
 	struct transmitDataStructure transmitMessage;
+	uint16_t battVoltage = fcBatteryVoltage();	//Add to your watch to keep an eye on the battery
 	robotState = IDLE;
 	//for(char a = 0; a < 10; a ++)
 	//{
@@ -135,7 +136,10 @@ int main(void)
 			break;
 			
 			case OBSTACLE_AVOIDANCE:
-				//Will execute code to guide robot around obstacles
+				//Will execute code to guide robot around obstacles. Type of obstacle avoidance
+				//performed will depend on the previous state of the robot, ie docking will want
+				//to not move out of the way of other robots so as not to go out of alignment but
+				//still stop when the dock has been reached.
 			break;
 			
 			case FORMATION:
@@ -231,8 +235,5 @@ void setup(void)
 #if defined ROBOT_TARGET_V2
 	lfInit();							//Initialise line follow sensors. Only tested on V2 so far.
 #endif
-	uint8_t obstacle = 0;
-	uint16_t battVoltage = fcBatteryVoltage();	//Add to your watch to keep an eye on the battery
-	scanProxSensors(&obstacle);
 	return;
 }
