@@ -61,3 +61,4 @@ uint8_t scanProxSensors(uint8_t *obstacleDetected)
 	} 
 	return 0;
 }
+
