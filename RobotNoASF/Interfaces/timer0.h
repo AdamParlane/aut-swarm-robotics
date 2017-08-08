@@ -77,7 +77,7 @@ int delay_ms(uint32_t period_ms);
 * Always returns 0
 *
 */
-int delay_us(uint16_t period_us);
+int delay_us(uint32_t period_us);
 
 /*
 * Function: void TC0_Handler()

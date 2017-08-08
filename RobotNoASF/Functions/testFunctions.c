@@ -218,7 +218,7 @@ void convertData(struct message_info message, uint8_t *data)
 	char dataByte;
 	char messageError;
 	MessageBufferOut = message.index;//sets message buffer reader to correct start address
-	for (char i = 0; i < message.length; i++)//for each entry in the array
+	for (uint8_t i = 0; i < message.length; i++)//for each entry in the array
 	{
 		messageError = MessageBufferGet(&dataByte);//retrieve the next byte of received message data
 		if(messageError == 0)//if there was NO error
