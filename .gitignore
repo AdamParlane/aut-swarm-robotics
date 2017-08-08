@@ -65,6 +65,7 @@ dkms.conf
 *.mk
 *.atsuo
 RobotNoASF/Debug/Makefile
+*.componentinfo.xml
 
 #device startup config
 *.ld
