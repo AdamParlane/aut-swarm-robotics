@@ -81,14 +81,7 @@ int main(void)
 	struct transmitDataStructure transmitMessage;
 	uint16_t battVoltage = fcBatteryVoltage();	//Add to your watch to keep an eye on the battery
 	robotState = IDLE;
-	//for(char a = 0; a < 10; a ++)
-	//{
-		//ledOn1; 
-		//delay_us(1000000);
-		//ledOff1;
-		//delay_us(1000000);
-	//}
-	
+		
 	while(1)
 	{
 		switch (robotState)
@@ -166,7 +159,6 @@ int main(void)
 			
 			case IDLE:
 			//idle
-			//rotateRobot(CCW, 100);
 			stopRobot();
 			
 			break;
@@ -217,7 +209,7 @@ void setup(void)
 	SPI_Init();							//Initialise SPI for talking with optical sensor
 	twi0Init();							//Initialise TWI0 interface
 	twi2Init();							//Initialise TWI2 interface
-	//timer0Init();						//Initialise timer0
+	timer0Init();						//Initialise timer0
 	lightSensInit(MUX_LIGHTSENS_R);		//Initialise Right Light/Colour sensor
 	lightSensInit(MUX_LIGHTSENS_L);		//Initialise Left Light/Colour sensor
 	proxSensInit(MUX_PROXSENS_A);		//Initialise proximity sensor on panel A
@@ -229,9 +221,9 @@ void setup(void)
 	fcInit();							//Initialise the fast charge chip
 	CommunicationSetup();				//Initialise communication system
 #if defined ROBOT_TARGET_V1
-	//imuInit();							//Initialise IMU. Only working on V1
+	imuInit();							//Initialise IMU. Only working on V1
 #endif
-	//mouseInit();						//May require further testing - Adam
+	mouseInit();						//May require further testing - Adam
 #if defined ROBOT_TARGET_V2
 	lfInit();							//Initialise line follow sensors. Only tested on V2 so far.
 #endif
