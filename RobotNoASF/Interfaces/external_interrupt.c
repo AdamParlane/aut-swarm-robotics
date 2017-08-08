@@ -41,9 +41,11 @@ void extIntInit(void)
 void PIOA_Handler(void)
 {
 	//If the IMU interrupt has been triggered
+#if defined ROBOT_TARGET_V2
 	if(IMU_INT_PORT->PIO_ISR & IMU_INT_PIN)
 	{
 		//Read off the FIFO buffer
 		
 	}
+#endif
 }

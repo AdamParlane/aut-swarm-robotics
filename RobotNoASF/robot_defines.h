@@ -34,6 +34,7 @@ enum ROBOT_STATES{TEST, TEST_ALL, MANUAL, FORMATION, DOCKING, OBSTACLE_AVOIDANCE
 #include "sam.h"
 #include "Interfaces/imu_interface.h"
 #include "Interfaces/timer0.h"
+#include "Interfaces/external_interrupt.h"
 #include "Interfaces/communication.h"
 #include "Interfaces/adc_interface.h"
 #include "Interfaces/opt_interface.h"
