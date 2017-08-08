@@ -80,14 +80,7 @@ int main(void)
 	robotPosition.y = 0;
 	struct transmitDataStructure transmitMessage;
 	robotState = IDLE;
-	for(char a = 0; a < 10; a ++)
-	{
-		ledOn1;
-		delay_ms(1000);
-		ledOff1;
-		delay_ms(1000);
-	}
-	
+		
 	while(1)
 	{
 		switch (robotState)
@@ -158,8 +151,7 @@ int main(void)
 			
 			case IDLE:
 			//idle
-			rotateRobot(CCW, 100);
-			//stopRobot();
+			stopRobot();
 			
 			break;
 		}
@@ -221,9 +213,9 @@ void setup(void)
 	fcInit();							//Initialise the fast charge chip
 	CommunicationSetup();				//Initialise communication system
 #if defined ROBOT_TARGET_V1
-	//imuInit();							//Initialise IMU. Only working on V1
+	imuInit();							//Initialise IMU. Only working on V1
 #endif
-	//mouseInit();						//May require further testing - Adam
+	mouseInit();						//May require further testing - Adam
 #if defined ROBOT_TARGET_V2
 	lfInit();							//Initialise line follow sensors. Only tested on V2 so far.
 #endif
