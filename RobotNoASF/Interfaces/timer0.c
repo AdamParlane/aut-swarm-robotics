@@ -19,11 +19,12 @@
 ///////////////Includes/////////////////////////////////////////////////////////////////////////////
 #include "timer0.h"
 
-//Flags and system globals
+///////////////Global Vars//////////////////////////////////////////////////////////////////////////
 volatile uint32_t systemTimestamp = 0;	//Number of ms since powerup. Used by delay_ms and get_ms 
 										//functions which in turn are used by the IMU drivers/DMP
 volatile uint16_t delaymsCounter = 0;
 
+extern uint8_t checkImuFifo;
 #if defined ROBOT_TARGET_V1
 uint32_t imuFifoNextReadTime = 0;	//The system time at which the IMU will be read next (ie when
 									//checkImuFifo will next be set to one. Used by the V1 robot
@@ -31,7 +32,7 @@ uint32_t imuFifoNextReadTime = 0;	//The system time at which the IMU will be rea
 									//The IMU.
 #endif
 
-
+///////////////Functions////////////////////////////////////////////////////////////////////////////
 /*
 * Function:
 * void timer0Init(void)
@@ -49,7 +50,7 @@ uint32_t imuFifoNextReadTime = 0;	//The system time at which the IMU will be rea
 * [use heavy detail for anything complicated]
 *
 * Improvements:
-* Commenting
+* (more descriptive?)Commenting
 *
 */
 void timer0Init(void)
@@ -114,7 +115,6 @@ int get_ms(uint32_t *timestamp)
 	*timestamp = systemTimestamp;
 	return 0;
 }
-
 
 /*
 * Function: int delay_ms(uint32_t period_ms)
@@ -184,9 +184,10 @@ void TC1_Handler()
 		//polled. V2 does utilize an external interrupt, so this code is not necessary.
 #if defined ROBOT_TARGET_V1
 		//Read IMUs FIFO every 5ms on the V1 platform
-		if(systemTimestamp >= (imuFifoNextReadTime + 5))
+		if(systemTimestamp >= (imuFifoNextReadTime + 100))
 		{
 			imuFifoNextReadTime = systemTimestamp;
+			checkImuFifo = 1;
 		}
 #endif		
 	}

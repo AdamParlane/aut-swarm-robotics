@@ -237,6 +237,4 @@ char twiReadImu(unsigned char slave_addr, unsigned char reg_addr,
 */
 uint8_t imuCommTest(void);
 
-
-
 #endif /* IMU_INTERFACE_H_ */

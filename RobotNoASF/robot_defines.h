@@ -32,10 +32,10 @@ enum ROBOT_STATES{TEST, TEST_ALL, MANUAL, FORMATION, DOCKING, OBSTACLE_AVOIDANCE
 ///////////////Includes/////////////////////////////////////////////////////////////////////////////
 #include "Interfaces/spi.h"
 #include "sam.h"
+#include "Interfaces/imu_interface.h"
 #include "Interfaces/timer0.h"
 #include "Interfaces/communication.h"
 #include "Interfaces/adc_interface.h"
-#include "Interfaces/imu_interface.h"
 #include "Interfaces/opt_interface.h"
 #include "Interfaces/motor_driver.h"
 #include "Interfaces/twimux_interface.h"
@@ -66,8 +66,6 @@ enum ROBOT_STATES{TEST, TEST_ALL, MANUAL, FORMATION, DOCKING, OBSTACLE_AVOIDANCE
 #endif
 
 ///////////////Type Definitions/////////////////////////////////////////////////////////////////////
-
-
 struct Command
 //is anyone using this??? not me -Matt
 //structure to receive the command and interpret it to something useful
@@ -84,7 +82,6 @@ struct Command
 char newDataFlag; //used for test function probably temporary
 char robotState, previousState;
 volatile char streamDelayCounter, streamIntervalFlag;
-
 
 ///////////////Functions////////////////////////////////////////////////////////////////////////////
 /*
