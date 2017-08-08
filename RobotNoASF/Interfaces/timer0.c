@@ -22,10 +22,6 @@
 //Flags and system globals
 volatile uint32_t systemTimestamp = 0;	//Number of ms since powerup. Used by delay_ms and get_ms 
 										//functions which in turn are used by the IMU drivers/DMP
-
-volatile uint16_t usTimeStamp = 0;		//Number of us since last interrupt for delay_us()
-
-volatile uint16_t delayusCounter = 0;
 volatile uint16_t delaymsCounter = 0;
 
 #if defined ROBOT_TARGET_V1
@@ -73,16 +69,15 @@ void timer0Init(void)
 	|	TC_CMR_ACPA_SET						// Set pulse on RA compare
 	|	TC_CMR_ACPC_CLEAR;					// Clear pulse on RC compare
 	REG_TC0_CMR1							//TC Channel Mode Register (Pg877)
-	|=	TC_CMR_TCCLKS_TIMER_CLOCK1			//Prescaler MCK/2 (100MHz/2 = 50MHz)
+	|=	TC_CMR_TCCLKS_TIMER_CLOCK3			//Prescaler MCK/32 (100MHz/32 = MHz)
 	|	TC_CMR_WAVE							//Waveform mode
 	|	TC_CMR_WAVSEL_UP_RC					//Clear on RC compare
 	|	TC_CMR_ACPA_SET						// Set pulse on RA compare
 	|	TC_CMR_ACPC_CLEAR;					// Clear pulse on RC compare
 	REG_TC0_IER1							//TC interrupt enable register
-	|=	TC_IER_CPCS;						//Enable Register B compare interrupt
-	REG_TC0_RC1	|= (TC_RC_RC(50));			//Set Register B (the timer counter value at which the
-	//interrupt will be triggered)
-	//=	50;									//Trigger once every us (100MHz/2/1M)
+	|=	TC_IER_CPCS;						//Enable Register C compare interrupt
+	REG_TC0_RC1	|= (TC_RC_RC(3125));		//Set Register C (the timer counter value at which the
+	//interrupt will be triggered) Trigger once every ms (100MHz/2/1M)
 	REG_TC0_RA0 |= (TC_RA_RA(2));			// RA set to 2 counts
 	REG_TC0_RC0 |= (TC_RC_RC(4));			// RC set to 4 counts (total square wave of 80ns period, 12.5MHZ)
 	REG_TC0_CCR0							//Clock control register
@@ -152,35 +147,6 @@ int delay_ms(uint32_t period_ms)
 }
 
 /*
-* Function: int delay_us(uint32_t period_us)
-*
-* micro second delay
-*
-* Inputs:
-* period_us is the number of microseconds to wait
-*
-* Returns:
-* Always returns 0
-*
-* Implementation:
-* Stores usTimeStamp at the start of the function, then waits until usTimestamp has
-* increased by the amount given in period_us before continuing.
-*
-*/
-int delay_us(uint32_t period_us)
-{
-	while(period_us > 0)
-	{
-		if(delayusCounter)
-		{
-			delayusCounter = 0;
-			period_us --;
-		}
-	}
-	return 0;
-}
-
-/*
 * Function: void TC0_Handler()
 *
 * Interrupt handler for Timer0. Is used to help implement get_ms() and delay_ms() functions
@@ -202,31 +168,26 @@ int delay_us(uint32_t period_us)
 void TC1_Handler()
 {
 	//The interrupt handler for timer counter 0
-	//Triggers every 1us
+	//Triggers every 1ms
 	if(REG_TC0_SR1 & TC_SR_CPCS)	//If RC compare flag
 	{
-		usTimeStamp++;//used to trigger 1ms
-		delayusCounter ++;//used for delay us
-		if(usTimeStamp == 1000) //every 1ms
+		systemTimestamp++;//used for getms
+		delaymsCounter++;//used for delay ms
+		streamDelayCounter++;//used for streaming data to pc every 100ms
+		if(streamDelayCounter == 100) //used for streaming data every 100ms
 		{
-			usTimeStamp = 0;//reset us counter every millisecond
-			systemTimestamp++;//used for getms
-			delaymsCounter++;//used for delay ms
-			streamDelayCounter++;//used for streaming data to pc every 100ms
-			if(streamDelayCounter == 100) //used for streaming data every 100ms
-			{
-				streamDelayCounter = 0;
-				streamIntervalFlag = 1;
-			}
-			//V1 robot doesn't have the IMU's interrupt pin tied in to the uC, so the FIFO will have to be
-			//polled. V2 does utilize an external interrupt, so this code is not necessary.
-#if defined ROBOT_TARGET_V1
-			//Read IMUs FIFO every 5ms on the V1 platform
-			if(systemTimestamp >= (imuFifoNextReadTime + 5))
-			{
-				imuFifoNextReadTime = systemTimestamp;
-			}
-#endif		
+			streamDelayCounter = 0;
+			streamIntervalFlag = 1;
 		}
+		//V1 robot doesn't have the IMU's interrupt pin tied in to the uC, so the FIFO will have to be
+		//polled. V2 does utilize an external interrupt, so this code is not necessary.
+#if defined ROBOT_TARGET_V1
+		//Read IMUs FIFO every 5ms on the V1 platform
+		if(systemTimestamp >= (imuFifoNextReadTime + 5))
+		{
+			imuFifoNextReadTime = systemTimestamp;
+		}
+#endif		
 	}
 }
+
