@@ -20,8 +20,29 @@
 ///////////////Includes/////////////////////////////////////////////////////////////////////////////
 #include "external_interrupt.h"
 
-///////////////Functions////////////////////////////////////////////////////////////////////////////
+///////////////Global vars//////////////////////////////////////////////////////////////////////////
+extern uint8_t checkImuFifo;
 
+///////////////Functions////////////////////////////////////////////////////////////////////////////
+/*
+* Function:
+* void extIntInit(void)
+*
+* Initialisation for external interrupts goes here
+*
+* Inputs:
+* none
+*
+* Returns:
+* none
+*
+* Implementation:
+* First, if building for V2 robot, the interrupt for the IMU is setup. The fisrt line enables the 
+* interrupt for the defined IMU int pin. Next, the additional mode register is set for the given
+* pin which allows rising edge detection on the IMU interrupt. The thirs line sets the IMU int pin
+* for edge detection, and the final register sets the IMU int pin to rising edge.
+*
+*/
 void extIntInit(void)
 {
 #if defined ROBOT_TARGET_V2
@@ -38,13 +59,31 @@ void extIntInit(void)
 	//Any other external interrupt configurations should follow
 }
 
+/*
+* Function:
+* void PIOA_Handler(void)
+*
+* Interrupt handler for parallel IO port A
+*
+* Inputs:
+* none
+*
+* Returns:
+* none
+*
+* Implementation:
+* General rule of thumb is a series conditional statements that check for the appropriate bit set in
+* the interrupt status register which indicates that the desired interrupt has been triggered. With
+* in the conditional statement is the code that should be executed on that interrupt.
+*
+*/
 void PIOA_Handler(void)
 {
 	//If the IMU interrupt has been triggered
 #if defined ROBOT_TARGET_V2
 	if(IMU_INT_PORT->PIO_ISR & IMU_INT_PIN)
 	{
-		//Read off the FIFO buffer
+		//Read off the IMUs FIFO buffer
 		
 	}
 #endif

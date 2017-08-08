@@ -76,7 +76,33 @@ struct Command
 	char command[10];
 };
 
-
+struct Position
+//structure to store all the robot side navigation / positioning data
+//this will be written to by getMouseXY, getEulerAngles, and another navigation function which
+//combines them. The structure will store the relevant info from both key sensors and fuse them in
+//an additional function
+{
+	uint16_t opticalDX;
+	uint16_t opticalDY;
+	float opticalX;
+	float opticalY;
+	long imuQW;
+	long imuQX;
+	long imuQY;
+	long imuQZ;
+	int16_t imuAccelX;
+	int16_t imuAccelY;
+	int16_t imuAccelZ;
+	int16_t imuGyroX;
+	int16_t imuGyroY;
+	int16_t imuGyroZ;
+	double imuPitch;
+	double imuRoll;
+	double imuYaw;
+	float x;
+	float y;
+	float h;
+};
 
 ///////////////Global variables/////////////////////////////////////////////////////////////////////
 //used for test function calling

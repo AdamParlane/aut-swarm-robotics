@@ -221,7 +221,8 @@ void setup(void)
 	fcInit();							//Initialise the fast charge chip
 	CommunicationSetup();				//Initialise communication system
 	imuInit();							//Initialise IMU.
-	
+	imuDmpInit();						//Initialise DMP system should be DISABLED for debugging!
+	extIntInit();						//Initialise external interrupts.
 	mouseInit();						//May require further testing - Adam
 #if defined ROBOT_TARGET_V2
 	lfInit();							//Initialise line follow sensors. Only on V2.
