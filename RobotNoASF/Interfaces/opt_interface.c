@@ -18,7 +18,7 @@
 * void mouseInit(void);
 * int mouseTestBasic(void);
 * void Get_Mouse_XY(struct Position *mousePos);
-* void delay (void);
+* void mouseInitDelay(void);
 *
 * Functionality of each function is explained before each function
 * This .c file should be paired with optInterface.h
@@ -129,14 +129,14 @@ void mouseInit(void)
 #endif
 	//initialize mouse sensor
 	SPI_Write(OPT_PWR_UP_RESET, 0x5A);		//Power Up Reset
-	delay();
+	mouseInitDelay();
 	SPI_Write(OPT_OBSERVATION, 0x00);		//clear observation register
-	delay();								//wait at least 1 frame
+	mouseInitDelay();								//wait at least 1 frame
 	dummyVar = SPI_Read(OPT_OBSERVATION);	//read observation register to check bits 0-3 are set	
 	while((dummyVar & 0x0F) != 0x0F)			//check if bits 0-3 have been set
 	{
 		dummyVar = SPI_Read(OPT_OBSERVATION);
-		delay();
+		mouseInitDelay();
 	}
 	dummyVar = SPI_Read(OPT_MOTION);
 	dummyVar = SPI_Read(OPT_DELTA_X_L);
@@ -153,7 +153,7 @@ void mouseInit(void)
 	SPI_Write(OPT_LSRPWR_CFG1, 0x00);		//complement of set laser current to full
 	SPI_Write(OPT_LASER_CTRL0, 0xC0);		//set laser current range to 4-10mA
 	SPI_Write(OPT_LASER_CTRL1, 0x00);		//complement of set laser current range to 4-10mA
-	delay();								//allow everything to settle after being initialized
+	mouseInitDelay();								//allow everything to settle after being initialized
 }
 
 /*
@@ -316,7 +316,7 @@ char SPI_Read(char readAddress)
 
 
 /*
-* Function: void delay(void)
+* Function: void mouseInitDelay(void)
 *
 * Simple Delay using a for loop called throughout the mouse sensor setup
 * To meet mouseInit timing requirements
@@ -330,7 +330,7 @@ char SPI_Read(char readAddress)
 * [Ideas for improvements that are yet to be made](optional)
 *
 */
-void delay (void)
+void mouseInitDelay(void)
 {
 	for (volatile uint16_t i=0; i<65535; i++)
 	{
