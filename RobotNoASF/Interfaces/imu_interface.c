@@ -68,9 +68,6 @@ uint8_t checkImuFifo	= 0;	//A flag to determine that the IMU's FIFO is ready to 
 *
 * Implementation:
 * MASTER CLOCK NEEDS TO BE SETUP FOR 100MHZ FIRST.
-* TIMER0 is initialised in register compare mode. This will provide a 
-* system time stamp that is incremented every millisecond and is necessary for delay_ms() used by 
-* the IMU driver.
 * Next, the IMU driver is initialised. The driver is told which sensors want to be used as well as
 * the desired sample rates.
 *
@@ -90,13 +87,11 @@ int imuInit(void)
 
 	//IMU INITIALISATION
 	//Initialise the IMU's driver	
-	result += mpu_init(0);								// Initialise the MPU with no interrupts
+	result += mpu_init(0);								//Initialise the MPU with no interrupt CBs
 	result += mpu_set_int_level(1);						//Make interrupt level active high
-	result += mpu_set_int_latched(0);					//Make interrupt latched, ie doesn't clear
-														//until reset as opposed to a pulse
 	
 	result += mpu_set_sensors(INV_XYZ_GYRO | INV_XYZ_ACCEL | INV_XYZ_COMPASS);// Wake up all sensors
-	result += mpu_set_sample_rate(800);					// Set 200Hz samplerate (for accel and gyro)											
+	result += mpu_set_sample_rate(800);					// Set 800Hz samplerate (for accel and gyro)											
 	result += mpu_set_compass_sample_rate(100);			// Set 100Hz compass sample rate (max)
 	
 	return result;
