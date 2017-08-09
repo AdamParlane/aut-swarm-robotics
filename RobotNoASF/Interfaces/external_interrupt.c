@@ -46,6 +46,7 @@ extern struct Position robotPosition;
 */
 void extIntInit(void)
 {
+	NVIC_EnableIRQ(ID_PIOA);	//Enable interrupts on PIOA
 #if defined ROBOT_TARGET_V2
 	//Setup IMU external interrupt pin. Pin and port is defined in imu_interface.h
 	IMU_INT_PORT->PIO_IER		//Enable the interrupt on the IMU int pin
