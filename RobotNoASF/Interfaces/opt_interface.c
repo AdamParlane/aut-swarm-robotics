@@ -204,6 +204,9 @@ void getMouseXY(struct Position *mousePos)
 			Ytemp -= 4096;
 		}
 		mousePos->opticalDY = Ytemp * RESOLUTION;
+		
+		mousePos->opticalX += mousePos->opticalDX;
+		mousePos->opticalY += mousePos->opticalDY;
 	}
 }
 

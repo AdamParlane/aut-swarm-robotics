@@ -34,7 +34,8 @@
 #include "../robot_defines.h"
 
 ///////////////Defines//////////////////////////////////////////////////////////////////////////////
-#define RESOLUTION			0.00125
+//#define RESOLUTION			0.00125		//How have you gotten this?
+#define RESOLUTION			1
 
 #define SPI_KEY				0x535049 //SPI write protect key for SAM4N8C
 
