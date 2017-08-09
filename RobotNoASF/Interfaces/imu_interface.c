@@ -91,6 +91,7 @@ int imuInit(void)
 	//IMU INITIALISATION
 	//Initialise the IMU's driver	
 	result += mpu_init(0);								// Initialise the MPU with no interrupts
+	result += set_int_enable(1);						//Enable data ready interrupt
 	result += mpu_set_sensors(INV_XYZ_GYRO | INV_XYZ_ACCEL | INV_XYZ_COMPASS);// Wake up all sensors
 	result += mpu_set_sample_rate(200);					// Set 200Hz samplerate (for accel and gyro)											
 	result += mpu_set_compass_sample_rate(100);			// Set 100Hz compass sample rate (max)
