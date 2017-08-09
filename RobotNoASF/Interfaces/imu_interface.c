@@ -51,8 +51,11 @@
 #include "../IMU-DMP/inv_mpu_CUSTOM.h"//IMU basic setup and initialisation functions
 
 
+
+
 ///////////////Global Vars//////////////////////////////////////////////////////////////////////////
 uint8_t checkImuFifo	= 0;	//A flag to determine that the IMU's FIFO is ready to be read again
+extern uint32_t systemTimestamp;
 
 ///////////////Functions////////////////////////////////////////////////////////////////////////////
 /*
@@ -352,55 +355,11 @@ void getEulerAngles(struct Position *imuData)
 char twiWriteImu(unsigned char slave_addr, unsigned char reg_addr, 
 					unsigned char length, unsigned char const *data)
 #if defined ROBOT_TARGET_V1
-{
-	//note txcomp MUST = 1 before writing (according to datasheet)
-	twi2MasterMode;								//Enable master mode
-	twi2SetSlave(slave_addr);					//Slave device address
-	twi2RegAddrSize(1);							//Set register address length to 1 byte
-	twi2RegAddr(reg_addr);						//set register address to write to
 
-	if(length == 1)
-	{
-		twi2Send(data[0]);						//set up data to transmit
-		twi2Stop;								// Send a stop bit
-		while(!twi2TxReady);					//while Transmit Holding Register not ready. wait.
-		} else {
-		for(unsigned char b = 0; b < length; b++)//Send data bit by bit until data length is reached
-		{
-			twi2Send(data[b]);					//set up data to transmit
-			while(!twi2TxReady);				//while Transmit Holding Register not ready. wait.
-		}
-		twi2Stop;								// Send a stop bit
-	}
-	while(!twi2TxComplete);						//while transmit not complete. wait.
-	return 0;
-}
 #endif
 
 #if defined ROBOT_TARGET_V2
-{
-	//note txcomp MUST = 1 before writing (according to datasheet)
-	twi0MasterMode;								//Enable master mode
-	twi0SetSlave(slave_addr);					//Slave device address
-	twi0RegAddrSize(1);							//Set register address length to 1 byte
-	twi0RegAddr(reg_addr);						//set register address to write to
 
-	if(length == 1)
-	{
-		twi0Send(data[0]);						//set up data to transmit
-		twi0Stop;								// Send a stop bit
-		while(!twi0TxReady);					//while Transmit Holding Register not ready. wait.
-	} else {
-		for(unsigned char b = 0; b < length; b++)//Send data bit by bit until data length is reached
-		{
-			twi0Send(data[b]);					//set up data to transmit
-			while(!twi0TxReady);				//while Transmit Holding Register not ready. wait.
-		}
-		twi0Stop;								// Send a stop bit
-	}
-	while(!twi0TxComplete);						//while transmit not complete. wait.
-	return 0;
-}
 #endif
 
 /*
@@ -450,20 +409,28 @@ char twiReadImu(unsigned char slave_addr, unsigned char reg_addr,
 	//set at the same time
 	{
 		twi2StartSingle;				//Send START & STOP condition as required (single byte read)
-		while(!twi2RxReady);			//while Receive Holding Register not ready. wait.
+		//while Receive Holding Register not ready. wait.
+		if(waitForFlag(&REG_TWI2_SR, TWI_SR_RXRDY, TWI_RXRDY_TIMEOUT))
+			return 1;
 		data[0] = twi2Receive;			//store data received
-		while(!twi2TxComplete);			//while transmit not complete. wait.
-		return 0;
+		//while transmission not complete. wait.
+		if(waitForFlag(&REG_TWI2_SR, TWI_SR_TXCOMP, TWI_TXCOMP_TIMEOUT))
+			return 1;
+		else
+			return 0;
 	} else {
 		twi2Start;						//Send start bit
 		for(unsigned char b = 0; b < length; b++)
 		{
-			while(!twi2RxReady);
+			if(waitForFlag(&REG_TWI2_SR, TWI_SR_RXRDY, TWI_RXRDY_TIMEOUT))
+				return 1;
 			data[b] = twi2Receive;
 			if(b == length - 2)
-			twi2Stop;					//Send stop on reception of 2nd to last byte
+				twi2Stop;					//Send stop on reception of 2nd to last byte
 		}
-		while(!twi2TxComplete);				//while transmit not complete. wait.
+		//while transmit not complete. wait.
+		if(waitForFlag(&REG_TWI2_SR, TWI_SR_TXCOMP, TWI_TXCOMP_TIMEOUT))
+			return 1;
 	}
 	return 0;
 }
@@ -481,20 +448,28 @@ char twiReadImu(unsigned char slave_addr, unsigned char reg_addr,
 										//set at the same time
 	{
 		twi0StartSingle;				//Send START & STOP condition as required (single byte read)
-		while(!twi0RxReady);			//while Receive Holding Register not ready. wait.
+		//while Receive Holding Register not ready. wait.
+		if(waitForFlag(&REG_TWI0_SR, TWI_SR_RXRDY, TWI_RXRDY_TIMEOUT))
+			return 1;
 		data[0] = twi0Receive;			//store data received
-		while(!twi0TxComplete);			//while transmit not complete. wait.
-		return 0;
+		//while transmission not complete. wait.
+		if(waitForFlag(&REG_TWI0_SR, TWI_SR_TXCOMP, TWI_TXCOMP_TIMEOUT))
+			return 1;
+		else
+			return 0;
 	} else {
 		twi0Start;						//Send start bit
 		for(unsigned char b = 0; b < length; b++)
 		{
-			while(!twi0RxReady);
+			if(waitForFlag(&REG_TWI0_SR, TWI_SR_RXRDY, TWI_RXRDY_TIMEOUT))
+				return 1;
 			data[b] = twi0Receive;
 			if(b == length - 2)
 			twi0Stop;					//Send stop on reception of 2nd to last byte
 		}
-		while(!twi0TxComplete);				//while transmit not complete. wait.
+		//while transmit not complete. wait.
+		if(waitForFlag(&REG_TWI0_SR, TWI_SR_TXCOMP, TWI_TXCOMP_TIMEOUT))
+			return 1;
 	}
 	return 0;
 }
@@ -536,5 +511,14 @@ uint8_t imuCommTest(void)
 }
 
 
+uint8_t waitForFlag(uint32_t *regAddr, uint32_t regMask, uint16_t timeOutMs)
+{
+	uint32_t startTime = systemTimestamp;
+	while(!(*regAddr&regMask) && (systemTimestamp < (startTime + timeOutMs)));
+	if(*regAddr&regMask)
+		return 0;
+	else
+		return 1;
+}
 
 

@@ -60,6 +60,10 @@
 #define imuIntState			(IMU_INT_PORT->PIO_PSR & IMU_INT_PIN)
 #endif
 
+#define TWI_RXRDY_TIMEOUT	2
+#define TWI_TXRDY_TIMEOUT	2
+#define TWI_TXCOMP_TIMEOUT	2
+
 ///////////////Enumerations/////////////////////////////////////////////////////////////////////////
 enum axes
 {
@@ -245,4 +249,6 @@ char twiReadImu(unsigned char slave_addr, unsigned char reg_addr,
 */
 uint8_t imuCommTest(void);
 
+
+uint8_t waitForFlag(uint32_t *regAddr, uint32_t regMask, uint16_t timeOutMs);
 #endif /* IMU_INTERFACE_H_ */

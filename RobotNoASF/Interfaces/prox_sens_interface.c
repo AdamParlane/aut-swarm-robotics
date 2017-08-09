@@ -66,17 +66,17 @@ void proxSensInit(uint8_t channel)
 	//Set multiplexer address to correct device
 	twi0MuxSwitch(channel);
 	//Disable and Power down
-	twi0Write(TWI0_PROXSENS_ADDR, PS_CMD_1BYTE | PS_ENABLE_REG, PS_DISABLE_STATE);
+	twi0Write(TWI0_PROXSENS_ADDR, PS_CMD_1BYTE | PS_ENABLE_REG, 1, &PS_DISABLE_STATE);
 	//Proximity ADC time: 2.73 ms, minimum proximity integration time
-	twi0Write(TWI0_PROXSENS_ADDR, PS_CMD_1BYTE | PS_PTIME_REG, PS_PTIME_INIT);
+	twi0Write(TWI0_PROXSENS_ADDR, PS_CMD_1BYTE | PS_PTIME_REG, 1, &PS_PTIME_INIT);
 	//Sets the number of Proximity pulses that the LDR pin will generate during the prox Accum
 	//state: (recommended proximity pulse count = 8) PREVIOUSLY HAD BEEN SET TO 0X02
-	twi0Write(TWI0_PROXSENS_ADDR, PS_CMD_1BYTE | PS_PPULSE_REG, PS_PPULSE_INIT);
+	twi0Write(TWI0_PROXSENS_ADDR, PS_CMD_1BYTE | PS_PPULSE_REG, 1, &PS_PPULSE_INIT);
 	//Gain Control register: LED = 100mA, Proximity diode select, Proximity gain x1, recommended
 	//settings
-	twi0Write(TWI0_PROXSENS_ADDR, PS_CMD_1BYTE | PS_GAINCTL_REG, PS_PDIODE_INIT);
+	twi0Write(TWI0_PROXSENS_ADDR, PS_CMD_1BYTE | PS_GAINCTL_REG, 1, &PS_PDIODE_INIT);
 	//Power ON, Proximity Enable
-	twi0Write(TWI0_PROXSENS_ADDR, PS_CMD_1BYTE | PS_ENABLE_REG, PS_ENABLE_STATE);
+	twi0Write(TWI0_PROXSENS_ADDR, PS_CMD_1BYTE | PS_ENABLE_REG, 1, &PS_ENABLE_STATE);
 }
 
 /*
@@ -97,15 +97,12 @@ void proxSensInit(uint8_t channel)
 * and scales the proximity measurement to a 16-bit value, then stores the result in two 8-bit 
 * proximity data (PDATAx) registers. Therefore, the TWI must read/retrieve both 8-bit registers.
 *
-* Improvements:
-* Eliminate data variable.
-*
 */
 uint16_t proxSensRead(uint8_t channel)
 {
 	uint16_t data;
 	twi0MuxSwitch(channel);	//Set multiplexer address to correct device
-	data = twi0ReadDouble(TWI0_PROXSENS_ADDR, PS_CMD_INC | PS_PDATAL_REG);
+	twi0Read(TWI0_PROXSENS_ADDR, (PS_CMD_INC | PS_PDATAL_REG), 2, &data);
 	//NOTE: Command_REG of the ProxSensor must be written to, as part of R/W functions.
 	//Low data register is read, auto-increment occurs and high data register is read.
 	return data;
