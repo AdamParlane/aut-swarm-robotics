@@ -29,7 +29,7 @@
 * int delay_ms(uint32_t period_ms)
 * unsigned short invOrientationMatrixToScalar(const signed char *mtx)
 * unsigned short invRow2Scale(const signed char *row)
-* void getEulerAngles(long *ptQuat, euler_packet_t *eulerAngle)
+* void getEulerAngles(struct Position *imuData)
 * char twiWriteImu(unsigned char slave_addr, unsigned char reg_addr,
 *						unsigned char length, unsigned char const *data)
 * char twiReadImu(unsigned char slave_addr, unsigned char reg_addr,
@@ -44,7 +44,7 @@
 #define IMU_INTERFACE_H_
 
 ///////////////Includes/////////////////////////////////////////////////////////////////////////////
-#include "sam.h"									//System header
+#include "../robot_defines.h"									//System header
 
 ///////////////Defines//////////////////////////////////////////////////////////////////////////////
 ////MPU9250 register addresses
@@ -173,7 +173,7 @@ unsigned short invOrientationMatrixToScalar(const signed char *mtx);
 unsigned short invRow2Scale(const signed char *row);
 
 /*
-* Function: void getEulerAngles(long *ptQuat, euler_packet_t *eulerAngle)
+* Function: void getEulerAngles(struct Position *imuData)
 *
 * Convert Quaternion numbers from the IMU to Euler rotational angles
 *
@@ -187,8 +187,7 @@ unsigned short invRow2Scale(const signed char *row);
 * roll.
 *
 */
-void getEulerAngles(long *ptQuat, euler_packet_t *eulerAngle);
-
+void getEulerAngles(struct Position *imuData);
 
 /*
 * Function: char twiWriteImu(unsigned char slave_addr, unsigned char reg_addr,

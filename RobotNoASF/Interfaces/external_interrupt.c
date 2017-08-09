@@ -87,40 +87,47 @@ void PIOA_Handler(void)
 #if defined ROBOT_TARGET_V2
 	if(IMU_INT_PORT->PIO_ISR & IMU_INT_PIN)
 	{
-		short gyroData[3];				//Stores raw gyro data from IMU
-		short accelData[3];				//Stores raw accelerometer data from IMU
-		long quatData[4];				//Stores fused quaternion data from IMU
-		unsigned long sensorTimeStamp;	//Stores the datas Timestamp
-		short sensors;					//Says which sensors were updated
-		unsigned char more;				//Not 0 when there is more data in FIFO after read
-		do 
-		{
-			dmp_read_fifo(gyroData, accelData, quatData, &sensorTimeStamp, &sensors, &more);
-			//if(sensors & INV_WXYZ_QUAT)		//If quaternion data was in the FIFO
-			//{
-				//robotPosition.imuQX = quatData[X];
-				//robotPosition.imuQY = quatData[Y];
-				//robotPosition.imuQZ = quatData[Z];
-				//robotPosition.imuQW = quatData[W];
-				//robotPosition.imuDeltaTime = sensorTimeStamp - robotPosition.imuTimeStamp;  
-				//robotPosition.imuTimeStamp = sensorTimeStamp;
-			//}
-			//if(sensors & INV_XYZ_ACCEL)		//If accelerometer data was in the FIFO
-			//{
-				//robotPosition.imuAccelX = accelData[X];
-				//robotPosition.imuAccelY = accelData[Y];
-				//robotPosition.imuAccelZ = accelData[Z];			
-			//}
-			//if(sensors & INV_XYZ_GYRO)			//If gyro data was in the FIFO
-			//{
-				//robotPosition.imuGyroX = gyroData[X];
-				//robotPosition.imuGyroY = gyroData[Y];
-				//robotPosition.imuGyroZ = gyroData[Z];
-			//}
-
-		} while(more);
+		checkImuFifo = 1;
 		//ledTog1;
 	}
 #endif
 	
+}
+
+//Temporary
+void imuReadFifo(void)
+{
+	short gyroData[3];				//Stores raw gyro data from IMU
+	short accelData[3];				//Stores raw accelerometer data from IMU
+	long quatData[4];				//Stores fused quaternion data from IMU
+	unsigned long sensorTimeStamp;	//Stores the data Timestamp
+	short sensors;					//Says which sensor data was in the FIFO
+	unsigned char more;				//Not 0 when there is more data in FIFO after read
+	do
+	{
+		dmp_read_fifo(gyroData, accelData, quatData, &sensorTimeStamp, &sensors, &more);
+		if(sensors & INV_WXYZ_QUAT)		//If quaternion data was in the FIFO
+		{
+		robotPosition.imuQX = quatData[X];
+		robotPosition.imuQY = quatData[Y];
+		robotPosition.imuQZ = quatData[Z];
+		robotPosition.imuQW = quatData[W];
+
+		}
+		if(sensors & INV_XYZ_ACCEL)		//If accelerometer data was in the FIFO
+		{
+		robotPosition.imuAccelX = accelData[X];
+		robotPosition.imuAccelY = accelData[Y];
+		robotPosition.imuAccelZ = accelData[Z];
+		}
+		if(sensors & INV_XYZ_GYRO)			//If gyro data was in the FIFO
+		{
+		robotPosition.imuGyroX = gyroData[X];
+		robotPosition.imuGyroY = gyroData[Y];
+		robotPosition.imuGyroZ = gyroData[Z];
+		}
+
+	} while(more);	//If there is still more in the FIFO then do it again.
+	robotPosition.imuDeltaTime = sensorTimeStamp - robotPosition.imuTimeStamp;
+	robotPosition.imuTimeStamp = sensorTimeStamp;
 }

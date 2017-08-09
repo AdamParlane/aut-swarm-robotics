@@ -3,7 +3,7 @@
 *
 * Author : Matthew Witt (wittsend86@gmail.com)
 * Created: 28/04/2017
-*
+*void getEulerAngles(struct Position *imuData)
 * Project Repository: https://github.com/AdamParlane/aut-swarm-robotics
 *
 * Description:
@@ -33,7 +33,7 @@
 * int delay_ms(uint32_t period_ms)
 * unsigned short invOrientationMatrixToScalar(const signed char *mtx)
 * unsigned short invRow2Scale(const signed char *row)
-* void getEulerAngles(long *ptQuat, euler_packet_t *eulerAngle)
+* void getEulerAngles(struct Position *imuData)
 * uint8_t imuCommTest(void)
 * void TC0_Handler()
 *
@@ -96,7 +96,7 @@ int imuInit(void)
 														//until reset as opposed to a pulse
 	
 	result += mpu_set_sensors(INV_XYZ_GYRO | INV_XYZ_ACCEL | INV_XYZ_COMPASS);// Wake up all sensors
-	result += mpu_set_sample_rate(100);					// Set 200Hz samplerate (for accel and gyro)											
+	result += mpu_set_sample_rate(800);					// Set 200Hz samplerate (for accel and gyro)											
 	result += mpu_set_compass_sample_rate(100);			// Set 100Hz compass sample rate (max)
 	
 	return result;
@@ -137,13 +137,10 @@ int imuDmpInit(void)
 	result += dmp_set_orientation(invOrientationMatrixToScalar(gyro_orientation));
 	result += dmp_enable_feature(DMP_FEATURE_6X_LP_QUAT | DMP_FEATURE_SEND_RAW_ACCEL |
 									DMP_FEATURE_SEND_CAL_GYRO);
-	//result += dmp_enable_feature(DMP_FEATURE_6X_LP_QUAT);//Enable 6 axis low power quaternions
 	result += dmp_set_fifo_rate(10);					//10Hz update rate from the FIFO
-	//result += dmp_set_interrupt_mode(DMP_INT_CONTINUOUS);	//Use continuous interrupts rather than
-															//gesture based (pg10 in DMP manual)
+	result += dmp_set_interrupt_mode(DMP_INT_CONTINUOUS);//Use continuous interrupts rather than
+														//gesture based (pg10 in DMP manual)
 	result += mpu_set_dmp_state(1);						//Start DMP (also starts IMU interrupt)
-	
-	
 	return result;
 }
 
@@ -285,29 +282,27 @@ unsigned short invRow2Scale(const signed char *row)
 }
 
 /*
-* Function: void getEulerAngles(long *ptQuat, euler_packet_t *eulerAngle)
+* Function: void getEulerAngles(struct Position *imuData)
 *
 * Convert Quaternion numbers from the IMU to Euler rotational angles
 *
 * Inputs:
-* ptQuat is a 4 element numeric array that holds the 4 parts of a quaternion complex number:
-* x(i), y(j), z(k), w(omega). Presumably ptQuat is a rate of change of orientation, not an absolute 
-* orientation value.
+* struct Position *imuData
+*   Holds the address to the global robotPosition structure that holds all positional data
 *
 * Returns:
-* eulerAngle is a pointer to an euler_packet_t structure that has three elements: yaw, pitch and
-* roll.
+* Loads Yaw, Pitch and Roll data back into robotPosition.
 *
 * Implementation:
 * TO COME
 *
 */
-void getEulerAngles(long *ptQuat, euler_packet_t *eulerAngle)
+void getEulerAngles(struct Position *imuData)
 {
-	double w = ptQuat[3];
-	double x = ptQuat[0];
-	double y = ptQuat[1];
-	double z = ptQuat[2];
+	double w = imuData->imuQW;
+	double x = imuData->imuQX;
+	double y = imuData->imuQY;
+	double z = imuData->imuQZ;
 	double sqw = w*w;
 	double sqx = x*x;
 	double sqy = y*y;
@@ -315,20 +310,20 @@ void getEulerAngles(long *ptQuat, euler_packet_t *eulerAngle)
 	double unit = sqx + sqy + sqz + sqw; // if normalised is one, otherwise is correction factor
 	double test = x*y + z*w;
 	if (test > 0.499*unit) { // singularity at north pole
-		eulerAngle->pitch = 2 * atan2(x,w);
-		eulerAngle->yaw = M_PI/2;
-		eulerAngle->roll = 0;
+		imuData->imuPitch = 2 * atan2(x,w);
+		imuData->imuYaw = M_PI/2;
+		imuData->imuRoll = 0;
 		return;
 	}
 	if (test < -0.499*unit) { // singularity at south pole
-		eulerAngle->pitch = -2 * atan2(x,w);
-		eulerAngle->yaw = M_PI/2;
-		eulerAngle->roll = 0;
+		imuData->imuPitch = -2 * atan2(x,w);
+		imuData->imuYaw = M_PI/2;
+		imuData->imuRoll = 0;
 		return;
 	}
-	eulerAngle->pitch = (atan2(2*y*w-2*x*z , sqx - sqy - sqz + sqw))*180/M_PI;
-	eulerAngle->yaw = (asin(2*test/unit))*180/M_PI;
-	eulerAngle->roll = (atan2(2*x*w-2*y*z , -sqx + sqy - sqz + sqw))*180/M_PI;
+	imuData->imuPitch = (atan2(2*y*w-2*x*z , sqx - sqy - sqz + sqw))*180/M_PI;
+	imuData->imuYaw = (asin(2*test/unit))*180/M_PI;
+	imuData->imuRoll = (atan2(2*x*w-2*y*z , -sqx + sqy - sqz + sqw))*180/M_PI;
 }
 
 
