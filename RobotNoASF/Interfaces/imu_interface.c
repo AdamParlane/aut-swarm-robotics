@@ -84,16 +84,19 @@ int imuInit(void)
 	//Setup PIO for IMU hardware interrupt
 	IMU_INT_PORT->PIO_PER		//Enable the pin
 	|=	IMU_INT_PIN;
-	IMU_INT_PORT->PIO_IER		//Make input.
+	IMU_INT_PORT->PIO_ODR		//Make input.
 	|= IMU_INT_PIN;
 #endif
 
 	//IMU INITIALISATION
 	//Initialise the IMU's driver	
 	result += mpu_init(0);								// Initialise the MPU with no interrupts
-	result += set_int_enable(1);						//Enable data ready interrupt
+	result += mpu_set_int_level(1);						//Make interrupt level active high
+	result += mpu_set_int_latched(0);					//Make interrupt latched, ie doesn't clear
+														//until reset as opposed to a pulse
+	
 	result += mpu_set_sensors(INV_XYZ_GYRO | INV_XYZ_ACCEL | INV_XYZ_COMPASS);// Wake up all sensors
-	result += mpu_set_sample_rate(200);					// Set 200Hz samplerate (for accel and gyro)											
+	result += mpu_set_sample_rate(100);					// Set 200Hz samplerate (for accel and gyro)											
 	result += mpu_set_compass_sample_rate(100);			// Set 100Hz compass sample rate (max)
 	
 	return result;
@@ -132,13 +135,15 @@ int imuDmpInit(void)
 	result += dmp_load_motion_driver_firmware();		// Load the DMP firmware
 	//Send the orientation correction matrix
 	result += dmp_set_orientation(invOrientationMatrixToScalar(gyro_orientation));
-	//result += dmp_enable_feature(DMP_FEATURE_6X_LP_QUAT | DMP_FEATURE_SEND_RAW_ACCEL |
-	//								DMP_FEATURE_SEND_CAL_GYRO | DMP_FEATURE_GYRO_CAL);
-	result += dmp_enable_feature(DMP_FEATURE_6X_LP_QUAT);//Enable 6 axis low power quaternions
-	result += dmp_set_fifo_rate(1);					//10Hz update rate from the FIFO
-	result += dmp_set_interrupt_mode(DMP_INT_CONTINUOUS);	//Use continuous interrupts rather than
+	result += dmp_enable_feature(DMP_FEATURE_6X_LP_QUAT | DMP_FEATURE_SEND_RAW_ACCEL |
+									DMP_FEATURE_SEND_CAL_GYRO);
+	//result += dmp_enable_feature(DMP_FEATURE_6X_LP_QUAT);//Enable 6 axis low power quaternions
+	result += dmp_set_fifo_rate(10);					//10Hz update rate from the FIFO
+	//result += dmp_set_interrupt_mode(DMP_INT_CONTINUOUS);	//Use continuous interrupts rather than
 															//gesture based (pg10 in DMP manual)
-	result += mpu_set_dmp_state(1);						//Start DMP
+	result += mpu_set_dmp_state(1);						//Start DMP (also starts IMU interrupt)
+	
+	
 	return result;
 }
 

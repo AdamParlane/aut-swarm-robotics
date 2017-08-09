@@ -61,6 +61,7 @@ struct Position
 	double imuRoll;
 	double imuYaw;
 	unsigned long imuTimeStamp;
+	unsigned short imuDeltaTime;
 	float x;
 	float y;
 	float h;

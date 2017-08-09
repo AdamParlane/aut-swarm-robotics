@@ -19,6 +19,8 @@
 
 ///////////////Includes/////////////////////////////////////////////////////////////////////////////
 #include "external_interrupt.h"
+#include "../IMU-DMP/inv_mpu_dmp_motion_driver_CUSTOM.h"
+#include "../IMU-DMP/inv_mpu_CUSTOM.h"
 
 ///////////////Global vars//////////////////////////////////////////////////////////////////////////
 extern uint8_t checkImuFifo;
@@ -53,7 +55,7 @@ void extIntInit(void)
 	|=	IMU_INT_PIN;
 	IMU_INT_PORT->PIO_AIMER		//Enable additional interrupt modes on IMU int pin (Must be enabled
 	|=	IMU_INT_PIN;			//So we can have a rising edge interrupt rather than lvl sensitive)
-	IMU_INT_PORT->PIO_LSR		//Make pin sensitive to edge rather than level
+	IMU_INT_PORT->PIO_ESR		//Make pin sensitive to level rather than edge
 	|=	IMU_INT_PIN;
 	IMU_INT_PORT->PIO_REHLSR	//Make pin rising edge sensitive
 	|=	IMU_INT_PIN;
@@ -89,20 +91,35 @@ void PIOA_Handler(void)
 		short accelData[3];				//Stores raw accelerometer data from IMU
 		long quatData[4];				//Stores fused quaternion data from IMU
 		unsigned long sensorTimeStamp;	//Stores the datas Timestamp
-		short sensors;					//Tells which sensors are enabled ??
-		unsigned char more;				//Not yet sure
-		dmp_read_fifo(gyroData, accelData, quatData, &sensorTimeStamp, &sensors, &more);
-		robotPosition.imuAccelX = accelData[X];
-		robotPosition.imuAccelY = accelData[Y];
-		robotPosition.imuAccelZ = accelData[Z];
-		robotPosition.imuGyroX = gyroData[X];
-		robotPosition.imuGyroY = gyroData[Y];
-		robotPosition.imuGyroZ = gyroData[Z];
-		robotPosition.imuQX = quatData[X];
-		robotPosition.imuQY = quatData[Y];
-		robotPosition.imuQZ = quatData[Z];
-		robotPosition.imuQW = quatData[W];
-		ledTog1;
+		short sensors;					//Says which sensors were updated
+		unsigned char more;				//Not 0 when there is more data in FIFO after read
+		do 
+		{
+			dmp_read_fifo(gyroData, accelData, quatData, &sensorTimeStamp, &sensors, &more);
+			//if(sensors & INV_WXYZ_QUAT)		//If quaternion data was in the FIFO
+			//{
+				//robotPosition.imuQX = quatData[X];
+				//robotPosition.imuQY = quatData[Y];
+				//robotPosition.imuQZ = quatData[Z];
+				//robotPosition.imuQW = quatData[W];
+				//robotPosition.imuDeltaTime = sensorTimeStamp - robotPosition.imuTimeStamp;  
+				//robotPosition.imuTimeStamp = sensorTimeStamp;
+			//}
+			//if(sensors & INV_XYZ_ACCEL)		//If accelerometer data was in the FIFO
+			//{
+				//robotPosition.imuAccelX = accelData[X];
+				//robotPosition.imuAccelY = accelData[Y];
+				//robotPosition.imuAccelZ = accelData[Z];			
+			//}
+			//if(sensors & INV_XYZ_GYRO)			//If gyro data was in the FIFO
+			//{
+				//robotPosition.imuGyroX = gyroData[X];
+				//robotPosition.imuGyroY = gyroData[Y];
+				//robotPosition.imuGyroZ = gyroData[Z];
+			//}
+
+		} while(more);
+		//ledTog1;
 	}
 #endif
 	
