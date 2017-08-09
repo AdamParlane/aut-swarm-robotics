@@ -53,7 +53,7 @@ void extIntInit(void)
 	|=	IMU_INT_PIN;
 	IMU_INT_PORT->PIO_AIMER		//Enable additional interrupt modes on IMU int pin (Must be enabled
 	|=	IMU_INT_PIN;			//So we can have a rising edge interrupt rather than lvl sensitive)
-	IMU_INT_PORT->PIO_ESR		//Make pin sensitive to edge rather than level
+	IMU_INT_PORT->PIO_LSR		//Make pin sensitive to edge rather than level
 	|=	IMU_INT_PIN;
 	IMU_INT_PORT->PIO_REHLSR	//Make pin rising edge sensitive
 	|=	IMU_INT_PIN;
@@ -102,6 +102,8 @@ void PIOA_Handler(void)
 		robotPosition.imuQY = quatData[Y];
 		robotPosition.imuQZ = quatData[Z];
 		robotPosition.imuQW = quatData[W];
+		ledTog1;
 	}
 #endif
+	
 }

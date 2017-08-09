@@ -134,7 +134,9 @@ int imuDmpInit(void)
 	//result += dmp_enable_feature(DMP_FEATURE_6X_LP_QUAT | DMP_FEATURE_SEND_RAW_ACCEL |
 	//								DMP_FEATURE_SEND_CAL_GYRO | DMP_FEATURE_GYRO_CAL);
 	result += dmp_enable_feature(DMP_FEATURE_6X_LP_QUAT);//Enable 6 axis low power quaternions
-	result += dmp_set_fifo_rate(10);					//10Hz update rate from the FIFO
+	result += dmp_set_fifo_rate(1);					//10Hz update rate from the FIFO
+	result += dmp_set_interrupt_mode(DMP_INT_CONTINUOUS);	//Use continuous interrupts rather than
+															//gesture based (pg10 in DMP manual)
 	result += mpu_set_dmp_state(1);						//Start DMP
 	return result;
 }

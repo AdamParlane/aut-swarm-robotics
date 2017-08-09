@@ -94,7 +94,10 @@ struct Position
 #define	ledOn1 		(REG_PIOA_SODR |= (1<<28))
 #define	ledOn2 		(REG_PIOC_SODR |= (1<<8))
 #define	ledOn3 		(REG_PIOA_SODR |= (1<<27))
-
+#define ledTog1		{if(REG_PIOA_ODSR&(1<<28)) ledOff1; else ledOn1;}
+#define ledTog2		{if(REG_PIOC_ODSR&(1<<8)) ledOff2; else ledOn2;}
+#define ledTog3		{if(REG_PIOA_ODSR&(1<<27)) ledOff3; else ledOn3;}
+	
 //Universal Asynchronous Receiver/Transmitter
 #define TXRDY (REG_UART3_SR & UART_SR_TXRDY)	//UART TX READY flag [SHOULD BE IN COMMUNICATIONS]
 
