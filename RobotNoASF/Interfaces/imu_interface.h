@@ -60,6 +60,15 @@
 #define imuIntState			(IMU_INT_PORT->PIO_PSR & IMU_INT_PIN)
 #endif
 
+///////////////Enumerations/////////////////////////////////////////////////////////////////////////
+enum axes
+{
+	X,
+	Y,
+	Z,
+	W
+};
+
 ///////////////Type definitions/////////////////////////////////////////////////////////////////////
 //Structure that stores converted Euler angles of rotation. Parameter of GetEulerAngles
 typedef struct euler_packet 

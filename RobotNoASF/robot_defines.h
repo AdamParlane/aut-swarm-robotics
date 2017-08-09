@@ -27,7 +27,44 @@
 //Or maybe all defines should be before indludes
 enum ROBOT_STATES{TEST, TEST_ALL, MANUAL, FORMATION, DOCKING, OBSTACLE_AVOIDANCE, IDLE, CHARGING}; //main loop functionality
 
+///////////////Type Definitions/////////////////////////////////////////////////////////////////////
+struct Command
+//is anyone using this??? not me -Matt
+//structure to receive the command and interpret it to something useful
+{
+	char messageClass;
+	char commandCode;
+	char command[10];
+};
 
+struct Position
+//structure to store all the robot side navigation / positioning data
+//this will be written to by getMouseXY, getEulerAngles, and another navigation function which
+//combines them. The structure will store the relevant info from both key sensors and fuse them in
+//an additional function
+{
+	short opticalDX;
+	short opticalDY;
+	float opticalX;
+	float opticalY;
+	long imuQW;
+	long imuQX;
+	long imuQY;
+	long imuQZ;
+	short imuAccelX;
+	short imuAccelY;
+	short imuAccelZ;
+	short imuGyroX;
+	short imuGyroY;
+	short imuGyroZ;
+	double imuPitch;
+	double imuRoll;
+	double imuYaw;
+	unsigned long imuTimeStamp;
+	float x;
+	float y;
+	float h;
+};
 
 ///////////////Includes/////////////////////////////////////////////////////////////////////////////
 #include "Interfaces/spi.h"
@@ -66,43 +103,7 @@ enum ROBOT_STATES{TEST, TEST_ALL, MANUAL, FORMATION, DOCKING, OBSTACLE_AVOIDANCE
 #error  Robot version has not been set in compiler symbols. (set ROBOT_TARGET_V1 or ROBOT_TARGET_V2)
 #endif
 
-///////////////Type Definitions/////////////////////////////////////////////////////////////////////
-struct Command
-//is anyone using this??? not me -Matt
-//structure to receive the command and interpret it to something useful
-{
-	char messageClass;
-	char commandCode;
-	char command[10];
-};
 
-struct Position
-//structure to store all the robot side navigation / positioning data
-//this will be written to by getMouseXY, getEulerAngles, and another navigation function which
-//combines them. The structure will store the relevant info from both key sensors and fuse them in
-//an additional function
-{
-	uint16_t opticalDX;
-	uint16_t opticalDY;
-	float opticalX;
-	float opticalY;
-	long imuQW;
-	long imuQX;
-	long imuQY;
-	long imuQZ;
-	int16_t imuAccelX;
-	int16_t imuAccelY;
-	int16_t imuAccelZ;
-	int16_t imuGyroX;
-	int16_t imuGyroY;
-	int16_t imuGyroZ;
-	double imuPitch;
-	double imuRoll;
-	double imuYaw;
-	float x;
-	float y;
-	float h;
-};
 
 ///////////////Global variables/////////////////////////////////////////////////////////////////////
 //used for test function calling

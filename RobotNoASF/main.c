@@ -27,6 +27,7 @@
 ///////////////Global variables/////////////////////////////////////////////////////////////////////
 uint8_t SBtest, SBtest1;
 uint16_t DBtest, DBtest1, DBtest2;
+struct Position robotPosition;
 
 ///////////////Functions////////////////////////////////////////////////////////////////////////////
 /*
@@ -75,7 +76,6 @@ int main(void)
 	struct frame_info frame;
 	struct message_info message;
 	//Optical
-	struct Position robotPosition;
 	robotPosition.x = 0;
 	robotPosition.y = 0;
 	struct transmitDataStructure transmitMessage;

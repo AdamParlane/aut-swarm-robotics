@@ -22,6 +22,7 @@
 
 ///////////////Global vars//////////////////////////////////////////////////////////////////////////
 extern uint8_t checkImuFifo;
+extern struct Position robotPosition;
 
 ///////////////Functions////////////////////////////////////////////////////////////////////////////
 /*
@@ -83,8 +84,23 @@ void PIOA_Handler(void)
 #if defined ROBOT_TARGET_V2
 	if(IMU_INT_PORT->PIO_ISR & IMU_INT_PIN)
 	{
-		//Read off the IMUs FIFO buffer
-		
+		short gyroData[3];				//Stores raw gyro data from IMU
+		short accelData[3];				//Stores raw accelerometer data from IMU
+		long quatData[4];				//Stores fused quaternion data from IMU
+		unsigned long sensorTimeStamp;	//Stores the datas Timestamp
+		short sensors;					//Tells which sensors are enabled ??
+		unsigned char more;				//Not yet sure
+		dmp_read_fifo(gyroData, accelData, quatData, &sensorTimeStamp, &sensors, &more);
+		robotPosition.imuAccelX = accelData[X];
+		robotPosition.imuAccelY = accelData[Y];
+		robotPosition.imuAccelZ = accelData[Z];
+		robotPosition.imuGyroX = gyroData[X];
+		robotPosition.imuGyroY = gyroData[Y];
+		robotPosition.imuGyroZ = gyroData[Z];
+		robotPosition.imuQX = quatData[X];
+		robotPosition.imuQY = quatData[Y];
+		robotPosition.imuQZ = quatData[Z];
+		robotPosition.imuQW = quatData[W];
 	}
 #endif
 }
