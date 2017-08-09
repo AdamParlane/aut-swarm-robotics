@@ -83,7 +83,7 @@ void SPI_Init(void)
 	REG_PIOB_PDR |= PIO_PDR_P14; //Give control of NPCS1 (on PB14/Pin 99) to SPI
 #endif
 #if defined ROBOT_TARGET_V2
-	REG_PIOA_PDR |= PIO_PDR_P30; //Give control of NPCS1 (on PB14/Pin 99) to SPI
+	REG_PIOA_PDR |= PIO_PDR_P30; //Give control of NPCS1 (on PA30/Pin 64) to SPI
 #endif
 	REG_SPI_MR |= SPI_MR_MSTR;				//SPI in Master Mode
 	//set fixed peripheral select(peripheral chosen in SP_MR.PCS instead of SPI_THR.PCS)
@@ -152,7 +152,7 @@ void mouseInit(void)
 	SPI_Write(OPT_LSRPWR_CFG0, 0xFF);		//set laser current to full
 	SPI_Write(OPT_LSRPWR_CFG1, 0x00);		//complement of set laser current to full
 	SPI_Write(OPT_LASER_CTRL0, 0xC0);		//set laser current range to 4-10mA
-	SPI_Write(OPT_LASER_CTRL1, 0x00);		//complement of set laser current range to 4-10mA
+	SPI_Write(OPT_LASER_CTRL1, 0x3F);		//complement of set laser current range to 4-10mA
 	mouseInitDelay();								//allow everything to settle after being initialized
 }
 

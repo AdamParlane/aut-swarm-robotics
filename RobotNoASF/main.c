@@ -173,6 +173,9 @@ int main(void)
 				InterpretSwarmMessage(message);	//Interpret the message
 			}
 		}
+		
+		getMouseXY(&robotPosition);
+		
 	}
 }
 
