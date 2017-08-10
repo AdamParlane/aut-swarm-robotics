@@ -15,7 +15,7 @@
 *
 * Functions:
 * void twi0Init(void)
-* void twi0MuxSwitch(uint8_t channel)
+* uint8_t twi0MuxSwitch(uint8_t channel)
 * uint8_t twi0ReadMuxChannel(void)
 * void twi0Write(uint8_t slaveAddress, uint8_t intAddress, uint8_t data)
 * uint8_t twi0ReadSingle(uint8_t slaveAddress, uint8_t intAddress)
@@ -117,7 +117,7 @@ void twi2Init(void)
 
 /*
 * Function:
-* void twi0MuxSwitch(uint8_t channel);
+* uint8_t twi0MuxSwitch(uint8_t channel);
 *
 * Sets the I2C multiplexer to desired channel.
 *
@@ -136,16 +136,21 @@ void twi2Init(void)
 * - Wait for transmission to complete before exiting function.
 *
 */
-void twi0MuxSwitch(uint8_t channel)
+uint8_t twi0MuxSwitch(uint8_t channel)
 {
 	twi0MasterMode;					//Master mode enabled, slave disabled
 	twi0SetSlave(TWI0_MUX_ADDR);	//Slave address (eg. Mux or Fast Charge Chip)
 	//No internal address and set to master write mode by default of zero
 	twi0Send(channel);				//Load THR and writing to THR causes start to be sent
 	twi0Stop;						//Set STOP bit after tx
-	while(!twi0TxReady);			//wait for start and data to be shifted out of holding register
-	while(!twi0TxComplete);			//Communication complete, holding and shifting registers
-									//empty, Stop sent
+	//wait for start and data to be shifted out of holding register
+	if(waitForFlag((uint32_t*)&REG_TWI0_SR, TWI_SR_TXRDY, TWI_TXRDY_TIMEOUT))
+		return 1;
+	//Communication complete, holding and shifting registers empty, Stop sent
+	if(waitForFlag((uint32_t*)&REG_TWI0_SR, TWI_SR_TXCOMP, TWI_TXCOMP_TIMEOUT))
+		return 1;
+	else
+		return 0;
 }
 
 /*
@@ -158,7 +163,8 @@ void twi0MuxSwitch(uint8_t channel)
 * none
 *
 * Returns:
-* a byte that holds a number from 0x8 (Ch0) to 0xF (Ch7) representing the current channel
+* A byte that holds a number from 0x8 (Ch0) to 0xF (Ch7) representing the current channel.
+* Will return 0x01 on error
 *
 * Implementation:
 * - Enable TWI0 as bus master
@@ -179,9 +185,13 @@ uint8_t twi0ReadMuxChannel(void)
 	twi0RegAddrSize(0);				//Set single internal device register
 	twi0SetReadMode;				//Master read direction = 1
 	twi0StartSingle;				//Send a START|STOP bit as required (single byte read)
-	while(!twi0RxReady);			//While Receive Holding Register not ready. wait.
+	//While Receive Holding Register not ready. wait.
+	if(waitForFlag(*(uint32_t*)(uint32_t*)&REG_TWI0_SR, TWI_SR_RXRDY, TWI_RXRDY_TIMEOUT))
+		return 1;
 	returnVal = twi0Receive;		//Store data received (the lower byte of 16-bit data)
-	while(!twi0TxComplete);			//Wait for transmission complete
+	//Wait for transmission complete
+	if(waitForFlag((uint32_t*)&REG_TWI0_SR, TWI_SR_TXCOMP, TWI_TXCOMP_TIMEOUT))
+		return 1;
 	return returnVal;
 }
 
@@ -222,20 +232,20 @@ char twi0Write(unsigned char slave_addr, unsigned char reg_addr,
 		twi0Send(data[0]);						//set up data to transmit
 		twi0Stop;								// Send a stop bit
 		//while Transmit Holding Register not ready. wait.
-		if(waitForFlag(&REG_TWI0_SR, TWI_SR_TXRDY, TWI_TXRDY_TIMEOUT))
+		if(waitForFlag((uint32_t*)&REG_TWI0_SR, TWI_SR_TXRDY, TWI_TXRDY_TIMEOUT))
 		return 1;
 		} else {
 		for(unsigned char b = 0; b < length; b++)//Send data bit by bit until data length is reached
 		{
 			twi0Send(data[b]);					//set up data to transmit
 			//while Transmit Holding Register not ready. wait.
-			if(waitForFlag(&REG_TWI0_SR, TWI_SR_TXRDY, TWI_TXRDY_TIMEOUT))
+			if(waitForFlag((uint32_t*)&REG_TWI0_SR, TWI_SR_TXRDY, TWI_TXRDY_TIMEOUT))
 			return 1;
 		}
 		twi0Stop;								// Send a stop bit
 	}
 	//while transmit not complete. wait.
-	if(waitForFlag(&REG_TWI0_SR, TWI_SR_TXCOMP, TWI_TXCOMP_TIMEOUT))
+	if(waitForFlag((uint32_t*)&REG_TWI0_SR, TWI_SR_TXCOMP, TWI_TXCOMP_TIMEOUT))
 	return 1;
 	else
 	return 0;
@@ -314,11 +324,11 @@ char twi0Read(unsigned char slave_addr, unsigned char reg_addr,
 	{
 		twi0StartSingle;				//Send START & STOP condition as required (single byte read)
 		//while Receive Holding Register not ready. wait.
-		if(waitForFlag(&REG_TWI0_SR, TWI_SR_RXRDY, TWI_RXRDY_TIMEOUT))
+		if(waitForFlag((uint32_t*)&REG_TWI0_SR, TWI_SR_RXRDY, TWI_RXRDY_TIMEOUT))
 		return 1;
 		data[0] = twi0Receive;			//store data received
 		//while transmission not complete. wait.
-		if(waitForFlag(&REG_TWI0_SR, TWI_SR_TXCOMP, TWI_TXCOMP_TIMEOUT))
+		if(waitForFlag((uint32_t*)&REG_TWI0_SR, TWI_SR_TXCOMP, TWI_TXCOMP_TIMEOUT))
 		return 1;
 		else
 		return 0;
@@ -326,14 +336,14 @@ char twi0Read(unsigned char slave_addr, unsigned char reg_addr,
 		twi0Start;						//Send start bit
 		for(unsigned char b = 0; b < length; b++)
 		{
-			if(waitForFlag(&REG_TWI0_SR, TWI_SR_RXRDY, TWI_RXRDY_TIMEOUT))
+			if(waitForFlag((uint32_t*)&REG_TWI0_SR, TWI_SR_RXRDY, TWI_RXRDY_TIMEOUT))
 			return 1;
 			data[b] = twi0Receive;
 			if(b == length - 2)
 			twi0Stop;					//Send stop on reception of 2nd to last byte
 		}
 		//while transmit not complete. wait.
-		if(waitForFlag(&REG_TWI0_SR, TWI_SR_TXCOMP, TWI_TXCOMP_TIMEOUT))
+		if(waitForFlag((uint32_t*)&REG_TWI0_SR, TWI_SR_TXCOMP, TWI_TXCOMP_TIMEOUT))
 		return 1;
 	}
 	return 0;

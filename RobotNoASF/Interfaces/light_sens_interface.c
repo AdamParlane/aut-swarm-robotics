@@ -49,8 +49,9 @@
 
 void lightSensInit(uint8_t channel)
 {
+	uint8_t writeBuffer = LS_AUTO_LOW_LUX;
 	twi0MuxSwitch(channel); //Set multiplexer address to correct device
-	twi0Write(TWI0_LIGHTSENS_ADDR, LS_CONFIG_REG, 1, &LS_AUTO_LOW_LUX);
+	twi0Write(TWI0_LIGHTSENS_ADDR, LS_CONFIG_REG, 1, &writeBuffer);
 }
 
 /*
@@ -82,8 +83,8 @@ void lightSensInit(uint8_t channel)
 */
 uint16_t lightSensRead(uint8_t channel, uint8_t colour)
 {
-	uint16_t data;
+	unsigned char data[2];
 	twi0MuxSwitch(channel);	//Set multiplexer address to a light sensor device
-	twi0Read(TWI0_LIGHTSENS_ADDR, colour, 2, &data);
-	return data;
+	twi0Read(TWI0_LIGHTSENS_ADDR, colour, 2, data);
+	return (data[1]<<8)|(data[0]);
 }

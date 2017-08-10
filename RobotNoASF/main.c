@@ -231,14 +231,12 @@ void setup(void)
 	proxSensInit(MUX_PROXSENS_F);		//Initialise proximity sensor on panel F
 	fcInit();							//Initialise the fast charge chip
 	CommunicationSetup();				//Initialise communication system
-	//imuInit();							//Initialise IMU.
-	//extIntInit();						//Initialise external interrupts.
-	//imuDmpInit();						//Initialise DMP system
+	imuInit();							//Initialise IMU.
+	extIntInit();						//Initialise external interrupts.
+	imuDmpInit();						//Initialise DMP system
 	mouseInit();						//May require further testing - Adam
 #if defined ROBOT_TARGET_V2
 	lfInit();							//Initialise line follow sensors. Only on V2.
 #endif
-	uint8_t result = 0;
-	char errorVal = twiReadImu(0x69, IMU_WHOAMI_REG, 1, &result);
 	return;
 }

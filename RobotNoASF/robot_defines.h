@@ -163,4 +163,25 @@ void pioInit(void);
 */
 void ledInit(void);
 
+/*
+* Function:
+* uint8_t waitForFlag(uint32_t *regAddr, uint32_t regMask, uint16_t timeOutMs)
+*
+* Will wait for the given status bit to become true. If it doesn't become true in the time
+* specified in timeOutMs, then the function exits with an error.
+*
+* Inputs:
+* uint32_t *regAddr
+*	The address to the status register that is to be monitored.
+* uint32_t regMask
+*   The bitmask to apply to the given register.
+* uint16_t timeOutMs
+*   The maximum number of milliseconds to wait before exiting the function with an error.
+*
+* Returns:
+* 0 if flag was detected or 1 if timeout was reached before flag was detected.
+*
+*/
+uint8_t waitForFlag(const volatile uint32_t* regAddr, uint32_t regMask, uint16_t timeOutMs);
+
 #endif /* ROBOTDEFINES_H_ */

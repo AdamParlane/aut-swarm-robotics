@@ -21,22 +21,13 @@
 *
 * Functions:
 * int imuInit(void)
-* void timer0Init(void)
 * int imuDmpInit(void)
 * unsigned char imuDmpStop(void)
 * unsigned char imuDmpStart(void)
-* int get_ms(uint32_t *timestamp)
-* int delay_ms(uint32_t period_ms)
 * unsigned short invOrientationMatrixToScalar(const signed char *mtx)
 * unsigned short invRow2Scale(const signed char *row)
 * void getEulerAngles(struct Position *imuData)
-* char twiWriteImu(unsigned char slave_addr, unsigned char reg_addr,
-*						unsigned char length, unsigned char const *data)
-* char twiReadImu(unsigned char slave_addr, unsigned char reg_addr,
-*						unsigned char length,	unsigned char *data)
 * uint8_t imuCommTest(void)
-* void TC0_Handler()
-*
 *
 */
 
@@ -60,9 +51,6 @@
 #define imuIntState			(IMU_INT_PORT->PIO_PSR & IMU_INT_PIN)
 #endif
 
-#define TWI_RXRDY_TIMEOUT	2
-#define TWI_TXRDY_TIMEOUT	2
-#define TWI_TXCOMP_TIMEOUT	2
 
 ///////////////Enumerations/////////////////////////////////////////////////////////////////////////
 enum axes
@@ -96,8 +84,6 @@ typedef struct euler_packet
 *
 */
 int imuInit(void);
-
-
 
 /*
 * Function: int imuDmpInit(void)
@@ -144,7 +130,6 @@ unsigned char imuDmpStop(void);
 *
 */
 unsigned char imuDmpStart(void);
-
 
 /*
 * Function:
@@ -194,47 +179,6 @@ unsigned short invRow2Scale(const signed char *row);
 void getEulerAngles(struct Position *imuData);
 
 /*
-* Function: char twiWriteImu(unsigned char slave_addr, unsigned char reg_addr,
-*								unsigned char length, unsigned char const *data)
-*
-* Required by the IMU drivers (hence naming convention). Writes the specified number of bytes to a
-* register on the given TWI device.
-*
-* Inputs:
-* slave_addr is the address of the device to be written to on TWI2. The address varies even for the
-* IMU driver because the IMU and compass have different TWI slave addresses. reg_addr is the
-* 8bit address of the register being written to. length is the number of bytes to be written. *data
-* points to the data bytes to be written.
-*
-* Returns:
-* returns 0 on success.
-*
-*/
-char twiWriteImu(unsigned char slave_addr, unsigned char reg_addr, 
-					unsigned char length, unsigned char const *data);
-
-/*
-* Function: char twiReadImu(unsigned char slave_addr, unsigned char reg_addr,
-*								unsigned char length, unsigned char const *data)
-*
-* Required by the IMU drivers (hence naming convention). Reads the specified number of bytes from a
-* register on the given TWI device.
-*
-* Inputs:
-* slave_addr is the address of the device to be read from on TWI2. The address varies even for the
-* IMU driver because the IMU and compass have different TWI slave addresses. reg_addr is the address
-* of the register being read from. length is the number of bytes to be read. The IMU automatically
-* increments the register address when reading more than one byte. *data points to the location in
-* memory where the retrieved data will be stored.
-*
-* Returns:
-* returns 0 on success.
-*
-*/
-char twiReadImu(unsigned char slave_addr, unsigned char reg_addr, 
-					unsigned char length, unsigned char *data);
-
-/*
 * Function:
 * char imuCommTest(void)
 *
@@ -249,6 +193,4 @@ char twiReadImu(unsigned char slave_addr, unsigned char reg_addr,
 */
 uint8_t imuCommTest(void);
 
-
-uint8_t waitForFlag(uint32_t *regAddr, uint32_t regMask, uint16_t timeOutMs);
 #endif /* IMU_INTERFACE_H_ */

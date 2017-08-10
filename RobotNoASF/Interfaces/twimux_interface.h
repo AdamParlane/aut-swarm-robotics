@@ -16,11 +16,16 @@
 * Functions:
 * void twi0Init(void)
 * void twi2Init(void)
-* void twi0MuxSwitch(uint8_t channel)
+* uint8_t twi0MuxSwitch(uint8_t channel)
 * uint8_t twi0ReadMuxChannel(void)
-* void twi0Write(uint8_t slaveAddress, uint8_t intAddress, uint8_t data)
-* uint8_t twi0ReadSingle(uint8_t slaveAddress, uint8_t intAddress)
-* uint16_t twi0ReadDouble(uint8_t slaveAddress, uint8_t intAddress)
+* char twi0Write(unsigned char slave_addr, unsigned char reg_addr,
+*						unsigned char length, unsigned char const *data)
+* char twi2Write(unsigned char slave_addr, unsigned char reg_addr,
+*						unsigned char length, unsigned char const *data)
+* char twi0Read(unsigned char slave_addr, unsigned char reg_addr,
+*						unsigned char length,	unsigned char *data)
+* char twi2Read(unsigned char slave_addr, unsigned char reg_addr,
+*						unsigned char length,	unsigned char *data)
 *
 */
 
@@ -28,9 +33,14 @@
 #define TWIMUX_INTERFACE_H_
 
 ///////////////Includes/////////////////////////////////////////////////////////////////////////////
-#include "sam.h"
+#include "../robot_defines.h"
 
 ///////////////Defines//////////////////////////////////////////////////////////////////////////////
+////TWI status register timeout values (ms)
+#define TWI_RXRDY_TIMEOUT	2
+#define TWI_TXRDY_TIMEOUT	2
+#define TWI_TXCOMP_TIMEOUT	2
+
 ////General Commands
 //if returns 1, then the receive holding register has a new byte to be read
 #define twi0RxReady			(REG_TWI0_SR & TWI_SR_RXRDY)
@@ -144,7 +154,7 @@ void twi2Init(void);
 
 /*
 * Function:
-* void twi0MuxSwitch(uint8_t channel)
+* uint8_t twi0MuxSwitch(uint8_t channel)
 *
 * Sets the I2C multiplexer to desired channel.
 *
@@ -155,7 +165,7 @@ void twi2Init(void);
 * none
 *
 */
-void twi0MuxSwitch(uint8_t channel);
+uint8_t twi0MuxSwitch(uint8_t channel);
 
 /*
 * Function:
@@ -199,24 +209,6 @@ char twi0Write(unsigned char slave_addr, unsigned char reg_addr,
 					unsigned char length, unsigned char const *data);
 char twi2Write(unsigned char slave_addr, unsigned char reg_addr,
 					unsigned char length, unsigned char const *data);
-
-/*
-* Function:
-* uint8_t twi0ReadSingle(uint8_t slaveAddress, uint8_t intAddress)
-*
-* Will read a single byte from a TWI slave device that has 8bit internal register addresses
-*
-* Inputs:
-* uint8_t slaveAddress:
-*    The address of the slave device on TWI0 to read from
-* uint8_t intAddress:
-*    The internal address of the register to read from
-*
-* Returns:
-* a byte containing the contents of the internal register on the slave device specified.
-*
-*/
-uint8_t twi0ReadSingle(uint8_t slaveAddress, uint8_t intAddress);
 
 /*
 * Function: char twiNRead(unsigned char slave_addr, unsigned char reg_addr,

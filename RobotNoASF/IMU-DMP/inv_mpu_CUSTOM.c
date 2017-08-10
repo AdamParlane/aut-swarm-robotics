@@ -23,7 +23,7 @@
 #include <string.h>
 #include <math.h>
 #include "inv_mpu_CUSTOM.h"
-#include "../Interfaces/imu_interface.h"
+#include "../Interfaces/twimux_interface.h"
 #include "../Interfaces/timer0.h"
 
 /* The following functions must be defined for this platform:
@@ -38,74 +38,7 @@
  * fabsf(float x)
  * min(int a, int b)
  */
-#if defined MOTION_DRIVER_TARGET_MSP430
-#include "msp430.h"
-#include "msp430_i2c.h"
-#include "msp430_clock.h"
-#include "msp430_interrupt.h"
-#define i2c_write   msp430_i2c_write
-#define i2c_read    msp430_i2c_read
-#define delay_ms    msp430_delay_ms
-#define get_ms      msp430_get_clock_ms
-static inline int reg_int_cb(struct int_param_s *int_param)
-{
-    return msp430_reg_int_cb(int_param->cb, int_param->pin, int_param->lp_exit,
-        int_param->active_low);
-}
-#define log_i(...)     do {} while (0)
-#define log_e(...)     do {} while (0)
-/* labs is already defined by TI's toolchain. */
-/* fabs is for doubles. fabsf is for floats. */
-#define fabs        fabsf
-#define min(a,b) ((a<b)?a:b)
-#elif defined EMPL_TARGET_MSP430
-#include "msp430.h"
-#include "msp430_i2c.h"
-#include "msp430_clock.h"
-#include "msp430_interrupt.h"
-#include "log.h"
-#define i2c_write   msp430_i2c_write
-#define i2c_read    msp430_i2c_read
-#define delay_ms    msp430_delay_ms
-#define get_ms      msp430_get_clock_ms
-static inline int reg_int_cb(struct int_param_s *int_param)
-{
-    return msp430_reg_int_cb(int_param->cb, int_param->pin, int_param->lp_exit,
-        int_param->active_low);
-}
-#define log_i       MPL_LOGI
-#define log_e       MPL_LOGE
-/* labs is already defined by TI's toolchain. */
-/* fabs is for doubles. fabsf is for floats. */
-#define fabs        fabsf
-#define min(a,b) ((a<b)?a:b)
-#elif defined EMPL_TARGET_UC3L0
-/* Instead of using the standard TWI driver from the ASF library, we're using
- * a TWI driver that follows the slave address + register address convention.
- */
-#include "twi.h"
-#include "delay.h"
-#include "sysclk.h"
-#include "log.h"
-#include "sensors_xplained.h"
-#include "uc3l0_clock.h"
-#define i2c_write(a, b, c, d)   twi_write(a, b, d, c)
-#define i2c_read(a, b, c, d)    twi_read(a, b, d, c)
-/* delay_ms is a function already defined in ASF. */
-#define get_ms  uc3l0_get_clock_ms
-static inline int reg_int_cb(struct int_param_s *int_param)
-{
-    sensor_board_irq_connect(int_param->pin, int_param->cb, int_param->arg);
-    return 0;
-}
-#define log_i       MPL_LOGI
-#define log_e       MPL_LOGE
-/* UC3 is a 32-bit processor, so abs and labs are equivalent. */
-#define labs        abs
-#define fabs(x)     (((x)>0)?(x):-(x))
-#else
-
-//SWARM ROBOT CONFIGURATION/////////////////////////////////////////////
+////////////SWARM ROBOT CONFIGURATION///////////////////////////////////////////////////////////////
 
 extern uint32_t systemTimestamp;	//millisecs since power on. Declared in timer0.c
 
@@ -120,10 +53,15 @@ static inline int reg_int_cb(struct int_param_s *int_param)
 #define labs			abs
 #define fabs(x)			(((x)>0)?(x):-(x))
 #define min(a,b)		((a<b)?a:b)
-#define i2c_write		twiWriteImu
-#define i2c_read		twiReadImu
-
+#if defined ROBOT_TARGET_V1			//IMU is on TWI2 on V1 robots
+#define i2c_write		twi2Write
+#define i2c_read		twi2Read
 #endif
+#if defined ROBOT_TARGET_V2			//IMU is on TWI0 on V2 robots
+#define i2c_write		twi0Write
+#define i2c_read		twi0Read
+#endif
+
 
 #if !defined MPU6050 && !defined MPU9150 && !defined MPU6500 && !defined MPU9250
 #error  Which gyro are you using? Define MPUxxxx in your compiler options.

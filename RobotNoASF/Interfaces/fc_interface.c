@@ -53,16 +53,21 @@ void fcInit(void)
 	REG_PIOB_OER |= PIO_OER_P2;		//Set PB2 as an output
 	REG_PIOB_CODR |= PIO_CODR_P2;	//Set PB2 to low
 	
+	
+	uint8_t writeBuffer;	
 	//NOT SHURE IF THIS LINE IS NEEDED BE CAUSE ACCORDING TO DATASHEET CE IS INVERTED, THEREFORE THE
 	//DEFAULT VALUE 0 WOULD MEAN THAT CHARGING IS ENABLED NOT 1. TESTING REQUIRED.
 	//Ensures that CE bit is clear in case safety timer has gone off in previous charge.
-	twi0Write(TWI0_FCHARGE_ADDR, FC_CONTROL_REG, 1, &FC_CONTROL_INIT);
+	writeBuffer = FC_CONTROL_INIT;
+	twi0Write(TWI0_FCHARGE_ADDR, FC_CONTROL_REG, 1, &writeBuffer);
 															
 	//Vreg = 3.98v, input current = 2.5A
-	twi0Write(TWI0_FCHARGE_ADDR, FC_BATVOL_REG, 1, &FC_BATTVOL_INIT);
+	writeBuffer = FC_BATTVOL_INIT;
+	twi0Write(TWI0_FCHARGE_ADDR, FC_BATVOL_REG, 1, &writeBuffer);
 	
 	//Charge current set to max Ic=2875mA, termination current Iterm=100mA (default)
-	twi0Write(TWI0_FCHARGE_ADDR, FC_CHARGE_REG, 1, &FC_CHARGE_INIT);
+	writeBuffer = FC_CHARGE_INIT;
+	twi0Write(TWI0_FCHARGE_ADDR, FC_CHARGE_REG, 1, &writeBuffer);
 }
 
 /*
@@ -85,8 +90,9 @@ void fcInit(void)
 */
 void fcWatchdogReset(void)
 {
+	uint8_t writeBuffer = FC_STATUS_WDRESET;
 	//Resets the FCC watchdog timer. Must be done once every 30s or else registers will reset.
-	twi0Write(TWI0_FCHARGE_ADDR, FC_STATUS_REG, 1, &FC_STATUS_WDRESET);
+	twi0Write(TWI0_FCHARGE_ADDR, FC_STATUS_REG, 1, &writeBuffer);
 }
 
 /*

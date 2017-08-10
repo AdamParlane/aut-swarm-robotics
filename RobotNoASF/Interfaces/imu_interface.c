@@ -21,21 +21,13 @@
 * 
 * Functions:
 * int imuInit(void)
-* void timer0Init(void)
 * int imuDmpInit(void)
 * void imuDmpStop(void)
 * void imuDmpStart(void)
-* char twiWriteImu(unsigned char slave_addr, unsigned char reg_addr, 
-*						unsigned char length, unsigned char const *data)
-* char twiReadImu(unsigned char slave_addr, unsigned char reg_addr, 
-*						unsigned char length,	unsigned char *data)
-* int get_ms(uint32_t *timestamp)
-* int delay_ms(uint32_t period_ms)
 * unsigned short invOrientationMatrixToScalar(const signed char *mtx)
 * unsigned short invRow2Scale(const signed char *row)
 * void getEulerAngles(struct Position *imuData)
 * uint8_t imuCommTest(void)
-* void TC0_Handler()
 *
 *
 */
@@ -49,9 +41,6 @@
 //Invensense Direct Motion Processing Driver Files
 #include "../IMU-DMP/inv_mpu_dmp_motion_driver_CUSTOM.h"//Direct Motion Processing setup functions
 #include "../IMU-DMP/inv_mpu_CUSTOM.h"//IMU basic setup and initialisation functions
-
-
-
 
 ///////////////Global Vars//////////////////////////////////////////////////////////////////////////
 uint8_t checkImuFifo	= 0;	//A flag to determine that the IMU's FIFO is ready to be read again
@@ -324,157 +313,6 @@ void getEulerAngles(struct Position *imuData)
 	imuData->imuRoll = (atan2(2*x*w-2*y*z , -sqx + sqy - sqz + sqw))*180/M_PI;
 }
 
-
-
-/*
-* Function: char twiWriteImu(unsigned char slave_addr, unsigned char reg_addr, 
-*								unsigned char length, unsigned char const *data)
-*
-* Required by the IMU drivers (hence naming convention). Writes the specified number of bytes to a
-* register on the given TWI device.
-*
-* Inputs:
-* slave_addr is the address of the device to be written to on TWI2. The address varies even for the
-* IMU driver because the IMU and compass have different TWI slave addresses. reg_addr is the
-* 8bit address of the register being written to. length is the number of bytes to be written. *data 
-* points to the data bytes to be written.
-*
-* Returns:
-* returns 0 on success.
-*
-* Implementation:
-* Master mode on TWI2 is enabled, TWI2 is prepared for transmission ie slave and register addresses
-* are set and register address size is set to 1 byte. Next, transmission takes place but there are
-* slightly different procedures for single and multi byte transmission. On single byte
-* transmission, the STOP state is set in the TWI control register immediately after the byte to be
-* sent is loaded into the transmission holding register. On multi-byte transmission, the STOP
-* flag isn't set until all bytes have been sent and the transmission holding register is clear.
-*
-*/
-
-char twiWriteImu(unsigned char slave_addr, unsigned char reg_addr, 
-					unsigned char length, unsigned char const *data)
-#if defined ROBOT_TARGET_V1
-
-#endif
-
-#if defined ROBOT_TARGET_V2
-
-#endif
-
-/*
-* Function: char twiReadImu(unsigned char slave_addr, unsigned char reg_addr,
-*								unsigned char length, unsigned char const *data)
-*
-* Required by the IMU drivers (hence naming convention). Reads the specified number of bytes from a
-* register on the given TWI device.
-*
-* Inputs:
-* slave_addr is the address of the device to be read from on TWI2. The address varies even for the
-* IMU driver because the IMU and compass have different TWI slave addresses. reg_addr is the address
-* of the register being read from. length is the number of bytes to be read. The IMU automatically 
-* increments the register address when reading more than one byte. *data points to the location in 
-* memory where the retrieved data will be stored.
-*
-* Returns:
-* returns 0 on success.
-*
-* Implementation:
-* Master mode on TWI2 is enabled, TWI2 is prepared for transmission ie slave and register addresses
-* are set and register address size is set to 1 byte. Next, reception takes place but there are
-* different procedures for single and multi byte reception. On single byte reception, the START and
-* STOP flags are set simultaneously in TWI2's control register to indicate that only one byte will
-* be read before communication is stopped. With multi-byte reception, the START flag is set 
-* initially, and the STOP flag in the control register is set when the second to last byte has been
-* received (ie there will only be one byte left to receive after the STOP flag is set)
-*
-* Improvements:
-* Could use a timeout feature with the return of a non-zero value if the slave device doesn't
-* reply in time (TXCOMP loops). This would stop the code hanging in an endless loop if the IMU 
-* decides to stop talking. Additionally, non zero value returned on error.
-*
-*/
-
-char twiReadImu(unsigned char slave_addr, unsigned char reg_addr,
-					unsigned char length, unsigned char *data)
-#if defined ROBOT_TARGET_V1
-{
-	twi2MasterMode;						//Enable master mode
-	twi2SetSlave(slave_addr);			//Slave device address
-	twi2SetReadMode;					//Set to read from register
-	twi2RegAddrSize(1);					//Register addr byte length (0-3)
-	twi2RegAddr(reg_addr);				//set up address to read from
-	
-	if (length == 1)					//If reading one byte, then START and STOP bits need to be
-	//set at the same time
-	{
-		twi2StartSingle;				//Send START & STOP condition as required (single byte read)
-		//while Receive Holding Register not ready. wait.
-		if(waitForFlag(&REG_TWI2_SR, TWI_SR_RXRDY, TWI_RXRDY_TIMEOUT))
-			return 1;
-		data[0] = twi2Receive;			//store data received
-		//while transmission not complete. wait.
-		if(waitForFlag(&REG_TWI2_SR, TWI_SR_TXCOMP, TWI_TXCOMP_TIMEOUT))
-			return 1;
-		else
-			return 0;
-	} else {
-		twi2Start;						//Send start bit
-		for(unsigned char b = 0; b < length; b++)
-		{
-			if(waitForFlag(&REG_TWI2_SR, TWI_SR_RXRDY, TWI_RXRDY_TIMEOUT))
-				return 1;
-			data[b] = twi2Receive;
-			if(b == length - 2)
-				twi2Stop;					//Send stop on reception of 2nd to last byte
-		}
-		//while transmit not complete. wait.
-		if(waitForFlag(&REG_TWI2_SR, TWI_SR_TXCOMP, TWI_TXCOMP_TIMEOUT))
-			return 1;
-	}
-	return 0;
-}
-#endif
-
-#if defined ROBOT_TARGET_V2
-{
-	twi0MasterMode;						//Enable master mode
-	twi0SetSlave(slave_addr);			//Slave device address
-	twi0SetReadMode;					//Set to read from register
-	twi0RegAddrSize(1);					//Register addr byte length (0-3)
-	twi0RegAddr(reg_addr);				//set up address to read from
-	
-	if (length == 1)					//If reading one byte, then START and STOP bits need to be
-										//set at the same time
-	{
-		twi0StartSingle;				//Send START & STOP condition as required (single byte read)
-		//while Receive Holding Register not ready. wait.
-		if(waitForFlag(&REG_TWI0_SR, TWI_SR_RXRDY, TWI_RXRDY_TIMEOUT))
-			return 1;
-		data[0] = twi0Receive;			//store data received
-		//while transmission not complete. wait.
-		if(waitForFlag(&REG_TWI0_SR, TWI_SR_TXCOMP, TWI_TXCOMP_TIMEOUT))
-			return 1;
-		else
-			return 0;
-	} else {
-		twi0Start;						//Send start bit
-		for(unsigned char b = 0; b < length; b++)
-		{
-			if(waitForFlag(&REG_TWI0_SR, TWI_SR_RXRDY, TWI_RXRDY_TIMEOUT))
-				return 1;
-			data[b] = twi0Receive;
-			if(b == length - 2)
-			twi0Stop;					//Send stop on reception of 2nd to last byte
-		}
-		//while transmit not complete. wait.
-		if(waitForFlag(&REG_TWI0_SR, TWI_SR_TXCOMP, TWI_TXCOMP_TIMEOUT))
-			return 1;
-	}
-	return 0;
-}
-#endif
-
 /*
 * Function:
 * uint8_t imuCommTest(void)
@@ -502,7 +340,12 @@ uint8_t imuCommTest(void)
 	dmpEnabled = imuDmpStop();		//Stop DMP. Returns 1 if DMP was running.
 		
 	//Request test byte
-	twiReadImu(TWI2_IMU_ADDR, IMU_WHOAMI_REG, 1, &returnVal);
+#if defined ROBOT_TARGET_V1
+	twi2Read(TWI2_IMU_ADDR, IMU_WHOAMI_REG, 1, &returnVal);
+#endif
+#if defined ROBOT_TARGET_V2
+	twi0Read(TWI2_IMU_ADDR, IMU_WHOAMI_REG, 1, &returnVal);
+#endif
 
 	if (dmpEnabled == 1)			//If DMP was running before this function began
 		imuDmpStart();				//Restart the DMP
@@ -511,14 +354,6 @@ uint8_t imuCommTest(void)
 }
 
 
-uint8_t waitForFlag(uint32_t *regAddr, uint32_t regMask, uint16_t timeOutMs)
-{
-	uint32_t startTime = systemTimestamp;
-	while(!(*regAddr&regMask) && (systemTimestamp < (startTime + timeOutMs)));
-	if(*regAddr&regMask)
-		return 0;
-	else
-		return 1;
-}
+
 
 
