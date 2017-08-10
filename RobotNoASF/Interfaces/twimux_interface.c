@@ -186,7 +186,7 @@ uint8_t twi0ReadMuxChannel(void)
 	twi0SetReadMode;				//Master read direction = 1
 	twi0StartSingle;				//Send a START|STOP bit as required (single byte read)
 	//While Receive Holding Register not ready. wait.
-	if(waitForFlag(*(uint32_t*)(uint32_t*)&REG_TWI0_SR, TWI_SR_RXRDY, TWI_RXRDY_TIMEOUT))
+	if(waitForFlag((uint32_t*)&REG_TWI0_SR, TWI_SR_RXRDY, TWI_RXRDY_TIMEOUT))
 		return 1;
 	returnVal = twi0Receive;		//Store data received (the lower byte of 16-bit data)
 	//Wait for transmission complete
