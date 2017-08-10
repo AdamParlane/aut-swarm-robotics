@@ -179,7 +179,7 @@ int main(void)
 		//If ready, will read IMU data. Will be moved to a function when NAVIGATION module is added			
 		if(checkImuFifo)
 		{
-			imuReadFifo();
+			imuReadFifo(&robotPosition);
 			checkImuFifo = 0;
 			getEulerAngles(&robotPosition);
 		}

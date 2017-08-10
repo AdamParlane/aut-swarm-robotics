@@ -182,6 +182,6 @@ void ledInit(void);
 * 0 if flag was detected or 1 if timeout was reached before flag was detected.
 *
 */
-uint8_t waitForFlag(const volatile uint32_t* regAddr, uint32_t regMask, uint16_t timeOutMs);
+uint8_t waitForFlag(const volatile uint32_t *regAddr, uint32_t regMask, uint16_t timeOutMs);
 
 #endif /* ROBOTDEFINES_H_ */

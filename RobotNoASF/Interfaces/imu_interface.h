@@ -27,6 +27,7 @@
 * unsigned short invOrientationMatrixToScalar(const signed char *mtx)
 * unsigned short invRow2Scale(const signed char *row)
 * void getEulerAngles(struct Position *imuData)
+* uint8_t imuReadFifo(struct Position *imuData)
 * uint8_t imuCommTest(void)
 *
 */
@@ -60,15 +61,6 @@ enum axes
 	Z,
 	W
 };
-
-///////////////Type definitions/////////////////////////////////////////////////////////////////////
-//Structure that stores converted Euler angles of rotation. Parameter of GetEulerAngles
-typedef struct euler_packet 
-{
-	double pitch;
-	double roll;
-	double yaw;
-} euler_packet_t;
 
 ///////////////Functions////////////////////////////////////////////////////////////////////////////
 /*
@@ -177,6 +169,22 @@ unsigned short invRow2Scale(const signed char *row);
 *
 */
 void getEulerAngles(struct Position *imuData);
+
+/*
+* Function:
+* void imuReadFifo(void)
+*
+* Will read data from the IMU's FIFO buffer and store data in the given Position structure
+*
+* Inputs:
+* struct Position *imuData:
+*   Pointer to the global robotPosition structure. This is where the read data will be stored
+*
+* Returns:
+* 0 on success; non-zero otherwise
+*
+*/
+uint8_t imuReadFifo(struct Position *imuData);
 
 /*
 * Function:

@@ -185,7 +185,7 @@ void ledInit(void)
 *   exit the function with a 1 (indicating an error)
 *
 */
-uint8_t waitForFlag(const volatile uint32_t* regAddr, uint32_t regMask, uint16_t timeOutMs)
+uint8_t waitForFlag(const volatile uint32_t *regAddr, uint32_t regMask, uint16_t timeOutMs)
 {
 	uint32_t startTime = systemTimestamp;
 	while(!((*regAddr) & regMask) && (systemTimestamp < (startTime + timeOutMs)));

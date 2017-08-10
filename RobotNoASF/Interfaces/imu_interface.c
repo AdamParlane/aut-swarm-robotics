@@ -27,8 +27,8 @@
 * unsigned short invOrientationMatrixToScalar(const signed char *mtx)
 * unsigned short invRow2Scale(const signed char *row)
 * void getEulerAngles(struct Position *imuData)
+* uint8_t imuReadFifo(struct Position *imuData)
 * uint8_t imuCommTest(void)
-*
 *
 */
 
@@ -252,19 +252,19 @@ unsigned short invRow2Scale(const signed char *row)
 	unsigned short b;
 
 	if (row[0] > 0)
-	b = 0;
+		b = 0;
 	else if (row[0] < 0)
-	b = 4;
+		b = 4;
 	else if (row[1] > 0)
-	b = 1;
+		b = 1;
 	else if (row[1] < 0)
-	b = 5;
+		b = 5;
 	else if (row[2] > 0)
-	b = 2;
+		b = 2;
 	else if (row[2] < 0)
-	b = 6;
+		b = 6;
 	else
-	b = 7;      // error
+		b = 7;      // error
 	return b;
 }
 
@@ -313,6 +313,71 @@ void getEulerAngles(struct Position *imuData)
 	imuData->imuRoll = (atan2(2*x*w-2*y*z , -sqx + sqy - sqz + sqw))*180/M_PI;
 }
 
+
+/*
+* Function:
+* void imuReadFifo(void)
+*
+* Will read data from the IMU's FIFO buffer and store data in the given Position structure
+*
+* Inputs:
+* struct Position *imuData:
+*   Pointer to the global robotPosition structure. This is where the read data will be stored
+*
+* Returns:
+* 0 on success, non zero otherwise
+*
+* Implementation:
+* Sets up variables required as parameters for dmp_read_fifo() (see below for descriptions).
+* Calls dmp_read_fifo() which will attempt to read the data from the FIFO buffer. If this fails, 
+* this function will exit with non zero value. On success, the sensors parameter is checked against
+* bit masks to determine what data was stored in the FIFO so it can be stored in the Position
+* structure. This should save a little bit of time if only some of the data has been sent.
+* Next the more parameter is checked. If it is non-zero then there is more data in the FIFO buffer
+* still so dmp_read_fifo is called again. When more is finally zero, the timer between the last FIFO
+* read and this one is calculated and stored and the timestamp of the current read is stored.
+*
+*/
+uint8_t imuReadFifo(struct Position *imuData)
+{
+	short gyroData[3];					//Stores raw gyro data from IMU
+	short accelData[3];					//Stores raw accelerometer data from IMU
+	long quatData[4];					//Stores fused quaternion data from IMU
+	unsigned long sensorTimeStamp;		//Stores the data Timestamp
+	short sensors;						//Says which sensor data was in the FIFO
+	unsigned char more;					//Not 0 when there is more data in FIFO after read
+	do
+	{
+		if(dmp_read_fifo(gyroData, accelData, quatData, &sensorTimeStamp, &sensors, &more))
+			return 1;					//If FIFO read function returns non zero then error has 
+										//occurred, so exit this function with non zero->
+		if(sensors & INV_WXYZ_QUAT)		//If quaternion data was in the FIFO
+		{
+			imuData->imuQX = quatData[X];
+			imuData->imuQY = quatData[Y];
+			imuData->imuQZ = quatData[Z];
+			imuData->imuQW = quatData[W];
+
+		}
+		if(sensors & INV_XYZ_ACCEL)		//If accelerometer data was in the FIFO
+		{
+			imuData->imuAccelX = accelData[X];
+			imuData->imuAccelY = accelData[Y];
+			imuData->imuAccelZ = accelData[Z];
+		}
+		if(sensors & INV_XYZ_GYRO)		//If gyro data was in the FIFO
+		{
+			imuData->imuGyroX = gyroData[X];
+			imuData->imuGyroY = gyroData[Y];
+			imuData->imuGyroZ = gyroData[Z];
+		}
+
+	} while(more);						//If there is still more in the FIFO then do it again->
+	imuData->imuDeltaTime = sensorTimeStamp - imuData->imuTimeStamp;
+	imuData->imuTimeStamp = sensorTimeStamp;
+	return 0;
+}
+
 /*
 * Function:
 * uint8_t imuCommTest(void)
@@ -329,7 +394,7 @@ void getEulerAngles(struct Position *imuData)
 * - Disable DMP if necessary
 * - Send byte to WHO AM I register on IMU
 * - Re-enable DMP if enabled beforehand
-* - Return value retrieved from IMU. Should return 0x71 if communication successful.
+* - Return value retrieved from IMU. Should return 0x71 (0x73?) if communication successful.
 *
 */
 uint8_t imuCommTest(void)
