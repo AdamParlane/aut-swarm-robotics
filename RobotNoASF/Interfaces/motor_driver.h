@@ -107,7 +107,7 @@ void motor_init(void);
 *	none
 *
 */
-void moveRobot(int direction, unsigned char speed);
+void moveRobot(signed int direction, unsigned char speed);
 
 /*
 * Function:
