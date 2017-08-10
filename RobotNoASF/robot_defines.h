@@ -23,8 +23,8 @@
 #ifndef ROBOTDEFINES_H_
 #define ROBOTDEFINES_H_
 
-//TODO: change something so that this doesnt have to be first
-//Or maybe all defines should be before indludes
+//TODO: change something so that this doesn't have to be first
+//Or maybe all defines should be before includes
 enum ROBOT_STATES{TEST, TEST_ALL, MANUAL, FORMATION, DOCKING, OBSTACLE_AVOIDANCE, IDLE, CHARGING}; //main loop functionality
 
 ///////////////Type Definitions/////////////////////////////////////////////////////////////////////
@@ -174,7 +174,7 @@ void ledInit(void);
 * uint32_t *regAddr
 *	The address to the status register that is to be monitored.
 * uint32_t regMask
-*   The bitmask to apply to the given register.
+*   The bit mask to apply to the given register.
 * uint16_t timeOutMs
 *   The maximum number of milliseconds to wait before exiting the function with an error.
 *
