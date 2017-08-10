@@ -183,9 +183,9 @@ void motor_init(void)
 * None as of 26/7/17
 *
 */
-void moveRobot(uint16_t direction, unsigned char speed)
+void moveRobot(int direction, unsigned char speed)
 {
-	uint16_t motor1Speed, motor2Speed, motor3Speed;
+	int motor1Speed, motor2Speed, motor3Speed;
 	float directionRad;
 	//keep direction in range +/-180degrees
 	while(direction > 180) 
