@@ -88,16 +88,23 @@ struct Position
 #include "Functions/obstacle_avoidance.h"
 
 ///////////////Defines//////////////////////////////////////////////////////////////////////////////
+//LED PIO port and pin definitions
+#define LED_1_PORT	PIOA
+#define LED_1_PIN	PIO_PA28
+#define LED_2_PORT	PIOC
+#define LED_2_PIN	PIO_PC8
+#define LED_3_PORT	PIOA
+#define LED_3_PIN	PIO_PA27
 //LED control macros
-#define	ledOff1 	(REG_PIOA_CODR |= (1<<28))
-#define	ledOff2		(REG_PIOC_CODR |= (1<<8))
-#define	ledOff3 	(REG_PIOA_CODR |= (1<<27))
-#define	ledOn1 		(REG_PIOA_SODR |= (1<<28))
-#define	ledOn2 		(REG_PIOC_SODR |= (1<<8))
-#define	ledOn3 		(REG_PIOA_SODR |= (1<<27))
-#define ledTog1		{if(REG_PIOA_ODSR&(1<<28)) ledOff1; else ledOn1;}
-#define ledTog2		{if(REG_PIOC_ODSR&(1<<8)) ledOff2; else ledOn2;}
-#define ledTog3		{if(REG_PIOA_ODSR&(1<<27)) ledOff3; else ledOn3;}
+#define	ledOff1 	(LED_1_PORT->PIO_CODR |= LED_1_PIN)
+#define	ledOff2		(LED_2_PORT->PIO_CODR |= LED_2_PIN)
+#define	ledOff3 	(LED_3_PORT->PIO_CODR |= LED_3_PIN)
+#define	ledOn1 		(LED_1_PORT->PIO_SODR |= LED_1_PIN)
+#define	ledOn2 		(LED_2_PORT->PIO_SODR |= LED_2_PIN)
+#define	ledOn3 		(LED_3_PORT->PIO_SODR |= LED_3_PIN)
+#define ledTog1		{if(LED_1_PORT->PIO_ODSR&LED_1_PIN) ledOff1; else ledOn1;}
+#define ledTog2		{if(LED_2_PORT->PIO_ODSR&LED_2_PIN) ledOff2; else ledOn2;}
+#define ledTog3		{if(LED_3_PORT->PIO_ODSR&LED_3_PIN) ledOff3; else ledOn3;}
 	
 //Universal Asynchronous Receiver/Transmitter
 #define TXRDY (REG_UART3_SR & UART_SR_TXRDY)	//UART TX READY flag [SHOULD BE IN COMMUNICATIONS]
@@ -106,7 +113,6 @@ struct Position
 #if !defined ROBOT_TARGET_V1 && !defined ROBOT_TARGET_V2
 #error  Robot version has not been set in compiler symbols. (set ROBOT_TARGET_V1 or ROBOT_TARGET_V2)
 #endif
-
 
 
 ///////////////Global variables/////////////////////////////////////////////////////////////////////

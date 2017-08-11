@@ -215,7 +215,10 @@ unsigned char imuDmpStart(void)
 * TODO: return value description for invOrientationMatrixToScalar function
 *
 * Implementation:
-* TODO: Implementation description for invOrientationMatrixToScalar function
+* These next two functions converts the orientation matrix (see
+* gyro_orientation) to a scalar representation for use by the DMP.
+* NOTE: These functions are borrowed from Invensense's MPL.
+*
 *
 */
 unsigned short invOrientationMatrixToScalar(const signed char *mtx)
@@ -293,23 +296,25 @@ unsigned short invRow2Scale(const signed char *row)
 */
 void getEulerAngles(struct Position *imuData)
 {
-	double w = imuData->imuQW;
+	double w = imuData->imuQW;				//Pull quaternions from IMU
 	double x = imuData->imuQX;
 	double y = imuData->imuQY;
 	double z = imuData->imuQZ;
-	double sqw = w*w;
+	double sqw = w*w;						//Pre-calculate squares
 	double sqx = x*x;
 	double sqy = y*y;
 	double sqz = z*z;
-	double unit = sqx + sqy + sqz + sqw; // if normalised is one, otherwise is correction factor
+	double unit = sqx + sqy + sqz + sqw;	//Should equal 1, otherwise is correction factor
 	double test = x*y + z*w;
-	if (test > 0.499*unit) { // singularity at north pole
+	if (test > 0.499*unit)					// singularity at north pole
+	{
 		imuData->imuRoll = 2 * atan2(x,w);
 		imuData->imuPitch = M_PI/2;
 		imuData->imuYaw = 0;
 		return;
 	}
-	if (test < -0.499*unit) { // singularity at south pole
+	if (test < -0.499*unit)					// singularity at south pole
+	{
 		imuData->imuRoll = -2 * atan2(x,w);
 		imuData->imuPitch = M_PI/2;
 		imuData->imuYaw = 0;
@@ -347,9 +352,9 @@ void getEulerAngles(struct Position *imuData)
 */
 uint8_t imuReadFifo(struct Position *imuData)
 {
-	short gyroData[3];					//Stores raw gyro data from IMU
-	short accelData[3];					//Stores raw accelerometer data from IMU
-	long quatData[4];					//Stores fused quaternion data from IMU
+	short gyroData[3];					//Stores raw gyro data from IMU (PRY)->(XYZ)
+	short accelData[3];					//Stores raw accelerometer data from IMU (XYZ)
+	long quatData[4];					//Stores fused quaternion data from IMU (XYZW)
 	unsigned long sensorTimeStamp;		//Stores the data Timestamp
 	short sensors;						//Says which sensor data was in the FIFO
 	unsigned char more;					//Not 0 when there is more data in FIFO after read
@@ -422,10 +427,5 @@ uint8_t imuCommTest(void)
 	if (dmpEnabled == 1)			//If DMP was running before this function began
 		imuDmpStart();				//Restart the DMP
 		
-	return returnVal;				//return 0x71 on success
+	return returnVal;				//return 0x71 (0x73?) on success
 }
-
-
-
-
-
