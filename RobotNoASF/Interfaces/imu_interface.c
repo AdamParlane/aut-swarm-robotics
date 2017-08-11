@@ -113,12 +113,19 @@ int imuInit(void)
 int imuDmpInit(void)
 {
 	int result = 0;			//If > 0 then error has occurred
-	//Orientation correction matrix for the IMU
+	//Orientation correction matrix for the IMU. Allows the output to be corrected, no matter
+	//how the IMU is orientated relative to the robot.
+	
+	//This is the orientation matrix for the V2 robots with the IMU mounted on the underside of the
+	//main board.
 	static signed char gyro_orientation[9] =
-	{	-1,	 0,	 0,
-		0,	-1,	 0,
-		0,	 0,	 1
+	//  X    Y   Z
+	{	1,	 0,	 0,  //X
+		0,	-1,	 0,  //Y
+		0,	 0,	 -1  //Z
 	};
+	//Both Y and Z axis are inverted because the chip is mounted upside down.
+	
 	result += dmp_load_motion_driver_firmware();		// Load the DMP firmware
 	//Send the orientation correction matrix
 	result += dmp_set_orientation(invOrientationMatrixToScalar(gyro_orientation));
@@ -297,20 +304,20 @@ void getEulerAngles(struct Position *imuData)
 	double unit = sqx + sqy + sqz + sqw; // if normalised is one, otherwise is correction factor
 	double test = x*y + z*w;
 	if (test > 0.499*unit) { // singularity at north pole
-		imuData->imuPitch = 2 * atan2(x,w);
-		imuData->imuYaw = M_PI/2;
-		imuData->imuRoll = 0;
+		imuData->imuRoll = 2 * atan2(x,w);
+		imuData->imuPitch = M_PI/2;
+		imuData->imuYaw = 0;
 		return;
 	}
 	if (test < -0.499*unit) { // singularity at south pole
-		imuData->imuPitch = -2 * atan2(x,w);
-		imuData->imuYaw = M_PI/2;
-		imuData->imuRoll = 0;
+		imuData->imuRoll = -2 * atan2(x,w);
+		imuData->imuPitch = M_PI/2;
+		imuData->imuYaw = 0;
 		return;
 	}
-	imuData->imuPitch = (atan2(2*y*w-2*x*z , sqx - sqy - sqz + sqw))*180/M_PI;
-	imuData->imuYaw = (asin(2*test/unit))*180/M_PI;
-	imuData->imuRoll = (atan2(2*x*w-2*y*z , -sqx + sqy - sqz + sqw))*180/M_PI;
+	imuData->imuRoll = (atan2(2*y*w-2*x*z , sqx - sqy - sqz + sqw))*180/M_PI;
+	imuData->imuPitch = (asin(2*test/unit))*180/M_PI;
+	imuData->imuYaw = (atan2(2*x*w-2*y*z , -sqx + sqy - sqz + sqw))*180/M_PI;
 }
 
 
