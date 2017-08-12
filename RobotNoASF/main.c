@@ -80,7 +80,8 @@ int main(void)
 	//Optical
 	robotPosition.x = 0;
 	robotPosition.y = 0;
-	robotPosition.imuYawOffset = 180;
+	robotPosition.imuYawOffset = 180;	//Ensures that whatever way the robot is facing when powered
+										//on is 0 degrees heading.
 	struct transmitDataStructure transmitMessage;
 	
 	robotState = IDLE;

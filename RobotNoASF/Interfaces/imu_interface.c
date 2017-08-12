@@ -294,7 +294,9 @@ unsigned short invRow2Scale(const signed char *row)
 * Loads Yaw, Pitch and Roll data back into robotPosition.
 *
 * Implementation:
-* TO COME
+* After the quaternions have been converted to Euler angles, the Yaw offset is applied which is a
+* heading correction obtained from the PC. Once this has been applied, the Yaw value is checked to
+* ensure it is still in range (-180<Yaw<180) and corrected if necessary.
 *
 */
 void getEulerAngles(struct Position *imuData)
@@ -334,7 +336,6 @@ void getEulerAngles(struct Position *imuData)
 	while(imuData->imuYaw < -180.0)
 		imuData->imuYaw += 360.0;
 }
-
 
 /*
 * Function:
@@ -438,4 +439,47 @@ uint8_t imuCommTest(void)
 		imuDmpStart();				//Restart the DMP
 		
 	return returnVal;				//return 0x71 (0x73?) on success
+}
+
+/*
+* Function:
+* void imuApplyYawCorrection(float correctHeading, struct Position *imuData)
+*
+* Takes a 'correct' heading and uses it to modify the onboard heading to match.
+*
+* Inputs:
+* float correctHeading
+*   Correct heading of the robot (from webcam) (between -180 and 180)
+* struct Position *imuData
+*   Pointer to the robotPosition structure
+*
+* Returns:
+* none
+*
+* Implementation:
+* First the function checks that correctHeading is between -180 and 180 and corrects it if
+* necessary. Then it looks at the difference between the heading provided and the heading reported
+* by the IMU and adds the difference to imuYawOffset to correct it. Finally, it makes sure that
+* imuYawOffset is between -180 and 180 and corrects it if necessary.
+* 
+* Improvements:
+* Will most likely move this from imu_interface to the Navigation module when its created.
+*
+*/
+void imuApplyYawCorrection(float correctHeading, struct Position *imuData)
+{
+	//Make sure correctHeading is in range
+	while(correctHeading > 180.0)
+		correctHeading -= 360.0;
+	while(correctHeading <= -180.0)
+		correctHeading += 360.0;
+	//Take difference and apply it to imuYawOffset.
+	imuData->imuYawOffset += correctHeading - imuData->imuYaw;
+	//Wrap imuYawOffset so its always between -180 and 180 degrees
+	while(imuData->imuYawOffset > 180.0)
+		imuData->imuYawOffset -= 360.0;
+	while(imuData->imuYawOffset <= -180.0)	//In the case that imuYawOffset is set to 180, having
+											//'<=' should prevent it from rebounding between 180 and
+											//-180 every time this function is called.
+		imuData->imuYawOffset += 360.0;
 }
