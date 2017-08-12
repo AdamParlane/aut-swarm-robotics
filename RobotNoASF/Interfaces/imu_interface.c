@@ -29,6 +29,7 @@
 * void getEulerAngles(struct Position *imuData)
 * uint8_t imuReadFifo(struct Position *imuData)
 * uint8_t imuCommTest(void)
+* void imuApplyYawCorrection(float correctHeading, struct Position *imuData)
 *
 */
 
