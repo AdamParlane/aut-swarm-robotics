@@ -82,9 +82,13 @@ int main(void)
 	robotPosition.y = 0;
 	robotPosition.imuYawOffset = 180;	//Ensures that whatever way the robot is facing when powered
 										//on is 0 degrees heading.
+	uint16_t sensorClosest, sensorVal, maxSensorVal;
+	float rotating = 0;
+	uint8_t found;
+	
 	struct transmitDataStructure transmitMessage;
 	
-	robotState = IDLE;
+	robotState = DOCKING;
 		
 	while(1)
 	{
@@ -127,9 +131,40 @@ int main(void)
 			break;
 			
 			case DOCKING:
-			//if battery low or manual command set
-			//dockRobot();
-			followLine();
+				//if battery low or manual command set
+				//dockRobot();
+				//followLine();
+				//if(!rotating)
+				//{
+					//maxSensorVal = PS_IN_RANGE;
+					//sensorClosest = 0;
+					//for (uint16_t i = MUX_PROXSENS_A; i <= MUX_PROXSENS_B; i++)
+					//{
+						//sensorVal = proxSensRead(i);
+						//if(sensorVal > maxSensorVal)
+							//sensorClosest = i;
+					//}
+				//}
+				//switch(sensorClosest)
+				//{
+					//case MUX_PROXSENS_B:
+						//rotating = rotateToHeading(-60, &robotPosition);
+					//break;
+					//case MUX_PROXSENS_C:
+						//rotating = rotateToHeading(-120, &robotPosition);
+					//break;
+					//case MUX_PROXSENS_D:
+						//rotating = rotateToHeading(-180, &robotPosition);
+					//break;
+					//case MUX_PROXSENS_E:
+						//rotating = rotateToHeading(120, &robotPosition);
+					//break;
+					//case MUX_PROXSENS_F:
+						//rotating = rotateToHeading(60, &robotPosition);
+					//break;
+				//}
+				
+				error = scanProxSensors(&found);
 			break;
 			
 			case OBSTACLE_AVOIDANCE:
@@ -185,6 +220,9 @@ int main(void)
 			checkImuFifo = 0;
 			getEulerAngles(&robotPosition);
 		}
+		
+		
+		
 	}
 }
 

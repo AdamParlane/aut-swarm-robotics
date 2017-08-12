@@ -78,6 +78,7 @@ struct Position
 #include "Functions/docking_functions.h"
 #include "Functions/manual_mode.h"
 #include "Functions/obstacle_avoidance.h"
+#include "Functions/motion_functions.h"
 
 ///////////////Defines//////////////////////////////////////////////////////////////////////////////
 //LED PIO port and pin definitions
