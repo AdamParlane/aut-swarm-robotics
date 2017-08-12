@@ -26,8 +26,7 @@
 */ 
 
 ///////////////Includes/////////////////////////////////////////////////////////////////////////////
-#include "spi.h"
-#include "sam.h"
+#include "../robot_defines.h"
 #include <math.h>
 #include "opt_interface.h"
 
@@ -199,12 +198,12 @@ void getMouseXY(struct Position *mousePos)
 		{
 			Xtemp -= 4096;
 		}
-		mousePos->opticaldx = Xtemp * RESOLUTION;
+		mousePos->opticalDY = Xtemp * RESOLUTION;
 		if(Ytemp & (1<<12))					//if MSB of Y is set (for 2s complement)
 		{
 			Ytemp -= 4096;
 		}
-		mousePos->opticaldy = Ytemp * RESOLUTION;
+		mousePos->opticalDY = Ytemp * RESOLUTION;
 	}
 }
 

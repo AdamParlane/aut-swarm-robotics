@@ -21,22 +21,14 @@
 *
 * Functions:
 * int imuInit(void)
-* void timer0Init(void)
 * int imuDmpInit(void)
 * unsigned char imuDmpStop(void)
 * unsigned char imuDmpStart(void)
-* int get_ms(uint32_t *timestamp)
-* int delay_ms(uint32_t period_ms)
 * unsigned short invOrientationMatrixToScalar(const signed char *mtx)
 * unsigned short invRow2Scale(const signed char *row)
-* void getEulerAngles(long *ptQuat, euler_packet_t *eulerAngle)
-* char twiWriteImu(unsigned char slave_addr, unsigned char reg_addr,
-*						unsigned char length, unsigned char const *data)
-* char twiReadImu(unsigned char slave_addr, unsigned char reg_addr,
-*						unsigned char length,	unsigned char *data)
+* void getEulerAngles(struct Position *imuData)
+* uint8_t imuReadFifo(struct Position *imuData)
 * uint8_t imuCommTest(void)
-* void TC0_Handler()
-*
 *
 */
 
@@ -44,19 +36,52 @@
 #define IMU_INTERFACE_H_
 
 ///////////////Includes/////////////////////////////////////////////////////////////////////////////
-#include "sam.h"									//System header
+#include "../robot_defines.h"									//System header
 
 ///////////////Defines//////////////////////////////////////////////////////////////////////////////
 ////MPU9250 register addresses
 #define IMU_WHOAMI_REG			0x75
 
-//Structure that stores converted Euler angles of rotation. Parameter of GetEulerAngles
-typedef struct euler_packet 
+////IMU conversion factors:
+/////Depending on the scale selection set for the gyro (from datasheet pg8) will convert gyro
+/////output to degrees per second
+#define IMU_GYRO_FS_0_CONV			0.0076335877862595	//250dps	(1/131)
+#define IMU_GYRO_FS_1_CONV			0.0152671755725191	//500dps	(1/65.5)
+#define IMU_GYRO_FS_2_CONV			0.0304878048780488	//1000dps	(1/32.8)
+#define IMU_GYRO_FS_3_CONV			0.0609756097560976	//2000dps	(1/16.4)
+/////Depending on the scale selection set for the accel (from datasheet pg9) will convert accel
+/////output to Gs
+#define IMU_ACCEL_AFS_0_CONV_G		0.00006103515625	//+-2G		(1/16384)
+#define IMU_ACCEL_AFS_1_CONV_G		0.0001220703125		//+-4G		(1/8192)
+#define IMU_ACCEL_AFS_2_CONV_G		0.000244140625		//+-8G		(1/4096)
+#define IMU_ACCEL_AFS_3_CONV_G		0.00048828125		//+-16G		(1/2048)
+#define IMU_ACCEL_AFS_0_CONV_MS2	0.0005987548828125	//+-2G		(9.81/16384)
+#define IMU_ACCEL_AFS_1_CONV_MS2	0.001197509765625	//+-4G		(9.81/8192)
+#define IMU_ACCEL_AFS_2_CONV_MS2	0.00239501953125	//+-8G		(9.81/4096)
+#define IMU_ACCEL_AFS_3_CONV_MS2	0.0047900390625		//+-16G		(9.81/2048)
+#define IMU_GYRO_CONV				IMU_GYRO_FS_3_CONV		//Convert to degrees per second
+#define IMU_ACCEL_CONV_G			IMU_ACCEL_AFS_0_CONV_G	//Convert to Gs
+#define IMU_ACCEL_CONV_MS2			IMU_ACCEL_AFS_0_CONV_MS2//Convert to ms^2
+
+////IMU external interrupt pin define
+#if defined ROBOT_TARGET_V2
+//////Port that the IMU interrupt is on
+#define IMU_INT_PORT		(PIOA)
+//////Pin that the IMU interrupt is on
+#define IMU_INT_PIN			(PIO_PA5)
+//////IMU interrupt state (1 means data waiting to be read)
+#define imuIntState			(IMU_INT_PORT->PIO_PSR & IMU_INT_PIN)
+#endif
+
+
+///////////////Enumerations/////////////////////////////////////////////////////////////////////////
+enum axes
 {
-	double pitch;
-	double roll;
-	double yaw;
-} euler_packet_t;
+	X,
+	Y,
+	Z,
+	W
+};
 
 ///////////////Functions////////////////////////////////////////////////////////////////////////////
 /*
@@ -72,8 +97,6 @@ typedef struct euler_packet
 *
 */
 int imuInit(void);
-
-
 
 /*
 * Function: int imuDmpInit(void)
@@ -121,7 +144,6 @@ unsigned char imuDmpStop(void);
 */
 unsigned char imuDmpStart(void);
 
-
 /*
 * Function:
 * unsigned short invOrientationMatrixToScalar(const signed char *mtx)
@@ -153,7 +175,7 @@ unsigned short invOrientationMatrixToScalar(const signed char *mtx);
 unsigned short invRow2Scale(const signed char *row);
 
 /*
-* Function: void getEulerAngles(long *ptQuat, euler_packet_t *eulerAngle)
+* Function: void getEulerAngles(struct Position *imuData)
 *
 * Convert Quaternion numbers from the IMU to Euler rotational angles
 *
@@ -167,49 +189,23 @@ unsigned short invRow2Scale(const signed char *row);
 * roll.
 *
 */
-void getEulerAngles(long *ptQuat, euler_packet_t *eulerAngle);
-
-
-/*
-* Function: char twiWriteImu(unsigned char slave_addr, unsigned char reg_addr,
-*								unsigned char length, unsigned char const *data)
-*
-* Required by the IMU drivers (hence naming convention). Writes the specified number of bytes to a
-* register on the given TWI device.
-*
-* Inputs:
-* slave_addr is the address of the device to be written to on TWI2. The address varies even for the
-* IMU driver because the IMU and compass have different TWI slave addresses. reg_addr is the
-* 8bit address of the register being written to. length is the number of bytes to be written. *data
-* points to the data bytes to be written.
-*
-* Returns:
-* returns 0 on success.
-*
-*/
-char twiWriteImu(unsigned char slave_addr, unsigned char reg_addr, 
-					unsigned char length, unsigned char const *data);
+void getEulerAngles(struct Position *imuData);
 
 /*
-* Function: char twiReadImu(unsigned char slave_addr, unsigned char reg_addr,
-*								unsigned char length, unsigned char const *data)
+* Function:
+* void imuReadFifo(void)
 *
-* Required by the IMU drivers (hence naming convention). Reads the specified number of bytes from a
-* register on the given TWI device.
+* Will read data from the IMU's FIFO buffer and store data in the given Position structure
 *
 * Inputs:
-* slave_addr is the address of the device to be read from on TWI2. The address varies even for the
-* IMU driver because the IMU and compass have different TWI slave addresses. reg_addr is the address
-* of the register being read from. length is the number of bytes to be read. The IMU automatically
-* increments the register address when reading more than one byte. *data points to the location in
-* memory where the retrieved data will be stored.
+* struct Position *imuData:
+*   Pointer to the global robotPosition structure. This is where the read data will be stored
 *
 * Returns:
-* returns 0 on success.
+* 0 on success; non-zero otherwise
 *
 */
-char twiReadImu(unsigned char slave_addr, unsigned char reg_addr, 
-					unsigned char length, unsigned char *data);
+uint8_t imuReadFifo(struct Position *imuData);
 
 /*
 * Function:
@@ -225,7 +221,5 @@ char twiReadImu(unsigned char slave_addr, unsigned char reg_addr,
 *
 */
 uint8_t imuCommTest(void);
-
-
 
 #endif /* IMU_INTERFACE_H_ */

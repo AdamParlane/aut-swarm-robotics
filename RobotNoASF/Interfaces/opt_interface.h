@@ -55,26 +55,8 @@
 #define OPT_INVS_PROD_ID	0x3F
 
 
+
 ///////////////Functions////////////////////////////////////////////////////////////////////////////
-
-struct Position
-//struture to store all the robot side navigation / positioning data
-//this will be written to by getMouseXY, getEulerAngles, and another navigation function which combines them
-//The struture will store the relevant info from both key sensors and fuse them in an additional function
-{
-	uint16_t opticaldx;
-	uint16_t opticaldy;
-	float opticalx;
-	float opticaly;
-	float IMUqw;
-	float IMUqx;
-	float IMUqy;
-	float IMUqz;
-	float x;
-	float y;
-	float h;
-};
-
 /*
 * Function: void SPI_Init(void)
 *

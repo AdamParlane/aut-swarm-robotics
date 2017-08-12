@@ -227,6 +227,12 @@
     <Compile Include="Interfaces\communication.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="Interfaces\external_interrupt.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="Interfaces\external_interrupt.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="Interfaces\fc_interface.c">
       <SubType>compile</SubType>
     </Compile>

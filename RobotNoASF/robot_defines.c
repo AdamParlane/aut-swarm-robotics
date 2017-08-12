@@ -21,6 +21,9 @@
 ///////////////Includes/////////////////////////////////////////////////////////////////////////////
 #include "robot_defines.h"
 
+///////////////Global variables/////////////////////////////////////////////////////////////////////
+extern uint32_t systemTimestamp;	//Required by waitForFlag()
+
 ///////////////Functions////////////////////////////////////////////////////////////////////////////
 /*
 * Function:
@@ -153,4 +156,41 @@ void ledInit(void)
 	ledOff1;					//D1 starts up off
 	ledOff2;					//D2 starts up off
 	ledOff3;					//D3 starts up off
+}
+
+/*
+* Function:
+* uint8_t waitForFlag(uint32_t *regAddr, uint32_t regMask, uint16_t timeOutMs)
+*
+* Will wait for the given status bit to become true. If it doesn't become true in the time
+* specified in timeOutMs, then the function exits with an error.
+*
+* Inputs:
+* uint32_t *regAddr
+*	The address to the status register that is to be monitored.
+* uint32_t regMask
+*   The bitmask to apply to the given register.
+* uint16_t timeOutMs
+*   The maximum number of milliseconds to wait before exiting the function with an error.
+*
+* Returns:
+* 0 if flag was detected or 1 if timeout was reached before flag was detected.
+*
+* Implementation:
+* - System timestamp is loaded into a variable so we know at what time this function started.
+* - A while function then waits for the flag to be set in the given register. It is also checking
+*   if the time out period has been reached. The while loop exits when the flag is set or the
+*   timeout period expires.
+* - If the while loop exited because the flag was set, exit the function with a 0 value, otherwise
+*   exit the function with a 1 (indicating an error)
+*
+*/
+uint8_t waitForFlag(const volatile uint32_t *regAddr, uint32_t regMask, uint16_t timeOutMs)
+{
+	uint32_t startTime = systemTimestamp;
+	while(!((*regAddr) & regMask) && (systemTimestamp < (startTime + timeOutMs)));
+	if((*regAddr) & regMask)
+		return 0;
+	else
+		return 1;
 }

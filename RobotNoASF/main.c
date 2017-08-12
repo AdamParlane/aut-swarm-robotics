@@ -27,6 +27,9 @@
 ///////////////Global variables/////////////////////////////////////////////////////////////////////
 uint8_t SBtest, SBtest1;
 uint16_t DBtest, DBtest1, DBtest2;
+struct Position robotPosition;
+extern uint8_t checkImuFifo;
+uint16_t battVoltage;
 
 ///////////////Functions////////////////////////////////////////////////////////////////////////////
 /*
@@ -75,13 +78,10 @@ int main(void)
 	struct frame_info frame;
 	struct message_info message;
 	//Optical
-	struct Position robotPosition;
 	robotPosition.x = 0;
 	robotPosition.y = 0;
 	struct transmitDataStructure transmitMessage;
 	robotState = DOCKING;
-	uint16_t battVoltage = fcBatteryVoltage();	//Add to your watch to keep an eye on the battery
-
 	while(1)
 	{
 		switch (robotState)
@@ -173,6 +173,14 @@ int main(void)
 				InterpretSwarmMessage(message);	//Interpret the message
 			}
 		}
+
+		//If ready, will read IMU data. Will be moved to a function when NAVIGATION module is added			
+		if(checkImuFifo)
+		{
+			imuReadFifo(&robotPosition);
+			checkImuFifo = 0;
+			getEulerAngles(&robotPosition);
+		}
 	}
 }
 
@@ -204,6 +212,7 @@ void setup(void)
 	masterClockInit();					//Initialise the master clock to 100MHz
 	pioInit();							//Initialise the PIO controllers
 	adcSingleConvInit();				//Initialise ADC for single conversion mode
+	battVoltage = fcBatteryVoltage();	//Add to your watch to keep an eye on the battery
 	ledInit();							//Initialise the LEDs on the mid board
 	motor_init();						//Initialise the motor driver chips
 	SPI_Init();							//Initialise SPI for talking with optical sensor
@@ -220,12 +229,12 @@ void setup(void)
 	proxSensInit(MUX_PROXSENS_F);		//Initialise proximity sensor on panel F
 	fcInit();							//Initialise the fast charge chip
 	CommunicationSetup();				//Initialise communication system
-#if defined ROBOT_TARGET_V1
-	imuInit();							//Initialise IMU. Only working on V1
-#endif
+	imuInit();							//Initialise IMU.
+	extIntInit();						//Initialise external interrupts.
+	imuDmpInit();						//Initialise DMP system
 	mouseInit();						//May require further testing - Adam
 #if defined ROBOT_TARGET_V2
-	lfInit();							//Initialise line follow sensors. Only tested on V2 so far.
+	lfInit();							//Initialise line follow sensors. Only on V2.
 #endif
 	return;
 }

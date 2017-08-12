@@ -49,8 +49,9 @@
 
 void lightSensInit(uint8_t channel)
 {
+	uint8_t writeBuffer = LS_AUTO_LOW_LUX;
 	twi0MuxSwitch(channel); //Set multiplexer address to correct device
-	twi0Write(TWI0_LIGHTSENS_ADDR, LS_CONFIG_REG, LS_AUTO_LOW_LUX);
+	twi0Write(TWI0_LIGHTSENS_ADDR, LS_CONFIG_REG, 1, &writeBuffer);
 }
 
 /*
@@ -75,18 +76,15 @@ void lightSensInit(uint8_t channel)
 *
 * Implementation:
 * First, the multiplexer on TWI0 is set to the channel for the desired light sensor.
-* Next, the desired colour value from the selected sensor is read and returned by twi0ReadDouble().
+* Next, the desired colour value from the selected sensor is read and returned by twi0Read().
 * TWI0_LIGHTSENS_ADDR is the I2C address of the light sensors, and colour is an internal register
 * address.
-*
-* Improvements:
-* Eliminate the data variable and take the return directly from twi0ReadDouble()
 *
 */
 uint16_t lightSensRead(uint8_t channel, uint8_t colour)
 {
-	uint16_t data;
+	unsigned char data[2];
 	twi0MuxSwitch(channel);	//Set multiplexer address to a light sensor device
-	data = twi0ReadDouble(TWI0_LIGHTSENS_ADDR, colour);
-	return data;
+	twi0Read(TWI0_LIGHTSENS_ADDR, colour, 2, data);
+	return (data[1]<<8)|(data[0]);
 }
