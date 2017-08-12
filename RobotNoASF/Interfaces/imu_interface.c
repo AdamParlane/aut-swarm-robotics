@@ -296,16 +296,16 @@ unsigned short invRow2Scale(const signed char *row)
 */
 void getEulerAngles(struct Position *imuData)
 {
-	double w = imuData->imuQW;				//Pull quaternions from IMU
-	double x = imuData->imuQX;
-	double y = imuData->imuQY;
-	double z = imuData->imuQZ;
-	double sqw = w*w;						//Pre-calculate squares
-	double sqx = x*x;
-	double sqy = y*y;
-	double sqz = z*z;
-	double unit = sqx + sqy + sqz + sqw;	//Should equal 1, otherwise is correction factor
-	double test = x*y + z*w;
+	float w = imuData->imuQW;				//Pull quaternions from IMU
+	float x = imuData->imuQX;
+	float y = imuData->imuQY;
+	float z = imuData->imuQZ;
+	float sqw = w*w;						//Pre-calculate squares
+	float sqx = x*x;
+	float sqy = y*y;
+	float sqz = z*z;
+	float unit = sqx + sqy + sqz + sqw;	//Should equal 1, otherwise is correction factor
+	float test = x*y + z*w;
 	if (test > 0.499*unit)					// singularity at north pole
 	{
 		imuData->imuRoll = 2 * atan2(x,w);
@@ -373,15 +373,15 @@ uint8_t imuReadFifo(struct Position *imuData)
 		}
 		if(sensors & INV_XYZ_ACCEL)		//If accelerometer data was in the FIFO
 		{
-			imuData->imuAccelX = accelData[X];
-			imuData->imuAccelY = accelData[Y];
-			imuData->imuAccelZ = accelData[Z];
+			imuData->imuAccelX = accelData[X]*IMU_ACCEL_CONV_MS2;
+			imuData->imuAccelY = accelData[Y]*IMU_ACCEL_CONV_MS2;
+			imuData->imuAccelZ = accelData[Z]*IMU_ACCEL_CONV_MS2;
 		}
 		if(sensors & INV_XYZ_GYRO)		//If gyro data was in the FIFO
 		{
-			imuData->imuGyroX = gyroData[X];
-			imuData->imuGyroY = gyroData[Y];
-			imuData->imuGyroZ = gyroData[Z];
+			imuData->imuGyroX = gyroData[X]*IMU_GYRO_CONV;
+			imuData->imuGyroY = gyroData[Y]*IMU_GYRO_CONV;
+			imuData->imuGyroZ = gyroData[Z]*IMU_GYRO_CONV;
 		}
 
 	} while(more);						//If there is still more in the FIFO then do it again->

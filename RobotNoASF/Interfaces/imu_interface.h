@@ -42,6 +42,27 @@
 ////MPU9250 register addresses
 #define IMU_WHOAMI_REG			0x75
 
+////IMU conversion factors:
+/////Depending on the scale selection set for the gyro (from datasheet pg8) will convert gyro
+/////output to degrees per second
+#define IMU_GYRO_FS_0_CONV			0.0076335877862595	//250dps	(1/131)
+#define IMU_GYRO_FS_1_CONV			0.0152671755725191	//500dps	(1/65.5)
+#define IMU_GYRO_FS_2_CONV			0.0304878048780488	//1000dps	(1/32.8)
+#define IMU_GYRO_FS_3_CONV			0.0609756097560976	//2000dps	(1/16.4)
+/////Depending on the scale selection set for the accel (from datasheet pg9) will convert accel
+/////output to Gs
+#define IMU_ACCEL_AFS_0_CONV_G		0.00006103515625	//+-2G		(1/16384)
+#define IMU_ACCEL_AFS_1_CONV_G		0.0001220703125		//+-4G		(1/8192)
+#define IMU_ACCEL_AFS_2_CONV_G		0.000244140625		//+-8G		(1/4096)
+#define IMU_ACCEL_AFS_3_CONV_G		0.00048828125		//+-16G		(1/2048)
+#define IMU_ACCEL_AFS_0_CONV_MS2	0.0005987548828125	//+-2G		(9.81/16384)
+#define IMU_ACCEL_AFS_1_CONV_MS2	0.001197509765625	//+-4G		(9.81/8192)
+#define IMU_ACCEL_AFS_2_CONV_MS2	0.00239501953125	//+-8G		(9.81/4096)
+#define IMU_ACCEL_AFS_3_CONV_MS2	0.0047900390625		//+-16G		(9.81/2048)
+#define IMU_GYRO_CONV				IMU_GYRO_FS_3_CONV		//Convert to degrees per second
+#define IMU_ACCEL_CONV_G			IMU_ACCEL_AFS_0_CONV_G	//Convert to Gs
+#define IMU_ACCEL_CONV_MS2			IMU_ACCEL_AFS_0_CONV_MS2//Convert to ms^2
+
 ////IMU external interrupt pin define
 #if defined ROBOT_TARGET_V2
 //////Port that the IMU interrupt is on
