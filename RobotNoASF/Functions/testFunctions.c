@@ -17,9 +17,10 @@
 * This .c file should be paired with testFunctions.h
 *
 */
+///////////////Includes/////////////////////////////////////////////////////////////////////////////
 #include "testFunctions.h"
 
-
+///////////////Functions////////////////////////////////////////////////////////////////////////////
 /*
 * Function: void testManager(struct message_info message)
 *
@@ -80,7 +81,10 @@
 */
 uint8_t testManager(struct message_info message, struct transmitDataStructure *transmit)
 {
-	struct Position testPosition;	//Declare a new instance of the Position structure for test purposes only for mouse and IMU results
+	struct Position testPosition; //This shouldn't be necessary, as the mouse and IMU data should
+									//Be retrieved constantly into robotPosition in the main loop.
+									//That way we don't have to have multiple Position structures
+									//being created and moving around..
 	static uint8_t receivedTestData[50]; //array for data coming into the robot AFTER Xbee framing has been stripped
 	uint16_t peripheralReturnData; //the test data returned from eh relevant peripheral
 	char testType = message.command;//what peripheral is being tested
@@ -133,16 +137,17 @@ uint8_t testManager(struct message_info message, struct transmitDataStructure *t
 				
 		case TEST_IMU:
 		//TO DO Adam & Matt
-		//getIMUQuaterions(&testPosition);
-		/*transmitTestData[1] = DATA_RETURN; //sending data out
-		transmitTestData[2] = testPosition.IMUqw >> 8;		//upper byte
-		transmitTestData[3] = testPosition.IMUqw & 0xFF;	//lower byte
-		transmitTestData[4] = testPosition.IMUqx >> 8;		//upper byte
-		transmitTestData[5] = testPosition.IMUqx & 0xFF;	//lower byte
-		transmitTestData[6] = testPosition.IMUqy >> 8;		//upper byte
-		transmitTestData[7] = testPosition.IMUqy & 0xFF;	//lower byte
-		transmitTestData[8] = testPosition.IMUqz >> 8;		//upper byte
-		transmitTestData[9] = testPosition.IMUqz & 0xFF;	//lower byte*/
+		//The quaternions are long integers. (4bytes each).
+		//
+		transmit->Data[1] = DATA_RETURN; //sending data out
+		transmit->Data[2] = robotPosition.imuQW >> 8;		//upper byte
+		transmit->Data[3] = robotPosition.imuQW & 0xFF;	//lower byte
+		transmit->Data[4] = robotPosition.imuQX >> 8;		//upper byte
+		transmit->Data[5] = robotPosition.imuQX & 0xFF;	//lower byte
+		transmit->Data[6] = robotPosition.imuQY >> 8;		//upper byte
+		transmit->Data[7] = robotPosition.imuQY & 0xFF;	//lower byte
+		transmit->Data[8] = robotPosition.imuQZ >> 8;		//upper byte
+		transmit->Data[9] = robotPosition.imuQZ & 0xFF;	//lower byte
 		transmit->DataSize = 10;
 		break;
 		

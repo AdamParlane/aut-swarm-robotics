@@ -28,43 +28,34 @@
 enum ROBOT_STATES{TEST, TEST_ALL, MANUAL, FORMATION, DOCKING, OBSTACLE_AVOIDANCE, IDLE, CHARGING}; //main loop functionality
 
 ///////////////Type Definitions/////////////////////////////////////////////////////////////////////
-struct Command
-//is anyone using this??? not me -Matt
-//structure to receive the command and interpret it to something useful
-{
-	char messageClass;
-	char commandCode;
-	char command[10];
-};
-
 struct Position
 //structure to store all the robot side navigation / positioning data
 //this will be written to by getMouseXY, getEulerAngles, and another navigation function which
 //combines them. The structure will store the relevant info from both key sensors and fuse them in
-//an additional function
+//an additional function (84bytes i think)
 {
 	short opticalDX;
 	short opticalDY;
 	float opticalX;
 	float opticalY;
-	long imuQW;
-	long imuQX;
-	long imuQY;
-	long imuQZ;
-	float imuAccelX;
-	float imuAccelY;
-	float imuAccelZ;
-	float imuGyroX;
-	float imuGyroY;
-	float imuGyroZ;
-	float imuPitch;
-	float imuRoll;
-	float imuYaw;
-	unsigned long imuTimeStamp;
-	unsigned short imuDeltaTime;
-	float x;
-	float y;
-	float h;
+	long imuQW;				//W component of the quaternion complex number returned by DMP
+	long imuQX;				//X component of the quaternion complex number returned by DMP
+	long imuQY;				//Y component of the quaternion complex number returned by DMP
+	long imuQZ;				//Z component of the quaternion complex number returned by DMP
+	float imuAccelX;		//Delta X Acceleration in ms^2
+	float imuAccelY;		//Delta Y Acceleration in ms^2
+	float imuAccelZ;		//Delta Z Acceleration in ms^2
+	float imuGyroX;			//Delta pitch in deg/s
+	float imuGyroY;			//Delta roll in	deg/s
+	float imuGyroZ;			//Delta yaw in deg/s (Delta heading)
+	float imuPitch;			//Absolute pitch from DMP (degrees)
+	float imuRoll;			//Absolute roll from DMP (degrees)
+	float imuYaw;			//Absolute yaw (heading) from DMP (degrees)
+	unsigned long imuTimeStamp;//Time at which last IMU reading took place (ms)
+	unsigned short imuDeltaTime;//Time between last IMU reading and IMU previous reading
+	float x;				//Absolute X position in arena
+	float y;				//Absolute Y position in arena
+	float h;				//Absolute Z position in arena
 };
 
 ///////////////Includes/////////////////////////////////////////////////////////////////////////////

@@ -83,6 +83,9 @@ struct message_info MessageBufferInfo[MESSAGE_BUFFER_INFO_SIZE];
 int MessageBufferInfoIn, MessageBufferInfoOut, MessageBufferInfoUse;
 
 // Local Function Prototypes
+// TODO: This needs fixing. All function prototypes should be in the header file for the module.
+// If functions are to be private to a module, then they should be declared as static. Also, 
+// MessageBufferGet is being called from testFunctions.c and is generating a warning. -Matt
 void FrameBufferInit(void);			//Initialize all usage variables to the beginning of the array
 int FrameBufferPut(uint8_t new);	//Adds a new byte to the end of the array
 int FrameBufferGet(uint8_t *old);	//Gets the oldest byte from the array
