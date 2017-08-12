@@ -80,6 +80,7 @@ int main(void)
 	//Optical
 	robotPosition.x = 0;
 	robotPosition.y = 0;
+	robotPosition.imuYawOffset = 180;
 	struct transmitDataStructure transmitMessage;
 	
 	robotState = IDLE;

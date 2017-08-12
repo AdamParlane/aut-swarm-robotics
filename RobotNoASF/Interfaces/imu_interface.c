@@ -326,6 +326,13 @@ void getEulerAngles(struct Position *imuData)
 	imuData->imuRoll = (atan2(2*y*w-2*x*z , sqx - sqy - sqz + sqw))*180/M_PI;
 	imuData->imuPitch = (asin(2*test/unit))*180/M_PI;
 	imuData->imuYaw = (atan2(2*x*w-2*y*z , -sqx + sqy - sqz + sqw))*180/M_PI;
+	//Factor in the Yaw offset (Heading correction from the PC)
+	imuData->imuYaw += imuData->imuYawOffset;
+	//Wrap imuYaw so its always between -180 and 180 degrees
+	while(imuData->imuYaw > 180.0)
+		imuData->imuYaw -= 360.0;
+	while(imuData->imuYaw < -180.0)
+		imuData->imuYaw += 360.0;
 }
 
 
