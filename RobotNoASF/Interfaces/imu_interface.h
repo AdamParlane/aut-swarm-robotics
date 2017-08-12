@@ -223,4 +223,22 @@ uint8_t imuReadFifo(struct Position *imuData);
 */
 uint8_t imuCommTest(void);
 
+/*
+* Function:
+* void imuApplyYawCorrection(float correctHeading, struct Position *imuData)
+*
+* Takes a 'correct' heading and uses it to modify the onboard heading to match.
+*
+* Inputs:
+* float correctHeading
+*   Correct heading of the robot (from webcam) (between -180 and 180)
+* struct Position *imuData
+*   Pointer to the robotPosition structure
+*
+* Returns:
+* none
+*
+*/
+void imuApplyYawCorrection(float correctHeading, struct Position *imuData);
+
 #endif /* IMU_INTERFACE_H_ */
