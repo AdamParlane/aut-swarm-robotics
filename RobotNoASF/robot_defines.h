@@ -51,6 +51,7 @@ struct Position
 	float imuPitch;			//Absolute pitch from DMP (degrees)
 	float imuRoll;			//Absolute roll from DMP (degrees)
 	float imuYaw;			//Absolute yaw (heading) from DMP (degrees)
+	float imuYawOffset;		//Used to offset heading value (when corrected by PC)
 	unsigned long imuTimeStamp;//Time at which last IMU reading took place (ms)
 	unsigned short imuDeltaTime;//Time between last IMU reading and IMU previous reading
 	float x;				//Absolute X position in arena
