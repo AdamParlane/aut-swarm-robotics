@@ -60,11 +60,13 @@ float rotateToHeading(float heading, struct Position *imuData)
 	iErr += pErr*imuData->imuDeltaTime*0.001;
 	dErr = (pErr - pErrOld)/(imuData->imuDeltaTime*0.001);
 	
+	
+	
 	motorSpeed = abs(RTH_KP*pErr + RTH_KI*iErr + RTH_KD*dErr); 
 	if(motorSpeed > 100)
 		motorSpeed = 100;
 
-	if((abs(pErr) < 3) && (motorSpeed < 13))	//If error is less than 3 deg and motorSpeed is less
+	if((abs(pErr) < 1) && (motorSpeed < 15))	//If error is less than 3 deg and motorSpeed is less
 												//than 5% then we must be pretty close so stop and
 												//return a 0. Prevents oscillation about target
 	{
