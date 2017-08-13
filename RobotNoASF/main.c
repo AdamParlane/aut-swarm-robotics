@@ -164,7 +164,9 @@ int main(void)
 					//break;
 				//}
 				
-				error = scanProxSensors(&found);
+				rotateToHeading(90, &robotPosition);
+				
+				//error = scanProxSensors(&found);
 			break;
 			
 			case OBSTACLE_AVOIDANCE:

@@ -69,6 +69,9 @@ float rotateToHeading(float heading, struct Position *imuData)
 												//return a 0. Prevents oscillation about target
 	{
 		stopRobot();
+		iErr = 0;
+		pErr = 0;
+		dErr = 0;
 		return 0;
 	} else {
 	
