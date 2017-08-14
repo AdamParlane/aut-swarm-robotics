@@ -273,3 +273,28 @@ void followLine(void)
 	}
 #endif
 }
+
+uint8_t scanBrightestLightSource(int16_t *brightestHeading)
+{
+	static int16_t heading = -180;
+	static int16_t brightestVal = 0;
+	uint16_t avgBrightness = 0;
+	
+	if(rotateToHeading(heading))
+	{
+		avgBrightness = (lightSensRead(MUX_LIGHTSENS_L) + lightSensRead(MUX_LIGHTSENS_R))/2;
+		if (avgBrightness > brightestVal)
+		{
+			brightestVal = avgBrightness;
+			*brightestHeading = heading;
+		}
+		heading += 30;
+		if(heading > 180)		//Scan finished
+		{
+			heading = -180;
+			brightestVal = 0;
+			return 0;
+		}
+	}
+	return 1;
+}
