@@ -112,6 +112,6 @@ void followLine(void);
 * it means the heading stored at *breightestHeading points to the brightest light source.
 *
 */
-uint8_t scanBrightestLightSource(int16_t *brightestHeading);
+uint8_t scanBrightestLightSource(int16_t *brightestHeading, struct Position *imuData);
 
 #endif /* DOCKING_FUNCTIONS_H_ */
