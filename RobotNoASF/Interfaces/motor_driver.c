@@ -292,6 +292,9 @@ void moveRobot(signed int direction, unsigned char speed)
 */
 void rotateRobot(char direction, unsigned char speed)
 {
+	if(speed > 100)				//Safety
+		speed = 0;
+		
 	if(direction == CW)			//enable all motors to spin the robot clockwise
 	{
 		RIN_1_H;
