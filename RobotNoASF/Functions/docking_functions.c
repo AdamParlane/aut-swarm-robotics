@@ -27,6 +27,7 @@
 ///////////////Global variables/////////////////////////////////////////////////////////////////////
 //Light follower sensor states.
 struct LineSensorArray lf;
+extern struct Position robotPosition;
 
 ///////////////Functions////////////////////////////////////////////////////////////////////////////
 /*
@@ -280,9 +281,10 @@ uint8_t scanBrightestLightSource(int16_t *brightestHeading)
 	static int16_t brightestVal = 0;
 	uint16_t avgBrightness = 0;
 	
-	if(rotateToHeading(heading))
+	if(rotateToHeading(heading, &robotPosition))
 	{
-		avgBrightness = (lightSensRead(MUX_LIGHTSENS_L) + lightSensRead(MUX_LIGHTSENS_R))/2;
+		avgBrightness = (lightSensRead(MUX_LIGHTSENS_L, LS_WHITE_REG) + 
+							lightSensRead(MUX_LIGHTSENS_R, LS_WHITE_REG))/2;
 		if (avgBrightness > brightestVal)
 		{
 			brightestVal = avgBrightness;
