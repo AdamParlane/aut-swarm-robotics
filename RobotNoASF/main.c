@@ -23,7 +23,6 @@
 ///////////////Defines//////////////////////////////////////////////////////////////////////////////
 #define		batteryLow	1
 
-
 ///////////////Global variables/////////////////////////////////////////////////////////////////////
 uint8_t SBtest, SBtest1;
 uint16_t DBtest, DBtest1, DBtest2;
@@ -81,45 +80,41 @@ int main(void)
 	robotPosition.x = 0;
 	robotPosition.y = 0;
 	robotPosition.imuYawOffset = 180;	//Ensures that whatever way the robot is facing when powered
-										//on is 0 degrees heading.
-	uint16_t sensorClosest, sensorVal, maxSensorVal;
-	float rotating = 0;
-	uint8_t found;
-	
+	//on is 0 degrees heading.
 	struct transmitDataStructure transmitMessage;
 	
-	robotState = DOCKING;
-		
+	robotState = IDLE;
+	
 	while(1)
 	{
 		switch (robotState)
 		{
 			case TEST:
-				if(newDataFlag || streamIntervalFlag)//get the new test data
-				{
-					testMode = testManager(message, &transmitMessage);//get the new test data
-				}
-				if(testMode == STOP_STREAMING)
+			if(newDataFlag || streamIntervalFlag)//get the new test data
+			{
+				testMode = testManager(message, &transmitMessage);//get the new test data
+			}
+			if(testMode == STOP_STREAMING)
 				robotState = IDLE;
-				else if(testMode == SINGLE_SAMPLE)
-				{
-					robotState = IDLE;
-					SendXbeeAPITransmitRequest(COORDINATOR_64,UNKNOWN_16, transmitMessage.Data, transmitMessage.DataSize);  //Send the Message
-				}
-				else if(streamIntervalFlag && testMode == STREAM_DATA)
-				{
-					streamIntervalFlag = 0;
-					SendXbeeAPITransmitRequest(COORDINATOR_64,UNKNOWN_16, transmitMessage.Data, transmitMessage.DataSize);  //Send the Message
-				}
+			else if(testMode == SINGLE_SAMPLE)
+			{
+				robotState = IDLE;
+				SendXbeeAPITransmitRequest(COORDINATOR_64,UNKNOWN_16, transmitMessage.Data, transmitMessage.DataSize);  //Send the Message
+			}
+			else if(streamIntervalFlag && testMode == STREAM_DATA)
+			{
+				streamIntervalFlag = 0;
+				SendXbeeAPITransmitRequest(COORDINATOR_64,UNKNOWN_16, transmitMessage.Data, transmitMessage.DataSize);  //Send the Message
+			}
 			break;
 			
 			case TEST_ALL:
-			//Place holder for state to test all peripherals at once
+				//Place holder for state to test all peripherals at once
 			break;
 			
 			case MANUAL:
 				if(newDataFlag)
-					manualControl(message);
+				manualControl(message);
 				chargeInfo = chargeDetector();
 				if (chargeInfo == CHARGING)
 				{
@@ -127,53 +122,20 @@ int main(void)
 					robotState = CHARGING;
 				}
 				else
-					error = chargeInfo;			
+					error = chargeInfo;
 			break;
 			
 			case DOCKING:
 				//if battery low or manual command set
 				//dockRobot();
-				//followLine();
-				//if(!rotating)
-				//{
-					//maxSensorVal = PS_IN_RANGE;
-					//sensorClosest = 0;
-					//for (uint16_t i = MUX_PROXSENS_A; i <= MUX_PROXSENS_B; i++)
-					//{
-						//sensorVal = proxSensRead(i);
-						//if(sensorVal > maxSensorVal)
-							//sensorClosest = i;
-					//}
-				//}
-				//switch(sensorClosest)
-				//{
-					//case MUX_PROXSENS_B:
-						//rotating = rotateToHeading(-60, &robotPosition);
-					//break;
-					//case MUX_PROXSENS_C:
-						//rotating = rotateToHeading(-120, &robotPosition);
-					//break;
-					//case MUX_PROXSENS_D:
-						//rotating = rotateToHeading(-180, &robotPosition);
-					//break;
-					//case MUX_PROXSENS_E:
-						//rotating = rotateToHeading(120, &robotPosition);
-					//break;
-					//case MUX_PROXSENS_F:
-						//rotating = rotateToHeading(60, &robotPosition);
-					//break;
-				//}
-				
-				rotateToHeading(90, &robotPosition);
-				
-				//error = scanProxSensors(&found);
+				followLine();
 			break;
 			
 			case OBSTACLE_AVOIDANCE:
-				//Will execute code to guide robot around obstacles. Type of obstacle avoidance
-				//performed will depend on the previous state of the robot, ie docking will want
-				//to not move out of the way of other robots so as not to go out of alignment but
-				//still stop when the dock has been reached.
+			//Will execute code to guide robot around obstacles. Type of obstacle avoidance
+			//performed will depend on the previous state of the robot, ie docking will want
+			//to not move out of the way of other robots so as not to go out of alignment but
+			//still stop when the dock has been reached.
 			break;
 			
 			case FORMATION:
@@ -184,23 +146,23 @@ int main(void)
 				ledOn1;
 				chargeInfo = chargeDetector();
 				if(chargeInfo == CHARGING)
-					break;
-				else if(chargeInfo == CHARGED)
-				{
-					ledOff1;
-					robotState = previousState;
-				}
-				else
-				{
-					ledOff1;
-					error = chargeInfo;
-					robotState = MANUAL;
-				}
-				break;
+			break;
+			else if(chargeInfo == CHARGED)
+			{
+				ledOff1;
+				robotState = previousState;
+			}
+			else
+			{
+				ledOff1;
+				error = chargeInfo;
+				robotState = MANUAL;
+			}
+			break;
 			
 			case IDLE:
-			//idle
-			stopRobot();
+				//idle
+				stopRobot();
 			
 			break;
 		}
@@ -215,16 +177,13 @@ int main(void)
 			}
 		}
 
-		//If ready, will read IMU data. Will be moved to a function when NAVIGATION module is added			
+		//If ready, will read IMU data. Will be moved to a function when NAVIGATION module is added
 		if(checkImuFifo)
 		{
 			imuReadFifo(&robotPosition);
 			checkImuFifo = 0;
 			getEulerAngles(&robotPosition);
 		}
-		
-		
-		
 	}
 }
 
