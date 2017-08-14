@@ -17,6 +17,7 @@
 * void updateLineSensorStates(void)
 * int8_t getLineDirection(void)
 * void followLine(void)
+* uint8_t scanBrightestLightSource(int16_t *brightestHeading)
 *
 */
 
@@ -95,6 +96,22 @@ int8_t getLineDirection(void);
 */
 void followLine(void);
 
+/*
+* Function:
+* uint8_t scanBrightestLightSource(int16_t *brightestHeading)
+*
+* The robot will scan from -180 degrees to 180 degrees and record the heading with the brightest
+* source of light (which hopefully is the charging station)
+*
+* Inputs:
+* int16_t *brightestHeading
+*   A pointer to a variable that contains a heading to the brightest detected light source so far.
+*
+* Returns:
+* Returns a 1 if the function hasn't completed yet, or a 0 if it has. When the function returns a 0
+* it means the heading stored at *breightestHeading points to the brightest light source.
+*
+*/
 uint8_t scanBrightestLightSource(int16_t *brightestHeading);
 
 #endif /* DOCKING_FUNCTIONS_H_ */
