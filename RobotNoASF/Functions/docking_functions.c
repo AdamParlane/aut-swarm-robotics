@@ -316,25 +316,27 @@ uint8_t scanBrightestLightSource(int16_t *brightestHeading)
 	static int16_t brightestVal = 0;
 	uint16_t avgBrightness = 0;
 	
-	if(rotateToHeading(heading, &robotPosition))
+	if(rotateToHeading(heading, &robotPosition))	//If we are facing the right direction
 	{
+		//Get average value from the light sensors.
 		avgBrightness = (lightSensRead(MUX_LIGHTSENS_L, LS_WHITE_REG) + 
 							lightSensRead(MUX_LIGHTSENS_R, LS_WHITE_REG))/2;
 		
-		if (avgBrightness > brightestVal)
+		if (avgBrightness > brightestVal)			//If light at this heading is brighter than
+													//before
 		{
-			brightestVal = avgBrightness;
+			brightestVal = avgBrightness;			//Update static vars with new values
 			*brightestHeading = heading;
 		}
 		
-		heading += headingStepSize;
+		heading += headingStepSize;					//Step to the next heading
 		
-		if(heading > (180 - headingStepSize)		//Scan finished
+		if(heading > (180 - headingStepSize)		//If we have reached the last heading
 		{
 			heading = -180;
 			brightestVal = 0;
-			return 0;
+			return 0;								//Scan finished
 		}
 	}
-	return 1;
+	return 1;								//Otherwise, we haven't finished yet
 }
