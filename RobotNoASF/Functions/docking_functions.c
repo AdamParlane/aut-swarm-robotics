@@ -316,7 +316,7 @@ uint8_t scanBrightestLightSource(int16_t *brightestHeading, struct Position *imu
 	static int16_t brightestVal = 0;
 	uint16_t avgBrightness = 0;
 	
-	if(rotateToHeading((float)heading, imuData))	//If we are facing the right direction
+	if(!rotateToHeading((float)heading, imuData))	//If we are facing the right direction
 	{
 		//Get average value from the light sensors.
 		avgBrightness = (lightSensRead(MUX_LIGHTSENS_L, LS_WHITE_REG) + 
