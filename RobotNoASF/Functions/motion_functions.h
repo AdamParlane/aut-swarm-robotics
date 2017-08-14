@@ -31,6 +31,23 @@
 #define RTH_KD	0.0
 
 ///////////////Functions////////////////////////////////////////////////////////////////////////////
+/*
+* Function:
+* float rotateToHeading(float heading, struct Position *imuData)
+*
+* Will rotate the robot to face the given heading
+*
+* Inputs:
+* float heading:
+*   The heading in degrees that we wish the robot to face (-180 < heading < 180)
+* struct Position *imuData:
+*   A pointer to the robotPosition structure so we can get imuYaw
+*
+* Returns:
+* Will return 0 if the robot has settled at the desired heading, otherwise will return the signed
+* error
+*
+*/
 float rotateToHeading(float heading, struct Position *imuData);
 
 #endif /* MOTION_FUNCTIONS_H_ */
