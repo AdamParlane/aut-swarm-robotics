@@ -307,13 +307,14 @@ void followLine(void)
 * Improvements:
 * Have the robot scan in one continuous sweep rather than stopping at each heading to read light 
 * values
+* Currently it seems to not lock dead on with the light source.
 *
 */
 uint8_t scanBrightestLightSource(int16_t *brightestHeading, struct Position *imuData)
 {
 	const uint8_t headingStepSize = 10;
 	static int16_t heading = -180;
-	static int16_t brightestVal = 0;
+	static uint16_t brightestVal = 0;
 	uint16_t avgBrightness = 0;
 	
 	if(!rotateToHeading((float)heading, imuData))	//If we are facing the right direction
