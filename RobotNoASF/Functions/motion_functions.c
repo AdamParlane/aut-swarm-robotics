@@ -88,9 +88,16 @@ float rotateToHeading(float heading, struct Position *imuData)
 	motorSpeed = abs(RTH_KP*pErr + RTH_KI*iErr + RTH_KD*dErr); 
 	if(motorSpeed > 100)
 		motorSpeed = 100;
-	//If error is less than 1 deg and motorSpeed is less than 15% then we must be pretty close so
-	//stop and return a 0.
-	if((abs(pErr) < 1) && (motorSpeed < 5))	
+	
+	//Force the PID controller to always take the shortest path to the destination.
+	//For example if the robot was currently facing at -120 degrees and the target was 130 degrees,
+	//instead of going right around from -120 to 130, it will go to -180 and down to 130.	
+	if(abs(pErr) > 180)
+		pErr *= -1;
+	
+	//If error is less than 0.5 deg and delta yaw is less than 0.5 degrees per second then we can
+	//stop
+	if((abs(pErr) < 0.5) && (abs(imuData->imuGyroZ) < 0.5))	
 	{
 		stopRobot();
 		iErr = 0;		//Clear the static vars so they don't interfere next time we call this
