@@ -3,7 +3,7 @@
 *
 * Author : Matthew Witt (wittsend86@gmail.com)
 * Created: 28/04/2017
-*void getEulerAngles(struct Position *imuData)
+*void imuGetEulerAngles(struct Position *imuData)
 * Project Repository: https://github.com/AdamParlane/aut-swarm-robotics
 *
 * Description:
@@ -26,7 +26,7 @@
 * void imuDmpStart(void)
 * unsigned short invOrientationMatrixToScalar(const signed char *mtx)
 * unsigned short invRow2Scale(const signed char *row)
-* void getEulerAngles(struct Position *imuData)
+* void imuGetEulerAngles(struct Position *imuData)
 * uint8_t imuReadFifo(struct Position *imuData)
 * uint8_t imuCommTest(void)
 * void imuApplyYawCorrection(float correctHeading, struct Position *imuData)
@@ -35,7 +35,7 @@
 
 ///////////////Includes/////////////////////////////////////////////////////////////////////////////
 #include "imu_interface.h"
-#include <tgmath.h>				//Required for atan2 in GetEulerAngles()
+#include <tgmath.h>				//Required for atan2 in imuGetEulerAngles()
 #include "twimux_interface.h"	//twi and multiplexer
 #include "../robot_defines.h"
 
@@ -283,7 +283,7 @@ unsigned short invRow2Scale(const signed char *row)
 }
 
 /*
-* Function: void getEulerAngles(struct Position *imuData)
+* Function: void imuGetEulerAngles(struct Position *imuData)
 *
 * Convert Quaternion numbers from the IMU to Euler rotational angles
 *
@@ -300,7 +300,7 @@ unsigned short invRow2Scale(const signed char *row)
 * ensure it is still in range (-180<Yaw<180) and corrected if necessary.
 *
 */
-void getEulerAngles(struct Position *imuData)
+void imuGetEulerAngles(struct Position *imuData)
 {
 	float w = imuData->imuQW;				//Pull quaternions from IMU
 	float x = imuData->imuQX;

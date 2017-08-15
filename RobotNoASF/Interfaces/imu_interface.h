@@ -26,7 +26,7 @@
 * unsigned char imuDmpStart(void)
 * unsigned short invOrientationMatrixToScalar(const signed char *mtx)
 * unsigned short invRow2Scale(const signed char *row)
-* void getEulerAngles(struct Position *imuData)
+* void imuGetEulerAngles(struct Position *imuData)
 * uint8_t imuReadFifo(struct Position *imuData)
 * uint8_t imuCommTest(void)
 * void imuApplyYawCorrection(float correctHeading, struct Position *imuData)
@@ -177,7 +177,7 @@ unsigned short invOrientationMatrixToScalar(const signed char *mtx);
 unsigned short invRow2Scale(const signed char *row);
 
 /*
-* Function: void getEulerAngles(struct Position *imuData)
+* Function: void imuGetEulerAngles(struct Position *imuData)
 *
 * Convert Quaternion numbers from the IMU to Euler rotational angles
 *
@@ -191,7 +191,7 @@ unsigned short invRow2Scale(const signed char *row);
 * roll.
 *
 */
-void getEulerAngles(struct Position *imuData);
+void imuGetEulerAngles(struct Position *imuData);
 
 /*
 * Function:

@@ -30,7 +30,7 @@ enum ROBOT_STATES{TEST, TEST_ALL, MANUAL, FORMATION, DOCKING, OBSTACLE_AVOIDANCE
 ///////////////Type Definitions/////////////////////////////////////////////////////////////////////
 struct Position
 //structure to store all the robot side navigation / positioning data
-//this will be written to by getMouseXY, getEulerAngles, and another navigation function which
+//this will be written to by getMouseXY, imuGetEulerAngles, and another navigation function which
 //combines them. The structure will store the relevant info from both key sensors and fuse them in
 //an additional function (84bytes i think)
 {
