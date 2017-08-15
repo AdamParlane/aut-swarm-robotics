@@ -1,9 +1,9 @@
 /*
 * imu_interface.c
 *
-* Author : Matthew Witt (wittsend86@gmail.com)
+* Author : Matthew Witt (pxf5695@autuni.ac.nz)
 * Created: 28/04/2017
-*void getEulerAngles(struct Position *imuData)
+*void imuGetEulerAngles(struct Position *imuData)
 * Project Repository: https://github.com/AdamParlane/aut-swarm-robotics
 *
 * Description:
@@ -26,7 +26,7 @@
 * void imuDmpStart(void)
 * unsigned short invOrientationMatrixToScalar(const signed char *mtx)
 * unsigned short invRow2Scale(const signed char *row)
-* void getEulerAngles(struct Position *imuData)
+* void imuGetEulerAngles(struct Position *imuData)
 * uint8_t imuReadFifo(struct Position *imuData)
 * uint8_t imuCommTest(void)
 * void imuApplyYawCorrection(float correctHeading, struct Position *imuData)
@@ -35,7 +35,7 @@
 
 ///////////////Includes/////////////////////////////////////////////////////////////////////////////
 #include "imu_interface.h"
-#include <tgmath.h>				//Required for atan2 in GetEulerAngles()
+#include <tgmath.h>				//Required for atan2 in imuGetEulerAngles()
 #include "twimux_interface.h"	//twi and multiplexer
 #include "../robot_defines.h"
 
@@ -283,7 +283,7 @@ unsigned short invRow2Scale(const signed char *row)
 }
 
 /*
-* Function: void getEulerAngles(struct Position *imuData)
+* Function: void imuGetEulerAngles(struct Position *imuData)
 *
 * Convert Quaternion numbers from the IMU to Euler rotational angles
 *
@@ -300,7 +300,7 @@ unsigned short invRow2Scale(const signed char *row)
 * ensure it is still in range (-180<Yaw<180) and corrected if necessary.
 *
 */
-void getEulerAngles(struct Position *imuData)
+void imuGetEulerAngles(struct Position *imuData)
 {
 	float w = imuData->imuQW;				//Pull quaternions from IMU
 	float x = imuData->imuQX;
@@ -332,10 +332,7 @@ void getEulerAngles(struct Position *imuData)
 	//Factor in the Yaw offset (Heading correction from the PC)
 	imuData->imuYaw += imuData->imuYawOffset;
 	//Wrap imuYaw so its always between -180 and 180 degrees
-	while(imuData->imuYaw > 180.0)
-		imuData->imuYaw -= 360.0;
-	while(imuData->imuYaw < -180.0)
-		imuData->imuYaw += 360.0;
+	imuData->imuYaw = imuWrapAngle(imuData->imuYaw);
 }
 
 /*
@@ -470,17 +467,39 @@ uint8_t imuCommTest(void)
 void imuApplyYawCorrection(float correctHeading, struct Position *imuData)
 {
 	//Make sure correctHeading is in range
-	while(correctHeading > 180.0)
-		correctHeading -= 360.0;
-	while(correctHeading <= -180.0)
-		correctHeading += 360.0;
+	correctHeading = imuWrapAngle(correctHeading);
 	//Take difference and apply it to imuYawOffset.
 	imuData->imuYawOffset += correctHeading - imuData->imuYaw;
 	//Wrap imuYawOffset so its always between -180 and 180 degrees
-	while(imuData->imuYawOffset > 180.0)
-		imuData->imuYawOffset -= 360.0;
-	while(imuData->imuYawOffset <= -180.0)	//In the case that imuYawOffset is set to 180, having
-											//'<=' should prevent it from rebounding between 180 and
-											//-180 every time this function is called.
-		imuData->imuYawOffset += 360.0;
+	imuData->imuYawOffset = imuWrapAngle(imuData->imuYawOffset);
+}
+
+/*
+* Function:
+* float imuWrapAngle(float angleDeg)
+*
+* Will take any angle in degrees and convert it to its equivalent value between -180 and 180 degrees
+*
+* Inputs:
+* float angleDeg
+*   Angle to wrap
+*
+* Returns:
+* Wrapped equivalent of the given angle
+*
+* Implementation:
+* Uses modulus to return the remainder of the given angle divided by 180. If the given angle was 
+* less than -180 then this is the new angle. Otherwise if the original angle is greater than 180
+* then the remainder has 180 subtracted from it and this becomes the new value. In any other case
+* (Which is just if the input angle is less than 180 and greater than -180) just return the input
+* value because it is already in range.
+*
+*/
+float imuWrapAngle(float angleDeg)
+{
+	while(angleDeg > 180.0)
+		angleDeg -= 360.0;
+	while(angleDeg <= -180.0)
+		angleDeg += 360.0;
+	return angleDeg;
 }

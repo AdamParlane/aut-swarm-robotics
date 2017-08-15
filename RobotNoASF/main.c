@@ -184,7 +184,7 @@ int main(void)
 		{
 			imuReadFifo(&robotPosition);
 			checkImuFifo = 0;
-			getEulerAngles(&robotPosition);
+			imuGetEulerAngles(&robotPosition);
 		}
 	}
 }

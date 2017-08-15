@@ -275,6 +275,12 @@
     <Compile Include="Interfaces\opt_interface.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="Interfaces\pio_interface.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="Interfaces\pio_interface.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="Interfaces\prox_sens_interface.c">
       <SubType>compile</SubType>
     </Compile>

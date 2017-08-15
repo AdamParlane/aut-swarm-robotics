@@ -30,7 +30,7 @@ enum ROBOT_STATES{TEST, TEST_ALL, MANUAL, FORMATION, DOCKING, OBSTACLE_AVOIDANCE
 ///////////////Type Definitions/////////////////////////////////////////////////////////////////////
 struct Position
 //structure to store all the robot side navigation / positioning data
-//this will be written to by getMouseXY, getEulerAngles, and another navigation function which
+//this will be written to by getMouseXY, imuGetEulerAngles, and another navigation function which
 //combines them. The structure will store the relevant info from both key sensors and fuse them in
 //an additional function (84bytes i think)
 {
@@ -62,6 +62,7 @@ struct Position
 ///////////////Includes/////////////////////////////////////////////////////////////////////////////
 #include "Interfaces/spi.h"
 #include "sam.h"
+#include "Interfaces/pio_interface.h"
 #include "Interfaces/imu_interface.h"
 #include "Interfaces/timer0.h"
 #include "Interfaces/external_interrupt.h"
@@ -81,23 +82,6 @@ struct Position
 #include "Functions/motion_functions.h"
 
 ///////////////Defines//////////////////////////////////////////////////////////////////////////////
-//LED PIO port and pin definitions
-#define LED_1_PORT	PIOA
-#define LED_1_PIN	PIO_PA28
-#define LED_2_PORT	PIOC
-#define LED_2_PIN	PIO_PC8
-#define LED_3_PORT	PIOA
-#define LED_3_PIN	PIO_PA27
-//LED control macros
-#define	ledOff1 	(LED_1_PORT->PIO_CODR |= LED_1_PIN)
-#define	ledOff2		(LED_2_PORT->PIO_CODR |= LED_2_PIN)
-#define	ledOff3 	(LED_3_PORT->PIO_CODR |= LED_3_PIN)
-#define	ledOn1 		(LED_1_PORT->PIO_SODR |= LED_1_PIN)
-#define	ledOn2 		(LED_2_PORT->PIO_SODR |= LED_2_PIN)
-#define	ledOn3 		(LED_3_PORT->PIO_SODR |= LED_3_PIN)
-#define ledTog1		{if(LED_1_PORT->PIO_ODSR&LED_1_PIN) ledOff1; else ledOn1;}
-#define ledTog2		{if(LED_2_PORT->PIO_ODSR&LED_2_PIN) ledOff2; else ledOn2;}
-#define ledTog3		{if(LED_3_PORT->PIO_ODSR&LED_3_PIN) ledOff3; else ledOn3;}
 	
 //Universal Asynchronous Receiver/Transmitter
 #define TXRDY (REG_UART3_SR & UART_SR_TXRDY)	//UART TX READY flag [SHOULD BE IN COMMUNICATIONS]
@@ -106,7 +90,6 @@ struct Position
 #if !defined ROBOT_TARGET_V1 && !defined ROBOT_TARGET_V2
 #error  Robot version has not been set in compiler symbols. (set ROBOT_TARGET_V1 or ROBOT_TARGET_V2)
 #endif
-
 
 ///////////////Global variables/////////////////////////////////////////////////////////////////////
 //used for test function calling
@@ -130,37 +113,6 @@ volatile char streamDelayCounter, streamIntervalFlag;
 *
 */
 void masterClockInit(void);
-
-/*
-* Function:
-* void pioInit(void)
-*
-* Supplies master clock to the three parallel I/O controllers (A, B and C) and disables write
-* protection on their configuration registers.
-*
-* Inputs:
-* none
-*
-* Returns:
-* none
-*
-*/
-void pioInit(void);
-
-/*
-* Function:
-* void ledInit(void)
-*
-* Initialises the PIO pins needed to use the LEDs. pioInit() MUST be run first.
-*
-* Inputs:
-* none
-*
-* Returns:
-* none
-*
-*/
-void ledInit(void);
 
 /*
 * Function:
