@@ -145,10 +145,6 @@ void twi2Init(void)
 */
 uint8_t twi0MuxSwitch(uint8_t channel)
 {
-	if(channel < 0x8)				//Make sure channel is in range
-		channel = 0x8;
-	if(channel > 0xF)
-		channel = 0xF;
 	twi0MasterMode;					//Master mode enabled, slave disabled
 	twi0SetSlave(TWI0_MUX_ADDR);	//Slave address (eg. Mux or Fast Charge Chip)
 	//No internal address and set to master write mode by default of zero
@@ -161,7 +157,9 @@ uint8_t twi0MuxSwitch(uint8_t channel)
 	if(waitForFlag((uint32_t*)&REG_TWI0_SR, TWI_SR_TXCOMP, TWI_TXCOMP_TIMEOUT))
 		return 1;
 	else
+	{
 		return 0;
+	}
 }
 
 /*
@@ -199,7 +197,7 @@ uint8_t twi0ReadMuxChannel(void)
 	//While Receive Holding Register not ready. wait.
 	if(waitForFlag((uint32_t*)&REG_TWI0_SR, TWI_SR_RXRDY, TWI_RXRDY_TIMEOUT))
 		return 1;
-	returnVal = twi0Receive;		//Store data received (the lower byte of 16-bit data)
+	returnVal = twi0Receive;		//Store data received 
 	//Wait for transmission complete
 	if(waitForFlag((uint32_t*)&REG_TWI0_SR, TWI_SR_TXCOMP, TWI_TXCOMP_TIMEOUT))
 		return 1;
@@ -262,7 +260,7 @@ char twi0Write(unsigned char slave_addr, unsigned char reg_addr,
 		return 1;
 	else
 		return 0;
-};
+}
 
 char twi2Write(unsigned char slave_addr, unsigned char reg_addr,
 				unsigned char length, unsigned char const *data)

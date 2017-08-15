@@ -17,6 +17,7 @@
 * void updateLineSensorStates(void)
 * int8_t getLineDirection(void)
 * void followLine(void)
+* uint8_t scanBrightestLightSource(int16_t *brightestHeading)
 *
 */
 
@@ -27,22 +28,6 @@
 #include "../robot_defines.h"
 
 ///////////////Defines//////////////////////////////////////////////////////////////////////////////
-
-
-///////////////Type Definitions/////////////////////////////////////////////////////////////////////
-struct LineSensorArray
-//Will store states of the line sensors for use by functions in this modules. This is necessary
-//because there is a gray area when the sensor is half on and half off the line, so by establishing
-//hysteresis and only changing the stored states when an upper and lower threshold is crossed,
-//jitter should be reduced.
-{
-	uint8_t outerLeft;	
-	uint8_t innerLeft;
-	uint8_t innerRight;
-	uint8_t outerRight;
-};
-
-
 
 ///////////////Functions////////////////////////////////////////////////////////////////////////////
 /*
@@ -110,5 +95,23 @@ int8_t getLineDirection(void);
 *
 */
 void followLine(void);
+
+/*
+* Function:
+* uint8_t scanBrightestLightSource(int16_t *brightestHeading)
+*
+* The robot will scan from -180 degrees to 180 degrees and record the heading with the brightest
+* source of light (which hopefully is the charging station)
+*
+* Inputs:
+* int16_t *brightestHeading
+*   A pointer to a variable that contains a heading to the brightest detected light source so far.
+*
+* Returns:
+* Returns a 1 if the function hasn't completed yet, or a 0 if it has. When the function returns a 0
+* it means the heading stored at *breightestHeading points to the brightest light source.
+*
+*/
+uint8_t scanBrightestLightSource(int16_t *brightestHeading, struct Position *imuData);
 
 #endif /* DOCKING_FUNCTIONS_H_ */

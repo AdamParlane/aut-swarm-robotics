@@ -17,6 +17,7 @@
 * void updateLineSensorStates(void)
 * int8_t getLineDirection(void)
 * void followLine(void)
+* uint8_t scanBrightestLightSource(int16_t *brightestHeading)
 *
 */
 
@@ -27,6 +28,7 @@
 ///////////////Global variables/////////////////////////////////////////////////////////////////////
 //Light follower sensor states.
 struct LineSensorArray lf;
+extern struct Position robotPosition;
 
 ///////////////Functions////////////////////////////////////////////////////////////////////////////
 /*
@@ -272,4 +274,70 @@ void followLine(void)
 		REG_PWM_CUPD2 = 0;			//rear
 	}
 #endif
+}
+
+/*
+* Function:
+* uint8_t scanBrightestLightSource(int16_t *brightestHeading)
+*
+* The robot will scan from -180 degrees to 180 degrees and record the heading with the brightest
+* source of light (which hopefully is the charging station)
+*
+* Inputs:
+* int16_t *brightestHeading
+*   A pointer to a variable that contains a heading to the brightest detected light source so far.
+*
+* Returns:
+* Returns a 1 if the function hasn't completed yet, or a 0 if it has. When the function returns a 0
+* it means the heading stored at *breightestHeading points to the brightest light source.
+*
+* Implementation:
+* heading is a static variable that stores the heading that the robot is currently moving to.
+* brightestVal is a static variable that stored the brightest detected light value so far.
+* avgBrightness is a temporary variable that stores the average brightness between the two light
+* sensors.
+* First up the function calls the rotateToHeading function. If that function has completed (ie the
+* robot is facing in the heading we want) then an average white light brightness reading is taken
+* from the light sensors. If the average brightness just read is greater than the last stored
+* brightness value then update brightestHeading with the current heading and update brightestVal
+* with the current avgBrightness. Once the robot has rotated 360 degrees, return 0 and reset the
+* static variable to their starting states to indicate that the scan is complete. The heading
+* left behind in brightest heading is the heading with the greatest amount of light.
+*
+* Improvements:
+* Have the robot scan in one continuous sweep rather than stopping at each heading to read light 
+* values
+* Currently it seems to not lock dead on with the light source.
+*
+*/
+uint8_t scanBrightestLightSource(int16_t *brightestHeading, struct Position *imuData)
+{
+	const uint8_t headingStepSize = 10;
+	static int16_t heading = -180;
+	static uint16_t brightestVal = 0;
+	uint16_t avgBrightness = 0;
+	
+	if(!rotateToHeading((float)heading, imuData))	//If we are facing the right direction
+	{
+		//Get average value from the light sensors.
+		avgBrightness = (lightSensRead(MUX_LIGHTSENS_L, LS_WHITE_REG) + 
+							lightSensRead(MUX_LIGHTSENS_R, LS_WHITE_REG))/2;
+		
+		if (avgBrightness > brightestVal)			//If light at this heading is brighter than
+													//before
+		{
+			brightestVal = avgBrightness;			//Update static vars with new values
+			*brightestHeading = heading;
+		}
+		
+		heading += headingStepSize;					//Step to the next heading
+		
+		if(heading > (180 - headingStepSize))		//If we have reached the last heading
+		{
+			heading = -180;
+			brightestVal = 0;
+			return 0;								//Scan finished
+		}
+	}
+	return 1;								//Otherwise, we haven't finished yet
 }
