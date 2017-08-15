@@ -46,10 +46,9 @@
 * Perhaps could just setup both sensors at once?
 *
 */
-
 void lightSensInit(uint8_t channel)
 {
-	uint8_t writeBuffer = LS_AUTO_LOW_LUX;
+	uint8_t writeBuffer = LS_AUTO|LS_320MS;	//Auto trigger, 320ms integration time
 	twi0MuxSwitch(channel); //Set multiplexer address to correct device
 	twi0Write(TWI0_LIGHTSENS_ADDR, LS_CONFIG_REG, 1, &writeBuffer);
 }
@@ -85,6 +84,7 @@ uint16_t lightSensRead(uint8_t channel, uint8_t colour)
 {
 	unsigned char data[2];
 	twi0MuxSwitch(channel);	//Set multiplexer address to a light sensor device
+	twi0ReadMuxChannel();
 	twi0Read(TWI0_LIGHTSENS_ADDR, colour, 2, data);
 	return (data[1]<<8)|(data[0]);
 }

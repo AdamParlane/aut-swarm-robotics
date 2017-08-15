@@ -1,7 +1,7 @@
 /*
 * imu_interface.h
 *
-* Author : Matthew Witt (wittsend86@gmail.com)
+* Author : Matthew Witt (pxf5695@autuni.ac.nz)
 * Created: 28/04/2017
 *
 * Project Repository: https://github.com/AdamParlane/aut-swarm-robotics
@@ -26,9 +26,10 @@
 * unsigned char imuDmpStart(void)
 * unsigned short invOrientationMatrixToScalar(const signed char *mtx)
 * unsigned short invRow2Scale(const signed char *row)
-* void getEulerAngles(struct Position *imuData)
+* void imuGetEulerAngles(struct Position *imuData)
 * uint8_t imuReadFifo(struct Position *imuData)
 * uint8_t imuCommTest(void)
+* void imuApplyYawCorrection(float correctHeading, struct Position *imuData)
 *
 */
 
@@ -43,25 +44,26 @@
 #define IMU_WHOAMI_REG			0x75
 
 ////IMU conversion factors:
-/////Depending on the scale selection set for the gyro (from datasheet pg8) will convert gyro
+/////Depending on the sensitivity set for the gyro (from datasheet pg8) will convert gyro
 /////output to degrees per second
-#define IMU_GYRO_FS_0_CONV			0.0076335877862595	//250dps	(1/131)
-#define IMU_GYRO_FS_1_CONV			0.0152671755725191	//500dps	(1/65.5)
-#define IMU_GYRO_FS_2_CONV			0.0304878048780488	//1000dps	(1/32.8)
-#define IMU_GYRO_FS_3_CONV			0.0609756097560976	//2000dps	(1/16.4)
-/////Depending on the scale selection set for the accel (from datasheet pg9) will convert accel
-/////output to Gs
-#define IMU_ACCEL_AFS_0_CONV_G		0.00006103515625	//+-2G		(1/16384)
-#define IMU_ACCEL_AFS_1_CONV_G		0.0001220703125		//+-4G		(1/8192)
-#define IMU_ACCEL_AFS_2_CONV_G		0.000244140625		//+-8G		(1/4096)
-#define IMU_ACCEL_AFS_3_CONV_G		0.00048828125		//+-16G		(1/2048)
-#define IMU_ACCEL_AFS_0_CONV_MS2	0.0005987548828125	//+-2G		(9.81/16384)
-#define IMU_ACCEL_AFS_1_CONV_MS2	0.001197509765625	//+-4G		(9.81/8192)
-#define IMU_ACCEL_AFS_2_CONV_MS2	0.00239501953125	//+-8G		(9.81/4096)
-#define IMU_ACCEL_AFS_3_CONV_MS2	0.0047900390625		//+-16G		(9.81/2048)
-#define IMU_GYRO_CONV				IMU_GYRO_FS_3_CONV		//Convert to degrees per second
-#define IMU_ACCEL_CONV_G			IMU_ACCEL_AFS_0_CONV_G	//Convert to Gs
-#define IMU_ACCEL_CONV_MS2			IMU_ACCEL_AFS_0_CONV_MS2//Convert to ms^2
+#define IMU_GYRO_FS_250_CONV		0.0076335877862595	//250dps	(1/131)
+#define IMU_GYRO_FS_500_CONV		0.0152671755725191	//500dps	(1/65.5)
+#define IMU_GYRO_FS_1000_CONV		0.0304878048780488	//1000dps	(1/32.8)
+#define IMU_GYRO_FS_2000_CONV		0.0609756097560976	//2000dps	(1/16.4)
+/////Depending on the sensitivity set in imuInit() for the accel (from datasheet pg9) will convert 
+/////accel output to Gs
+#define IMU_ACCEL_AFS_2_CONV_G		0.00006103515625	//+-2G		(1/16384)
+#define IMU_ACCEL_AFS_4_CONV_G		0.0001220703125		//+-4G		(1/8192)
+#define IMU_ACCEL_AFS_8_CONV_G		0.000244140625		//+-8G		(1/4096)
+#define IMU_ACCEL_AFS_16_CONV_G		0.00048828125		//+-16G		(1/2048)
+#define IMU_ACCEL_AFS_2_CONV_MS2	0.0005987548828125	//+-2G		(9.81/16384)
+#define IMU_ACCEL_AFS_4_CONV_MS2	0.001197509765625	//+-4G		(9.81/8192)
+#define IMU_ACCEL_AFS_8_CONV_MS2	0.00239501953125	//+-8G		(9.81/4096)
+#define IMU_ACCEL_AFS_16_CONV_MS2	0.0047900390625		//+-16G		(9.81/2048)
+////Conversion factors used by the program
+#define IMU_GYRO_CONV				IMU_GYRO_FS_1000_CONV	//Convert to degrees per second
+#define IMU_ACCEL_CONV_G			IMU_ACCEL_AFS_2_CONV_G	//Convert to Gs
+#define IMU_ACCEL_CONV_MS2			IMU_ACCEL_AFS_2_CONV_MS2//Convert to ms^2
 
 ////IMU external interrupt pin define
 #if defined ROBOT_TARGET_V2
@@ -175,7 +177,7 @@ unsigned short invOrientationMatrixToScalar(const signed char *mtx);
 unsigned short invRow2Scale(const signed char *row);
 
 /*
-* Function: void getEulerAngles(struct Position *imuData)
+* Function: void imuGetEulerAngles(struct Position *imuData)
 *
 * Convert Quaternion numbers from the IMU to Euler rotational angles
 *
@@ -189,7 +191,7 @@ unsigned short invRow2Scale(const signed char *row);
 * roll.
 *
 */
-void getEulerAngles(struct Position *imuData);
+void imuGetEulerAngles(struct Position *imuData);
 
 /*
 * Function:
@@ -221,5 +223,39 @@ uint8_t imuReadFifo(struct Position *imuData);
 *
 */
 uint8_t imuCommTest(void);
+
+/*
+* Function:
+* void imuApplyYawCorrection(float correctHeading, struct Position *imuData)
+*
+* Takes a 'correct' heading and uses it to modify the onboard heading to match.
+*
+* Inputs:
+* float correctHeading
+*   Correct heading of the robot (from webcam) (between -180 and 180)
+* struct Position *imuData
+*   Pointer to the robotPosition structure
+*
+* Returns:
+* none
+*
+*/
+void imuApplyYawCorrection(float correctHeading, struct Position *imuData);
+
+/*
+* Function:
+* float imuWrapAngle(float angleDeg)
+*
+* Will take any angle in degrees and convert it to its equivalent value between -180 and 180 degrees
+*
+* Inputs:
+* float angleDeg
+*   Angle to wrap
+*
+* Returns:
+* Wrapped equivalent of the given angle
+*
+*/
+float imuWrapAngle(float angleDeg);
 
 #endif /* IMU_INTERFACE_H_ */

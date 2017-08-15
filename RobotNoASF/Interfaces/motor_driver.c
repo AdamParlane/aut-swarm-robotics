@@ -187,11 +187,10 @@ void moveRobot(signed int direction, unsigned char speed)
 {
 	signed int motor1Speed, motor2Speed, motor3Speed;
 	float directionRad;
+
 	//keep direction in range +/-180degrees
-	while(direction > 180) 
-		direction -= 360;
-	while(direction < -180)
-		direction += 360;
+	direction = imuWrapAngle(direction);
+
 	//stop speed from being over max in case of user input error
 	if(speed > 100)
 		speed = 100;
@@ -292,6 +291,9 @@ void moveRobot(signed int direction, unsigned char speed)
 */
 void rotateRobot(char direction, unsigned char speed)
 {
+	if(speed > 100)				//Safety
+		speed = 0;
+		
 	if(direction == CW)			//enable all motors to spin the robot clockwise
 	{
 		RIN_1_H;

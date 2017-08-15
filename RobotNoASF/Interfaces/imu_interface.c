@@ -1,9 +1,9 @@
 /*
 * imu_interface.c
 *
-* Author : Matthew Witt (wittsend86@gmail.com)
+* Author : Matthew Witt (pxf5695@autuni.ac.nz)
 * Created: 28/04/2017
-*void getEulerAngles(struct Position *imuData)
+*void imuGetEulerAngles(struct Position *imuData)
 * Project Repository: https://github.com/AdamParlane/aut-swarm-robotics
 *
 * Description:
@@ -26,15 +26,16 @@
 * void imuDmpStart(void)
 * unsigned short invOrientationMatrixToScalar(const signed char *mtx)
 * unsigned short invRow2Scale(const signed char *row)
-* void getEulerAngles(struct Position *imuData)
+* void imuGetEulerAngles(struct Position *imuData)
 * uint8_t imuReadFifo(struct Position *imuData)
 * uint8_t imuCommTest(void)
+* void imuApplyYawCorrection(float correctHeading, struct Position *imuData)
 *
 */
 
 ///////////////Includes/////////////////////////////////////////////////////////////////////////////
 #include "imu_interface.h"
-#include <tgmath.h>				//Required for atan2 in GetEulerAngles()
+#include <tgmath.h>				//Required for atan2 in imuGetEulerAngles()
 #include "twimux_interface.h"	//twi and multiplexer
 #include "../robot_defines.h"
 
@@ -81,7 +82,8 @@ int imuInit(void)
 	//Initialise the IMU's driver	
 	result += mpu_init(0);								//Initialise the MPU with no interrupt CBs
 	result += mpu_set_int_level(1);						//Make interrupt level active high
-	
+	result += mpu_set_gyro_fsr(1000);					//1000dps (Gyro sensitivity)
+	result += mpu_set_accel_fsr(2);						//+-2G (Accelerometer sensitivity)
 	result += mpu_set_sensors(INV_XYZ_GYRO | INV_XYZ_ACCEL | INV_XYZ_COMPASS);// Wake up all sensors
 	result += mpu_set_sample_rate(800);					// Set 800Hz samplerate (for accel and gyro)											
 	result += mpu_set_compass_sample_rate(100);			// Set 100Hz compass sample rate (max)
@@ -131,7 +133,9 @@ int imuDmpInit(void)
 	result += dmp_set_orientation(invOrientationMatrixToScalar(gyro_orientation));
 	result += dmp_enable_feature(DMP_FEATURE_6X_LP_QUAT | DMP_FEATURE_SEND_RAW_ACCEL |
 									DMP_FEATURE_SEND_CAL_GYRO);
-	result += dmp_set_fifo_rate(10);					//10Hz update rate from the FIFO
+	
+	result += dmp_set_fifo_rate(200);			//200Hz update rate from the FIFO as per
+												//datasheet (improves accuracy)
 	result += dmp_set_interrupt_mode(DMP_INT_CONTINUOUS);//Use continuous interrupts rather than
 														//gesture based (pg10 in DMP manual)
 	result += mpu_set_dmp_state(1);						//Start DMP (also starts IMU interrupt)
@@ -279,7 +283,7 @@ unsigned short invRow2Scale(const signed char *row)
 }
 
 /*
-* Function: void getEulerAngles(struct Position *imuData)
+* Function: void imuGetEulerAngles(struct Position *imuData)
 *
 * Convert Quaternion numbers from the IMU to Euler rotational angles
 *
@@ -291,10 +295,12 @@ unsigned short invRow2Scale(const signed char *row)
 * Loads Yaw, Pitch and Roll data back into robotPosition.
 *
 * Implementation:
-* TO COME
+* After the quaternions have been converted to Euler angles, the Yaw offset is applied which is a
+* heading correction obtained from the PC. Once this has been applied, the Yaw value is checked to
+* ensure it is still in range (-180<Yaw<180) and corrected if necessary.
 *
 */
-void getEulerAngles(struct Position *imuData)
+void imuGetEulerAngles(struct Position *imuData)
 {
 	float w = imuData->imuQW;				//Pull quaternions from IMU
 	float x = imuData->imuQX;
@@ -323,8 +329,11 @@ void getEulerAngles(struct Position *imuData)
 	imuData->imuRoll = (atan2(2*y*w-2*x*z , sqx - sqy - sqz + sqw))*180/M_PI;
 	imuData->imuPitch = (asin(2*test/unit))*180/M_PI;
 	imuData->imuYaw = (atan2(2*x*w-2*y*z , -sqx + sqy - sqz + sqw))*180/M_PI;
+	//Factor in the Yaw offset (Heading correction from the PC)
+	imuData->imuYaw += imuData->imuYawOffset;
+	//Wrap imuYaw so its always between -180 and 180 degrees
+	imuData->imuYaw = imuWrapAngle(imuData->imuYaw);
 }
-
 
 /*
 * Function:
@@ -428,4 +437,69 @@ uint8_t imuCommTest(void)
 		imuDmpStart();				//Restart the DMP
 		
 	return returnVal;				//return 0x71 (0x73?) on success
+}
+
+/*
+* Function:
+* void imuApplyYawCorrection(float correctHeading, struct Position *imuData)
+*
+* Takes a 'correct' heading and uses it to modify the onboard heading to match.
+*
+* Inputs:
+* float correctHeading
+*   Correct heading of the robot (from webcam) (between -180 and 180)
+* struct Position *imuData
+*   Pointer to the robotPosition structure
+*
+* Returns:
+* none
+*
+* Implementation:
+* First the function checks that correctHeading is between -180 and 180 and corrects it if
+* necessary. Then it looks at the difference between the heading provided and the heading reported
+* by the IMU and adds the difference to imuYawOffset to correct it. Finally, it makes sure that
+* imuYawOffset is between -180 and 180 and corrects it if necessary.
+* 
+* Improvements:
+* Will most likely move this from imu_interface to the Navigation module when its created.
+*
+*/
+void imuApplyYawCorrection(float correctHeading, struct Position *imuData)
+{
+	//Make sure correctHeading is in range
+	correctHeading = imuWrapAngle(correctHeading);
+	//Take difference and apply it to imuYawOffset.
+	imuData->imuYawOffset += correctHeading - imuData->imuYaw;
+	//Wrap imuYawOffset so its always between -180 and 180 degrees
+	imuData->imuYawOffset = imuWrapAngle(imuData->imuYawOffset);
+}
+
+/*
+* Function:
+* float imuWrapAngle(float angleDeg)
+*
+* Will take any angle in degrees and convert it to its equivalent value between -180 and 180 degrees
+*
+* Inputs:
+* float angleDeg
+*   Angle to wrap
+*
+* Returns:
+* Wrapped equivalent of the given angle
+*
+* Implementation:
+* Uses modulus to return the remainder of the given angle divided by 180. If the given angle was 
+* less than -180 then this is the new angle. Otherwise if the original angle is greater than 180
+* then the remainder has 180 subtracted from it and this becomes the new value. In any other case
+* (Which is just if the input angle is less than 180 and greater than -180) just return the input
+* value because it is already in range.
+*
+*/
+float imuWrapAngle(float angleDeg)
+{
+	while(angleDeg > 180.0)
+		angleDeg -= 360.0;
+	while(angleDeg <= -180.0)
+		angleDeg += 360.0;
+	return angleDeg;
 }
