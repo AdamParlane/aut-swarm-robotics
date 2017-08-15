@@ -331,7 +331,7 @@ uint8_t scanBrightestLightSource(float *brightestHeading, uint16_t sweepAngle,
 			brightestVal = 0;								//Reset brightestValue
 			startHeading = imuData->imuYaw - (sweepAngle/2);//Calculate start heading
 			endHeading = startHeading + sweepAngle;
-			sHeading = startHeading + 25;
+			sHeading = startHeading + sweepAngle/3;
 			functionState = GOTO_START_POSITION;			//Angles set up, lets start
 			return 1;
 		break;
@@ -347,7 +347,11 @@ uint8_t scanBrightestLightSource(float *brightestHeading, uint16_t sweepAngle,
 			if(abs(rotateError) < 170 && sHeading < endHeading)//Keep sHeading only 25 degrees ahead
 															//of current heading so that robot will
 															//always take the long way around
+			{
 				sHeading += ROTATE_STEP_SZ;
+				if(sHeading > endHeading)
+					sHeading = endHeading;
+			}
 			if(!rotateError)
 				functionState = END;
 			else
