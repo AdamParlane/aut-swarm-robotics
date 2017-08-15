@@ -484,3 +484,33 @@ void imuApplyYawCorrection(float correctHeading, struct Position *imuData)
 											//-180 every time this function is called.
 		imuData->imuYawOffset += 360.0;
 }
+
+/*
+* Function:
+* float imuWrapAngle(float angleDeg)
+*
+* Will take any angle in degrees and convert it to its equivalent value between -180 and 180 degrees
+*
+* Inputs:
+* float angleDeg
+*   Angle to wrap
+*
+* Returns:
+* Wrapped equivalent of the given angle
+*
+* Implementation:
+* Uses modulus to return the remainder of the given angle divided by 180. If the given angle was 
+* less than -180 then this is the new angle. Otherwise if the original angle is greater than 180
+* then the remainder has 180 subtracted from it and this becomes the new value. In any other case
+* (Which is just if the input angle is less than 180 and greater than -180) just return the input
+* value because it is already in range.
+*
+*/
+float imuWrapAngle(float angleDeg)
+{
+	if(angleDeg < -180)
+		return (angleDeg%180);
+	if(angleDeg > 180)
+		return (angleDeg%180) - 180;
+	return angleDeg;
+}
