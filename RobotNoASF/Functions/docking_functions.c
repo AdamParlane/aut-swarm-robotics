@@ -311,7 +311,7 @@ void followLine(void)
 */
 uint8_t scanBrightestLightSource(int16_t *brightestHeading, struct Position *imuData)
 {
-	const uint8_t headingStepSize = 30;
+	const uint8_t headingStepSize = 10;
 	static int16_t heading = -180;
 	static int16_t brightestVal = 0;
 	uint16_t avgBrightness = 0;
