@@ -499,7 +499,7 @@ float imuWrapAngle(float angleDeg)
 {
 	while(angleDeg > 180.0)
 		angleDeg -= 360.0;
-	while(angleDeg <= -180.0)
+	while(angleDeg < -180.0)
 		angleDeg += 360.0;
 	return angleDeg;
 }

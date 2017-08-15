@@ -315,33 +315,36 @@ uint8_t scanBrightestLightSource(float *brightestHeading, uint16_t sweepAngle,
 								struct Position *imuData)
 {
 	const float ROTATE_STEP_SZ = 1;
-	enum {FUNCTION_INIT, GOTO_START_POSITION, SWEEP, END} states;
+	enum {FUNCTION_INIT, GOTO_START_POSITION, SWEEP, END};
 	static uint8_t functionState = FUNCTION_INIT;
-	static int16_t startHeading;
-	static int16_t endHeading;
+	static float startHeading;
+	static float endHeading;
 	static float sHeading;
 	static uint16_t brightestVal;
+	float rotateError;
 	uint16_t avgBrightness = 0;
 	
 	switch(functionState)
 	{
 		case FUNCTION_INIT:
 			//Calculate where to start sweep from
-			brightestVal = 0;						//Reset brightestValue
+			brightestVal = 0;								//Reset brightestValue
 			startHeading = imuData->imuYaw - (sweepAngle/2);//Calculate start heading
 			endHeading = startHeading + sweepAngle;
-			sHeading = startHeading + 1;
-			functionState = GOTO_START_POSITION;	//Angles set up, lets start
+			sHeading = startHeading + 25;
+			functionState = GOTO_START_POSITION;			//Angles set up, lets start
+			return 1;
+		break;
 
 		case GOTO_START_POSITION:
 			if(!rotateToHeading(startHeading, imuData))
-				functionState = SWEEP;		//In position, now perform sweep
+				functionState = SWEEP;						//In position, now perform sweep
 			return 1;
 		break;
 		
 		case SWEEP:
-			float rotateError = rotateToHeading(sHeading);
-			if(abs(rotateError) < 25 && sHeading < endHeading)//Keep sHeading only 25 degrees ahead
+			rotateError = rotateToHeading(sHeading, imuData);
+			if(abs(rotateError) < 170 && sHeading < endHeading)//Keep sHeading only 25 degrees ahead
 															//of current heading so that robot will
 															//always take the long way around
 				sHeading += ROTATE_STEP_SZ;
@@ -363,5 +366,6 @@ uint8_t scanBrightestLightSource(float *brightestHeading, uint16_t sweepAngle,
 		case END:
 			functionState = FUNCTION_INIT;
 			return 0;
-	}	
+	}
+	return 1;
 }

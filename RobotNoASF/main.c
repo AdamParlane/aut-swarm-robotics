@@ -70,7 +70,7 @@ int main(void)
 	//const char streamIntervalFlag = 1;
 	setup();
 	uint8_t testMode = 0x00;
-	int16_t bHeading;
+	float bHeading;
 	char chargeInfo;
 	char error; //used for developement to log and watch errors - AP
 	//TODO: Adam add error handling with GUI
@@ -130,7 +130,7 @@ int main(void)
 				//if battery low or manual command set
 				//dockRobot();
 				//followLine();
-				rotateToHeading((float)bHeading, &robotPosition);
+				rotateToHeading(bHeading, &robotPosition);
 			break;
 			
 			case OBSTACLE_AVOIDANCE:
@@ -165,7 +165,7 @@ int main(void)
 			case IDLE:
 				//idle
 				//stopRobot();
-				if(!scanBrightestLightSource(&bHeading, &robotPosition))
+				if(!scanBrightestLightSource(&bHeading, 360, &robotPosition))
 				{
 					robotState = DOCKING;
 				}
