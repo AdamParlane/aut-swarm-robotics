@@ -497,9 +497,9 @@ void imuApplyYawCorrection(float correctHeading, struct Position *imuData)
 */
 float imuWrapAngle(float angleDeg)
 {
-	if(angleDeg < -180)
-		return (angleDeg%180);
-	if(angleDeg > 180)
-		return (angleDeg%180) - 180;
+	while(angleDeg > 180.0)
+		angleDeg -= 360.0;
+	while(angleDeg <= -180.0)
+		angleDeg += 360.0;
 	return angleDeg;
 }
