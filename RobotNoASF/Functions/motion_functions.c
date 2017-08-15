@@ -82,7 +82,7 @@ float rotateToHeading(float heading, struct Position *imuData)
 	if(motorSpeed > 100)
 		motorSpeed = 100;
 	
-	//Force the PID controller to always take the shortest path to the destination.
+	//Force the P controller to always take the shortest path to the destination.
 	//For example if the robot was currently facing at -120 degrees and the target was 130 degrees,
 	//instead of going right around from -120 to 130, it will go to -180 and down to 130.	
 	if(abs(pErr) > 180)

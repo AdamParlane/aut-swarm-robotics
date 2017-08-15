@@ -15,8 +15,7 @@
 *
 * Functions:
 * void masterClockInit(void)
-* void pioInit(void)
-* void ledInit(void)
+* uint8_t waitForFlag(const volatile uint32_t *regAddr, uint32_t regMask, uint16_t timeOutMs)
 *
 */
 

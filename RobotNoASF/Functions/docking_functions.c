@@ -278,7 +278,8 @@ void followLine(void)
 
 /*
 * Function:
-* uint8_t scanBrightestLightSource(int16_t *brightestHeading)
+* uint8_t scanBrightestLightSource(float *brightestHeading, uint16_t sweepAngle,
+*									struct Position *imuData);
 *
 * The robot will scan from -180 degrees to 180 degrees and record the heading with the brightest
 * source of light (which hopefully is the charging station)
@@ -310,34 +311,57 @@ void followLine(void)
 * Currently it seems to not lock dead on with the light source.
 *
 */
-uint8_t scanBrightestLightSource(int16_t *brightestHeading, struct Position *imuData)
+uint8_t scanBrightestLightSource(float *brightestHeading, uint16_t sweepAngle, 
+								struct Position *imuData)
 {
-	const uint8_t headingStepSize = 10;
-	static int16_t heading = -180;
-	static uint16_t brightestVal = 0;
+	const float ROTATE_STEP_SZ = 1;
+	enum {FUNCTION_INIT, GOTO_START_POSITION, SWEEP, END} states;
+	static uint8_t functionState = FUNCTION_INIT;
+	static int16_t startHeading;
+	static int16_t endHeading;
+	static float sHeading;
+	static uint16_t brightestVal;
 	uint16_t avgBrightness = 0;
 	
-	if(!rotateToHeading((float)heading, imuData))	//If we are facing the right direction
+	switch(functionState)
 	{
-		//Get average value from the light sensors.
-		avgBrightness = (lightSensRead(MUX_LIGHTSENS_L, LS_WHITE_REG) + 
-							lightSensRead(MUX_LIGHTSENS_R, LS_WHITE_REG))/2;
+		case FUNCTION_INIT:
+			//Calculate where to start sweep from
+			brightestVal = 0;						//Reset brightestValue
+			startHeading = imuData->imuYaw - (sweepAngle/2);//Calculate start heading
+			endHeading = startHeading + sweepAngle;
+			sHeading = startHeading + 1;
+			functionState = GOTO_START_POSITION;	//Angles set up, lets start
+
+		case GOTO_START_POSITION:
+			if(!rotateToHeading(startHeading, imuData))
+				functionState = SWEEP;		//In position, now perform sweep
+			return 1;
+		break;
 		
-		if (avgBrightness > brightestVal)			//If light at this heading is brighter than
-													//before
-		{
-			brightestVal = avgBrightness;			//Update static vars with new values
-			*brightestHeading = heading;
-		}
+		case SWEEP:
+			float rotateError = rotateToHeading(sHeading);
+			if(abs(rotateError) < 25 && sHeading < endHeading)//Keep sHeading only 25 degrees ahead
+															//of current heading so that robot will
+															//always take the long way around
+				sHeading += ROTATE_STEP_SZ;
+			if(!rotateError)
+				functionState = END;
+			else
+			{
+				avgBrightness = (lightSensRead(MUX_LIGHTSENS_L, LS_WHITE_REG) +
+											lightSensRead(MUX_LIGHTSENS_R, LS_WHITE_REG))/2;
+				if(avgBrightness > brightestVal)
+				{
+					brightestVal = avgBrightness;
+					*brightestHeading = imuData->imuYaw;
+				}
+			}
+			return 1;
+		break;
 		
-		heading += headingStepSize;					//Step to the next heading
-		
-		if(heading > (180 - headingStepSize))		//If we have reached the last heading
-		{
-			heading = -180;
-			brightestVal = 0;
-			return 0;								//Scan finished
-		}
-	}
-	return 1;								//Otherwise, we haven't finished yet
+		case END:
+			functionState = FUNCTION_INIT;
+			return 0;
+	}	
 }

@@ -98,7 +98,8 @@ void followLine(void);
 
 /*
 * Function:
-* uint8_t scanBrightestLightSource(int16_t *brightestHeading)
+* uint8_t scanBrightestLightSource(float *brightestHeading, uint16_t sweepAngle,
+*									struct Position *imuData);
 *
 * The robot will scan from -180 degrees to 180 degrees and record the heading with the brightest
 * source of light (which hopefully is the charging station)
@@ -112,6 +113,7 @@ void followLine(void);
 * it means the heading stored at *breightestHeading points to the brightest light source.
 *
 */
-uint8_t scanBrightestLightSource(int16_t *brightestHeading, struct Position *imuData);
+uint8_t scanBrightestLightSource(float *brightestHeading, uint16_t sweepAngle,
+								struct Position *imuData);
 
 #endif /* DOCKING_FUNCTIONS_H_ */
