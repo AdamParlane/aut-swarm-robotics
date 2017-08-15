@@ -335,6 +335,7 @@ void UART3_Handler(void)
 
 void UART3_Write(uint8_t data)
 {
+	//TODO: Needs waitForFlag here
 	while(!(REG_UART3_SR & (1<<1)));	//wait till TXRDY
 	REG_UART3_THR = data;				//place data in TX register
 }

@@ -72,10 +72,7 @@ float rotateToHeading(float heading, struct Position *imuData)
 	uint32_t motorSpeed;			//Stores motorSpeed calculated by PID sum
 	
 	//Make sure heading is in range
-	while(heading > 180.0)
-		heading -= 360.0;
-	while(heading <= -180.0)
-		heading += 360.0;
+	heading = imuWrapAngle(heading);
 		
 	//Calculate proportional error values
 	pErr = heading - imuData->imuYaw;				//Signed Error

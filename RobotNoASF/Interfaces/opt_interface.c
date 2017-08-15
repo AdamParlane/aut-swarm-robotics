@@ -270,10 +270,12 @@ char mouseTestBasic(void)
 */
 void SPI_Write(char writeAddress, char spiData)
 {
+	//TODO: Needs waitForFlag here
 	while(!(REG_SPI_SR & SPI_SR_TDRE));		//Wait for address to move out of TDR
 	//Load TDR with peripheral register to be written to.
 	REG_SPI_TDR |= (writeAddress |= (1<<7));//Puts 1 into bit 7 to indicates writing to register
 	//wait for received data to be ready to be read
+	//TODO: Needs waitForFlag here
 	while(!(REG_SPI_SR & SPI_SR_TDRE));		//Wait for address to move out of TDR
 	REG_SPI_TDR |= spiData;					//Load data to be sent
 }
@@ -306,9 +308,11 @@ char SPI_Read(char readAddress)
 	data = REG_SPI_RDR;						//Read the RDR to ensure that the RDRF flag is reset.
 	//Load TDR with peripheral register to be read from. 
 	REG_SPI_TDR |= (readAddress);			//0 in bit 7 which indicates a reading operation.
+	//TODO: Needs waitForFlag here
 	while(!(REG_SPI_SR & (1<<0)));			//Wait for first RDRF flag.
 	data = REG_SPI_RDR;						//First lot of data which will be incorrect. 
 	REG_SPI_TDR |= (readAddress);			//Load TDR again.
+	//TODO: Needs waitForFlag here
 	while(!(REG_SPI_SR & (1<<0)));			//Wait for second RDRF flag.
 	data = REG_SPI_RDR;						//Read the correct data
 	return data;

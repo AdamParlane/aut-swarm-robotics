@@ -1,7 +1,7 @@
 /*
 * imu_interface.h
 *
-* Author : Matthew Witt (wittsend86@gmail.com)
+* Author : Matthew Witt (pxf5695@autuni.ac.nz)
 * Created: 28/04/2017
 *
 * Project Repository: https://github.com/AdamParlane/aut-swarm-robotics

@@ -1,7 +1,7 @@
 /*
 * imu_interface.c
 *
-* Author : Matthew Witt (wittsend86@gmail.com)
+* Author : Matthew Witt (pxf5695@autuni.ac.nz)
 * Created: 28/04/2017
 *void imuGetEulerAngles(struct Position *imuData)
 * Project Repository: https://github.com/AdamParlane/aut-swarm-robotics
@@ -332,10 +332,7 @@ void imuGetEulerAngles(struct Position *imuData)
 	//Factor in the Yaw offset (Heading correction from the PC)
 	imuData->imuYaw += imuData->imuYawOffset;
 	//Wrap imuYaw so its always between -180 and 180 degrees
-	while(imuData->imuYaw > 180.0)
-		imuData->imuYaw -= 360.0;
-	while(imuData->imuYaw < -180.0)
-		imuData->imuYaw += 360.0;
+	imuData->imuYaw = imuWrapAngle(imuData->imuYaw);
 }
 
 /*
@@ -470,19 +467,11 @@ uint8_t imuCommTest(void)
 void imuApplyYawCorrection(float correctHeading, struct Position *imuData)
 {
 	//Make sure correctHeading is in range
-	while(correctHeading > 180.0)
-		correctHeading -= 360.0;
-	while(correctHeading <= -180.0)
-		correctHeading += 360.0;
+	correctHeading = imuWrapAngle(correctHeading);
 	//Take difference and apply it to imuYawOffset.
 	imuData->imuYawOffset += correctHeading - imuData->imuYaw;
 	//Wrap imuYawOffset so its always between -180 and 180 degrees
-	while(imuData->imuYawOffset > 180.0)
-		imuData->imuYawOffset -= 360.0;
-	while(imuData->imuYawOffset <= -180.0)	//In the case that imuYawOffset is set to 180, having
-											//'<=' should prevent it from rebounding between 180 and
-											//-180 every time this function is called.
-		imuData->imuYawOffset += 360.0;
+	imuData->imuYawOffset = imuWrapAngle(imuData->imuYawOffset);
 }
 
 /*
