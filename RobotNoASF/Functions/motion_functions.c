@@ -90,7 +90,7 @@ float rotateToHeading(float heading, struct Position *imuData)
 		motorSpeed = 100;
 	//If error is less than 1 deg and motorSpeed is less than 15% then we must be pretty close so
 	//stop and return a 0.
-	if((abs(pErr) < 1) && (motorSpeed < 15))	
+	if((abs(pErr) < 1) && (motorSpeed < 5))	
 	{
 		stopRobot();
 		iErr = 0;		//Clear the static vars so they don't interfere next time we call this

@@ -28,7 +28,7 @@
 //PID constants for rotateToHeading
 #define RTH_KP	4.0
 #define RTH_KI	0.000
-#define RTH_KD	0.0
+#define RTH_KD	0.25
 
 ///////////////Functions////////////////////////////////////////////////////////////////////////////
 /*
