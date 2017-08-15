@@ -46,10 +46,9 @@
 * Perhaps could just setup both sensors at once?
 *
 */
-
 void lightSensInit(uint8_t channel)
 {
-	uint8_t writeBuffer = LS_AUTO_LOW_LUX;
+	uint8_t writeBuffer = LS_AUTO|LS_320MS;	//Auto trigger, 320ms integration time
 	twi0MuxSwitch(channel); //Set multiplexer address to correct device
 	twi0Write(TWI0_LIGHTSENS_ADDR, LS_CONFIG_REG, 1, &writeBuffer);
 }

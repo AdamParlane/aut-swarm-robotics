@@ -32,13 +32,17 @@
 #define LS_WHITE_REG		0x0B	//White light is detected at the tower for docking alignment
 //Register address for configuration
 #define LS_CONFIG_REG		0x00
-//General Commands
-#define LS_DETECT_LOW_LUX	0x06		//40ms integration time, Trigger one time, Force Mode
-#define LS_DETECT_MED_LUX	0x26		//80ms integration time, Trigger one time, Force Mode
-#define LS_DETECT_HI_LUX	0x46		//160ms integration time, Trigger one time, Force Mode
-#define LS_DETECT_MAX_LUX	0x56		//1280ms integration time, Trigger one time, Force Mode
-#define LS_AUTO_LOW_LUX		0x00		//40ms integration time, No Trigger, Auto Mode
-#define LS_DISABLE			0x03		//Force Mode, Disable Sensor
+//Config register settings (0x00)
+////Lower nibble settings (Trigger or Auto mode)
+#define LS_DETECT			0x06		//Lower nibble settings Trigger one time/ force mode
+#define LS_AUTO				0x00		//Auto mode, no triggering
+////Upper nibble settings (Light sensitivity)
+#define LS_40MS				0x06		//40ms integration time (High sensitivity)
+#define LS_80MS				0x10		//80ms integration time
+#define LS_160MS			0x20		//160ms integration time
+#define LS_320MS			0x30		//3200ms integration time
+#define LS_640MS			0x40		//640ms integration time
+#define LS_1280MS			0x50		//1280ms integration time, (Low sensitivity)
 
 ///////////////Functions////////////////////////////////////////////////////////////////////////////
 /*
