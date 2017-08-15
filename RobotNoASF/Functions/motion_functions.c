@@ -68,9 +68,8 @@ extern struct Position robotPosition;
 */
 float rotateToHeading(float heading, struct Position *imuData)
 {
-	static float pErr, iErr;		//Proportional (signed) error, Integral error
-	float pErrOld, dErr;			//Old pErr value, and delta error
-	uint32_t motorSpeed;			//Stores motorSpeed calulated by PID sum
+	static float pErr;				//Proportional (signed) error
+	uint32_t motorSpeed;			//Stores motorSpeed calculated by PID sum
 	
 	//Make sure heading is in range
 	while(heading > 180.0)
@@ -78,14 +77,11 @@ float rotateToHeading(float heading, struct Position *imuData)
 	while(heading <= -180.0)
 		heading += 360.0;
 		
-	//Calculate proportional, integral and differential error values
-	pErrOld = pErr;
+	//Calculate proportional error values
 	pErr = heading - imuData->imuYaw;				//Signed Error
-	iErr += pErr*imuData->imuDeltaTime*0.001;		//Sum of signed errors multiplied by dt
-	dErr = (pErr - pErrOld)/(imuData->imuDeltaTime*0.001);//Change of error/dt
 	
 	//If motorSpeed ends up being out of range, then dial it back
-	motorSpeed = abs(RTH_KP*pErr + RTH_KI*iErr + RTH_KD*dErr); 
+	motorSpeed = abs(RTH_KP*pErr); 
 	if(motorSpeed > 100)
 		motorSpeed = 100;
 	
@@ -100,8 +96,8 @@ float rotateToHeading(float heading, struct Position *imuData)
 	if((abs(pErr) < 0.5) && (abs(imuData->imuGyroZ) < 0.5))	
 	{
 		stopRobot();
-		iErr = 0;		//Clear the static vars so they don't interfere next time we call this
-		pErr = 0;		//function
+		pErr = 0;			//Clear the static vars so they don't interfere next time we call this
+							//function
 		return 0;
 	} else {
 		if(pErr > 0.0 )	//If heading is less than IMU heading then rotate clockwise to correct
