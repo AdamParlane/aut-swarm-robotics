@@ -85,7 +85,7 @@ int main(void)
 	struct transmitDataStructure transmitMessage;
 	
 	robotState = IDLE;
-	
+
 	while(1)
 	{
 		switch (robotState)
