@@ -84,7 +84,7 @@ int main(void)
 										//on is 0 degrees heading.
 	struct transmitDataStructure transmitMessage;
 	
-	robotState = IDLE;
+	robotState = OBSTACLE_AVOIDANCE;
 	
 	while(1)
 	{
@@ -130,7 +130,8 @@ int main(void)
 				//if battery low or manual command set
 				//dockRobot();
 				//followLine();
-				rotateToHeading(bHeading, &robotPosition);
+				if(!rotateToHeading(bHeading, &robotPosition))
+					robotState = OBSTACLE_AVOIDANCE;
 			break;
 			
 			case OBSTACLE_AVOIDANCE:
@@ -138,6 +139,7 @@ int main(void)
 			//performed will depend on the previous state of the robot, ie docking will want
 			//to not move out of the way of other robots so as not to go out of alignment but
 			//still stop when the dock has been reached.
+			trackLight(&robotPosition);
 			break;
 			
 			case FORMATION:

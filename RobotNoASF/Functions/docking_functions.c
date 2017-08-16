@@ -373,3 +373,4 @@ uint8_t scanBrightestLightSource(float *brightestHeading, uint16_t sweepAngle,
 	}
 	return 1;
 }
+

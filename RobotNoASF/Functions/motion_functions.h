@@ -28,6 +28,10 @@
 //PID constants for rotateToHeading
 #define RTH_KP	4.0
 
+//PID constants for trackLight
+#define TL_KP	0.0009
+#define TL_KI	0.0000005
+
 ///////////////Functions////////////////////////////////////////////////////////////////////////////
 /*
 * Function:
@@ -47,5 +51,7 @@
 *
 */
 float rotateToHeading(float heading, struct Position *imuData);
+
+float trackLight(struct Position *imuData);
 
 #endif /* MOTION_FUNCTIONS_H_ */

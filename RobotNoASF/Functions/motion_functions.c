@@ -106,3 +106,38 @@ float rotateToHeading(float heading, struct Position *imuData)
 		return pErr;	//If not, return pErr
 	}
 }
+
+float trackLight(struct Position *imuData)
+{
+	static float pErr;
+	static float iErr = 0;
+	uint32_t motorSpeed;
+	
+	pErr = lightSensRead(MUX_LIGHTSENS_R, LS_WHITE_REG) - 
+			lightSensRead(MUX_LIGHTSENS_L, LS_WHITE_REG);
+	iErr += pErr;
+			
+	//If motorSpeed ends up being out of range, then dial it back
+	motorSpeed = abs(TL_KP*pErr + TL_KI*iErr);
+	if(motorSpeed > 100)
+		motorSpeed = 100;
+		
+	//If error is less than 0.5 deg and delta yaw is less than 0.5 degrees per second then we can
+	//stop
+	if((abs(pErr) < 50) && (abs(imuData->imuGyroZ) < 1))
+	{
+		ledOn1;
+		stopRobot();
+		pErr = 0;			//Clear the static vars so they don't interfere next time we call this
+							//function
+		iErr = 0;
+		return 0;
+	} else {
+		if(pErr > 0.0 )	//If heading is less than IMU heading then rotate clockwise to correct
+			rotateRobot(CW, (unsigned char)motorSpeed);
+		else			//Otherwise rotate anti-clockwise
+			rotateRobot(CCW, (unsigned char)motorSpeed);
+		ledOff1;
+		return pErr;	//If not, return pErr
+	}
+}
