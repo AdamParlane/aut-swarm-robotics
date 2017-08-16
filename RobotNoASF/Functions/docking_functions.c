@@ -69,7 +69,6 @@ uint8_t dockRobot(struct Position *imuData)
 			bHeading = scanBrightestLightSourceProx();	
 			imuDmpStart();
 			
-
 			//if(!scanBrightestLightSource(&bHeading, 359, imuData))
 				dockingState = FACE_BRIGHTEST;
 		break;

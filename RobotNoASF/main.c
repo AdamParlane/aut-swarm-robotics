@@ -128,7 +128,8 @@ int main(void)
 			
 			case DOCKING:
 				//if battery low or manual command set
-				dockRobot(&robotPosition);
+				//dockRobot(&robotPosition);
+				rotateToHeading(0, &robotPosition);
 			break;
 			
 			case OBSTACLE_AVOIDANCE:

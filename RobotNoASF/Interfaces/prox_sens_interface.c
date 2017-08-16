@@ -160,7 +160,7 @@ void proxAmbModeEnabled(void)
 		twi0Write(TWI0_PROXSENS_ADDR, PS_CMD_1BYTE | PS_ENABLE_REG, 1, &writeBuffer);		
 	}
 	//Wait for the first reading
-	//delay_ms(53); //(50ms ATIME + 2.73ms WTIME)	
+	delay_ms(53); //(50ms ATIME + 2.73ms WTIME)	
 }
 
 void proxModeEnabled(void)

@@ -167,7 +167,6 @@ int imuDmpInit(void)
 unsigned char imuDmpStop(void)
 {
 	unsigned char dmpEnabled = 0;
-		
 	mpu_get_dmp_state(&dmpEnabled);				//See if DMP was running
 	if (dmpEnabled == 1)						//If it was
 		mpu_set_dmp_state(0);					//Stop DMP
@@ -199,7 +198,6 @@ unsigned char imuDmpStop(void)
 unsigned char imuDmpStart(void)
 {
 	unsigned char dmpEnabled = 0;
-	
 	mpu_get_dmp_state(&dmpEnabled);				//See if DMP was already running
 	if (dmpEnabled == 0)						//If it wasn't
 		mpu_set_dmp_state(1);					//Start DMP
