@@ -18,7 +18,7 @@
 * void mouseInit(void);
 * int mouseTestBasic(void);
 * void Get_Mouse_XY(struct Position *mousePos);
-* void delay (void);
+* void mouseInitDelay(void);
 *
 * Functionality of each function is explained before each function
 * In the this file that is a summary of purpose, input and return values
@@ -127,7 +127,7 @@ char mouseTestBasic(void);
 void getMouseXY(struct Position *mousePos);
 
 /*
-* Function: void delay(void)
+* Function: void mouseInitDelay(void)
 *
 * Simple Delay using a for loop called throughout the mouse sensor setup
 * To meet mouseInit timing requirements
@@ -137,7 +137,7 @@ void getMouseXY(struct Position *mousePos);
 *
 * No return value
 */
-void delay (void);
+void mouseInitDelay(void);
 
 
 
