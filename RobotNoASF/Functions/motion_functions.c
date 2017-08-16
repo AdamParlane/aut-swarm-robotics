@@ -104,3 +104,51 @@ float rotateToHeading(float heading, struct Position *imuData)
 		return pErr;	//If not, return pErr
 	}
 }
+
+
+/*
+* Function:
+* char randomMovementGenerator(void)
+*
+* Will make the robot move around psuedo-randomly
+*
+* Inputs:
+* No Inputs
+*
+* Returns:
+* No return values
+*
+* Implementation:
+* rand is seeded using srand and the systemTimeStamp
+* systemTimeStamp is used becaue it has a high chance of being unique each time this is called
+* This is important because rand is puesdo-random and the same seed will produce the same set
+* of 'random' numbers therefore must be seeded with a unique value
+* PC applications use the time but this is not available
+*
+* Once seeded rand() is called with a modulo making the output within the desired range
+* Desired range
+*	Direction		0-360	degrees
+*	Speed			0-100	percent
+*	Delay			0-5		seconds
+*
+* Next these values are used to call the moveRobot function and allow it to run for Delay amount
+* of seconds
+*
+*
+* Improvements:
+* Could use a return value to indicate success, or delay time
+* 
+* TODO: AP
+* Need to change to use the timer interrupt NOT delay so the program doesnt hang for a few seconds
+* each time the function is called
+*
+*/
+char randomMovementGenerator(void)
+{
+	srand(systemTimestamp(NULL));	//Seed rand() to give unique random numbers
+	int direction = rand() % 360;	//get random direction range: 0 - 360 degrees
+	char speed = rand() % 100;		//get random speed:up to 100%
+	char runTime = rand() % 5;		//get random delay time: up to 5 seconds
+	moveRobot(direction, speed);	//moveRobot at random speed and direction
+	delay_ms(runTime * 1000);		//Delay for random milliseconds
+}

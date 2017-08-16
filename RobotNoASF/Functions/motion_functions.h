@@ -48,4 +48,20 @@
 */
 float rotateToHeading(float heading, struct Position *imuData);
 
+
+/*
+* Function:
+* char randomMovementGenerator(void)
+*
+* Will make the robot move around psuedo-randomly
+*
+* Inputs:
+* No Inputs
+*
+* Returns:
+* No return values
+*
+*/
+char randomMovementGenerator(void);
+
 #endif /* MOTION_FUNCTIONS_H_ */
