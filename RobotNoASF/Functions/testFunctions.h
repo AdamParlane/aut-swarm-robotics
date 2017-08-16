@@ -42,20 +42,7 @@ struct transmitDataStructure
 	uint8_t DataSize;//size of the transmit array
 };
 
-/*
-*
-* Function: void convertData(struct message_info message, uint8_t* data[50])
-*
-* Converts the received message structure and pointer to an array with the required test command data
-*
-* Input is the message structure from the received data
-* after the XBee framing has been stripped
-* and a pointer to the array where the new data is to be copied to
-*
-* No Return Values
-*
-*/
-void convertData(struct message_info message, uint8_t *data);
+
 
 /*
 * Function: uint8_t testManager(struct message_info message, struct transmitDataStructure *transmit,

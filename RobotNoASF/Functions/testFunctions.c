@@ -208,46 +208,6 @@ uint8_t testManager(struct message_info message, struct transmitDataStructure *t
 }
 
 /*
-*
-* Function: void convertData(struct message_info message, uint8_t* data[50])
-*
-* Converts the received message structure and pointer to an array with the required test command data
-*
-* Input is the message structure from the received data
-* after the XBee framing has been stripped
-* and a pointer to the array where the new data is to be copied to
-*
-* No Return Values
-*
-* Uses the message index to call the MessageBufferOut
-* This ensures that the message copying begins from the correct location
-* Simple for loop to copy the array of length message.length
-* This array is accessed via pointers and is used by the test Manager
-* The Message Buffer Get function returns 0 for success and -1 for failure
-* This function will quit on a failed return
-*
-*/
-void convertData(struct message_info message, uint8_t *data)
-{
-	char dataByte;
-	char messageError;
-	MessageBufferOut = message.index;//sets message buffer reader to correct start address
-	for (uint8_t i = 0; i < message.length; i++)//for each entry in the array
-	{
-		messageError = MessageBufferGet(&dataByte);//retrieve the next byte of received message data
-		if(messageError == 0)//if there was NO error
-		{
-			data[i] = dataByte;//fill the array with the data
-		}
-		else//if there was an error, exit
-		//TO DO: prehaps add some sort of error flagging system??
-			return;
-	}
-}
-
-
-
-/*
 * Function: void testAll(struct transmitDataStructure *transmit)
 *
 * tests all the peripherals in a set order and returns them all back to the GUI in one packet
