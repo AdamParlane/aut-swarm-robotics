@@ -77,17 +77,19 @@ float rotateToHeading(float heading, struct Position *imuData)
 	//Calculate proportional error values
 	pErr = heading - imuData->imuYaw;				//Signed Error
 	
-	//If motorSpeed ends up being out of range, then dial it back
-	motorSpeed = abs(RTH_KP*pErr); 
-	if(motorSpeed > 100)
-		motorSpeed = 100;
-	
 	//Force the P controller to always take the shortest path to the destination.
 	//For example if the robot was currently facing at -120 degrees and the target was 130 degrees,
 	//instead of going right around from -120 to 130, it will go to -180 and down to 130.	
-	if(abs(pErr) > 180)
-		pErr *= -1;
-	
+	if(pErr > 180)
+		pErr -= 360;
+	if(pErr < -180)
+		pErr += 360;
+		
+	//If motorSpeed ends up being out of range, then dial it back
+	motorSpeed = abs(RTH_KP*pErr);
+	if(motorSpeed > 100)
+		motorSpeed = 100;
+		
 	//If error is less than 0.5 deg and delta yaw is less than 0.5 degrees per second then we can
 	//stop
 	if((abs(pErr) < 0.5) && (abs(imuData->imuGyroZ) < 0.5))	

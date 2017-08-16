@@ -26,7 +26,7 @@
 ///////////////Global variables/////////////////////////////////////////////////////////////////////
 uint8_t SBtest, SBtest1;
 uint16_t DBtest, DBtest1, DBtest2;
-struct Position robotPosition;
+volatile struct Position robotPosition;
 extern uint8_t checkImuFifo;
 uint16_t battVoltage;
 
@@ -165,7 +165,11 @@ int main(void)
 			case IDLE:
 				//idle
 				//stopRobot();
-				if(!scanBrightestLightSource(&bHeading, 360, &robotPosition))
+				//if(!rotateToHeading(-179.5, &robotPosition))
+					//ledOn1;
+				//else
+					//ledOff1;
+				if(!scanBrightestLightSource(&bHeading, 359, &robotPosition))
 				{
 					robotState = DOCKING;
 				}

@@ -314,7 +314,7 @@ void followLine(void)
 uint8_t scanBrightestLightSource(float *brightestHeading, uint16_t sweepAngle, 
 								struct Position *imuData)
 {
-	const float ROTATE_STEP_SZ = 1;
+	const float ROTATE_STEP_SZ = 2;
 	enum {FUNCTION_INIT, GOTO_START_POSITION, SWEEP, END};
 	static uint8_t functionState = FUNCTION_INIT;
 	static float startHeading;
@@ -357,7 +357,7 @@ uint8_t scanBrightestLightSource(float *brightestHeading, uint16_t sweepAngle,
 			else
 			{
 				avgBrightness = (lightSensRead(MUX_LIGHTSENS_L, LS_WHITE_REG) +
-											lightSensRead(MUX_LIGHTSENS_R, LS_WHITE_REG))/2;
+										lightSensRead(MUX_LIGHTSENS_R, LS_WHITE_REG))/2;
 				if(avgBrightness > brightestVal)
 				{
 					brightestVal = avgBrightness;
