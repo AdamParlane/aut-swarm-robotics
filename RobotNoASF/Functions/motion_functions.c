@@ -107,24 +107,52 @@ float rotateToHeading(float heading, struct Position *imuData)
 	}
 }
 
+/*
+* Function:
+* float trackLight(struct Position *imuData)
+*
+* Robot while attempt to aim itself at a light source
+*
+* Inputs:
+* struct Position *imuData:
+*   A pointer to the robotPosition structure
+*
+* Returns:
+* 0 if equilibrium is reached, otherwise will return the proportional error value
+*
+* Implementation:
+* Works similarly to rotateToHeading except that a normalised difference between the light sensors
+* is used for feedback. This generates a heading delta that can be applied to the current heading
+* by the rotateToHeading() function which tries to correct the imbalance between the sensors.
+*
+* Improvements:
+* Possibility for integral run away if something goes wrong at the moment
+*
+*/
 float trackLight(struct Position *imuData)
 {
-	static float pErr;
-	static float iErr = 0;
-	uint32_t motorSpeed;
+	static float pErr;			//Proportional error
+	static float iErr = 0;		//Integral error
+	float dHeading;				//Delta heading to adjust by
+	//Read light sensor values
+	uint16_t leftSensor = lightSensRead(MUX_LIGHTSENS_L, LS_WHITE_REG);
+	uint16_t rightSensor = lightSensRead(MUX_LIGHTSENS_R, LS_WHITE_REG);
 	
-	pErr = lightSensRead(MUX_LIGHTSENS_R, LS_WHITE_REG) - 
-			lightSensRead(MUX_LIGHTSENS_L, LS_WHITE_REG);
+	//Calculate errors
+	//Proportional error is normalised by the average value of both sensors
+	pErr = (float)(rightSensor - leftSensor)/((float)(leftSensor + rightSensor)/2.0);
 	iErr += pErr;
 			
-	//If motorSpeed ends up being out of range, then dial it back
-	motorSpeed = abs(TL_KP*pErr + TL_KI*iErr);
-	if(motorSpeed > 100)
-		motorSpeed = 100;
-		
+	//If dHeading ends up being out of range, then dial it back
+	dHeading = TL_KP*pErr + TL_KI*iErr;
+	if(dHeading > 90)
+		dHeading = 90;
+	if(dHeading < -90)
+		dHeading = -90;
+	
 	//If error is less than 0.5 deg and delta yaw is less than 0.5 degrees per second then we can
 	//stop
-	if((abs(pErr) < 50) && (abs(imuData->imuGyroZ) < 1))
+	if((abs(dHeading) < 0.5) && (abs(imuData->imuGyroZ) < 0.5))
 	{
 		ledOn1;
 		stopRobot();
@@ -133,10 +161,7 @@ float trackLight(struct Position *imuData)
 		iErr = 0;
 		return 0;
 	} else {
-		if(pErr > 0.0 )	//If heading is less than IMU heading then rotate clockwise to correct
-			rotateRobot(CW, (unsigned char)motorSpeed);
-		else			//Otherwise rotate anti-clockwise
-			rotateRobot(CCW, (unsigned char)motorSpeed);
+		rotateToHeading(imuData->imuYaw + dHeading, imuData);
 		ledOff1;
 		return pErr;	//If not, return pErr
 	}

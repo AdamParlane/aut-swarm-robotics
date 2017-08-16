@@ -29,8 +29,8 @@
 #define RTH_KP	4.0
 
 //PID constants for trackLight
-#define TL_KP	0.0009
-#define TL_KI	0.0000005
+#define TL_KP	10.0
+#define TL_KI	0.001
 
 ///////////////Functions////////////////////////////////////////////////////////////////////////////
 /*
@@ -52,6 +52,20 @@
 */
 float rotateToHeading(float heading, struct Position *imuData);
 
+/*
+* Function:
+* float trackLight(struct Position *imuData)
+*
+* Robot while attempt to aim itself at a light source
+*
+* Inputs:
+* struct Position *imuData:
+*   A pointer to the robotPosition structure
+*
+* Returns:
+* 0 if equilibrium is reached, otherwise will return the proportional error value
+*
+*/
 float trackLight(struct Position *imuData);
 
 #endif /* MOTION_FUNCTIONS_H_ */

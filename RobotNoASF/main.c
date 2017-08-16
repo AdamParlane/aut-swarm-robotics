@@ -26,7 +26,7 @@
 ///////////////Global variables/////////////////////////////////////////////////////////////////////
 uint8_t SBtest, SBtest1;
 uint16_t DBtest, DBtest1, DBtest2;
-volatile struct Position robotPosition;
+struct Position robotPosition;
 extern uint8_t checkImuFifo;
 uint16_t battVoltage;
 
@@ -84,7 +84,7 @@ int main(void)
 										//on is 0 degrees heading.
 	struct transmitDataStructure transmitMessage;
 	
-	robotState = OBSTACLE_AVOIDANCE;
+	robotState = IDLE;
 	
 	while(1)
 	{
