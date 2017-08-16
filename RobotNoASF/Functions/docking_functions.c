@@ -21,16 +21,15 @@
 *
 */
 
-///////////////Includes/////////////////////////////////////////////////////////////////////////////
+//////////////[Includes]////////////////////////////////////////////////////////////////////////////
 #include "docking_functions.h"
 #include <stdlib.h>				//abs() function in followLine()
 
-///////////////Global variables/////////////////////////////////////////////////////////////////////
+//////////////[Global variables]////////////////////////////////////////////////////////////////////
 //Light follower sensor states.
 struct LineSensorArray lf;
-extern struct Position robotPosition;
 
-///////////////Functions////////////////////////////////////////////////////////////////////////////
+//////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*
 * Function:
 * void dockRobot(void)
@@ -38,70 +37,60 @@ extern struct Position robotPosition;
 * Function to guide the robot to the dock.
 *
 * Inputs:
-* none
+* struct Position *imuData
+*   Pointer to the robotPosition structure
 *
 * Returns:
-* none
+* 0 when docking complete, otherwise non-zero
 *
 * Implementation:
-* assume max brightness is 0-100 (scale it to make this work)
-* [explain key steps of function]
-* [use heavy detail for anything complicated]
+* The docking function is a state machine that will change states after each step that is required
+* for docking is performed. More to come [WIP]
 *
 * Improvements:
 * [Ideas for improvements that are yet to be made](optional)
 *
 */
-void dockRobot(void)
+uint8_t dockRobot(struct Position *imuData)
 {
-	//************Approx light ranges**************//
-	//Ambient light in WS217 0x00DE - 0x0158
-	//LED @ 10cm straight on 0x0abe - 0x12ea
-	//LED @ 20cm straight on 0x05da - 0x06c6
-	//LED @ 30cm straight on 0x0443 - 0x04a9
-	//LED @ 30cm 30dg offset High ~0x04a9 Low ~0x0440
-	//LED @ 30cm 60dg offset High ~0x033a Low ~0x02b7
-	//LED @ 30cm 90dg offset High ~0x00ec Low ~0x00d6
+	float bHeading = 0;
+	enum {START, FACE_BRIGHTEST, FINISHED};
+	static uint8_t dockingState = START;
 	
-	//***********Approx Promity Values*************//
-	//Using my hand as an object, testing on side A
-	//touching - ~5cm = 0x03ff (max)
-	//5 cm away 0x0150 - 0x01ff
-	//10cm away 0x0070 - 0x0100
-	//20cm away 0x0030 - 0x003f
-	//30cm away 0x0020 - 0x0029
-	
-	uint16_t rightBrightness, leftBrightness;
-	float diff = 0;
-	float rightBrightnessScaled, leftBrightnessScaled;
-	
-	leftBrightness = lightSensRead(MUX_LIGHTSENS_L, LS_WHITE_REG);
-	rightBrightness = lightSensRead(MUX_LIGHTSENS_R, LS_WHITE_REG);
-	
-	//frontProximity = proxSensRead(MUX_PROXSENS_A); //need to test this
-	
-	if(rightBrightness > 0x0200 && leftBrightness > 0x0200)//if there is more light than ambient
+	///////////////[WIP]///////////////
+	switch(dockingState)
 	{
-		//Scale brightness to calculate required position
-		rightBrightnessScaled = (rightBrightness / 0xFFFF) * 100;
-		leftBrightnessScaled = (leftBrightness / 0xFFFF) * 100;
-		//Zero Justified Normalized Differential Shade Calculation
-		diff = 2 * (((rightBrightnessScaled * 100)/(rightBrightnessScaled + leftBrightnessScaled)) - 50);
-		//Convert to degrees
-		moveRobot(diff/2, 50);
+		case START:
+			rotateToHeading(0, imuData);
+			ledOn1;
+			ledOff2;
+			ledOff3;
+			//imuDmpStop();
+			//bHeading = scanBrightestLightSourceProx();	
+			//imuDmpStart();
+			
+			//if(!scanBrightestLightSource(&bHeading, 359, imuData))
+			//dockingState = FACE_BRIGHTEST;
+		break;
+		
+		case FACE_BRIGHTEST:
+			ledOff1;
+			ledOn2;
+			ledOff3;
+			if(!rotateToHeading(bHeading, imuData))
+				dockingState = FINISHED;
+		break; 
+		
+		case FINISHED:
+			ledOff1;
+			ledOff2;
+			ledOn3;
+			trackLight(imuData);
+			return 0;
+		break;
 	}
-	else if((leftBrightness > 0x1000 || rightBrightness >  0x1000))// && frontProximity > 0x0300)
-	{
-		stopRobot();
-	}
-	else if((rightBrightness - leftBrightness) > 0x009F)
-	{
-		rotateRobot(CW, 30); //turn right
-	}
-	else if((leftBrightness - rightBrightness) > 0x009F)
-	{
-		rotateRobot(CCW, 30);//turn left
-	}
+	
+	return 1;
 }
 
 /*
@@ -127,23 +116,23 @@ void dockRobot(void)
 void updateLineSensorStates(void)
 {
 #if defined ROBOT_TARGET_V2
-	uint8_t sensorValue;
+	uint8_t sensorValue;						//Temporarily stores state of a single sensor
 	
-	sensorValue = lfLineDetected(LF_OUTER_L);
-	if (sensorValue != NO_CHANGE)
-		lf.outerLeft = sensorValue;
+	sensorValue = lfLineDetected(LF_OUTER_L);	//Look for line on outer left sensor
+	if (sensorValue != NO_CHANGE)				//If this sensor has changed state
+		lf.outerLeft = sensorValue;				//Update line follower data structure with new data
 		
-	sensorValue = lfLineDetected(LF_INNER_L);
-	if (sensorValue != NO_CHANGE)
-		lf.innerLeft = sensorValue;
+	sensorValue = lfLineDetected(LF_INNER_L);	//Look for line on inner left sensor
+	if (sensorValue != NO_CHANGE)				//If this sensor has changed state
+		lf.innerLeft = sensorValue;				//Update line follower data structure with new data
 		
-	sensorValue = lfLineDetected(LF_OUTER_R);
-	if (sensorValue != NO_CHANGE)
-		lf.outerRight = sensorValue;
+	sensorValue = lfLineDetected(LF_OUTER_R);	//Look for line on outer right sensor
+	if (sensorValue != NO_CHANGE)				//If this sensor has changed state
+		lf.outerRight = sensorValue;			//Update line follower data structure with new data
 		
-	sensorValue = lfLineDetected(LF_INNER_R);
-	if (sensorValue != NO_CHANGE)
-		lf.innerRight = sensorValue;
+	sensorValue = lfLineDetected(LF_INNER_R);	//Look for line on inner right sensor
+	if (sensorValue != NO_CHANGE)				//If this sensor has changed state
+		lf.innerRight = sensorValue;			//Update line follower data structure with new data
 #endif
 }
 
@@ -278,7 +267,8 @@ void followLine(void)
 
 /*
 * Function:
-* uint8_t scanBrightestLightSource(int16_t *brightestHeading)
+* uint8_t scanBrightestLightSource(float *brightestHeading, uint16_t sweepAngle,
+*									struct Position *imuData);
 *
 * The robot will scan from -180 degrees to 180 degrees and record the heading with the brightest
 * source of light (which hopefully is the charging station)
@@ -310,34 +300,97 @@ void followLine(void)
 * Currently it seems to not lock dead on with the light source.
 *
 */
-uint8_t scanBrightestLightSource(int16_t *brightestHeading, struct Position *imuData)
+uint8_t scanBrightestLightSource(float *brightestHeading, uint16_t sweepAngle, 
+								struct Position *imuData)
 {
-	const uint8_t headingStepSize = 10;
-	static int16_t heading = -180;
-	static uint16_t brightestVal = 0;
+	const float ROTATE_STEP_SZ = 2;
+	enum {FUNCTION_INIT, GOTO_START_POSITION, SWEEP, END};
+	static uint8_t functionState = FUNCTION_INIT;
+	static float startHeading;
+	static float endHeading;
+	static float sHeading;
+	static uint16_t brightestVal;
+	float rotateError;
 	uint16_t avgBrightness = 0;
 	
-	if(!rotateToHeading((float)heading, imuData))	//If we are facing the right direction
+	switch(functionState)
 	{
-		//Get average value from the light sensors.
-		avgBrightness = (lightSensRead(MUX_LIGHTSENS_L, LS_WHITE_REG) + 
-							lightSensRead(MUX_LIGHTSENS_R, LS_WHITE_REG))/2;
+		case FUNCTION_INIT:
+			//Calculate where to start sweep from
+			brightestVal = 0;								//Reset brightestValue
+			startHeading = imuData->imuYaw - (sweepAngle/2);//Calculate start heading
+			endHeading = startHeading + sweepAngle;
+			sHeading = startHeading + sweepAngle/3;
+			functionState = GOTO_START_POSITION;			//Angles set up, lets start
+			return 1;
+		break;
+
+		case GOTO_START_POSITION:
+			if(!rotateToHeading(startHeading, imuData))
+				functionState = SWEEP;						//In position, now perform sweep
+			return 1;
+		break;
 		
-		if (avgBrightness > brightestVal)			//If light at this heading is brighter than
-													//before
+		case SWEEP:
+			rotateError = rotateToHeading(sHeading, imuData);
+			if(abs(rotateError) < 170 && sHeading < endHeading)//Keep sHeading only 25 degrees ahead
+															//of current heading so that robot will
+															//always take the long way around
+			{
+				sHeading += ROTATE_STEP_SZ;
+				if(sHeading > endHeading)
+					sHeading = endHeading;
+			}
+			if(!rotateError)
+				functionState = END;
+			else
+			{
+				avgBrightness = (lightSensRead(MUX_LIGHTSENS_L, LS_WHITE_REG) +
+										lightSensRead(MUX_LIGHTSENS_R, LS_WHITE_REG))/2;
+				if(avgBrightness > brightestVal)
+				{
+					brightestVal = avgBrightness;
+					*brightestHeading = imuData->imuYaw;
+				}
+			}
+			return 1;
+		break;
+		
+		case END:
+			functionState = FUNCTION_INIT;
+			return 0;
+	}
+	return 1;
+}
+
+
+float scanBrightestLightSourceProx(void)
+{
+	uint16_t sensor[6];
+	uint16_t brightestVal;
+	int brightestSensor = 0;
+	//Enable Ambient light mode on the prox sensors
+	proxAmbModeEnabled();
+
+	//Read light sensor values
+	sensor[0] = proxAmbRead(MUX_PROXSENS_A);		//0
+	sensor[1] = proxAmbRead(MUX_PROXSENS_B);		//60
+	sensor[3] = proxAmbRead(MUX_PROXSENS_C);		//120
+	sensor[4] = proxAmbRead(MUX_PROXSENS_D);		//180
+	sensor[5] = proxAmbRead(MUX_PROXSENS_E);		//-120
+	sensor[6] = proxAmbRead(MUX_PROXSENS_F);		//-60
+	//Revert to proximity mode
+	proxModeEnabled();
+	
+	//Find largest
+	for (int i = 0; i < 6; i++)
+	{
+		if(sensor[i] > brightestVal)
 		{
-			brightestVal = avgBrightness;			//Update static vars with new values
-			*brightestHeading = heading;
-		}
-		
-		heading += headingStepSize;					//Step to the next heading
-		
-		if(heading > (180 - headingStepSize))		//If we have reached the last heading
-		{
-			heading = -180;
-			brightestVal = 0;
-			return 0;								//Scan finished
+			brightestVal = sensor[i];
+			brightestSensor = i;
 		}
 	}
-	return 1;								//Otherwise, we haven't finished yet
+	
+	return imuWrapAngle(60*brightestSensor);
 }

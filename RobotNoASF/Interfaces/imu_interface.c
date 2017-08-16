@@ -33,7 +33,7 @@
 *
 */
 
-///////////////Includes/////////////////////////////////////////////////////////////////////////////
+//////////////[Includes]////////////////////////////////////////////////////////////////////////////
 #include "imu_interface.h"
 #include <tgmath.h>				//Required for atan2 in imuGetEulerAngles()
 #include "twimux_interface.h"	//twi and multiplexer
@@ -47,7 +47,7 @@
 uint8_t checkImuFifo	= 0;	//A flag to determine that the IMU's FIFO is ready to be read again
 extern uint32_t systemTimestamp;
 
-///////////////Functions////////////////////////////////////////////////////////////////////////////
+//////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*
 * Function: int imuInit(void)
 *
@@ -167,7 +167,6 @@ int imuDmpInit(void)
 unsigned char imuDmpStop(void)
 {
 	unsigned char dmpEnabled = 0;
-		
 	mpu_get_dmp_state(&dmpEnabled);				//See if DMP was running
 	if (dmpEnabled == 1)						//If it was
 		mpu_set_dmp_state(0);					//Stop DMP
@@ -199,7 +198,6 @@ unsigned char imuDmpStop(void)
 unsigned char imuDmpStart(void)
 {
 	unsigned char dmpEnabled = 0;
-	
 	mpu_get_dmp_state(&dmpEnabled);				//See if DMP was already running
 	if (dmpEnabled == 0)						//If it wasn't
 		mpu_set_dmp_state(1);					//Start DMP
@@ -499,7 +497,7 @@ float imuWrapAngle(float angleDeg)
 {
 	while(angleDeg > 180.0)
 		angleDeg -= 360.0;
-	while(angleDeg <= -180.0)
+	while(angleDeg < -179.99)
 		angleDeg += 360.0;
 	return angleDeg;
 }

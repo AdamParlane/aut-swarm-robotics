@@ -17,13 +17,13 @@
 * void setup(void)
 */
 
-///////////////Includes/////////////////////////////////////////////////////////////////////////////
+//////////////[Includes]////////////////////////////////////////////////////////////////////////////
 #include "robot_defines.h"
 
-///////////////Defines//////////////////////////////////////////////////////////////////////////////
+//////////////[Defines]/////////////////////////////////////////////////////////////////////////////
 #define		batteryLow	1
 
-///////////////Global variables/////////////////////////////////////////////////////////////////////
+//////////////[Global variables]////////////////////////////////////////////////////////////////////
 uint8_t SBtest, SBtest1;
 uint16_t DBtest, DBtest1, DBtest2;
 struct Position robotPosition;
@@ -31,7 +31,7 @@ extern uint8_t checkImuFifo;
 uint16_t battVoltage;
 
 
-///////////////Functions////////////////////////////////////////////////////////////////////////////
+//////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*
 * Function:
 * void setup(void)
@@ -71,7 +71,6 @@ int main(void)
 	//const char streamIntervalFlag = 1;
 	setup();
 	uint8_t testMode = 0x00;
-
 	char chargeInfo;
 	char error; //used for developement to log and watch errors - AP
 	//TODO: Adam add error handling with GUI
@@ -85,8 +84,8 @@ int main(void)
 										//on is 0 degrees heading.
 	struct transmitDataStructure transmitMessage;
 	
-	robotState = IDLE;
-
+	robotState = DOCKING;
+	
 	while(1)
 	{
 		switch (robotState)
@@ -129,9 +128,7 @@ int main(void)
 			
 			case DOCKING:
 				//if battery low or manual command set
-				//dockRobot();
-				//followLine();
-				//rotateToHeading((float)bHeading, &robotPosition);
+				dockRobot(&robotPosition);	//Execute docking procedure state machine
 			break;
 			
 			case OBSTACLE_AVOIDANCE:
@@ -166,10 +163,10 @@ int main(void)
 			case IDLE:
 				//idle
 				stopRobot();
-		
 			break;
 		}
 		
+		//This should be in a function in Communications////////////////////////////////////////////
 		if(FrameBufferInfoGetFull(&frame) == 0)	//Check for a received XBee Message
 		{
 			InterpretXbeeAPIFrame(frame); //Interpret the received XBee Message
@@ -187,6 +184,7 @@ int main(void)
 			checkImuFifo = 0;
 			imuGetEulerAngles(&robotPosition);
 		}
+		////////////////////////////////////////////////////////////////////////////////////////////
 		//if(obstacleAvoidanceEnabledFlag)
 			//obstacleAvoidanceManager();
 	}
@@ -229,12 +227,7 @@ void setup(void)
 	timer0Init();						//Initialise timer0
 	lightSensInit(MUX_LIGHTSENS_R);		//Initialise Right Light/Colour sensor
 	lightSensInit(MUX_LIGHTSENS_L);		//Initialise Left Light/Colour sensor
-	proxSensInit(MUX_PROXSENS_A);		//Initialise proximity sensor on panel A
-	proxSensInit(MUX_PROXSENS_B);		//Initialise proximity sensor on panel B
-	proxSensInit(MUX_PROXSENS_C);		//Initialise proximity sensor on panel C
-	proxSensInit(MUX_PROXSENS_D);		//Initialise proximity sensor on panel D
-	proxSensInit(MUX_PROXSENS_E);		//Initialise proximity sensor on panel E
-	proxSensInit(MUX_PROXSENS_F);		//Initialise proximity sensor on panel F
+	proxSensInit();						//Initialise proximity sensors
 	fcInit();							//Initialise the fast charge chip
 	CommunicationSetup();				//Initialise communication system
 	imuInit();							//Initialise IMU.
@@ -244,6 +237,7 @@ void setup(void)
 #if defined ROBOT_TARGET_V2
 	lfInit();							//Initialise line follow sensors. Only on V2.
 #endif
-	delay_ms(2500);
+	
+	delay_ms(2500);						//Stops robot running away while programming
 	return;
 }

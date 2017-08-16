@@ -16,7 +16,7 @@
 *
 */
 
-///////////////Includes/////////////////////////////////////////////////////////////////////////////
+//////////////[Includes]////////////////////////////////////////////////////////////////////////////
 #include "timer0.h"
 
 ///////////////Global Vars//////////////////////////////////////////////////////////////////////////
@@ -32,7 +32,7 @@ uint32_t imuFifoNextReadTime = 0;	//The system time at which the IMU will be rea
 									//The IMU.
 #endif
 
-///////////////Functions////////////////////////////////////////////////////////////////////////////
+//////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*
 * Function:
 * void timer0Init(void)
@@ -145,6 +145,55 @@ int delay_ms(uint32_t period_ms)
 		}
 	}
 	return 0;
+}
+
+/*
+* Function:
+* int fdelay_ms(uint32_t period_ms)
+*
+* Multi-task friendly delay
+*
+* Inputs:
+* uint32_t period_ms
+*   Delay in ms
+*
+* Returns:
+* 0 when time is up, otherwise 1
+*
+* Implementation:
+* TODO:[explain key steps of function]
+* [use heavy detail for anything complicated]
+*
+* Improvements:
+* [Ideas for improvements that are yet to be made](optional)
+*
+*/
+int fdelay_ms(uint32_t period_ms)
+{
+	enum {START, WAIT, STOP};
+	static uint8_t delayState = START;
+	static uint32_t startTime;
+	uint32_t timeStamp;
+
+	switch(delayState)
+	{
+		case START:
+		get_ms(&startTime);
+		delayState = WAIT;
+		break;
+		
+		case WAIT:
+		get_ms(&timeStamp);
+		if(timeStamp > startTime + period_ms)
+		delayState = STOP;
+		break;
+		
+		case STOP:
+		delayState = START;
+		return 0;
+		break;
+	}
+	return 1;
 }
 
 /*

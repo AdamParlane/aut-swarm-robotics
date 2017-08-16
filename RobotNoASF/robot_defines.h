@@ -15,8 +15,7 @@
 *
 * Functions:
 * void masterClockInit(void)
-* void pioInit(void)
-* void ledInit(void)
+* uint8_t waitForFlag(const volatile uint32_t *regAddr, uint32_t regMask, uint16_t timeOutMs)
 *
 */
 
@@ -59,7 +58,7 @@ struct Position
 	float h;				//Absolute Z position in arena
 };
 
-///////////////Includes/////////////////////////////////////////////////////////////////////////////
+//////////////[Includes]////////////////////////////////////////////////////////////////////////////
 #include "Interfaces/spi.h"
 #include "sam.h"
 #include "Interfaces/pio_interface.h"
@@ -81,7 +80,7 @@ struct Position
 #include "Functions/obstacle_avoidance.h"
 #include "Functions/motion_functions.h"
 
-///////////////Defines//////////////////////////////////////////////////////////////////////////////
+//////////////[Defines]/////////////////////////////////////////////////////////////////////////////
 	
 //Universal Asynchronous Receiver/Transmitter
 #define TXRDY (REG_UART3_SR & UART_SR_TXRDY)	//UART TX READY flag [SHOULD BE IN COMMUNICATIONS]
@@ -91,13 +90,13 @@ struct Position
 #error  Robot version has not been set in compiler symbols. (set ROBOT_TARGET_V1 or ROBOT_TARGET_V2)
 #endif
 
-///////////////Global variables/////////////////////////////////////////////////////////////////////
+//////////////[Global variables]////////////////////////////////////////////////////////////////////
 //used for test function calling
 char newDataFlag; //used for test function probably temporary
 char robotState, previousState;
 volatile char streamDelayCounter, streamIntervalFlag;
 
-///////////////Functions////////////////////////////////////////////////////////////////////////////
+//////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*
 * Function:
 * void masterClockInit(void)

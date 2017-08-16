@@ -16,13 +16,14 @@
 * void funcName(void)
 *
 */
-///////////////Includes/////////////////////////////////////////////////////////////////////////////
+//////////////[Includes]////////////////////////////////////////////////////////////////////////////
 #include "motion_functions.h"
 
-///////////////Global variables/////////////////////////////////////////////////////////////////////
+//////////////[Global variables]////////////////////////////////////////////////////////////////////
 extern struct Position robotPosition;
+extern uint32_t systemTimestamp;
 
-///////////////Functions////////////////////////////////////////////////////////////////////////////
+//////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*
 * Function:
 * float rotateToHeading(float heading, struct Position *imuData)
@@ -77,17 +78,19 @@ float rotateToHeading(float heading, struct Position *imuData)
 	//Calculate proportional error values
 	pErr = heading - imuData->imuYaw;				//Signed Error
 	
-	//If motorSpeed ends up being out of range, then dial it back
-	motorSpeed = abs(RTH_KP*pErr); 
-	if(motorSpeed > 100)
-		motorSpeed = 100;
-	
-	//Force the PID controller to always take the shortest path to the destination.
+	//Force the P controller to always take the shortest path to the destination.
 	//For example if the robot was currently facing at -120 degrees and the target was 130 degrees,
 	//instead of going right around from -120 to 130, it will go to -180 and down to 130.	
-	if(abs(pErr) > 180)
-		pErr *= -1;
-	
+	if(pErr > 180)
+		pErr -= 360;
+	if(pErr < -180)
+		pErr += 360;
+		
+	//If motorSpeed ends up being out of range, then dial it back
+	motorSpeed = abs(RTH_KP*pErr);
+	if(motorSpeed > 100)
+		motorSpeed = 100;
+		
 	//If error is less than 0.5 deg and delta yaw is less than 0.5 degrees per second then we can
 	//stop
 	if((abs(pErr) < 0.5) && (abs(imuData->imuGyroZ) < 0.5))	
@@ -105,6 +108,113 @@ float rotateToHeading(float heading, struct Position *imuData)
 	}
 }
 
+/*
+* Function:
+* float trackLight(struct Position *imuData)
+*
+* Robot while attempt to aim itself at a light source
+*
+* Inputs:
+* struct Position *imuData:
+*   A pointer to the robotPosition structure
+*
+* Returns:
+* 0 if equilibrium is reached, otherwise will return the proportional error value
+*
+* Implementation:
+* Works similarly to rotateToHeading except that a normalised difference between the light sensors
+* is used for feedback. This generates a heading delta that can be applied to the current heading
+* by the rotateToHeading() function which tries to correct the imbalance between the sensors.
+*
+* Improvements:
+* Possibility for integral run away if something goes wrong at the moment
+*
+*/
+float trackLight(struct Position *imuData)
+{
+	static float pErr;			//Proportional error
+	static float iErr = 0;		//Integral error
+	float dHeading;				//Delta heading to adjust by
+	//Read light sensor values
+	uint16_t leftSensor = lightSensRead(MUX_LIGHTSENS_L, LS_WHITE_REG);
+	uint16_t rightSensor = lightSensRead(MUX_LIGHTSENS_R, LS_WHITE_REG);
+	
+	//Calculate errors
+	//Proportional error is normalised by the average value of both sensors
+	pErr = (float)(rightSensor - leftSensor)/((float)(leftSensor + rightSensor)/2.0);
+	iErr += pErr;
+			
+	//If dHeading ends up being out of range, then dial it back
+	dHeading = TL_KP*pErr + TL_KI*iErr;
+	if(dHeading > 90)
+		dHeading = 90;
+	if(dHeading < -90)
+		dHeading = -90;
+	
+	//If error is less than 0.5 deg and delta yaw is less than 0.5 degrees per second then we can
+	//stop
+	if((abs(dHeading) < 0.5) && (abs(imuData->imuGyroZ) < 0.5))
+	{
+		ledOn1;
+		stopRobot();
+		pErr = 0;			//Clear the static vars so they don't interfere next time we call this
+							//function
+		iErr = 0;
+		return 0;
+	} else {
+		rotateToHeading(imuData->imuYaw + dHeading, imuData);
+		ledOff1;
+		return pErr;	//If not, return pErr
+	}
+}
+
+float trackLightProx(struct Position *imuData)
+{
+	static float pErr;			//Proportional error
+	static float iErr = 0;		//Integral error
+	float dHeading;				//Delta heading to adjust by
+	
+	//Enable Ambient light mode on the prox sensors
+	proxAmbModeEnabled();
+	
+	//Read light sensor values
+	uint16_t leftSensor = proxAmbRead(MUX_PROXSENS_F);
+	uint16_t frontSensor = proxAmbRead(MUX_PROXSENS_A);
+	uint16_t rightSensor = proxAmbRead(MUX_PROXSENS_B);
+	
+	//Revert to proximity mode
+	proxModeEnabled();
+	
+	leftSensor = (leftSensor + frontSensor)/2;
+	rightSensor = (rightSensor + frontSensor)/2;
+	
+	//Calculate errors
+	//Proportional error is normalised by the average value of both sensors
+	pErr = (float)(rightSensor - leftSensor)/((float)(leftSensor + rightSensor)/2.0);
+	iErr += pErr;
+	
+	//If dHeading ends up being out of range, then dial it back
+	dHeading = TL_KP*pErr + TL_KI*iErr;
+	if(dHeading > 90)
+		dHeading = 90;
+	if(dHeading < -90)
+		dHeading = -90;
+	
+	//If error is less than 0.5 deg and delta yaw is less than 0.5 degrees per second then we can
+	//stop
+	if((abs(dHeading) < 0.5) && (abs(imuData->imuGyroZ) < 0.5))
+	{
+		stopRobot();
+		pErr = 0;			//Clear the static vars so they don't interfere next time we call this
+		//function
+		iErr = 0;
+		return 0;
+	} else {
+		rotateToHeading(imuData->imuYaw + dHeading, imuData);
+		return dHeading;	//If not, return pErr
+	}
+	return 1;
+}
 
 /*
 * Function:
@@ -151,4 +261,5 @@ char randomMovementGenerator(void)
 	char runTime = rand() % 5;		//get random delay time: up to 5 seconds
 	moveRobot(direction, speed);	//moveRobot at random speed and direction
 	delay_ms(runTime * 1000);		//Delay for random milliseconds
+	return 0;
 }

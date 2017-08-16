@@ -20,15 +20,23 @@
 #ifndef MOTION_FUNCTIONS_H_
 #define MOTION_FUNCTIONS_H_
 
-///////////////Includes/////////////////////////////////////////////////////////////////////////////
+//////////////[Includes]////////////////////////////////////////////////////////////////////////////
 #include "../robot_defines.h"
 #include <stdlib.h>
 
-///////////////Defines//////////////////////////////////////////////////////////////////////////////
+//////////////[Defines]/////////////////////////////////////////////////////////////////////////////
 //PID constants for rotateToHeading
 #define RTH_KP	4.0
 
-///////////////Functions////////////////////////////////////////////////////////////////////////////
+//PID constants for trackLight
+#define TL_KP	10.0
+#define TL_KI	0.001
+
+//PID constants for trackLightprox
+#define TL_KP	10.0
+#define TL_KI	0.001
+
+//////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*
 * Function:
 * float rotateToHeading(float heading, struct Position *imuData)
@@ -48,6 +56,23 @@
 */
 float rotateToHeading(float heading, struct Position *imuData);
 
+/*
+* Function:
+* float trackLight(struct Position *imuData)
+*
+* Robot while attempt to aim itself at a light source
+*
+* Inputs:
+* struct Position *imuData:
+*   A pointer to the robotPosition structure
+*
+* Returns:
+* 0 if equilibrium is reached, otherwise will return the proportional error value
+*
+*/
+float trackLight(struct Position *imuData);
+
+float trackLightProx(struct Position *imuData);
 
 /*
 * Function:
