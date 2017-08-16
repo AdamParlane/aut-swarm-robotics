@@ -52,56 +52,31 @@ extern struct Position robotPosition;
 * [Ideas for improvements that are yet to be made](optional)
 *
 */
-void dockRobot(void)
+uint8_t dockRobot(struct Position *imuData)
 {
-	//************Approx light ranges**************//
-	//Ambient light in WS217 0x00DE - 0x0158
-	//LED @ 10cm straight on 0x0abe - 0x12ea
-	//LED @ 20cm straight on 0x05da - 0x06c6
-	//LED @ 30cm straight on 0x0443 - 0x04a9
-	//LED @ 30cm 30dg offset High ~0x04a9 Low ~0x0440
-	//LED @ 30cm 60dg offset High ~0x033a Low ~0x02b7
-	//LED @ 30cm 90dg offset High ~0x00ec Low ~0x00d6
+	float bHeading = 0;
+	enum {START, FACE_BRIGHTEST, FINISHED};
+	static uint8_t dockingState = START;
 	
-	//***********Approx Promity Values*************//
-	//Using my hand as an object, testing on side A
-	//touching - ~5cm = 0x03ff (max)
-	//5 cm away 0x0150 - 0x01ff
-	//10cm away 0x0070 - 0x0100
-	//20cm away 0x0030 - 0x003f
-	//30cm away 0x0020 - 0x0029
-	
-	uint16_t rightBrightness, leftBrightness;
-	float diff = 0;
-	float rightBrightnessScaled, leftBrightnessScaled;
-	
-	leftBrightness = lightSensRead(MUX_LIGHTSENS_L, LS_WHITE_REG);
-	rightBrightness = lightSensRead(MUX_LIGHTSENS_R, LS_WHITE_REG);
-	
-	//frontProximity = proxSensRead(MUX_PROXSENS_A); //need to test this
-	
-	if(rightBrightness > 0x0200 && leftBrightness > 0x0200)//if there is more light than ambient
+	switch(dockingState)
 	{
-		//Scale brightness to calculate required position
-		rightBrightnessScaled = (rightBrightness / 0xFFFF) * 100;
-		leftBrightnessScaled = (leftBrightness / 0xFFFF) * 100;
-		//Zero Justified Normalized Differential Shade Calculation
-		diff = 2 * (((rightBrightnessScaled * 100)/(rightBrightnessScaled + leftBrightnessScaled)) - 50);
-		//Convert to degrees
-		moveRobot(diff/2, 50);
+		case START:
+			bHeading = scanBrightestLightSourceProx(imuData);
+			dockingState = FACE_BRIGHTEST;
+		break;
+		
+		case FACE_BRIGHTEST:
+			if(!rotateToHeading(bHeading, imuData))
+				dockingState = FINISHED;
+		break; 
+		
+		case FINISHED:
+			trackLightProx(imuData);
+			return 0;
+		break;
 	}
-	else if((leftBrightness > 0x1000 || rightBrightness >  0x1000))// && frontProximity > 0x0300)
-	{
-		stopRobot();
-	}
-	else if((rightBrightness - leftBrightness) > 0x009F)
-	{
-		rotateRobot(CW, 30); //turn right
-	}
-	else if((leftBrightness - rightBrightness) > 0x009F)
-	{
-		rotateRobot(CCW, 30);//turn left
-	}
+	
+	return 1;
 }
 
 /*
@@ -374,3 +349,33 @@ uint8_t scanBrightestLightSource(float *brightestHeading, uint16_t sweepAngle,
 	return 1;
 }
 
+float scanBrightestLightSourceProx(struct Position *imuData)
+{
+	uint16_t sensor[6];
+	uint16_t brightestVal;
+	int brightestSensor = 0;
+	//Enable Ambient light mode on the prox sensors
+	proxAmbModeEnabled();
+		
+	//Read light sensor values
+	sensor[0] = proxAmbRead(MUX_PROXSENS_A);		//0
+	sensor[1] = proxAmbRead(MUX_PROXSENS_B);		//60
+	sensor[3] = proxAmbRead(MUX_PROXSENS_C);		//120
+	sensor[4] = proxAmbRead(MUX_PROXSENS_D);		//180
+	sensor[5] = proxAmbRead(MUX_PROXSENS_E);		//-120
+	sensor[6] = proxAmbRead(MUX_PROXSENS_F);		//-60
+	//Revert to proximity mode
+	proxModeEnabled();
+	
+	//Find largest
+	for (int i = 0; i < 6; i++)
+	{
+		if(sensor[i] > brightestVal)
+		{
+			brightestVal = sensor[i];
+			brightestSensor = i;
+		}
+	}
+	
+	return imuWrapAngle(60*brightestSensor);
+}

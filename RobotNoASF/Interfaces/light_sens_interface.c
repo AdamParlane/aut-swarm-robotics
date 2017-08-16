@@ -12,6 +12,15 @@
 * Atmel SAM 4N Processor Datasheet:http://www.atmel.com/Images/Atmel-11158-32-bit%20Cortex-M4-Microcontroller-SAM4N16-SAM4N8_Datasheet.pdf
 * VEML6040 colour sensor Datasheet:https://www.vishay.com/docs/84276/veml6040.pdf
 *
+* Approx light ranges
+* Ambient light in WS217 0x00DE - 0x0158
+* LED @ 10cm straight on 0x0abe - 0x12ea
+* LED @ 20cm straight on 0x05da - 0x06c6
+* LED @ 30cm straight on 0x0443 - 0x04a9
+* LED @ 30cm 30dg offset High ~0x04a9 Low ~0x0440
+* LED @ 30cm 60dg offset High ~0x033a Low ~0x02b7
+* LED @ 30cm 90dg offset High ~0x00ec Low ~0x00d6
+*
 * Functions:
 * void lightSensInit(uint8_t channel)
 * uint16_t lightSensRead(uint8_t channel, uint8_t colour)

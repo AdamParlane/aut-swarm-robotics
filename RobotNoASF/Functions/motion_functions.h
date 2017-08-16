@@ -32,6 +32,10 @@
 #define TL_KP	10.0
 #define TL_KI	0.001
 
+//PID constants for trackLightprox
+#define TL_KP	10.0
+#define TL_KI	0.001
+
 ///////////////Functions////////////////////////////////////////////////////////////////////////////
 /*
 * Function:

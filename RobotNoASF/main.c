@@ -70,13 +70,6 @@ int main(void)
 	//const char streamIntervalFlag = 1;
 	setup();
 	uint8_t testMode = 0x00;
-	float bHeading;
-				uint16_t sA;
-				uint16_t sB;
-				uint16_t sC;
-				uint16_t sD;
-				uint16_t sE;
-				uint16_t sF;
 	char chargeInfo;
 	char error; //used for developement to log and watch errors - AP
 	//TODO: Adam add error handling with GUI
@@ -90,7 +83,7 @@ int main(void)
 										//on is 0 degrees heading.
 	struct transmitDataStructure transmitMessage;
 	
-	robotState = OBSTACLE_AVOIDANCE;
+	robotState = DOCKING;
 	
 	while(1)
 	{
@@ -134,10 +127,7 @@ int main(void)
 			
 			case DOCKING:
 				//if battery low or manual command set
-				//dockRobot();
-				//followLine();
-				if(!rotateToHeading(bHeading, &robotPosition))
-					robotState = OBSTACLE_AVOIDANCE;
+				dockRobot(&robotPosition);
 			break;
 			
 			case OBSTACLE_AVOIDANCE:
@@ -145,14 +135,6 @@ int main(void)
 			//performed will depend on the previous state of the robot, ie docking will want
 			//to not move out of the way of other robots so as not to go out of alignment but
 			//still stop when the dock has been reached.
-			//trackLightProx(&robotPosition);
-			
-			sA = proxSensRead(MUX_PROXSENS_A);
-			sB = proxSensRead(MUX_PROXSENS_B);
-			 sC = proxSensRead(MUX_PROXSENS_C);
-			 sD = proxSensRead(MUX_PROXSENS_D);
-			 sE = proxSensRead(MUX_PROXSENS_E);
-			 sF = proxSensRead(MUX_PROXSENS_F);
 			break;
 			
 			case FORMATION:
@@ -179,16 +161,7 @@ int main(void)
 			
 			case IDLE:
 				//idle
-				//stopRobot();
-				//if(!rotateToHeading(-179.5, &robotPosition))
-					//ledOn1;
-				//else
-					//ledOff1;
-				if(!scanBrightestLightSource(&bHeading, 359, &robotPosition))
-				{
-					robotState = DOCKING;
-				}
-		
+				stopRobot();
 			break;
 		}
 		
@@ -264,9 +237,7 @@ void setup(void)
 #if defined ROBOT_TARGET_V2
 	lfInit();							//Initialise line follow sensors. Only on V2.
 #endif
-	//proxAmbModeEnabled();
-	uint8_t detected = 0;
-	//scanProxSensors(&detected);
-	//delay_ms(2500);
+	
+	delay_ms(2500);
 	return;
 }

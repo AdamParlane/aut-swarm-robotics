@@ -24,6 +24,14 @@
 * of 0b01 for TYPE will have the register address increment on each consecutive read/write. This
 * simplifies the task of reading long integer values.
 *
+* Approx Proximity Values
+* Using my hand as an object, testing on side A
+* touching - ~5cm = 0x03ff (max)
+* 5 cm away 0x0150 - 0x01ff
+* 10cm away 0x0070 - 0x0100
+* 20cm away 0x0030 - 0x003f
+* 30cm away 0x0020 - 0x0029
+*
 * Functions:
 * void proxSensInit(uint8_t channel)
 * uint16_t proxSensRead(uint8_t channel)
@@ -124,7 +132,7 @@ uint16_t proxAmbRead(uint8_t channel)
 {
 	unsigned char data[2];
 	twi0MuxSwitch(channel);	//Set multiplexer address to correct device
-	uint8_t errVal = twi0Read(TWI0_PROXSENS_ADDR, (PS_CMD_INC | PS_CH0DATAL_REG), 2, data);
+	twi0Read(TWI0_PROXSENS_ADDR, (PS_CMD_INC | PS_CH0DATAL_REG), 2, data);
 	uint16_t ch0Data = (data[1]<<8)|(data[0]);
 	twi0Read(TWI0_PROXSENS_ADDR, (PS_CMD_INC | PS_CH1DATAL_REG), 2, data);
 	uint16_t ch1Data = (data[1]<<8)|(data[0]);

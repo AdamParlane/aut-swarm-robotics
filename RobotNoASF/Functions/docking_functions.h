@@ -43,7 +43,7 @@
 * none
 *
 */
-void dockRobot(void);
+uint8_t dockRobot(struct Position *imuData);
 
 /*
 * Function:
@@ -115,5 +115,7 @@ void followLine(void);
 */
 uint8_t scanBrightestLightSource(float *brightestHeading, uint16_t sweepAngle,
 								struct Position *imuData);
+
+float scanBrightestLightSourceProx(struct Position *imuData);
 
 #endif /* DOCKING_FUNCTIONS_H_ */
