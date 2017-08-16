@@ -16,7 +16,7 @@
 #include <string.h>
 #include "sam.h"
 #include "communication.h"
-#include "../robot_defines.h"
+#include "../robot_setup.h"
 
 // XBee flow control bytes
 #define FRAME_DELIMITER 0x7E

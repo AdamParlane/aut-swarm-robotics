@@ -13,7 +13,7 @@
 #ifndef COMMUNICATION_H_
 #define COMMUNICATION_H_
 
-#include "../robot_defines.h"
+#include "../robot_setup.h"
 
 struct message_info
 {

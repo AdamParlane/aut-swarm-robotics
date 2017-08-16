@@ -37,7 +37,7 @@
 #include "imu_interface.h"
 #include <tgmath.h>				//Required for atan2 in imuGetEulerAngles()
 #include "twimux_interface.h"	//twi and multiplexer
-#include "../robot_defines.h"
+#include "../robot_setup.h"
 
 //Invensense Direct Motion Processing Driver Files
 #include "../IMU-DMP/inv_mpu_dmp_motion_driver_CUSTOM.h"//Direct Motion Processing setup functions

@@ -1,5 +1,5 @@
 /*
-* robot_defines.h
+* robot_setup.h
 *
 * Author : Adam Parlane, Matthew Witt
 * Created: 6/7/2017
@@ -97,6 +97,21 @@ char robotState, previousState;
 volatile char streamDelayCounter, streamIntervalFlag;
 
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
+/*
+* Function:
+* void robotSetup(void)
+*
+* The initialisation routine for all hardware in the robot.
+*
+* Inputs:
+* none
+*
+* Returns:
+* none
+*
+*/
+void robotSetup(void);
+
 /*
 * Function:
 * void masterClockInit(void)

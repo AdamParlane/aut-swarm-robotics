@@ -18,7 +18,7 @@
 */
 
 //////////////[Includes]////////////////////////////////////////////////////////////////////////////
-#include "robot_defines.h"
+#include "robot_setup.h"
 
 //////////////[Defines]/////////////////////////////////////////////////////////////////////////////
 #define		batteryLow	1
@@ -32,58 +32,6 @@ uint16_t battVoltage;
 
 
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
-/*
-* Function:
-* void setup(void)
-*
-* The initialisation routine for all hardware in the robot.
-*
-* Inputs:
-* none
-*
-* Returns:
-* none
-*
-* Implementation:
-* Contains functions which systematically set up each peripheral and hardware device connected to
-* the robot's micro controller. Click on a function and press 'Alt + G' to open the file where it
-* is kept (if using Atmel Studio)
-*
-* Improvements:
-* Maybe
-*
-*/
-void setup(void)
-{
-	REG_WDT_MR = WDT_MR_WDDIS; 			//Disable system watchdog timer.
-
-	masterClockInit();					//Initialise the master clock to 100MHz
-	pioInit();							//Initialise the PIO controllers
-	adcSingleConvInit();				//Initialise ADC for single conversion mode
-	battVoltage = fcBatteryVoltage();	//Add to your watch to keep an eye on the battery
-	ledInit();							//Initialise the LEDs on the mid board
-	motor_init();						//Initialise the motor driver chips
-	SPI_Init();							//Initialise SPI for talking with optical sensor
-	twi0Init();							//Initialise TWI0 interface
-	twi2Init();							//Initialise TWI2 interface
-	timer0Init();						//Initialise timer0
-	lightSensInit(MUX_LIGHTSENS_R);		//Initialise Right Light/Colour sensor
-	lightSensInit(MUX_LIGHTSENS_L);		//Initialise Left Light/Colour sensor
-	proxSensInit();						//Initialise proximity sensors
-	fcInit();							//Initialise the fast charge chip
-	CommunicationSetup();				//Initialise communication system
-	imuInit();							//Initialise IMU.
-	extIntInit();						//Initialise external interrupts.
-	imuDmpInit();						//Initialise DMP system
-	mouseInit();						//May require further testing - Adam
-#if defined ROBOT_TARGET_V2
-	lfInit();							//Initialise line follow sensors. Only on V2.
-#endif
-	
-	delay_ms(2500);						//Stops robot running away while programming
-	return;
-}
-
 /*
 * Function:
 * int main(void)
@@ -106,7 +54,8 @@ void setup(void)
 int main(void)
 {
 	//const char streamIntervalFlag = 1;
-	setup();
+	robotSetup();
+	battVoltage = fcBatteryVoltage();	//Add to your watch to keep an eye on the battery
 	uint8_t testMode = 0x00;
 	char chargeInfo;
 	char error; //used for developement to log and watch errors - AP

@@ -26,7 +26,7 @@
 */ 
 
 //////////////[Includes]////////////////////////////////////////////////////////////////////////////
-#include "../robot_defines.h"
+#include "../robot_setup.h"
 #include <math.h>
 #include "opt_interface.h"
 
