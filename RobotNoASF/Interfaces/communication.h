@@ -56,8 +56,23 @@ struct frame_info
 	uint8_t type;
 	int length;
 };
+///////////////Global variables/////////////////////////////////////////////////////////////////////
+extern char obstacleAvoidanceEnabledFlag;
 
-
+/*
+*
+* Function: void convertData(struct message_info message, uint8_t* data[50])
+*
+* Converts the received message structure and pointer to an array with the required test command data
+*
+* Input is the message structure from the received data
+* after the XBee framing has been stripped
+* and a pointer to the array where the new data is to be copied to
+*
+* No Return Values
+*
+*/
+void convertData(struct message_info message, uint8_t *data);
 
 /**** Public Function Prototypes ****/
 void CommunicationSetup(void);								// Sets up UART3 and the required buffers

@@ -45,8 +45,8 @@
 #define FC_CHARGE_INIT	0xFA	//charge current set to max Ic=2875mA, termination current
 								//Iterm=100mA (default) (FC_CHARGE_REG)
 
-#define CHARGING		0xDA
-#define CHARGED			0xDB
+#define BATT_CHARGING		0xDA
+#define BATT_CHARGED		0xDB
 
 //Union used to abstract the bit masking
 //At this stage just for the battery charging status

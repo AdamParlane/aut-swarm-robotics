@@ -30,6 +30,7 @@ struct Position robotPosition;
 extern uint8_t checkImuFifo;
 uint16_t battVoltage;
 
+
 ///////////////Functions////////////////////////////////////////////////////////////////////////////
 /*
 * Function:
@@ -92,7 +93,7 @@ int main(void)
 			case TEST:
 			if(newDataFlag || streamIntervalFlag)//get the new test data
 			{
-				testMode = testManager(message, &transmitMessage);//get the new test data
+				testMode = testManager(message, &transmitMessage, &robotPosition);//get the new test data
 			}
 			if(testMode == STOP_STREAMING)
 				robotState = IDLE;
@@ -144,19 +145,19 @@ int main(void)
 			case CHARGING:
 				ledOn1;
 				chargeInfo = chargeDetector();
-				if(chargeInfo == CHARGING)
-			break;
-			else if(chargeInfo == CHARGED)
-			{
-				ledOff1;
-				robotState = previousState;
-			}
-			else
-			{
-				ledOff1;
-				error = chargeInfo;
-				robotState = MANUAL;
-			}
+				if(chargeInfo == BATT_CHARGING)
+					break;
+				else if(chargeInfo == BATT_CHARGED)
+				{
+					ledOff1;
+					robotState = previousState;
+				}
+				else
+				{
+					ledOff1;
+					error = chargeInfo;
+					robotState = MANUAL;
+				}
 			break;
 			
 			case IDLE:
@@ -171,7 +172,7 @@ int main(void)
 
 			if(MessageBufferInfoGetFull(&message) == 0) //Check for a message from the swarm
 			{
-				InterpretSwarmMessage(message);	//Interpret the message
+				InterpretSwarmMessage(message);//Interpret the message
 			}
 		}
 
@@ -182,6 +183,8 @@ int main(void)
 			checkImuFifo = 0;
 			imuGetEulerAngles(&robotPosition);
 		}
+		//if(obstacleAvoidanceEnabledFlag)
+			//obstacleAvoidanceManager();
 	}
 }
 

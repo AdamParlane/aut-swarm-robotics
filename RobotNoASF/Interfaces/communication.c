@@ -95,7 +95,7 @@ int FrameBufferInfoPut(int ind, uint8_t typ, int len);	//Adds a element to the e
 
 void MessageBufferInit(void);		//Initialize all usage variables to the beginning of the array
 int MessageBufferPut(uint8_t new);	//Adds a new byte to the end of the array
-int MessageBufferGet(uint8_t *old);	//Gets the oldest byte from the array
+int MessageBufferGet(char *old);	//Gets the oldest byte from the array
 
 void MessageBufferInfoInit(void);							//Initialize all usage variables to the beginning of the array
 int MessageBufferInfoPut(int ind, uint8_t cmd, int len);	//Adds a element to the end of the array
@@ -104,20 +104,70 @@ void UART3_Handler(void);									//UART3 Interrupt handler, receives XBee Frame
 void UART3_Write(uint8_t data);								//Writes a byte to UART3
 void SendXbeeAPIFrame(uint8_t * frame_data, int len);		//Sends an XBee API Frame
 
+char obstacleAvoidanceEnabledFlag = 0;
 
+
+//Improvements: is it worth defining all these codes, im thinking no
 void InterpretSwarmMessage(struct message_info message)
 {
-	//copy information from the message info structure to local variables
-	//int index = message.index;
-	//int length = message.length;
+	//handles the incoming commands and sets the appropriate states / flags calls functions
 	newDataFlag = 1;
 	if(message.command >= 0xE0) //test command range 0xE0-0xEF
 		robotState = TEST;
-	else if(message.command >= 0xD0) //Manual command range 0xD0-0xDF
+	else if (message.command == 0xD0)
+		stopRobot();
+	else if(message.command >= 0xD1 && message.command <= 0xD3) //Manual command range 0xD1-0xD3
 		robotState = MANUAL;
+	else if (message.command == 0xD4)
+		//move robot randomly
+		randomMovementGenerator();		
+	else if (message.command == 0xD5)
+		robotState = DOCKING;
+		//0xD6 and D7 are also reserved for docking 
+		//at a later date for different methods if required
+	else if (message.command == 0xD8)
+		obstacleAvoidanceEnabledFlag = 0;
+	else if (message.command == 0xD9)
+		obstacleAvoidanceEnabledFlag = 1;
 }
 
-
+/*
+*
+* Function: void convertData(struct message_info message, uint8_t* data[50])
+*
+* Converts the received message structure and pointer to an array with the required test command data
+*
+* Input is the message structure from the received data
+* after the XBee framing has been stripped
+* and a pointer to the array where the new data is to be copied to
+*
+* No Return Values
+*
+* Uses the message index to call the MessageBufferOut
+* This ensures that the message copying begins from the correct location
+* Simple for loop to copy the array of length message.length
+* This array is accessed via pointers and is used by the test Manager
+* The Message Buffer Get function returns 0 for success and -1 for failure
+* This function will quit on a failed return
+*
+*/
+void convertData(struct message_info message, uint8_t *data)
+{
+	char dataByte;
+	char messageError;
+	MessageBufferOut = message.index;//sets message buffer reader to correct start address
+	for (uint8_t i = 0; i < message.length; i++)//for each entry in the array
+	{
+		messageError = MessageBufferGet(&dataByte);//retrieve the next byte of received message data
+		if(messageError == 0)//if there was NO error
+		{
+			data[i] = dataByte;//fill the array with the data
+		}
+		else//if there was an error, exit
+		//TO DO: prehaps add some sort of error flagging system??
+		return;
+	}
+}
 
 void InterpretXbeeAPIFrame(struct frame_info frame)
 {
@@ -531,7 +581,7 @@ int MessageBufferPut(uint8_t new)
 	return 0; // No errors
 }
 
-int MessageBufferGet(uint8_t *old)
+int MessageBufferGet(char *old)
 {
 	//Check to see if the buffer if empty
 	if(MessageBufferIn == MessageBufferOut)
