@@ -21,6 +21,7 @@
 
 ///////////////Global variables/////////////////////////////////////////////////////////////////////
 extern struct Position robotPosition;
+extern uint32_t systemTimestamp;
 
 ///////////////Functions////////////////////////////////////////////////////////////////////////////
 /*
@@ -215,6 +216,7 @@ float trackLightProx(struct Position *imuData)
 		return dHeading;	//If not, return pErr
 	}
 	return 1;
+}
 
 /*
 * Function:
@@ -255,10 +257,11 @@ float trackLightProx(struct Position *imuData)
 */
 char randomMovementGenerator(void)
 {
-	srand(systemTimestamp(NULL));	//Seed rand() to give unique random numbers
-	int direction = rand() % 360;	//get random direction range: 0 - 360 degrees
-	char speed = rand() % 100;		//get random speed:up to 100%
-	char runTime = rand() % 5;		//get random delay time: up to 5 seconds
-	moveRobot(direction, speed);	//moveRobot at random speed and direction
-	delay_ms(runTime * 1000);		//Delay for random milliseconds
+	//srand(systemTimestamp(NULL));	//Seed rand() to give unique random numbers
+	//int direction = rand() % 360;	//get random direction range: 0 - 360 degrees
+	//char speed = rand() % 100;		//get random speed:up to 100%
+	//char runTime = rand() % 5;		//get random delay time: up to 5 seconds
+	//moveRobot(direction, speed);	//moveRobot at random speed and direction
+	//delay_ms(runTime * 1000);		//Delay for random milliseconds
+	return 0;
 }

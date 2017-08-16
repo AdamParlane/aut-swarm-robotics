@@ -61,8 +61,9 @@ uint8_t dockRobot(struct Position *imuData)
 	switch(dockingState)
 	{
 		case START:
-			bHeading = scanBrightestLightSourceProx(imuData);
-			dockingState = FACE_BRIGHTEST;
+			rotateToHeading(90, imuData);
+			//bHeading = scanBrightestLightSourceProx(imuData);
+			//dockingState = FACE_BRIGHTEST;
 		break;
 		
 		case FACE_BRIGHTEST:
