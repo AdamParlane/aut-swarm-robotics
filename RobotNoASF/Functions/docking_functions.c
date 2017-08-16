@@ -54,23 +54,23 @@ struct LineSensorArray lf;
 uint8_t dockRobot(struct Position *imuData)
 {
 	float bHeading = 0;
-	enum {START, FACE_BRIGHTEST, FINISHED};
+	enum {FINISHED, START, FACE_BRIGHTEST, MOVE_FORWARD, RESCAN_BRIGHTEST, FOLLOW_LINE};
 	static uint8_t dockingState = START;
 	
 	///////////////[WIP]///////////////
 	switch(dockingState)
 	{
 		case START:
-			rotateToHeading(0, imuData);
+			//rotateToHeading(0, imuData);
 			ledOn1;
 			ledOff2;
 			ledOff3;
-			//imuDmpStop();
-			//bHeading = scanBrightestLightSourceProx();	
-			//imuDmpStart();
-			
 			//if(!scanBrightestLightSource(&bHeading, 359, imuData))
-			//dockingState = FACE_BRIGHTEST;
+				//dockingState = FACE_BRIGHTEST;
+			//if(!moveForwardByDistance(100, imuData))
+			{
+				dockingState = FINISHED;
+			}
 		break;
 		
 		case FACE_BRIGHTEST:
@@ -81,16 +81,25 @@ uint8_t dockRobot(struct Position *imuData)
 				dockingState = FINISHED;
 		break; 
 		
+		case MOVE_FORWARD:
+		break;
+		
+		case RESCAN_BRIGHTEST:
+		break;
+		
+		case FOLLOW_LINE:
+		break;
+		
 		case FINISHED:
 			ledOff1;
 			ledOff2;
 			ledOn3;
-			trackLight(imuData);
+			//trackLight(imuData);
 			return 0;
 		break;
 	}
 	
-	return 1;
+	return dockingState;
 }
 
 /*

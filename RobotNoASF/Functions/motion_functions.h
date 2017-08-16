@@ -56,6 +56,8 @@
 */
 float rotateToHeading(float heading, struct Position *imuData);
 
+float moveForwardByDistance(uint16_t distance, struct Position *posData);
+
 /*
 * Function:
 * float trackLight(struct Position *imuData)

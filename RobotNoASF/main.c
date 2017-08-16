@@ -166,9 +166,10 @@ int main(void)
 		//If ready, will read IMU data. Will be moved to a function when NAVIGATION module is added
 		if(checkImuFifo)
 		{
-			imuReadFifo(&robotPosition);
-			checkImuFifo = 0;
-			imuGetEulerAngles(&robotPosition);
+			imuReadFifo(&robotPosition);		//Read IMU's FIFO buffer
+			checkImuFifo = 0;					//Reset interrupt flag
+			imuGetEulerAngles(&robotPosition);	//Convert IMU quats to Euler angles
+			getMouseXY(&robotPosition);			//Update mouse sensor data while at it
 		}
 		////////////////////////////////////////////////////////////////////////////////////////////
 		//if(obstacleAvoidanceEnabledFlag)

@@ -21,7 +21,7 @@
 
 //////////////[Global variables]////////////////////////////////////////////////////////////////////
 extern struct Position robotPosition;
-extern uint32_t systemTimestamp;
+//extern uint32_t systemTimestamp;
 
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*
@@ -106,6 +106,35 @@ float rotateToHeading(float heading, struct Position *imuData)
 			rotateRobot(CCW, (unsigned char)motorSpeed);
 		return pErr;	//If not, return pErr
 	}
+}
+
+float moveForwardByDistance(uint16_t distance, struct Position *posData)
+{
+	enum {START, MOVING, STOP};
+	static uint8_t movingState = START;
+	uint16_t distanceTravelled = 0;
+	
+	switch(movingState)
+	{
+		case START:
+			movingState = MOVING;
+			moveRobot(0, 30);
+		break;
+		
+		case MOVING:
+			distanceTravelled += posData->opticalDY;
+			if(distanceTravelled > distance)
+				movingState = STOP;
+		break;
+						
+		case STOP:
+			stopRobot();
+			distanceTravelled = 0;
+			movingState = START;
+			return 0;
+		break;
+	}
+	return distance - distanceTravelled;
 }
 
 /*
