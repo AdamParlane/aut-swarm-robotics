@@ -166,3 +166,47 @@ float trackLight(struct Position *imuData)
 		return pErr;	//If not, return pErr
 	}
 }
+
+float trackLightProx(struct Position *imuData)
+{
+	//static float pErr;			//Proportional error
+	//static float iErr = 0;		//Integral error
+	//float dHeading;				//Delta heading to adjust by
+	
+	//Enable Ambient light mode on the prox sensors
+	
+	
+	//Read light sensor values
+	uint16_t leftSensor = proxAmbRead(MUX_PROXSENS_B);
+	uint16_t frontSensor = proxAmbRead(MUX_PROXSENS_A);
+	uint16_t rightSensor = proxAmbRead(MUX_PROXSENS_F);
+	
+	////Calculate errors
+	////Proportional error is normalised by the average value of both sensors
+	//pErr = (float)(rightSensor - leftSensor)/((float)(leftSensor + rightSensor)/2.0);
+	//iErr += pErr;
+	//
+	////If dHeading ends up being out of range, then dial it back
+	//dHeading = TL_KP*pErr + TL_KI*iErr;
+	//if(dHeading > 90)
+	//dHeading = 90;
+	//if(dHeading < -90)
+	//dHeading = -90;
+	//
+	////If error is less than 0.5 deg and delta yaw is less than 0.5 degrees per second then we can
+	////stop
+	//if((abs(dHeading) < 0.5) && (abs(imuData->imuGyroZ) < 0.5))
+	//{
+		//ledOn1;
+		//stopRobot();
+		//pErr = 0;			//Clear the static vars so they don't interfere next time we call this
+		////function
+		//iErr = 0;
+		//return 0;
+		//} else {
+		//rotateToHeading(imuData->imuYaw + dHeading, imuData);
+		//ledOff1;
+		//return pErr;	//If not, return pErr
+	//}
+	return 1;
+}

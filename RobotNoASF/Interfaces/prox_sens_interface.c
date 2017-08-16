@@ -67,11 +67,17 @@ void proxSensInit(uint8_t channel)
 	//Set multiplexer address to correct device
 	twi0MuxSwitch(channel);
 	//Disable and Power down
-	writeBuffer = PS_DISABLE_STATE;
+	writeBuffer = PS_DISABLE_ALL;
 	twi0Write(TWI0_PROXSENS_ADDR, PS_CMD_1BYTE | PS_ENABLE_REG, 1, &writeBuffer);
 	//Proximity ADC time: 2.73 ms, minimum proximity integration time
 	writeBuffer = PS_PTIME_INIT;
 	twi0Write(TWI0_PROXSENS_ADDR, PS_CMD_1BYTE | PS_PTIME_REG, 1, &writeBuffer);
+	//Program the ambient light integration time
+	writeBuffer = PS_ATIME_INIT;
+	twi0Write(TWI0_PROXSENS_ADDR, PS_CMD_1BYTE | PS_ATIME_REG, 1, &writeBuffer);
+	//Program Wait time
+	writeBuffer = PS_WTIME_INIT;
+	twi0Write(TWI0_PROXSENS_ADDR, PS_CMD_1BYTE | PS_WTIME_REG, 1, &writeBuffer);
 	//Sets the number of Proximity pulses that the LDR pin will generate during the prox Accum
 	//state: (recommended proximity pulse count = 8) PREVIOUSLY HAD BEEN SET TO 0X02
 	writeBuffer = PS_PPULSE_INIT;
@@ -81,7 +87,7 @@ void proxSensInit(uint8_t channel)
 	writeBuffer = PS_PDIODE_INIT;
 	twi0Write(TWI0_PROXSENS_ADDR, PS_CMD_1BYTE | PS_GAINCTL_REG, 1, &writeBuffer);
 	//Power ON, Proximity Enable
-	writeBuffer = PS_ENABLE_STATE;
+	writeBuffer = PS_ENABLE_PROX;
 	twi0Write(TWI0_PROXSENS_ADDR, PS_CMD_1BYTE | PS_ENABLE_REG, 1, &writeBuffer);
 }
 
@@ -112,4 +118,53 @@ uint16_t proxSensRead(uint8_t channel)
 	//NOTE: Command_REG of the ProxSensor must be written to, as part of R/W functions.
 	//Low data register is read, auto-increment occurs and high data register is read.
 	return (data[1]<<8)|(data[0]);
+}
+
+uint16_t proxAmbRead(uint8_t channel)
+{
+	unsigned char data[2];
+	twi0MuxSwitch(channel);	//Set multiplexer address to correct device
+	uint8_t errVal = twi0Read(TWI0_PROXSENS_ADDR, (PS_CMD_INC | PS_CH0DATAL_REG), 2, data);
+	uint16_t ch0Data = (data[1]<<8)|(data[0]);
+	twi0Read(TWI0_PROXSENS_ADDR, (PS_CMD_INC | PS_CH1DATAL_REG), 2, data);
+	uint16_t ch1Data = (data[1]<<8)|(data[0]);
+	//NOTE: Command_REG of the ProxSensor must be written to, as part of R/W functions.
+	//Low data register is read, auto-increment occurs and high data register is read.
+	
+	//Equations for canceling IR light (Datasheet pg9):
+	float IAC1 = ch0Data - 1.862*ch1Data;
+	float IAC2 = 0.764*ch0Data - 1.291*ch1Data;
+	
+	if(IAC1 > IAC2)
+		return (uint16_t)IAC1;
+	else
+		return (uint16_t)IAC2;
+}
+
+void proxAmbModeEnabled(void)
+{
+	uint8_t writeBuffer = PS_ENABLE_AMBI;
+	//Enable ambient light mode on all the sensors
+	for(int ch = MUX_PROXSENS_A; ch <= MUX_PROXSENS_B; ch++)
+	{
+		twi0MuxSwitch(ch);
+		//Enable the ambient sensor and disable proximity
+		twi0Write(TWI0_PROXSENS_ADDR, PS_CMD_1BYTE | PS_ENABLE_REG, 1, &writeBuffer);		
+	}
+	//Wait for the first reading
+	delay_ms(53); //(50ms ATIME + 2.73ms WTIME)	
+}
+
+void proxModeEnabled(void)
+{
+	uint8_t writeBuffer = PS_ENABLE_PROX;
+	//Enable ambient light mode on all the sensors
+	for(int ch = MUX_PROXSENS_A; ch <= MUX_PROXSENS_B; ch++)
+	{
+		twi0MuxSwitch(ch);
+		//Enable the ambient sensor and disable proximity
+		twi0Write(TWI0_PROXSENS_ADDR, PS_CMD_1BYTE | PS_ENABLE_REG, 1, &writeBuffer);
+	}
+	//Wait for the first reading
+	delay_ms(6); //(2.74ms PTIME + 2.73ms WTIME)
 }

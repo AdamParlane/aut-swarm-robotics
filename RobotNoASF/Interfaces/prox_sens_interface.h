@@ -39,16 +39,17 @@
 
 ///////////////Defines//////////////////////////////////////////////////////////////////////////////
 //Register addresses for reading data. (NOTE: Ch0 and Ch1 are two 16-bit registers)
-#define PS_CH0DATAL_REG	0x14	//Ch0 photodiode ADC low data register (Visible+IR light)
-#define PS_CH0DATAH_REG	0x15	//Ch0 photodiode ADC high data register (Visible+IR light)
-#define PS_CH1DATAL_REG	0x16	//Ch1 photodiode ADC low data register (IR only)
-#define PS_CH1DATAH_REG	0x17	//Ch1 photodiode ADC high data register (IR only)
+#define PS_CH0DATAL_REG	0x14	//Ch0 photodiode ADC low data register (Visible+IR light) AMB
+#define PS_CH0DATAH_REG	0x15	//Ch0 photodiode ADC high data register (Visible+IR light) AMB
+#define PS_CH1DATAL_REG	0x16	//Ch1 photodiode ADC low data register (IR only) AMB
+#define PS_CH1DATAH_REG	0x17	//Ch1 photodiode ADC high data register (IR only) AMB
 #define PS_PDATAL_REG	0x18	//Proximity ADC low data register
 #define PS_PDATAH_REG	0x19	//Proximity ADC high data register
 #define PS_STATUS_REG	0x13	//Device status
 
 //Register addresses for configuration, all R/W
 #define PS_ENABLE_REG	0x00	//Enable of states and interrupts
+#define PS_ATIME_REG	0x01	//Ambient ADC integration time
 #define PS_PTIME_REG	0x02	//Proximity ADC integration time (LPF)
 #define PS_WTIME_REG 	0x03	//Wait time
 #define PS_CONFIG_REG	0x0D	//Configuration
@@ -68,11 +69,13 @@
 								//!!ACCORDING to the datasheet, this should be set to at least 50ms
 								//or a greater multiple of 50ms in order to filter out 50/60hz
 								//flicker that is present in fluorescent lighting. (see Pg 9)
+#define PS_ATIME_INIT	0xED	//This should reject 50Hz flicker on the Ambient detection
 #define PS_PPULSE_INIT	0x08	//Recommended proximity pulse count is 8 Pulses
 #define PS_PDIODE_INIT	0x20	//LED = 100mA, Proximity diode select, Proximity gain x1,
 								//recommended settings
-#define PS_ENABLE_STATE	0x05	//Power ON, Proximity Enable
-#define PS_DISABLE_STATE 0x00	//Power OFF, Proximity Disable
+#define PS_ENABLE_PROX	0x05	//Power ON, Proximity Enable
+#define PS_ENABLE_AMBI	0x03	//Power ON, Ambient Enable
+#define PS_DISABLE_ALL	0x00	//Power OFF, Proximity Disable
 
 //Distance Threshold values
 #define PS_IN_RANGE		0x0070	//Should be prox value when an object is around 100mm away. Value
@@ -112,4 +115,9 @@ void proxSensInit(uint8_t channel);
 */
 uint16_t proxSensRead(uint8_t channel);
 
+uint16_t proxAmbRead(uint8_t channel);
+
+void proxAmbModeEnabled(void);
+
+void proxModeEnabled(void);
 #endif /* PROX_SENS_INTERFACE_H_ */

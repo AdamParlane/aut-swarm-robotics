@@ -68,4 +68,6 @@ float rotateToHeading(float heading, struct Position *imuData);
 */
 float trackLight(struct Position *imuData);
 
+float trackLightProx(struct Position *imuData);
+
 #endif /* MOTION_FUNCTIONS_H_ */
