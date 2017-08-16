@@ -93,7 +93,7 @@ int main(void)
 			case TEST:
 			if(newDataFlag || streamIntervalFlag)//get the new test data
 			{
-				testMode = testManager(message, &transmitMessage);//get the new test data
+				testMode = testManager(message, &transmitMessage, &robotPosition);//get the new test data
 			}
 			if(testMode == STOP_STREAMING)
 				robotState = IDLE;

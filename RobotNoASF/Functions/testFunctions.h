@@ -58,7 +58,8 @@ struct transmitDataStructure
 void convertData(struct message_info message, uint8_t *data);
 
 /*
-* Function: void testManager(struct message_info message)
+* Function: uint8_t testManager(struct message_info message, struct transmitDataStructure *transmit,
+*			struct Position *robotPosition)
 *
 * Handles the interpretation of received test commands,
 * calling the appropriate test functions / performing tests
@@ -74,7 +75,8 @@ void convertData(struct message_info message, uint8_t *data);
 * ***Streaming Interval = 100ms***
 *
 */
-uint8_t testManager(struct message_info message, struct transmitDataStructure *transmit);
+uint8_t testManager(struct message_info message, struct transmitDataStructure *transmit, 
+struct Position *robotPosition);
 
 /*
 * Function: void testAll(struct transmitDataStructure *transmit)
