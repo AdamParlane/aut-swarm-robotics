@@ -33,8 +33,12 @@
 * 30cm away 0x0020 - 0x0029
 *
 * Functions:
-* void proxSensInit(uint8_t channel)
+* void proxSensInit(void)
+* void proxSingleSensInit(uint8_t channel)
 * uint16_t proxSensRead(uint8_t channel)
+* uint16_t proxAmbRead(uint8_t channel)
+* void proxAmbModeEnabled(void)
+* void proxModeEnabled(void)
 *
 */
 
@@ -45,7 +49,33 @@
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*
 * Function:
-* void proxSensInit(uint8_t channel)
+* void proxSensInit(void)
+*
+* Initialise all proximity sensors. Tidies up setup() function
+*
+* Inputs:
+* none
+*
+* Returns:
+* none
+*
+* Implementation:
+* See description for proxSingleSensInit() below
+*
+*/
+void proxSensInit(void)
+{
+	proxSingleSensInit(MUX_PROXSENS_A);		//Initialise proximity sensor on panel A
+	proxSingleSensInit(MUX_PROXSENS_B);		//Initialise proximity sensor on panel B
+	proxSingleSensInit(MUX_PROXSENS_C);		//Initialise proximity sensor on panel C
+	proxSingleSensInit(MUX_PROXSENS_D);		//Initialise proximity sensor on panel D
+	proxSingleSensInit(MUX_PROXSENS_E);		//Initialise proximity sensor on panel E
+	proxSingleSensInit(MUX_PROXSENS_F);		//Initialise proximity sensor on panel F
+}
+
+/*
+* Function:
+* void proxSingleSensInit(uint8_t channel)
 *
 * This function will pass the desired channel to the Multiplexer and setup an *individual* proximity
 * sensor
@@ -69,7 +99,7 @@
 * Could this function just initialise all of the sensors?
 *
 */
-void proxSensInit(uint8_t channel)
+void proxSingleSensInit(uint8_t channel)
 {
 	uint8_t writeBuffer;
 	//Set multiplexer address to correct device

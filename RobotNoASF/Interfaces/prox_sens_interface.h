@@ -26,8 +26,12 @@
 * simplifies the task of reading long integer values.
 *
 * Functions:
-* void proxSensInit(uint8_t channel)
+* void proxSensInit(void)
+* void proxSingleSensInit(uint8_t channel)
 * uint16_t proxSensRead(uint8_t channel)
+* uint16_t proxAmbRead(uint8_t channel)
+* void proxAmbModeEnabled(void)
+* void proxModeEnabled(void)
 *
 */
 
@@ -84,7 +88,22 @@
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*
 * Function:
-* void proxSensInit(uint8_t channel)
+* void proxSensInit(void)
+*
+* Initialise all proximity sensors. Tidies up setup() function
+*
+* Inputs:
+* none
+*
+* Returns:
+* none
+*
+*/
+void proxSensInit(void);
+
+/*
+* Function:
+* void proxSingleSensInit(uint8_t channel)
 *
 * This function will pass the desired channel to the Multiplexer and setup an *individual* proximity
 * sensor
@@ -97,7 +116,7 @@
 * none
 *
 */
-void proxSensInit(uint8_t channel);
+void proxSingleSensInit(uint8_t channel);
 
 /*
 * Function:
