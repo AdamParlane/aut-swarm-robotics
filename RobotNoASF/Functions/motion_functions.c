@@ -231,8 +231,8 @@ float trackLightProx(struct Position *imuData)
 * No return values
 *
 * Implementation:
-* rand is seeded using srand and the systemTimeStamp
-* systemTimeStamp is used becaue it has a high chance of being unique each time this is called
+* rand is seeded using srand and the streamIntervalFlag
+* streamIntervalFlag is used becaue it has a high chance of being unique each time this is called
 * This is important because rand is puesdo-random and the same seed will produce the same set
 * of 'random' numbers therefore must be seeded with a unique value
 * PC applications use the time but this is not available
@@ -257,11 +257,11 @@ float trackLightProx(struct Position *imuData)
 */
 char randomMovementGenerator(void)
 {
-	//srand(systemTimestamp(NULL));	//Seed rand() to give unique random numbers
-	//int direction = rand() % 360;	//get random direction range: 0 - 360 degrees
-	//char speed = rand() % 100;		//get random speed:up to 100%
-	//char runTime = rand() % 5;		//get random delay time: up to 5 seconds
-	//moveRobot(direction, speed);	//moveRobot at random speed and direction
-	//delay_ms(runTime * 1000);		//Delay for random milliseconds
+	srand(streamIntervalFlag);		//Seed rand() to give unique random numbers
+	int direction = rand() % 360;	//get random direction range: 0 - 360 degrees
+	char speed = rand() % 100;		//get random speed:up to 100%
+	char runTime = rand() % 5;		//get random delay time: up to 5 seconds
+	moveRobot(direction, speed);	//moveRobot at random speed and direction
+	delay_ms(runTime * 1000);		//Delay for random milliseconds
 	return 0;
 }
