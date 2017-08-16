@@ -42,6 +42,6 @@
 */
 uint8_t scanProxSensors(uint8_t *obstacleDetected);
 
-char randomMovementGenerator(void);
+
 
 #endif /* OBSTACLE_AVOIDANCE_H_ */

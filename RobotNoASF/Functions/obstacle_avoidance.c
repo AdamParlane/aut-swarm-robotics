@@ -62,13 +62,4 @@ uint8_t scanProxSensors(uint8_t *obstacleDetected)
 	return 0;
 }
 
-char randomMovementGenerator(void)
-{
-	srand(systemTimestamp(NULL)); 
-	int direction = rand() % 360; //0 - 360 degrees
-	char speed = rand() % 100; //upto 100%
-	char runTime = rand() % 5; //up to 5 seconds
-	moveRobot(direction, speed);
-	delay_ms(runTime * 1000);
-	
-}
+
