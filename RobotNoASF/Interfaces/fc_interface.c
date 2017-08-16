@@ -181,9 +181,9 @@ uint8_t chargeDetector(void)
 	Register fcstatus;
 	twi0Read(TWI0_FCHARGE_ADDR, FC_STATUS_REG, 1, &fcstatus.status);
 	if(fcstatus.bit.b5 & fcstatus.bit.b4)
-		return CHARGING;
+		return BATT_CHARGING;
 	else if (fcstatus.bit.b6 & fcstatus.bit.b4)
-		return CHARGED;
+		return BATT_CHARGED;
 	else
 		return  fcstatus.status;
 }

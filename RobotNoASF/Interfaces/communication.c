@@ -95,7 +95,7 @@ int FrameBufferInfoPut(int ind, uint8_t typ, int len);	//Adds a element to the e
 
 void MessageBufferInit(void);		//Initialize all usage variables to the beginning of the array
 int MessageBufferPut(uint8_t new);	//Adds a new byte to the end of the array
-int MessageBufferGet(uint8_t *old);	//Gets the oldest byte from the array
+int MessageBufferGet(char *old);	//Gets the oldest byte from the array
 
 void MessageBufferInfoInit(void);							//Initialize all usage variables to the beginning of the array
 int MessageBufferInfoPut(int ind, uint8_t cmd, int len);	//Adds a element to the end of the array
@@ -104,17 +104,31 @@ void UART3_Handler(void);									//UART3 Interrupt handler, receives XBee Frame
 void UART3_Write(uint8_t data);								//Writes a byte to UART3
 void SendXbeeAPIFrame(uint8_t * frame_data, int len);		//Sends an XBee API Frame
 
+char obstacleAvoidanceEnabledFlag = 0;
 
+
+//Improvements: is it worth defining all these codes, im thinking no
 void InterpretSwarmMessage(struct message_info message)
 {
-	//copy information from the message info structure to local variables
-	//int index = message.index;
-	//int length = message.length;
+	//handles the incoming commands and sets the appropriate states / flags calls functions
 	newDataFlag = 1;
 	if(message.command >= 0xE0) //test command range 0xE0-0xEF
 		robotState = TEST;
-	else if(message.command >= 0xD0) //Manual command range 0xD0-0xDF
+	else if (message.command == 0xD0)
+		stopRobot();
+	else if(message.command >= 0xD1 && message.command <= 0xD3) //Manual command range 0xD1-0xD3
 		robotState = MANUAL;
+	else if (message.command == 0xD4)
+		//move robot randomly
+		randomMovementGenerator();		
+	else if (message.command == 0xD5)
+		robotState = DOCKING;
+		//0xD6 and D7 are also reserved for docking 
+		//at a later date for different methods if required
+	else if (message.command == 0xD8)
+		obstacleAvoidanceEnabledFlag = 0;
+	else if (message.command == 0xD9)
+		obstacleAvoidanceEnabledFlag = 1;
 }
 
 /*
@@ -567,7 +581,7 @@ int MessageBufferPut(uint8_t new)
 	return 0; // No errors
 }
 
-int MessageBufferGet(uint8_t *old)
+int MessageBufferGet(char *old)
 {
 	//Check to see if the buffer if empty
 	if(MessageBufferIn == MessageBufferOut)

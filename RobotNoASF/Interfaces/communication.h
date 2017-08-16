@@ -56,6 +56,8 @@ struct frame_info
 	uint8_t type;
 	int length;
 };
+///////////////Global variables/////////////////////////////////////////////////////////////////////
+extern char obstacleAvoidanceEnabledFlag;
 
 /*
 *
