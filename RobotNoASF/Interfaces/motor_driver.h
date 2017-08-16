@@ -168,23 +168,6 @@ void wiggleForward(uint8_t forwardSpeed, uint8_t lateralSpeed, uint8_t direction
 void stopRobot(void);
 
 /*
-* Function:
-* void setTestMotors(uint8_t motorData[])
-*
-* [brief purpose of function]
-*
-* Inputs:
-* uint8_t motorData[]
-*   two element 8bit array that contains a data packet from PC GUI relevant to the motor test
-*   routine. (ie speed, direction and what motor to run)
-*
-* Returns:
-* none
-*
-*/
-void setTestMotors(uint8_t motorData[]);
-
-/*
 *
 * Function:
 * void motorPWMcurve(void)
