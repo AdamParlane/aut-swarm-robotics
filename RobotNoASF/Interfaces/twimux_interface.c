@@ -29,10 +29,10 @@
 *
 */
 
-///////////////Includes/////////////////////////////////////////////////////////////////////////////
+//////////////[Includes]////////////////////////////////////////////////////////////////////////////
 #include "twimux_interface.h"
 
-///////////////Functions////////////////////////////////////////////////////////////////////////////
+//////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*
 * Function:
 * void twi0Init(void);
@@ -73,7 +73,7 @@ void twi0Init(void)
 
 	//TWI0 Clock Waveform Setup
 	REG_TWI0_CWGR
-	|=	TWI_CWGR_CKDIV(1)					//Clock speed 400000, fast mode
+	|=	TWI_CWGR_CKDIV(2)					//Clock speed 400000, fast mode
 	|	TWI_CWGR_CLDIV(63)					//Clock low period 1.3uSec
 	|	TWI_CWGR_CHDIV(28);					//Clock high period  0.6uSec
 	twi0MasterMode;							//Master mode enabled, slave disabled
@@ -115,7 +115,7 @@ void twi2Init(void)
 	
 	//TWI2 Clock Waveform Setup.
 	REG_TWI2_CWGR
-	|=	TWI_CWGR_CKDIV(1)					//Clock speed 400000, fast mode
+	|=	TWI_CWGR_CKDIV(2)					//Clock speed 400000, fast mode
 	|	TWI_CWGR_CLDIV(63)					//Clock low period 1.3uSec
 	|	TWI_CWGR_CHDIV(28);					//Clock high period  0.6uSec
 	twi2MasterMode;							//Master mode enabled, slave disabled

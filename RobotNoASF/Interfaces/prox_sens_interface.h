@@ -34,10 +34,10 @@
 #ifndef PROX_SENS_INTERFACE_H_
 #define PROX_SENS_INTERFACE_H_
 
-///////////////Includes/////////////////////////////////////////////////////////////////////////////
+//////////////[Includes]////////////////////////////////////////////////////////////////////////////
 #include "sam.h"
 
-///////////////Defines//////////////////////////////////////////////////////////////////////////////
+//////////////[Defines]/////////////////////////////////////////////////////////////////////////////
 //Register addresses for reading data. (NOTE: Ch0 and Ch1 are two 16-bit registers)
 #define PS_CH0DATAL_REG	0x14	//Ch0 photodiode ADC low data register (Visible+IR light) AMB
 #define PS_CH0DATAH_REG	0x15	//Ch0 photodiode ADC high data register (Visible+IR light) AMB
@@ -81,7 +81,7 @@
 #define PS_IN_RANGE		0x0070	//Should be prox value when an object is around 100mm away. Value
 								//increases as object draws closer. Max is 0x03FF.
 
-///////////////Functions////////////////////////////////////////////////////////////////////////////
+//////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*
 * Function:
 * void proxSensInit(uint8_t channel)
@@ -115,9 +115,49 @@ void proxSensInit(uint8_t channel);
 */
 uint16_t proxSensRead(uint8_t channel);
 
+/*
+* Function:
+* uint16_t proxAmbRead(uint8_t channel)
+*
+* Retrieves the Ambient light (16-bit) data from the selected proximity sensor.
+*
+* Inputs:
+* uint8_t channel:
+*    The I2C multiplexer channel of the desired proximity sensor
+*
+* Returns:
+* 16bit long integer containing the value proportional to lux hitting sensor
+*
+*/
 uint16_t proxAmbRead(uint8_t channel);
 
+/*
+* Function:
+* void proxAmbModeEnabled(void)
+*
+* Enables ambient light mode and disables proximity mode on the proximity sensors.
+*
+* Inputs:
+* none
+*
+* Returns:
+* none
+*
+*/
 void proxAmbModeEnabled(void);
 
+/*
+* Function:
+* void proxModeEnabled(void)
+*
+* Enables proximity detection mode and disables ambient light mode on the proximity sensors.
+*
+* Inputs:
+* none
+*
+* Returns:
+* none
+*
+*/
 void proxModeEnabled(void);
 #endif /* PROX_SENS_INTERFACE_H_ */

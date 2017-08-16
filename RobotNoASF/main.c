@@ -17,13 +17,13 @@
 * void setup(void)
 */
 
-///////////////Includes/////////////////////////////////////////////////////////////////////////////
+//////////////[Includes]////////////////////////////////////////////////////////////////////////////
 #include "robot_defines.h"
 
-///////////////Defines//////////////////////////////////////////////////////////////////////////////
+//////////////[Defines]/////////////////////////////////////////////////////////////////////////////
 #define		batteryLow	1
 
-///////////////Global variables/////////////////////////////////////////////////////////////////////
+//////////////[Global variables]////////////////////////////////////////////////////////////////////
 uint8_t SBtest, SBtest1;
 uint16_t DBtest, DBtest1, DBtest2;
 struct Position robotPosition;
@@ -31,7 +31,7 @@ extern uint8_t checkImuFifo;
 uint16_t battVoltage;
 
 
-///////////////Functions////////////////////////////////////////////////////////////////////////////
+//////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*
 * Function:
 * void setup(void)
@@ -128,8 +128,7 @@ int main(void)
 			
 			case DOCKING:
 				//if battery low or manual command set
-				//dockRobot(&robotPosition);
-				rotateToHeading(0, &robotPosition);
+				dockRobot(&robotPosition);	//Execute docking procedure state machine
 			break;
 			
 			case OBSTACLE_AVOIDANCE:
@@ -167,6 +166,7 @@ int main(void)
 			break;
 		}
 		
+		//This should be in a function in Communications////////////////////////////////////////////
 		if(FrameBufferInfoGetFull(&frame) == 0)	//Check for a received XBee Message
 		{
 			InterpretXbeeAPIFrame(frame); //Interpret the received XBee Message
@@ -184,6 +184,7 @@ int main(void)
 			checkImuFifo = 0;
 			imuGetEulerAngles(&robotPosition);
 		}
+		////////////////////////////////////////////////////////////////////////////////////////////
 		//if(obstacleAvoidanceEnabledFlag)
 			//obstacleAvoidanceManager();
 	}
@@ -220,7 +221,7 @@ void setup(void)
 	battVoltage = fcBatteryVoltage();	//Add to your watch to keep an eye on the battery
 	ledInit();							//Initialise the LEDs on the mid board
 	motor_init();						//Initialise the motor driver chips
-	//SPI_Init();							//Initialise SPI for talking with optical sensor
+	SPI_Init();							//Initialise SPI for talking with optical sensor
 	twi0Init();							//Initialise TWI0 interface
 	twi2Init();							//Initialise TWI2 interface
 	timer0Init();						//Initialise timer0
@@ -237,11 +238,11 @@ void setup(void)
 	imuInit();							//Initialise IMU.
 	extIntInit();						//Initialise external interrupts.
 	imuDmpInit();						//Initialise DMP system
-	//mouseInit();						//May require further testing - Adam
+	mouseInit();						//May require further testing - Adam
 #if defined ROBOT_TARGET_V2
 	lfInit();							//Initialise line follow sensors. Only on V2.
 #endif
 	
-	delay_ms(2500);
+	delay_ms(2500);						//Stops robot running away while programming
 	return;
 }

@@ -38,11 +38,11 @@
 *
 */
 
-///////////////Includes/////////////////////////////////////////////////////////////////////////////
+//////////////[Includes]////////////////////////////////////////////////////////////////////////////
 #include "prox_sens_interface.h"
 #include "twimux_interface.h"
 
-///////////////Functions////////////////////////////////////////////////////////////////////////////
+//////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*
 * Function:
 * void proxSensInit(uint8_t channel)
@@ -128,34 +128,71 @@ uint16_t proxSensRead(uint8_t channel)
 	return (data[1]<<8)|(data[0]);
 }
 
+/*
+* Function:
+* uint16_t proxAmbRead(uint8_t channel)
+*
+* Retrieves the Ambient light (16-bit) data from the selected proximity sensor.
+*
+* Inputs:
+* uint8_t channel:
+*    The I2C multiplexer channel of the desired proximity sensor
+*
+* Returns:
+* 16bit long integer containing the value proportional to lux hitting sensor
+*
+* Implementation:
+* Two 16bit values are read from the given sensor, one from each of the two photodiodes on board.
+* The channel 0 value contains data on both visible light and infrared light hitting the sensor.
+* Channel 1 give just amount of IR light. Then a value that is supposed to relfect human eye
+* brightness response is calculated using formulas found in the datasheet (pg9).
+* 
+*/
 uint16_t proxAmbRead(uint8_t channel)
 {
-	unsigned char data[2];
+	unsigned char data[2];	//TWI data retrieval buffer
 	twi0MuxSwitch(channel);	//Set multiplexer address to correct device
 	twi0Read(TWI0_PROXSENS_ADDR, (PS_CMD_INC | PS_CH0DATAL_REG), 2, data);
-	uint16_t ch0Data = (data[1]<<8)|(data[0]);
+	uint16_t ch0Data = (data[1]<<8)|(data[0]);	//Retrieve CH0 light data (Visible+IR)
 	twi0Read(TWI0_PROXSENS_ADDR, (PS_CMD_INC | PS_CH1DATAL_REG), 2, data);
-	uint16_t ch1Data = (data[1]<<8)|(data[0]);
+	uint16_t ch1Data = (data[1]<<8)|(data[0]);	//Retrieve CH1 light data (IR only)
 	//NOTE: Command_REG of the ProxSensor must be written to, as part of R/W functions.
 	//Low data register is read, auto-increment occurs and high data register is read.
 	
 	//Equations for canceling IR light (Datasheet pg9):
-	float IAC1 = ch0Data - 1.862*ch1Data;
-	float IAC2 = 0.764*ch0Data - 1.291*ch1Data;
+	float IAC1 = (float)ch0Data - 1.862*(float)ch1Data;
+	float IAC2 = 0.764*(float)ch0Data - 1.291*(float)ch1Data;
 	
-	if(IAC1 > IAC2)
+	if(IAC1 > IAC2)		//The largest value is the one we want
 		return (uint16_t)IAC1;
 	else
 		return (uint16_t)IAC2;
 }
 
+/*
+* Function:
+* void proxAmbModeEnabled(void)
+*
+* Enables ambient light mode and disables proximity mode on the proximity sensors.
+*
+* Inputs:
+* none
+*
+* Returns:
+* none
+*
+* Implementation:
+* A for loop steps through each proximity sensor mux address and writes out the PS_ENABLE_AMBI
+* command to the Enable register on each sensor.
+*
+*/
 void proxAmbModeEnabled(void)
 {
 	uint8_t writeBuffer = PS_ENABLE_AMBI;
 	//Enable ambient light mode on all the sensors
 	for(int ch = MUX_PROXSENS_A; ch <= MUX_PROXSENS_B; ch++)
 	{
-		twi0MuxSwitch(ch);
+		twi0MuxSwitch(ch);	//Switch to next prox sensor
 		//Enable the ambient sensor and disable proximity
 		twi0Write(TWI0_PROXSENS_ADDR, PS_CMD_1BYTE | PS_ENABLE_REG, 1, &writeBuffer);		
 	}
@@ -163,6 +200,23 @@ void proxAmbModeEnabled(void)
 	delay_ms(53); //(50ms ATIME + 2.73ms WTIME)	
 }
 
+/*
+* Function:
+* void proxModeEnabled(void)
+*
+* Enables proximity detection mode and disables ambient light mode on the proximity sensors.
+*
+* Inputs:
+* none
+*
+* Returns:
+* none
+*
+* Implementation:
+* A for loop steps through each proximity sensor mux address and writes out the PS_ENABLE_PROX
+* command to the Enable register on each sensor.
+*
+*/
 void proxModeEnabled(void)
 {
 	uint8_t writeBuffer = PS_ENABLE_PROX;

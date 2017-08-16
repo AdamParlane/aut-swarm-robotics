@@ -21,16 +21,15 @@
 *
 */
 
-///////////////Includes/////////////////////////////////////////////////////////////////////////////
+//////////////[Includes]////////////////////////////////////////////////////////////////////////////
 #include "docking_functions.h"
 #include <stdlib.h>				//abs() function in followLine()
 
-///////////////Global variables/////////////////////////////////////////////////////////////////////
+//////////////[Global variables]////////////////////////////////////////////////////////////////////
 //Light follower sensor states.
 struct LineSensorArray lf;
-extern struct Position robotPosition;
 
-///////////////Functions////////////////////////////////////////////////////////////////////////////
+//////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*
 * Function:
 * void dockRobot(void)
@@ -38,15 +37,15 @@ extern struct Position robotPosition;
 * Function to guide the robot to the dock.
 *
 * Inputs:
-* none
+* struct Position *imuData
+*   Pointer to the robotPosition structure
 *
 * Returns:
-* none
+* 0 when docking complete, otherwise non-zero
 *
 * Implementation:
-* assume max brightness is 0-100 (scale it to make this work)
-* [explain key steps of function]
-* [use heavy detail for anything complicated]
+* The docking function is a state machine that will change states after each step that is required
+* for docking is performed. More to come [WIP]
 *
 * Improvements:
 * [Ideas for improvements that are yet to be made](optional)
@@ -58,33 +57,34 @@ uint8_t dockRobot(struct Position *imuData)
 	enum {START, FACE_BRIGHTEST, FINISHED};
 	static uint8_t dockingState = START;
 	
+	///////////////[WIP]///////////////
 	switch(dockingState)
 	{
 		case START:
-			//rotateToHeading(0, imuData);
-						ledOn1;
-						ledOff2;
-						ledOff3;
-			imuDmpStop();
-			bHeading = scanBrightestLightSourceProx();	
-			imuDmpStart();
+			rotateToHeading(0, imuData);
+			ledOn1;
+			ledOff2;
+			ledOff3;
+			//imuDmpStop();
+			//bHeading = scanBrightestLightSourceProx();	
+			//imuDmpStart();
 			
 			//if(!scanBrightestLightSource(&bHeading, 359, imuData))
-				dockingState = FACE_BRIGHTEST;
+			//dockingState = FACE_BRIGHTEST;
 		break;
 		
 		case FACE_BRIGHTEST:
-					ledOff1;
-					ledOn2;
-					ledOff3;
+			ledOff1;
+			ledOn2;
+			ledOff3;
 			if(!rotateToHeading(bHeading, imuData))
 				dockingState = FINISHED;
 		break; 
 		
 		case FINISHED:
-						ledOff1;
-						ledOff2;
-						ledOn3;
+			ledOff1;
+			ledOff2;
+			ledOn3;
 			trackLight(imuData);
 			return 0;
 		break;
@@ -116,23 +116,23 @@ uint8_t dockRobot(struct Position *imuData)
 void updateLineSensorStates(void)
 {
 #if defined ROBOT_TARGET_V2
-	uint8_t sensorValue;
+	uint8_t sensorValue;						//Temporarily stores state of a single sensor
 	
-	sensorValue = lfLineDetected(LF_OUTER_L);
-	if (sensorValue != NO_CHANGE)
-		lf.outerLeft = sensorValue;
+	sensorValue = lfLineDetected(LF_OUTER_L);	//Look for line on outer left sensor
+	if (sensorValue != NO_CHANGE)				//If this sensor has changed state
+		lf.outerLeft = sensorValue;				//Update line follower data structure with new data
 		
-	sensorValue = lfLineDetected(LF_INNER_L);
-	if (sensorValue != NO_CHANGE)
-		lf.innerLeft = sensorValue;
+	sensorValue = lfLineDetected(LF_INNER_L);	//Look for line on inner left sensor
+	if (sensorValue != NO_CHANGE)				//If this sensor has changed state
+		lf.innerLeft = sensorValue;				//Update line follower data structure with new data
 		
-	sensorValue = lfLineDetected(LF_OUTER_R);
-	if (sensorValue != NO_CHANGE)
-		lf.outerRight = sensorValue;
+	sensorValue = lfLineDetected(LF_OUTER_R);	//Look for line on outer right sensor
+	if (sensorValue != NO_CHANGE)				//If this sensor has changed state
+		lf.outerRight = sensorValue;			//Update line follower data structure with new data
 		
-	sensorValue = lfLineDetected(LF_INNER_R);
-	if (sensorValue != NO_CHANGE)
-		lf.innerRight = sensorValue;
+	sensorValue = lfLineDetected(LF_INNER_R);	//Look for line on inner right sensor
+	if (sensorValue != NO_CHANGE)				//If this sensor has changed state
+		lf.innerRight = sensorValue;			//Update line follower data structure with new data
 #endif
 }
 
