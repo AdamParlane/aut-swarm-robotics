@@ -61,18 +61,32 @@ uint8_t dockRobot(struct Position *imuData)
 	switch(dockingState)
 	{
 		case START:
-			rotateToHeading(90, imuData);
-			//bHeading = scanBrightestLightSourceProx(imuData);
-			//dockingState = FACE_BRIGHTEST;
+			//rotateToHeading(0, imuData);
+						ledOn1;
+						ledOff2;
+						ledOff3;
+			imuDmpStop();
+			bHeading = scanBrightestLightSourceProx();	
+			imuDmpStart();
+			
+
+			//if(!scanBrightestLightSource(&bHeading, 359, imuData))
+				dockingState = FACE_BRIGHTEST;
 		break;
 		
 		case FACE_BRIGHTEST:
+					ledOff1;
+					ledOn2;
+					ledOff3;
 			if(!rotateToHeading(bHeading, imuData))
 				dockingState = FINISHED;
 		break; 
 		
 		case FINISHED:
-			trackLightProx(imuData);
+						ledOff1;
+						ledOff2;
+						ledOn3;
+			trackLight(imuData);
 			return 0;
 		break;
 	}
@@ -350,14 +364,15 @@ uint8_t scanBrightestLightSource(float *brightestHeading, uint16_t sweepAngle,
 	return 1;
 }
 
-float scanBrightestLightSourceProx(struct Position *imuData)
+
+float scanBrightestLightSourceProx(void)
 {
 	uint16_t sensor[6];
 	uint16_t brightestVal;
 	int brightestSensor = 0;
 	//Enable Ambient light mode on the prox sensors
 	proxAmbModeEnabled();
-		
+
 	//Read light sensor values
 	sensor[0] = proxAmbRead(MUX_PROXSENS_A);		//0
 	sensor[1] = proxAmbRead(MUX_PROXSENS_B);		//60

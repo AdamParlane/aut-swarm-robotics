@@ -116,6 +116,6 @@ void followLine(void);
 uint8_t scanBrightestLightSource(float *brightestHeading, uint16_t sweepAngle,
 								struct Position *imuData);
 
-float scanBrightestLightSourceProx(struct Position *imuData);
+float scanBrightestLightSourceProx(void);
 
 #endif /* DOCKING_FUNCTIONS_H_ */
