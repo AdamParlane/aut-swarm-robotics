@@ -1,9 +1,9 @@
 /*
 * imu_interface.c
 *
-* Author : Matthew Witt (wittsend86@gmail.com)
+* Author : Matthew Witt (pxf5695@autuni.ac.nz)
 * Created: 28/04/2017
-*
+*void imuGetEulerAngles(struct Position *imuData)
 * Project Repository: https://github.com/AdamParlane/aut-swarm-robotics
 *
 * Description:
@@ -21,28 +21,21 @@
 * 
 * Functions:
 * int imuInit(void)
-* void timer0Init(void)
 * int imuDmpInit(void)
 * void imuDmpStop(void)
 * void imuDmpStart(void)
-* char twiWriteImu(unsigned char slave_addr, unsigned char reg_addr, 
-*						unsigned char length, unsigned char const *data)
-* char twiReadImu(unsigned char slave_addr, unsigned char reg_addr, 
-*						unsigned char length,	unsigned char *data)
-* int get_ms(uint32_t *timestamp)
-* int delay_ms(uint32_t period_ms)
 * unsigned short invOrientationMatrixToScalar(const signed char *mtx)
 * unsigned short invRow2Scale(const signed char *row)
-* void getEulerAngles(long *ptQuat, euler_packet_t *eulerAngle)
+* void imuGetEulerAngles(struct Position *imuData)
+* uint8_t imuReadFifo(struct Position *imuData)
 * uint8_t imuCommTest(void)
-* void TC0_Handler()
-*
+* void imuApplyYawCorrection(float correctHeading, struct Position *imuData)
 *
 */
 
-///////////////Includes/////////////////////////////////////////////////////////////////////////////
+//////////////[Includes]////////////////////////////////////////////////////////////////////////////
 #include "imu_interface.h"
-#include <tgmath.h>				//Required for atan2 in GetEulerAngles()
+#include <tgmath.h>				//Required for atan2 in imuGetEulerAngles()
 #include "twimux_interface.h"	//twi and multiplexer
 #include "../robot_defines.h"
 
@@ -50,11 +43,11 @@
 #include "../IMU-DMP/inv_mpu_dmp_motion_driver_CUSTOM.h"//Direct Motion Processing setup functions
 #include "../IMU-DMP/inv_mpu_CUSTOM.h"//IMU basic setup and initialisation functions
 
-
 ///////////////Global Vars//////////////////////////////////////////////////////////////////////////
 uint8_t checkImuFifo	= 0;	//A flag to determine that the IMU's FIFO is ready to be read again
+extern uint32_t systemTimestamp;
 
-///////////////Functions////////////////////////////////////////////////////////////////////////////
+//////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*
 * Function: int imuInit(void)
 *
@@ -68,9 +61,6 @@ uint8_t checkImuFifo	= 0;	//A flag to determine that the IMU's FIFO is ready to 
 *
 * Implementation:
 * MASTER CLOCK NEEDS TO BE SETUP FOR 100MHZ FIRST.
-* TIMER0 is initialised in register compare mode. This will provide a 
-* system time stamp that is incremented every millisecond and is necessary for delay_ms() used by 
-* the IMU driver.
 * Next, the IMU driver is initialised. The driver is told which sensors want to be used as well as
 * the desired sample rates.
 *
@@ -84,15 +74,18 @@ int imuInit(void)
 	//Setup PIO for IMU hardware interrupt
 	IMU_INT_PORT->PIO_PER		//Enable the pin
 	|=	IMU_INT_PIN;
-	IMU_INT_PORT->PIO_IER		//Make input.
+	IMU_INT_PORT->PIO_ODR		//Make input.
 	|= IMU_INT_PIN;
 #endif
 
 	//IMU INITIALISATION
 	//Initialise the IMU's driver	
-	result += mpu_init(0);								// Initialise the MPU with no interrupts
+	result += mpu_init(0);								//Initialise the MPU with no interrupt CBs
+	result += mpu_set_int_level(1);						//Make interrupt level active high
+	result += mpu_set_gyro_fsr(1000);					//1000dps (Gyro sensitivity)
+	result += mpu_set_accel_fsr(2);						//+-2G (Accelerometer sensitivity)
 	result += mpu_set_sensors(INV_XYZ_GYRO | INV_XYZ_ACCEL | INV_XYZ_COMPASS);// Wake up all sensors
-	result += mpu_set_sample_rate(200);					// Set 200Hz samplerate (for accel and gyro)											
+	result += mpu_set_sample_rate(800);					// Set 800Hz samplerate (for accel and gyro)											
 	result += mpu_set_compass_sample_rate(100);			// Set 100Hz compass sample rate (max)
 	
 	return result;
@@ -122,20 +115,30 @@ int imuInit(void)
 int imuDmpInit(void)
 {
 	int result = 0;			//If > 0 then error has occurred
-	//Orientation correction matrix for the IMU
+	//Orientation correction matrix for the IMU. Allows the output to be corrected, no matter
+	//how the IMU is orientated relative to the robot.
+	
+	//This is the orientation matrix for the V2 robots with the IMU mounted on the underside of the
+	//main board.
 	static signed char gyro_orientation[9] =
-	{	-1,	 0,	 0,
-		0,	-1,	 0,
-		0,	 0,	 1
+	//  X    Y   Z
+	{	1,	 0,	 0,  //X
+		0,	-1,	 0,  //Y
+		0,	 0,	 -1  //Z
 	};
+	//Both Y and Z axis are inverted because the chip is mounted upside down.
+	
 	result += dmp_load_motion_driver_firmware();		// Load the DMP firmware
 	//Send the orientation correction matrix
 	result += dmp_set_orientation(invOrientationMatrixToScalar(gyro_orientation));
-	//result += dmp_enable_feature(DMP_FEATURE_6X_LP_QUAT | DMP_FEATURE_SEND_RAW_ACCEL |
-	//								DMP_FEATURE_SEND_CAL_GYRO | DMP_FEATURE_GYRO_CAL);
-	result += dmp_enable_feature(DMP_FEATURE_6X_LP_QUAT);//Enable 6 axis low power quaternions
-	result += dmp_set_fifo_rate(10);					//10Hz update rate from the FIFO
-	result += mpu_set_dmp_state(1);						//Start DMP
+	result += dmp_enable_feature(DMP_FEATURE_6X_LP_QUAT | DMP_FEATURE_SEND_RAW_ACCEL |
+									DMP_FEATURE_SEND_CAL_GYRO);
+	
+	result += dmp_set_fifo_rate(200);			//200Hz update rate from the FIFO as per
+												//datasheet (improves accuracy)
+	result += dmp_set_interrupt_mode(DMP_INT_CONTINUOUS);//Use continuous interrupts rather than
+														//gesture based (pg10 in DMP manual)
+	result += mpu_set_dmp_state(1);						//Start DMP (also starts IMU interrupt)
 	return result;
 }
 
@@ -164,7 +167,6 @@ int imuDmpInit(void)
 unsigned char imuDmpStop(void)
 {
 	unsigned char dmpEnabled = 0;
-		
 	mpu_get_dmp_state(&dmpEnabled);				//See if DMP was running
 	if (dmpEnabled == 1)						//If it was
 		mpu_set_dmp_state(0);					//Stop DMP
@@ -196,7 +198,6 @@ unsigned char imuDmpStop(void)
 unsigned char imuDmpStart(void)
 {
 	unsigned char dmpEnabled = 0;
-	
 	mpu_get_dmp_state(&dmpEnabled);				//See if DMP was already running
 	if (dmpEnabled == 0)						//If it wasn't
 		mpu_set_dmp_state(1);					//Start DMP
@@ -216,7 +217,10 @@ unsigned char imuDmpStart(void)
 * TODO: return value description for invOrientationMatrixToScalar function
 *
 * Implementation:
-* TODO: Implementation description for invOrientationMatrixToScalar function
+* These next two functions converts the orientation matrix (see
+* gyro_orientation) to a scalar representation for use by the DMP.
+* NOTE: These functions are borrowed from Invensense's MPL.
+*
 *
 */
 unsigned short invOrientationMatrixToScalar(const signed char *mtx)
@@ -260,247 +264,138 @@ unsigned short invRow2Scale(const signed char *row)
 	unsigned short b;
 
 	if (row[0] > 0)
-	b = 0;
+		b = 0;
 	else if (row[0] < 0)
-	b = 4;
+		b = 4;
 	else if (row[1] > 0)
-	b = 1;
+		b = 1;
 	else if (row[1] < 0)
-	b = 5;
+		b = 5;
 	else if (row[2] > 0)
-	b = 2;
+		b = 2;
 	else if (row[2] < 0)
-	b = 6;
+		b = 6;
 	else
-	b = 7;      // error
+		b = 7;      // error
 	return b;
 }
 
 /*
-* Function: void getEulerAngles(long *ptQuat, euler_packet_t *eulerAngle)
+* Function: void imuGetEulerAngles(struct Position *imuData)
 *
 * Convert Quaternion numbers from the IMU to Euler rotational angles
 *
 * Inputs:
-* ptQuat is a 4 element numeric array that holds the 4 parts of a quaternion complex number:
-* x(i), y(j), z(k), w(omega). Presumably ptQuat is a rate of change of orientation, not an absolute 
-* orientation value.
+* struct Position *imuData
+*   Holds the address to the global robotPosition structure that holds all positional data
 *
 * Returns:
-* eulerAngle is a pointer to an euler_packet_t structure that has three elements: yaw, pitch and
-* roll.
+* Loads Yaw, Pitch and Roll data back into robotPosition.
 *
 * Implementation:
-* TO COME
+* After the quaternions have been converted to Euler angles, the Yaw offset is applied which is a
+* heading correction obtained from the PC. Once this has been applied, the Yaw value is checked to
+* ensure it is still in range (-180<Yaw<180) and corrected if necessary.
 *
 */
-void getEulerAngles(long *ptQuat, euler_packet_t *eulerAngle)
+void imuGetEulerAngles(struct Position *imuData)
 {
-	double w = ptQuat[3];
-	double x = ptQuat[0];
-	double y = ptQuat[1];
-	double z = ptQuat[2];
-	double sqw = w*w;
-	double sqx = x*x;
-	double sqy = y*y;
-	double sqz = z*z;
-	double unit = sqx + sqy + sqz + sqw; // if normalised is one, otherwise is correction factor
-	double test = x*y + z*w;
-	if (test > 0.499*unit) { // singularity at north pole
-		eulerAngle->pitch = 2 * atan2(x,w);
-		eulerAngle->yaw = M_PI/2;
-		eulerAngle->roll = 0;
+	float w = imuData->imuQW;				//Pull quaternions from IMU
+	float x = imuData->imuQX;
+	float y = imuData->imuQY;
+	float z = imuData->imuQZ;
+	float sqw = w*w;						//Pre-calculate squares
+	float sqx = x*x;
+	float sqy = y*y;
+	float sqz = z*z;
+	float unit = sqx + sqy + sqz + sqw;	//Should equal 1, otherwise is correction factor
+	float test = x*y + z*w;
+	if (test > 0.499*unit)					// singularity at north pole
+	{
+		imuData->imuRoll = 2 * atan2(x,w);
+		imuData->imuPitch = M_PI/2;
+		imuData->imuYaw = 0;
 		return;
 	}
-	if (test < -0.499*unit) { // singularity at south pole
-		eulerAngle->pitch = -2 * atan2(x,w);
-		eulerAngle->yaw = M_PI/2;
-		eulerAngle->roll = 0;
+	if (test < -0.499*unit)					// singularity at south pole
+	{
+		imuData->imuRoll = -2 * atan2(x,w);
+		imuData->imuPitch = M_PI/2;
+		imuData->imuYaw = 0;
 		return;
 	}
-	eulerAngle->pitch = (atan2(2*y*w-2*x*z , sqx - sqy - sqz + sqw))*180/M_PI;
-	eulerAngle->yaw = (asin(2*test/unit))*180/M_PI;
-	eulerAngle->roll = (atan2(2*x*w-2*y*z , -sqx + sqy - sqz + sqw))*180/M_PI;
+	imuData->imuRoll = (atan2(2*y*w-2*x*z , sqx - sqy - sqz + sqw))*180/M_PI;
+	imuData->imuPitch = (asin(2*test/unit))*180/M_PI;
+	imuData->imuYaw = (atan2(2*x*w-2*y*z , -sqx + sqy - sqz + sqw))*180/M_PI;
+	//Factor in the Yaw offset (Heading correction from the PC)
+	imuData->imuYaw += imuData->imuYawOffset;
+	//Wrap imuYaw so its always between -180 and 180 degrees
+	imuData->imuYaw = imuWrapAngle(imuData->imuYaw);
 }
-
-
 
 /*
-* Function: char twiWriteImu(unsigned char slave_addr, unsigned char reg_addr, 
-*								unsigned char length, unsigned char const *data)
+* Function:
+* void imuReadFifo(void)
 *
-* Required by the IMU drivers (hence naming convention). Writes the specified number of bytes to a
-* register on the given TWI device.
-*
-* Inputs:
-* slave_addr is the address of the device to be written to on TWI2. The address varies even for the
-* IMU driver because the IMU and compass have different TWI slave addresses. reg_addr is the
-* 8bit address of the register being written to. length is the number of bytes to be written. *data 
-* points to the data bytes to be written.
-*
-* Returns:
-* returns 0 on success.
-*
-* Implementation:
-* Master mode on TWI2 is enabled, TWI2 is prepared for transmission ie slave and register addresses
-* are set and register address size is set to 1 byte. Next, transmission takes place but there are
-* slightly different procedures for single and multi byte transmission. On single byte
-* transmission, the STOP state is set in the TWI control register immediately after the byte to be
-* sent is loaded into the transmission holding register. On multi-byte transmission, the STOP
-* flag isn't set until all bytes have been sent and the transmission holding register is clear.
-*
-*/
-
-char twiWriteImu(unsigned char slave_addr, unsigned char reg_addr, 
-					unsigned char length, unsigned char const *data)
-#if defined ROBOT_TARGET_V1
-{
-	//note txcomp MUST = 1 before writing (according to datasheet)
-	twi2MasterMode;								//Enable master mode
-	twi2SetSlave(slave_addr);					//Slave device address
-	twi2RegAddrSize(1);							//Set register address length to 1 byte
-	twi2RegAddr(reg_addr);						//set register address to write to
-
-	if(length == 1)
-	{
-		twi2Send(data[0]);						//set up data to transmit
-		twi2Stop;								// Send a stop bit
-		while(!twi2TxReady);					//while Transmit Holding Register not ready. wait.
-		} else {
-		for(unsigned char b = 0; b < length; b++)//Send data bit by bit until data length is reached
-		{
-			twi2Send(data[b]);					//set up data to transmit
-			while(!twi2TxReady);				//while Transmit Holding Register not ready. wait.
-		}
-		twi2Stop;								// Send a stop bit
-	}
-	while(!twi2TxComplete);						//while transmit not complete. wait.
-	return 0;
-}
-#endif
-
-#if defined ROBOT_TARGET_V2
-{
-	//note txcomp MUST = 1 before writing (according to datasheet)
-	twi0MasterMode;								//Enable master mode
-	twi0SetSlave(slave_addr);					//Slave device address
-	twi0RegAddrSize(1);							//Set register address length to 1 byte
-	twi0RegAddr(reg_addr);						//set register address to write to
-
-	if(length == 1)
-	{
-		twi0Send(data[0]);						//set up data to transmit
-		twi0Stop;								// Send a stop bit
-		while(!twi0TxReady);					//while Transmit Holding Register not ready. wait.
-	} else {
-		for(unsigned char b = 0; b < length; b++)//Send data bit by bit until data length is reached
-		{
-			twi0Send(data[b]);					//set up data to transmit
-			while(!twi0TxReady);				//while Transmit Holding Register not ready. wait.
-		}
-		twi0Stop;								// Send a stop bit
-	}
-	while(!twi0TxComplete);						//while transmit not complete. wait.
-	return 0;
-}
-#endif
-
-/*
-* Function: char twiReadImu(unsigned char slave_addr, unsigned char reg_addr,
-*								unsigned char length, unsigned char const *data)
-*
-* Required by the IMU drivers (hence naming convention). Reads the specified number of bytes from a
-* register on the given TWI device.
+* Will read data from the IMU's FIFO buffer and store data in the given Position structure
 *
 * Inputs:
-* slave_addr is the address of the device to be read from on TWI2. The address varies even for the
-* IMU driver because the IMU and compass have different TWI slave addresses. reg_addr is the address
-* of the register being read from. length is the number of bytes to be read. The IMU automatically 
-* increments the register address when reading more than one byte. *data points to the location in 
-* memory where the retrieved data will be stored.
+* struct Position *imuData:
+*   Pointer to the global robotPosition structure. This is where the read data will be stored
 *
 * Returns:
-* returns 0 on success.
+* 0 on success, non zero otherwise
 *
 * Implementation:
-* Master mode on TWI2 is enabled, TWI2 is prepared for transmission ie slave and register addresses
-* are set and register address size is set to 1 byte. Next, reception takes place but there are
-* different procedures for single and multi byte reception. On single byte reception, the START and
-* STOP flags are set simultaneously in TWI2's control register to indicate that only one byte will
-* be read before communication is stopped. With multi-byte reception, the START flag is set 
-* initially, and the STOP flag in the control register is set when the second to last byte has been
-* received (ie there will only be one byte left to receive after the STOP flag is set)
-*
-* Improvements:
-* Could use a timeout feature with the return of a non-zero value if the slave device doesn't
-* reply in time (TXCOMP loops). This would stop the code hanging in an endless loop if the IMU 
-* decides to stop talking. Additionally, non zero value returned on error.
+* Sets up variables required as parameters for dmp_read_fifo() (see below for descriptions).
+* Calls dmp_read_fifo() which will attempt to read the data from the FIFO buffer. If this fails, 
+* this function will exit with non zero value. On success, the sensors parameter is checked against
+* bit masks to determine what data was stored in the FIFO so it can be stored in the Position
+* structure. This should save a little bit of time if only some of the data has been sent.
+* Next the more parameter is checked. If it is non-zero then there is more data in the FIFO buffer
+* still so dmp_read_fifo is called again. When more is finally zero, the timer between the last FIFO
+* read and this one is calculated and stored and the timestamp of the current read is stored.
 *
 */
-
-char twiReadImu(unsigned char slave_addr, unsigned char reg_addr,
-					unsigned char length, unsigned char *data)
-#if defined ROBOT_TARGET_V1
+uint8_t imuReadFifo(struct Position *imuData)
 {
-	twi2MasterMode;						//Enable master mode
-	twi2SetSlave(slave_addr);			//Slave device address
-	twi2SetReadMode;					//Set to read from register
-	twi2RegAddrSize(1);					//Register addr byte length (0-3)
-	twi2RegAddr(reg_addr);				//set up address to read from
-	
-	if (length == 1)					//If reading one byte, then START and STOP bits need to be
-	//set at the same time
+	short gyroData[3];					//Stores raw gyro data from IMU (PRY)->(XYZ)
+	short accelData[3];					//Stores raw accelerometer data from IMU (XYZ)
+	long quatData[4];					//Stores fused quaternion data from IMU (XYZW)
+	unsigned long sensorTimeStamp;		//Stores the data Timestamp
+	short sensors;						//Says which sensor data was in the FIFO
+	unsigned char more;					//Not 0 when there is more data in FIFO after read
+	do
 	{
-		twi2StartSingle;				//Send START & STOP condition as required (single byte read)
-		while(!twi2RxReady);			//while Receive Holding Register not ready. wait.
-		data[0] = twi2Receive;			//store data received
-		while(!twi2TxComplete);			//while transmit not complete. wait.
-		return 0;
-	} else {
-		twi2Start;						//Send start bit
-		for(unsigned char b = 0; b < length; b++)
+		if(dmp_read_fifo(gyroData, accelData, quatData, &sensorTimeStamp, &sensors, &more))
+			return 1;					//If FIFO read function returns non zero then error has 
+										//occurred, so exit this function with non zero->
+		if(sensors & INV_WXYZ_QUAT)		//If quaternion data was in the FIFO
 		{
-			while(!twi2RxReady);
-			data[b] = twi2Receive;
-			if(b == length - 2)
-			twi2Stop;					//Send stop on reception of 2nd to last byte
+			imuData->imuQX = quatData[X];
+			imuData->imuQY = quatData[Y];
+			imuData->imuQZ = quatData[Z];
+			imuData->imuQW = quatData[W];
+
 		}
-		while(!twi2TxComplete);				//while transmit not complete. wait.
-	}
+		if(sensors & INV_XYZ_ACCEL)		//If accelerometer data was in the FIFO
+		{
+			imuData->imuAccelX = accelData[X]*IMU_ACCEL_CONV_MS2;
+			imuData->imuAccelY = accelData[Y]*IMU_ACCEL_CONV_MS2;
+			imuData->imuAccelZ = accelData[Z]*IMU_ACCEL_CONV_MS2;
+		}
+		if(sensors & INV_XYZ_GYRO)		//If gyro data was in the FIFO
+		{
+			imuData->imuGyroX = gyroData[X]*IMU_GYRO_CONV;
+			imuData->imuGyroY = gyroData[Y]*IMU_GYRO_CONV;
+			imuData->imuGyroZ = gyroData[Z]*IMU_GYRO_CONV;
+		}
+
+	} while(more);						//If there is still more in the FIFO then do it again->
+	imuData->imuDeltaTime = sensorTimeStamp - imuData->imuTimeStamp;
+	imuData->imuTimeStamp = sensorTimeStamp;
 	return 0;
 }
-#endif
-
-#if defined ROBOT_TARGET_V2
-{
-	twi0MasterMode;						//Enable master mode
-	twi0SetSlave(slave_addr);			//Slave device address
-	twi0SetReadMode;					//Set to read from register
-	twi0RegAddrSize(1);					//Register addr byte length (0-3)
-	twi0RegAddr(reg_addr);				//set up address to read from
-	
-	if (length == 1)					//If reading one byte, then START and STOP bits need to be
-										//set at the same time
-	{
-		twi0StartSingle;				//Send START & STOP condition as required (single byte read)
-		while(!twi0RxReady);			//while Receive Holding Register not ready. wait.
-		data[0] = twi0Receive;			//store data received
-		while(!twi0TxComplete);			//while transmit not complete. wait.
-		return 0;
-	} else {
-		twi0Start;						//Send start bit
-		for(unsigned char b = 0; b < length; b++)
-		{
-			while(!twi0RxReady);
-			data[b] = twi0Receive;
-			if(b == length - 2)
-			twi0Stop;					//Send stop on reception of 2nd to last byte
-		}
-		while(!twi0TxComplete);				//while transmit not complete. wait.
-	}
-	return 0;
-}
-#endif
 
 /*
 * Function:
@@ -518,7 +413,7 @@ char twiReadImu(unsigned char slave_addr, unsigned char reg_addr,
 * - Disable DMP if necessary
 * - Send byte to WHO AM I register on IMU
 * - Re-enable DMP if enabled beforehand
-* - Return value retrieved from IMU. Should return 0x71 if communication successful.
+* - Return value retrieved from IMU. Should return 0x71 (0x73?) if communication successful.
 *
 */
 uint8_t imuCommTest(void)
@@ -529,14 +424,80 @@ uint8_t imuCommTest(void)
 	dmpEnabled = imuDmpStop();		//Stop DMP. Returns 1 if DMP was running.
 		
 	//Request test byte
-	twiReadImu(TWI2_IMU_ADDR, IMU_WHOAMI_REG, 1, &returnVal);
+#if defined ROBOT_TARGET_V1
+	twi2Read(TWI2_IMU_ADDR, IMU_WHOAMI_REG, 1, &returnVal);
+#endif
+#if defined ROBOT_TARGET_V2
+	twi0Read(TWI2_IMU_ADDR, IMU_WHOAMI_REG, 1, &returnVal);
+#endif
 
 	if (dmpEnabled == 1)			//If DMP was running before this function began
 		imuDmpStart();				//Restart the DMP
 		
-	return returnVal;				//return 0x71 on success
+	return returnVal;				//return 0x71 (0x73?) on success
 }
 
+/*
+* Function:
+* void imuApplyYawCorrection(float correctHeading, struct Position *imuData)
+*
+* Takes a 'correct' heading and uses it to modify the onboard heading to match.
+*
+* Inputs:
+* float correctHeading
+*   Correct heading of the robot (from webcam) (between -180 and 180)
+* struct Position *imuData
+*   Pointer to the robotPosition structure
+*
+* Returns:
+* none
+*
+* Implementation:
+* First the function checks that correctHeading is between -180 and 180 and corrects it if
+* necessary. Then it looks at the difference between the heading provided and the heading reported
+* by the IMU and adds the difference to imuYawOffset to correct it. Finally, it makes sure that
+* imuYawOffset is between -180 and 180 and corrects it if necessary.
+* 
+* Improvements:
+* Will most likely move this from imu_interface to the Navigation module when its created.
+*
+*/
+void imuApplyYawCorrection(float correctHeading, struct Position *imuData)
+{
+	//Make sure correctHeading is in range
+	correctHeading = imuWrapAngle(correctHeading);
+	//Take difference and apply it to imuYawOffset.
+	imuData->imuYawOffset += correctHeading - imuData->imuYaw;
+	//Wrap imuYawOffset so its always between -180 and 180 degrees
+	imuData->imuYawOffset = imuWrapAngle(imuData->imuYawOffset);
+}
 
-
-
+/*
+* Function:
+* float imuWrapAngle(float angleDeg)
+*
+* Will take any angle in degrees and convert it to its equivalent value between -180 and 180 degrees
+*
+* Inputs:
+* float angleDeg
+*   Angle to wrap
+*
+* Returns:
+* Wrapped equivalent of the given angle
+*
+* Implementation:
+* Uses modulus to return the remainder of the given angle divided by 180. If the given angle was 
+* less than -180 then this is the new angle. Otherwise if the original angle is greater than 180
+* then the remainder has 180 subtracted from it and this becomes the new value. In any other case
+* (Which is just if the input angle is less than 180 and greater than -180) just return the input
+* value because it is already in range.
+*
+*/
+float imuWrapAngle(float angleDeg)
+{
+	while(angleDeg > 180.0)
+		angleDeg -= 360.0;
+	while(angleDeg < -179.99)
+		angleDeg += 360.0;
+	return angleDeg;
+}

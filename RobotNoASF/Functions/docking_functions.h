@@ -17,34 +17,19 @@
 * void updateLineSensorStates(void)
 * int8_t getLineDirection(void)
 * void followLine(void)
+* uint8_t scanBrightestLightSource(int16_t *brightestHeading)
 *
 */
 
 #ifndef DOCKING_FUNCTIONS_H_
 #define DOCKING_FUNCTIONS_H_
 
-///////////////Includes/////////////////////////////////////////////////////////////////////////////
+//////////////[Includes]////////////////////////////////////////////////////////////////////////////
 #include "../robot_defines.h"
 
-///////////////Defines//////////////////////////////////////////////////////////////////////////////
+//////////////[Defines]/////////////////////////////////////////////////////////////////////////////
 
-
-///////////////Type Definitions/////////////////////////////////////////////////////////////////////
-struct LineSensorArray
-//Will store states of the line sensors for use by functions in this modules. This is necessary
-//because there is a gray area when the sensor is half on and half off the line, so by establishing
-//hysteresis and only changing the stored states when an upper and lower threshold is crossed,
-//jitter should be reduced.
-{
-	uint8_t outerLeft;	
-	uint8_t innerLeft;
-	uint8_t innerRight;
-	uint8_t outerRight;
-};
-
-
-
-///////////////Functions////////////////////////////////////////////////////////////////////////////
+//////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*
 * Function:
 * void dockRobot(void)
@@ -58,7 +43,7 @@ struct LineSensorArray
 * none
 *
 */
-void dockRobot(void);
+uint8_t dockRobot(struct Position *imuData);
 
 /*
 * Function:
@@ -110,5 +95,27 @@ int8_t getLineDirection(void);
 *
 */
 void followLine(void);
+
+/*
+* Function:
+* uint8_t scanBrightestLightSource(float *brightestHeading, uint16_t sweepAngle,
+*									struct Position *imuData);
+*
+* The robot will scan from -180 degrees to 180 degrees and record the heading with the brightest
+* source of light (which hopefully is the charging station)
+*
+* Inputs:
+* int16_t *brightestHeading
+*   A pointer to a variable that contains a heading to the brightest detected light source so far.
+*
+* Returns:
+* Returns a 1 if the function hasn't completed yet, or a 0 if it has. When the function returns a 0
+* it means the heading stored at *breightestHeading points to the brightest light source.
+*
+*/
+uint8_t scanBrightestLightSource(float *brightestHeading, uint16_t sweepAngle,
+								struct Position *imuData);
+
+float scanBrightestLightSourceProx(void);
 
 #endif /* DOCKING_FUNCTIONS_H_ */

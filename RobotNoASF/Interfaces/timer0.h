@@ -9,10 +9,10 @@
 #ifndef TIMER0_H_
 #define TIMER0_H_
 
-///////////////Includes/////////////////////////////////////////////////////////////////////////////
+//////////////[Includes]////////////////////////////////////////////////////////////////////////////
 #include "../robot_defines.h"
 
-///////////////Functions////////////////////////////////////////////////////////////////////////////
+//////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*
 * Function:
 * void timer0Init(void)
@@ -64,6 +64,29 @@ int get_ms(uint32_t *timestamp);
 *
 */
 int delay_ms(uint32_t period_ms);
+
+/*
+* Function:
+* int fdelay_ms(uint32_t period_ms)
+*
+* Multi-task friendly delay
+*
+* Inputs:
+* uint32_t period_ms
+*   Delay in ms
+*
+* Returns:
+* 0 when time is up, otherwise 1
+*
+* Implementation:
+* [explain key steps of function]
+* [use heavy detail for anything complicated]
+*
+* Improvements:
+* [Ideas for improvements that are yet to be made](optional)
+*
+*/
+int fdelay_ms(uint32_t period_ms);
 
 /*
 * Function: void TC0_Handler()

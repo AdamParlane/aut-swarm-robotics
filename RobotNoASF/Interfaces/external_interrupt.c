@@ -17,15 +17,14 @@
 *
 */
 
-///////////////Includes/////////////////////////////////////////////////////////////////////////////
+//////////////[Includes]////////////////////////////////////////////////////////////////////////////
 #include "external_interrupt.h"
 #include "../IMU-DMP/inv_mpu_dmp_motion_driver_CUSTOM.h"
 
-///////////////Global vars//////////////////////////////////////////////////////////////////////////
+//////////////[Global variables]////////////////////////////////////////////////////////////////////
 extern uint8_t checkImuFifo;
-extern struct Position robotPosition;
 
-///////////////Functions////////////////////////////////////////////////////////////////////////////
+//////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*
 * Function:
 * void extIntInit(void)
@@ -47,13 +46,14 @@ extern struct Position robotPosition;
 */
 void extIntInit(void)
 {
+	NVIC_EnableIRQ(ID_PIOA);	//Enable interrupts on PIOA
 #if defined ROBOT_TARGET_V2
 	//Setup IMU external interrupt pin. Pin and port is defined in imu_interface.h
 	IMU_INT_PORT->PIO_IER		//Enable the interrupt on the IMU int pin
 	|=	IMU_INT_PIN;
 	IMU_INT_PORT->PIO_AIMER		//Enable additional interrupt modes on IMU int pin (Must be enabled
 	|=	IMU_INT_PIN;			//So we can have a rising edge interrupt rather than lvl sensitive)
-	IMU_INT_PORT->PIO_ESR		//Make pin sensitive to edge rather than level
+	IMU_INT_PORT->PIO_ESR		//Make pin sensitive to level rather than edge
 	|=	IMU_INT_PIN;
 	IMU_INT_PORT->PIO_REHLSR	//Make pin rising edge sensitive
 	|=	IMU_INT_PIN;
@@ -83,25 +83,10 @@ void PIOA_Handler(void)
 {
 	//If the IMU interrupt has been triggered
 #if defined ROBOT_TARGET_V2
-	if(IMU_INT_PORT->PIO_ISR & IMU_INT_PIN)
+	if(IMU_INT_PORT->PIO_ISR & IMU_INT_PIN)	//If IMU interrupt detected
 	{
-		short gyroData[3];				//Stores raw gyro data from IMU
-		short accelData[3];				//Stores raw accelerometer data from IMU
-		long quatData[4];				//Stores fused quaternion data from IMU
-		unsigned long sensorTimeStamp;	//Stores the datas Timestamp
-		short sensors;					//Tells which sensors are enabled ??
-		unsigned char more;				//Not yet sure
-		dmp_read_fifo(gyroData, accelData, quatData, &sensorTimeStamp, &sensors, &more);
-		robotPosition.imuAccelX = accelData[X];
-		robotPosition.imuAccelY = accelData[Y];
-		robotPosition.imuAccelZ = accelData[Z];
-		robotPosition.imuGyroX = gyroData[X];
-		robotPosition.imuGyroY = gyroData[Y];
-		robotPosition.imuGyroZ = gyroData[Z];
-		robotPosition.imuQX = quatData[X];
-		robotPosition.imuQY = quatData[Y];
-		robotPosition.imuQZ = quatData[Z];
-		robotPosition.imuQW = quatData[W];
+		checkImuFifo = 1;
+		//ledTog1;
 	}
-#endif
+#endif	
 }

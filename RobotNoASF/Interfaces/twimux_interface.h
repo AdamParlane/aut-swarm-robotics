@@ -16,21 +16,31 @@
 * Functions:
 * void twi0Init(void)
 * void twi2Init(void)
-* void twi0MuxSwitch(uint8_t channel)
+* uint8_t twi0MuxSwitch(uint8_t channel)
 * uint8_t twi0ReadMuxChannel(void)
-* void twi0Write(uint8_t slaveAddress, uint8_t intAddress, uint8_t data)
-* uint8_t twi0ReadSingle(uint8_t slaveAddress, uint8_t intAddress)
-* uint16_t twi0ReadDouble(uint8_t slaveAddress, uint8_t intAddress)
+* char twi0Write(unsigned char slave_addr, unsigned char reg_addr,
+*						unsigned char length, unsigned char const *data)
+* char twi2Write(unsigned char slave_addr, unsigned char reg_addr,
+*						unsigned char length, unsigned char const *data)
+* char twi0Read(unsigned char slave_addr, unsigned char reg_addr,
+*						unsigned char length,	unsigned char *data)
+* char twi2Read(unsigned char slave_addr, unsigned char reg_addr,
+*						unsigned char length,	unsigned char *data)
 *
 */
 
 #ifndef TWIMUX_INTERFACE_H_
 #define TWIMUX_INTERFACE_H_
 
-///////////////Includes/////////////////////////////////////////////////////////////////////////////
-#include "sam.h"
+//////////////[Includes]////////////////////////////////////////////////////////////////////////////
+#include "../robot_defines.h"
 
-///////////////Defines//////////////////////////////////////////////////////////////////////////////
+//////////////[Defines]/////////////////////////////////////////////////////////////////////////////
+////TWI status register timeout values (ms)
+#define TWI_RXRDY_TIMEOUT	2
+#define TWI_TXRDY_TIMEOUT	2
+#define TWI_TXCOMP_TIMEOUT	2
+
 ////General Commands
 //if returns 1, then the receive holding register has a new byte to be read
 #define twi0RxReady			(REG_TWI0_SR & TWI_SR_RXRDY)
@@ -111,7 +121,7 @@
 #define MUX_PROXSENS_E				0xFC		//Mux Channel 4, Side Panel E
 #define MUX_PROXSENS_F				0xFB		//Mux Channel 3, Side Panel F
 
-///////////////Functions////////////////////////////////////////////////////////////////////////////
+//////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*
 * Function:
 * void twi0Init(void)
@@ -144,7 +154,7 @@ void twi2Init(void);
 
 /*
 * Function:
-* void twi0MuxSwitch(uint8_t channel)
+* uint8_t twi0MuxSwitch(uint8_t channel)
 *
 * Sets the I2C multiplexer to desired channel.
 *
@@ -155,7 +165,7 @@ void twi2Init(void);
 * none
 *
 */
-void twi0MuxSwitch(uint8_t channel);
+uint8_t twi0MuxSwitch(uint8_t channel);
 
 /*
 * Function:
@@ -173,60 +183,53 @@ void twi0MuxSwitch(uint8_t channel);
 uint8_t twi0ReadMuxChannel(void);
 
 /*
-* Function:
-* void twi0Write(uint8_t slaveAddress, uint8_t intAddress, uint8_t data)
+* Function: char twiNWrite(unsigned char slave_addr, unsigned char reg_addr,
+*								unsigned char length, unsigned char const *data)
 *
-* Will write a byte on TWI0 to the slave device and internal register specified in the parameters
+* Writes bytes out to TWI devices. Allows multiple bytes to be written at once if desired
 *
 * Inputs:
-* uint8_t slaveAddress:
-*    The address of the slave device on TWI0 to write to
-* uint8_t intAddress:
-*    The internal address of the register to write to
-* uint8_t data:
-*    The byte to write
+* slave_addr is the address of the device to be written to on TWIn. reg_addr is the
+* 8bit address of the register being written to. length is the number of bytes to be written. *data
+* points to the data bytes to be written.
 *
 * Returns:
-* none
+* returns 0 on success. otherwise will return 1 on timeout
+*
+* Implementation:
+* Master mode on TWIn is enabled, TWIn is prepared for transmission ie slave and register addresses
+* are set and register address size is set to 1 byte. Next, transmission takes place but there are
+* slightly different procedures for single and multi byte transmission. On single byte
+* transmission, the STOP state is set in the TWI control register immediately after the byte to be
+* sent is loaded into the transmission holding register. On multi-byte transmission, the STOP
+* flag isn't set until all bytes have been sent and the transmission holding register is clear.
 *
 */
-void twi0Write(uint8_t slaveAddress, uint8_t intAddress, uint8_t data);
+char twi0Write(unsigned char slave_addr, unsigned char reg_addr,
+					unsigned char length, unsigned char const *data);
+char twi2Write(unsigned char slave_addr, unsigned char reg_addr,
+					unsigned char length, unsigned char const *data);
 
 /*
-* Function:
-* uint8_t twi0ReadSingle(uint8_t slaveAddress, uint8_t intAddress)
+* Function: char twiNRead(unsigned char slave_addr, unsigned char reg_addr,
+*								unsigned char length, unsigned char const *data)
 *
-* Will read a single byte from a TWI slave device that has 8bit internal register addresses
-*
-* Inputs:
-* uint8_t slaveAddress:
-*    The address of the slave device on TWI0 to read from
-* uint8_t intAddress:
-*    The internal address of the register to read from
-*
-* Returns:
-* a byte containing the contents of the internal register on the slave device specified.
-*
-*/
-uint8_t twi0ReadSingle(uint8_t slaveAddress, uint8_t intAddress);
-
-/*
-* Function:
-* uint8_t twi0ReadDouble(uint8_t slaveAddress, uint8_t intAddress)
-*
-* Will read two bytes from a TWI slave device that has 8bit internal register addresses
+* TWI interface read functions. Allows reading multiple bytes sequentially
 *
 * Inputs:
-* uint8_t slaveAddress:
-*    The address of the slave device on TWI0 to read from
-* uint8_t intAddress:
-*    The internal address of the register to read from
+* slave_addr is the address of the device to be read from on TWIn. The address varies even for the
+* IMU driver because the IMU and compass have different TWI slave addresses. reg_addr is the address
+* of the register being read from. length is the number of bytes to be read. The IMU automatically
+* increments the register address when reading more than one byte. *data points to the location in
+* memory where the retrieved data will be stored.
 *
 * Returns:
-* a 16bit integer containing the contents of the internal register on the slave device specified.
+* returns 0 on success.
 *
 */
-uint16_t twi0ReadDouble(uint8_t slaveAddress, uint8_t intAddress);
-
+char twi0Read(unsigned char slave_addr, unsigned char reg_addr,
+					unsigned char length, unsigned char *data);
+char twi2Read(unsigned char slave_addr, unsigned char reg_addr,
+					unsigned char length, unsigned char *data);
 
 #endif /* TWIMUX_INTERFACE_H_ */

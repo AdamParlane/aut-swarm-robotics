@@ -25,12 +25,12 @@
 *
 */ 
 
-///////////////Includes/////////////////////////////////////////////////////////////////////////////
+//////////////[Includes]////////////////////////////////////////////////////////////////////////////
 #include "../robot_defines.h"
 #include <math.h>
 #include "opt_interface.h"
 
-///////////////Functions////////////////////////////////////////////////////////////////////////////
+//////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*
 * Function: void SPI_Init(void)
 *
@@ -79,18 +79,25 @@ void SPI_Init(void)
 	REG_PIOA_PDR |= PIO_PDR_P12;			//Give control of MISO to SPI
 	REG_PIOA_PDR |= PIO_PDR_P13;			//Give control of MOSI to SPI
 	REG_PIOA_PDR |= PIO_PDR_P14;			//Give control of SCLK to SPI
+	REG_SPI_MR |= SPI_MR_MSTR;				//SPI in Master Mode
+	
 #if defined ROBOT_TARGET_V1
+	//Robot V1 uses PB14 as NCS, this is SPI Peripheral A, NPCS1
 	REG_PIOB_PDR |= PIO_PDR_P14; //Give control of NPCS1 (on PB14/Pin 99) to SPI
+	//set fixed peripheral select(peripheral chosen in SP_MR.PCS instead of SPI_THR.PCS)	
+	REG_SPI_MR &= ~SPI_MR_PS;
+	REG_SPI_MR |= SPI_MR_PCS(0b1101); //set slave to NPCS1 (only works while SPI_MR_PS = 0)	
+	REG_SPI_CSR1 |= (1<<0) | (0xF0<<8) | (0x17<<24); // CPOL=1, 500k baud (2us period), 6us DLYBCT	
 #endif
 #if defined ROBOT_TARGET_V2
-	REG_PIOA_PDR |= PIO_PDR_P30; //Give control of NPCS1 (on PA30/Pin 64) to SPI
+	//Robot V2 uses PA30 as NCS, this is SPI Peripheral B, NPCS2
+	REG_PIOA_PDR |= PIO_PDR_P30; //Give control of NPCS2 (on PA30) to SPI
+	//set fixed peripheral select(peripheral chosen in SP_MR.PCS instead of SPI_THR.PCS)	
+	REG_SPI_MR &= ~SPI_MR_PS;
+	REG_SPI_MR |= SPI_MR_PCS(0b1011); //set slave to NPCS2 (only works while SPI_MR_PS = 0)
+	REG_SPI_CSR2 |= (1<<0) | (0xF0<<8) | (0x17<<24); // CPOL=1, 500k baud (2us period), 6us DLYBCT	
 #endif
-	REG_SPI_MR |= SPI_MR_MSTR;				//SPI in Master Mode
-	//set fixed peripheral select(peripheral chosen in SP_MR.PCS instead of SPI_THR.PCS)
-	REG_SPI_MR &= ~SPI_MR_PS;				
-	REG_SPI_MR |= SPI_MR_PCS(0b1101); //set slave to NPCS1 (only works while SPI_MR_PS = 0)	
-	REG_SPI_CSR1 |= (1<<0) | (0xF0<<8) | (0x17<<24); // CPOL=1, 500k baud (2us period), 6us DLYBCT
-	REG_SPI_CR |= SPI_CR_SPIEN; 
+	REG_SPI_CR |= SPI_CR_SPIEN; //Enable SPI
 }
 
 /*
@@ -127,6 +134,7 @@ void mouseInit(void)
 	REG_PIOA_SODR |= (1<<30);				//Drive NCS High
 	REG_PIOA_CODR |= (1<<30);				//Drive NCS Low	
 #endif
+
 	//initialize mouse sensor
 	SPI_Write(OPT_PWR_UP_RESET, 0x5A);		//Power Up Reset
 	mouseInitDelay();
@@ -273,10 +281,12 @@ char mouseTestBasic(void)
 */
 void SPI_Write(char writeAddress, char spiData)
 {
+	//TODO: Needs waitForFlag here
 	while(!(REG_SPI_SR & SPI_SR_TDRE));		//Wait for address to move out of TDR
 	//Load TDR with peripheral register to be written to.
 	REG_SPI_TDR |= (writeAddress |= (1<<7));//Puts 1 into bit 7 to indicates writing to register
 	//wait for received data to be ready to be read
+	//TODO: Needs waitForFlag here
 	while(!(REG_SPI_SR & SPI_SR_TDRE));		//Wait for address to move out of TDR
 	REG_SPI_TDR |= spiData;					//Load data to be sent
 }
@@ -309,9 +319,11 @@ char SPI_Read(char readAddress)
 	data = REG_SPI_RDR;						//Read the RDR to ensure that the RDRF flag is reset.
 	//Load TDR with peripheral register to be read from. 
 	REG_SPI_TDR |= (readAddress);			//0 in bit 7 which indicates a reading operation.
+	//TODO: Needs waitForFlag here
 	while(!(REG_SPI_SR & (1<<0)));			//Wait for first RDRF flag.
 	data = REG_SPI_RDR;						//First lot of data which will be incorrect. 
 	REG_SPI_TDR |= (readAddress);			//Load TDR again.
+	//TODO: Needs waitForFlag here
 	while(!(REG_SPI_SR & (1<<0)));			//Wait for second RDRF flag.
 	data = REG_SPI_RDR;						//Read the correct data
 	return data;

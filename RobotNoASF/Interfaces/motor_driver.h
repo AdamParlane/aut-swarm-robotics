@@ -26,11 +26,11 @@
 #ifndef MOTOR_DRIVER_H_
 #define MOTOR_DRIVER_H_
 
-///////////////Includes/////////////////////////////////////////////////////////////////////////////
+//////////////[Includes]////////////////////////////////////////////////////////////////////////////
 #include <fastmath.h>
 #include "../robot_defines.h"
 
-///////////////Defines//////////////////////////////////////////////////////////////////////////////
+//////////////[Defines]/////////////////////////////////////////////////////////////////////////////
 //Miscellaneous
 #define CW	0xD2
 #define CCW 0xD3 // just changed these from 0 and 1, hopefully doesnt change anything
@@ -75,7 +75,7 @@
 
 
 
-///////////////Functions////////////////////////////////////////////////////////////////////////////
+//////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*
 * Function:
 * void motor_init(void)
@@ -107,7 +107,7 @@ void motor_init(void);
 *	none
 *
 */
-void moveRobot(uint16_t direction, unsigned char speed);
+void moveRobot(signed int direction, unsigned char speed);
 
 /*
 * Function:
@@ -166,23 +166,6 @@ void wiggleForward(uint8_t forwardSpeed, uint8_t lateralSpeed, uint8_t direction
 *
 */
 void stopRobot(void);
-
-/*
-* Function:
-* void setTestMotors(uint8_t motorData[])
-*
-* [brief purpose of function]
-*
-* Inputs:
-* uint8_t motorData[]
-*   two element 8bit array that contains a data packet from PC GUI relevant to the motor test
-*   routine. (ie speed, direction and what motor to run)
-*
-* Returns:
-* none
-*
-*/
-void setTestMotors(uint8_t motorData[]);
 
 /*
 *

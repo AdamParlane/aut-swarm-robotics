@@ -58,7 +58,7 @@ void manualControl(struct message_info tmessage)
 	}
 	else if(tmessage.command == MANUAL_STOP)
 	{
-		stopRobot();
+		//stopRobot();
 		robotState = IDLE;
 		
 	}

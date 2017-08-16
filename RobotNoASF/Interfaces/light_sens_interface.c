@@ -12,17 +12,26 @@
 * Atmel SAM 4N Processor Datasheet:http://www.atmel.com/Images/Atmel-11158-32-bit%20Cortex-M4-Microcontroller-SAM4N16-SAM4N8_Datasheet.pdf
 * VEML6040 colour sensor Datasheet:https://www.vishay.com/docs/84276/veml6040.pdf
 *
+* Approx light ranges
+* Ambient light in WS217 0x00DE - 0x0158
+* LED @ 10cm straight on 0x0abe - 0x12ea
+* LED @ 20cm straight on 0x05da - 0x06c6
+* LED @ 30cm straight on 0x0443 - 0x04a9
+* LED @ 30cm 30dg offset High ~0x04a9 Low ~0x0440
+* LED @ 30cm 60dg offset High ~0x033a Low ~0x02b7
+* LED @ 30cm 90dg offset High ~0x00ec Low ~0x00d6
+*
 * Functions:
 * void lightSensInit(uint8_t channel)
 * uint16_t lightSensRead(uint8_t channel, uint8_t colour)
 *
 */
 
-///////////////Includes/////////////////////////////////////////////////////////////////////////////
+//////////////[Includes]////////////////////////////////////////////////////////////////////////////
 #include "light_sens_interface.h"
 #include "twimux_interface.h"
 
-///////////////Functions////////////////////////////////////////////////////////////////////////////
+//////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*
 * Function:
 * void lightSensInit(uint8_t channel)
@@ -46,11 +55,11 @@
 * Perhaps could just setup both sensors at once?
 *
 */
-
 void lightSensInit(uint8_t channel)
 {
+	uint8_t writeBuffer = LS_AUTO|LS_640MS;	//Auto trigger, 320ms integration time
 	twi0MuxSwitch(channel); //Set multiplexer address to correct device
-	twi0Write(TWI0_LIGHTSENS_ADDR, LS_CONFIG_REG, LS_AUTO_LOW_LUX);
+	twi0Write(TWI0_LIGHTSENS_ADDR, LS_CONFIG_REG, 1, &writeBuffer);
 }
 
 /*
@@ -75,18 +84,16 @@ void lightSensInit(uint8_t channel)
 *
 * Implementation:
 * First, the multiplexer on TWI0 is set to the channel for the desired light sensor.
-* Next, the desired colour value from the selected sensor is read and returned by twi0ReadDouble().
+* Next, the desired colour value from the selected sensor is read and returned by twi0Read().
 * TWI0_LIGHTSENS_ADDR is the I2C address of the light sensors, and colour is an internal register
 * address.
-*
-* Improvements:
-* Eliminate the data variable and take the return directly from twi0ReadDouble()
 *
 */
 uint16_t lightSensRead(uint8_t channel, uint8_t colour)
 {
-	uint16_t data;
+	unsigned char data[2];
 	twi0MuxSwitch(channel);	//Set multiplexer address to a light sensor device
-	data = twi0ReadDouble(TWI0_LIGHTSENS_ADDR, colour);
-	return data;
+	twi0ReadMuxChannel();
+	twi0Read(TWI0_LIGHTSENS_ADDR, colour, 2, data);
+	return (data[1]<<8)|(data[0]);
 }

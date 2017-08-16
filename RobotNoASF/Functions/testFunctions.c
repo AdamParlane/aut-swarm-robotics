@@ -10,26 +10,33 @@
 * all robot systems are working correctly
 *
 * Contains the following functions:
-* void testManager(struct message_info message)
+* uint8_t testManager(struct message_info message, struct transmitDataStructure *transmit,
+* struct Position *robotPosition)
 * void convertData(struct message_info message, uint8_t* data[50])
 *
 * Functionality of each function is explained before each function
 * This .c file should be paired with testFunctions.h
 *
 */
+//////////////[Includes]////////////////////////////////////////////////////////////////////////////
 #include "testFunctions.h"
 
+//////////////[Global variables]////////////////////////////////////////////////////////////////////
+extern struct Position robotPosition;
 
+//////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*
-* Function: void testManager(struct message_info message)
+* Function: uint8_t testManager(struct message_info message, struct transmitDataStructure *transmit,
+*			struct Position *robotPosition)
 *
 * Handles the interpretation of received test commands,
 * calling the appropriate test functions / performing tests
 * and returning to the PC the test return value
 *
-* Input is the message structure from the received data
-* after the XBee framing has been stripped
-* 
+* Inputs:	the message structure from the received data after the XBee framing has been stripped
+*			pointer to the transmitData structure (contains transmitArray and size char)
+*			pointer to the robotPosition structure for mouse and IMU data
+*
 * No Return Values
 *
 * Called in the main loop whenever a new command is received 
@@ -69,7 +76,8 @@
 * [1] - (if applicable) specific peripheral (eg Prox A, B etc)
 *		where there is only 1 peripheral of a given type [1] will be removed and everything
 *		else will move up [2] will become [1] and so on
-* [2] - The test mode, in terms of the robot returning data to the PC or another robot (all of the below cases)
+* [2] - The test mode, in terms of the robot returning data to the PC or another robot 
+*		(all of the below cases)
 *		This will ALWAYS be DATA_RETURN (0x00)
 *		This is to ensure that a robot receiving the message doesnt mistake the command for a REQUEST
 *		For data from that robot but rather the robot is to RECEIVE the data
@@ -78,9 +86,8 @@
 *		The order will be [3] Data1_High, [4] Data1_Low, [5] Data2_High and so on
 * The transmit array sie must also be calculated and sent with the XBee Transmit Request
 */
-uint8_t testManager(struct message_info message, struct transmitDataStructure *transmit)
+uint8_t testManager(struct message_info message, struct transmitDataStructure *transmit, struct Position *robotPosition)
 {
-	struct Position testPosition;	//Declare a new instance of the Position structure for test purposes only for mouse and IMU results
 	static uint8_t receivedTestData[50]; //array for data coming into the robot AFTER Xbee framing has been stripped
 	uint16_t peripheralReturnData; //the test data returned from eh relevant peripheral
 	char testType = message.command;//what peripheral is being tested
@@ -121,29 +128,36 @@ uint8_t testManager(struct message_info message, struct transmitDataStructure *t
 		
 		case TEST_MOUSE_SENSOR:
 		//Only 1 mouse sensor just trying to attain dx & dy
-		//getMouseXY will will the structure testPosition (using pointers) with dx and dy
-		getMouseXY(&testPosition);
+		//getMouseXY will the structure testPosition (using pointers) with dx and dy
+		getMouseXY(robotPosition);
 		transmit->Data[1] = DATA_RETURN; //sending data out
-		transmit->Data[2] = testPosition.opticalDX >> 8; //upper byte
-		transmit->Data[3] = testPosition.opticalDX & 0xFF; //lower byte
-		transmit->Data[4] = testPosition.opticalDX >> 8; //upper byte
-		transmit->Data[5] = testPosition.opticalDX & 0xFF; //lower byte
+		transmit->Data[2] = robotPosition->opticalDX >> 8; //upper byte
+		transmit->Data[3] = robotPosition->opticalDX & 0xFF; //lower byte
+		transmit->Data[4] = robotPosition->opticalDX >> 8; //upper byte
+		transmit->Data[5] = robotPosition->opticalDX & 0xFF; //lower byte
 		transmit->DataSize = 6;
 		break;
 				
 		case TEST_IMU:
-		//TO DO Adam & Matt
-		//getIMUQuaterions(&testPosition);
-		/*transmitTestData[1] = DATA_RETURN; //sending data out
-		transmitTestData[2] = testPosition.IMUqw >> 8;		//upper byte
-		transmitTestData[3] = testPosition.IMUqw & 0xFF;	//lower byte
-		transmitTestData[4] = testPosition.IMUqx >> 8;		//upper byte
-		transmitTestData[5] = testPosition.IMUqx & 0xFF;	//lower byte
-		transmitTestData[6] = testPosition.IMUqy >> 8;		//upper byte
-		transmitTestData[7] = testPosition.IMUqy & 0xFF;	//lower byte
-		transmitTestData[8] = testPosition.IMUqz >> 8;		//upper byte
-		transmitTestData[9] = testPosition.IMUqz & 0xFF;	//lower byte*/
-		transmit->DataSize = 10;
+		//The quaternions are long integers. (4bytes each).
+		transmit->Data[1] = DATA_RETURN; //sending data out
+		transmit->Data[2] = robotPosition->imuQW >> 24;		//upper byte
+		transmit->Data[3] = robotPosition->imuQW >> 16;		//upper middle byte
+		transmit->Data[4] = robotPosition->imuQW >> 8;		//lower middle byte
+		transmit->Data[5] = robotPosition->imuQW & 0xFF;	//lower byte		
+		transmit->Data[6] = robotPosition->imuQX >> 24;		//upper byte
+		transmit->Data[7] = robotPosition->imuQX >> 16;		//upper middle byte
+		transmit->Data[8] = robotPosition->imuQX >> 8;		//lower middle byte
+		transmit->Data[9] = robotPosition->imuQX & 0xFF;	//lower byte
+		transmit->Data[10] = robotPosition->imuQY >> 24;	//upper byte
+		transmit->Data[11] = robotPosition->imuQY >> 16;	//upper middle byte
+		transmit->Data[12] = robotPosition->imuQY >> 8;		//lower middle byte
+		transmit->Data[13] = robotPosition->imuQY & 0xFF;	//lower byte
+		transmit->Data[14] = robotPosition->imuQZ >> 24;	//upper byte
+		transmit->Data[15] = robotPosition->imuQZ >> 16;	//upper middle byte
+		transmit->Data[16] = robotPosition->imuQZ >> 8;		//lower middle byte
+		transmit->Data[17] = robotPosition->imuQZ & 0xFF;	//lower byte		
+		transmit->DataSize = 18;
 		break;
 		
 		case TEST_LINE_FOLLOWERS:
@@ -192,46 +206,6 @@ uint8_t testManager(struct message_info message, struct transmitDataStructure *t
 	}
 	return testMode;
 }
-
-/*
-*
-* Function: void convertData(struct message_info message, uint8_t* data[50])
-*
-* Converts the received message structure and pointer to an array with the required test command data
-*
-* Input is the message structure from the received data
-* after the XBee framing has been stripped
-* and a pointer to the array where the new data is to be copied to
-*
-* No Return Values
-*
-* Uses the message index to call the MessageBufferOut
-* This ensures that the message copying begins from the correct location
-* Simple for loop to copy the array of length message.length
-* This array is accessed via pointers and is used by the test Manager
-* The Message Buffer Get function returns 0 for success and -1 for failure
-* This function will quit on a failed return
-*
-*/
-void convertData(struct message_info message, uint8_t *data)
-{
-	char dataByte;
-	char messageError;
-	MessageBufferOut = message.index;//sets message buffer reader to correct start address
-	for (uint8_t i = 0; i < message.length; i++)//for each entry in the array
-	{
-		messageError = MessageBufferGet(&dataByte);//retrieve the next byte of received message data
-		if(messageError == 0)//if there was NO error
-		{
-			data[i] = dataByte;//fill the array with the data
-		}
-		else//if there was an error, exit
-		//TO DO: prehaps add some sort of error flagging system??
-			return;
-	}
-}
-
-
 
 /*
 * Function: void testAll(struct transmitDataStructure *transmit)

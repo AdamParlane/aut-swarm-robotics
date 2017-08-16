@@ -15,60 +15,53 @@
 *
 * Functions:
 * void masterClockInit(void)
-* void pioInit(void)
-* void ledInit(void)
+* uint8_t waitForFlag(const volatile uint32_t *regAddr, uint32_t regMask, uint16_t timeOutMs)
 *
 */
 
 #ifndef ROBOTDEFINES_H_
 #define ROBOTDEFINES_H_
 
-//TODO: change something so that this doesnt have to be first
-//Or maybe all defines should be before indludes
+//TODO: change something so that this doesn't have to be first
+//Or maybe all defines should be before includes
 enum ROBOT_STATES{TEST, TEST_ALL, MANUAL, FORMATION, DOCKING, OBSTACLE_AVOIDANCE, IDLE, CHARGING}; //main loop functionality
 
 ///////////////Type Definitions/////////////////////////////////////////////////////////////////////
-struct Command
-//is anyone using this??? not me -Matt
-//structure to receive the command and interpret it to something useful
-{
-	char messageClass;
-	char commandCode;
-	char command[10];
-};
-
 struct Position
 //structure to store all the robot side navigation / positioning data
-//this will be written to by getMouseXY, getEulerAngles, and another navigation function which
+//this will be written to by getMouseXY, imuGetEulerAngles, and another navigation function which
 //combines them. The structure will store the relevant info from both key sensors and fuse them in
-//an additional function
+//an additional function (84bytes i think)
 {
 	short opticalDX;
 	short opticalDY;
 	float opticalX;
 	float opticalY;
-	long imuQW;
-	long imuQX;
-	long imuQY;
-	long imuQZ;
-	short imuAccelX;
-	short imuAccelY;
-	short imuAccelZ;
-	short imuGyroX;
-	short imuGyroY;
-	short imuGyroZ;
-	double imuPitch;
-	double imuRoll;
-	double imuYaw;
-	unsigned long imuTimeStamp;
-	float x;
-	float y;
-	float h;
+	long imuQW;				//W component of the quaternion complex number returned by DMP
+	long imuQX;				//X component of the quaternion complex number returned by DMP
+	long imuQY;				//Y component of the quaternion complex number returned by DMP
+	long imuQZ;				//Z component of the quaternion complex number returned by DMP
+	float imuAccelX;		//Delta X Acceleration in ms^2
+	float imuAccelY;		//Delta Y Acceleration in ms^2
+	float imuAccelZ;		//Delta Z Acceleration in ms^2
+	float imuGyroX;			//Delta pitch in deg/s
+	float imuGyroY;			//Delta roll in	deg/s
+	float imuGyroZ;			//Delta yaw in deg/s (Delta heading)
+	float imuPitch;			//Absolute pitch from DMP (degrees)
+	float imuRoll;			//Absolute roll from DMP (degrees)
+	float imuYaw;			//Absolute yaw (heading) from DMP (degrees)
+	float imuYawOffset;		//Used to offset heading value (when corrected by PC)
+	unsigned long imuTimeStamp;//Time at which last IMU reading took place (ms)
+	unsigned short imuDeltaTime;//Time between last IMU reading and IMU previous reading
+	float x;				//Absolute X position in arena
+	float y;				//Absolute Y position in arena
+	float h;				//Absolute Z position in arena
 };
 
-///////////////Includes/////////////////////////////////////////////////////////////////////////////
+//////////////[Includes]////////////////////////////////////////////////////////////////////////////
 #include "Interfaces/spi.h"
 #include "sam.h"
+#include "Interfaces/pio_interface.h"
 #include "Interfaces/imu_interface.h"
 #include "Interfaces/timer0.h"
 #include "Interfaces/external_interrupt.h"
@@ -85,16 +78,10 @@ struct Position
 #include "Functions/docking_functions.h"
 #include "Functions/manual_mode.h"
 #include "Functions/obstacle_avoidance.h"
+#include "Functions/motion_functions.h"
 
-///////////////Defines//////////////////////////////////////////////////////////////////////////////
-//LED control macros
-#define	ledOff1 	(REG_PIOA_CODR |= (1<<28))
-#define	ledOff2		(REG_PIOC_CODR |= (1<<8))
-#define	ledOff3 	(REG_PIOA_CODR |= (1<<27))
-#define	ledOn1 		(REG_PIOA_SODR |= (1<<28))
-#define	ledOn2 		(REG_PIOC_SODR |= (1<<8))
-#define	ledOn3 		(REG_PIOA_SODR |= (1<<27))
-
+//////////////[Defines]/////////////////////////////////////////////////////////////////////////////
+	
 //Universal Asynchronous Receiver/Transmitter
 #define TXRDY (REG_UART3_SR & UART_SR_TXRDY)	//UART TX READY flag [SHOULD BE IN COMMUNICATIONS]
 
@@ -103,15 +90,13 @@ struct Position
 #error  Robot version has not been set in compiler symbols. (set ROBOT_TARGET_V1 or ROBOT_TARGET_V2)
 #endif
 
-
-
-///////////////Global variables/////////////////////////////////////////////////////////////////////
+//////////////[Global variables]////////////////////////////////////////////////////////////////////
 //used for test function calling
 char newDataFlag; //used for test function probably temporary
 char robotState, previousState;
 volatile char streamDelayCounter, streamIntervalFlag;
 
-///////////////Functions////////////////////////////////////////////////////////////////////////////
+//////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*
 * Function:
 * void masterClockInit(void)
@@ -130,33 +115,23 @@ void masterClockInit(void);
 
 /*
 * Function:
-* void pioInit(void)
+* uint8_t waitForFlag(uint32_t *regAddr, uint32_t regMask, uint16_t timeOutMs)
 *
-* Supplies master clock to the three parallel I/O controllers (A, B and C) and disables write
-* protection on their configuration registers.
-*
-* Inputs:
-* none
-*
-* Returns:
-* none
-*
-*/
-void pioInit(void);
-
-/*
-* Function:
-* void ledInit(void)
-*
-* Initialises the PIO pins needed to use the LEDs. pioInit() MUST be run first.
+* Will wait for the given status bit to become true. If it doesn't become true in the time
+* specified in timeOutMs, then the function exits with an error.
 *
 * Inputs:
-* none
+* uint32_t *regAddr
+*	The address to the status register that is to be monitored.
+* uint32_t regMask
+*   The bit mask to apply to the given register.
+* uint16_t timeOutMs
+*   The maximum number of milliseconds to wait before exiting the function with an error.
 *
 * Returns:
-* none
+* 0 if flag was detected or 1 if timeout was reached before flag was detected.
 *
 */
-void ledInit(void);
+uint8_t waitForFlag(const volatile uint32_t *regAddr, uint32_t regMask, uint16_t timeOutMs);
 
 #endif /* ROBOTDEFINES_H_ */

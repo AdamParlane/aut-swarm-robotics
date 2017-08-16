@@ -13,15 +13,17 @@
 *
 * Functions:
 * void masterClockInit(void)
-* void pioInit(void)
-* void ledInit(void)
+* uint8_t waitForFlag(const volatile uint32_t *regAddr, uint32_t regMask, uint16_t timeOutMs)
 *
 */
 
-///////////////Includes/////////////////////////////////////////////////////////////////////////////
+//////////////[Includes]////////////////////////////////////////////////////////////////////////////
 #include "robot_defines.h"
 
-///////////////Functions////////////////////////////////////////////////////////////////////////////
+//////////////[Global variables]////////////////////////////////////////////////////////////////////
+extern uint32_t systemTimestamp;	//Required by waitForFlag()
+
+//////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*
 * Function:
 * void masterClockInit(void)
@@ -89,68 +91,37 @@ void masterClockInit(void)
 
 /*
 * Function:
-* void pioInit(void)
+* uint8_t waitForFlag(uint32_t *regAddr, uint32_t regMask, uint16_t timeOutMs)
 *
-* Supplies master clock to the three parallel I/O controllers (A, B and C) and disables write
-* protection on their configuration registers.
-*
-* Inputs:
-* none
-*
-* Returns:
-* none
-*
-* Implementation:
-* As described above.
-*
-*/
-void pioInit(void)
-{
-	REG_PMC_PCER0
-	|=	(1<<ID_PIOA);	//Enable clock access to PIO controller A
-	REG_PMC_PCER0
-	|=	(1<<ID_PIOB);	//Enable clock access to PIO controller B
-	REG_PMC_PCER0
-	|=	(1<<ID_PIOC);	//Enable clock access to PIO controller C
-	REG_PIOA_WPMR
-	=	0x50494F00;		//Disable PIOA write protect
-	REG_PIOB_WPMR
-	=	0x50494F00;		//Disable PIOB write protect
-	REG_PIOC_WPMR
-	=	0x50494F00;		//Disable PIOC write protect
-}
-
-/*
-* Function:
-* void ledInit(void)
-*
-* Initialises the PIO pins needed to use the LEDs
+* Will wait for the given status bit to become true. If it doesn't become true in the time
+* specified in timeOutMs, then the function exits with an error.
 *
 * Inputs:
-* none
+* uint32_t *regAddr
+*	The address to the status register that is to be monitored.
+* uint32_t regMask
+*   The bitmask to apply to the given register.
+* uint16_t timeOutMs
+*   The maximum number of milliseconds to wait before exiting the function with an error.
 *
 * Returns:
-* none
+* 0 if flag was detected or 1 if timeout was reached before flag was detected.
 *
 * Implementation:
-* - Allow PIO controller to use pins PA27, PA28 and PC8
-* - Enable PA27, PA28 and PC8 for output
-* - Switch all LEDs off by default
+* - System timestamp is loaded into a variable so we know at what time this function started.
+* - A while function then waits for the flag to be set in the given register. It is also checking
+*   if the time out period has been reached. The while loop exits when the flag is set or the
+*   timeout period expires.
+* - If the while loop exited because the flag was set, exit the function with a 0 value, otherwise
+*   exit the function with a 1 (indicating an error)
 *
 */
-void ledInit(void)
+uint8_t waitForFlag(const volatile uint32_t *regAddr, uint32_t regMask, uint16_t timeOutMs)
 {
-	REG_PIOA_PER
-	|=	(1<<28)					//PIO control enabled for D1 (LEDA)
-	|	(1<<27);				//PIO control enabled for D3 (LEDC)
-	REG_PIOC_PER
-	|=	(1<<8);					//PIO control enabled for D2 (LEDB)
-	REG_PIOA_OER
-	|=	(1<<28)					//D1 as output
-	|	(1<<27);				//D3 as output
-	REG_PIOC_OER
-	|=	(1<<8);					//D2 as output
-	ledOff1;					//D1 starts up off
-	ledOff2;					//D2 starts up off
-	ledOff3;					//D3 starts up off
+	uint32_t startTime = systemTimestamp;
+	while(!((*regAddr) & regMask) && (systemTimestamp < (startTime + timeOutMs)));
+	if((*regAddr) & regMask)
+		return 0;
+	else
+		return 1;
 }
