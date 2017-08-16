@@ -67,9 +67,9 @@ void robotSetup(void)
 	extIntInit();						//Initialise external interrupts.
 	imuDmpInit();						//Initialise DMP system
 	mouseInit();						//May require further testing - Adam
-	#if defined ROBOT_TARGET_V2
+#if defined ROBOT_TARGET_V2
 	lfInit();							//Initialise line follow sensors. Only on V2.
-	#endif
+#endif
 	
 	delay_ms(2500);						//Stops robot running away while programming
 	return;
