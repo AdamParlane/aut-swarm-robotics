@@ -13,7 +13,7 @@
 #ifndef COMMUNICATION_H_
 #define COMMUNICATION_H_
 
-#include "../robot_defines.h"
+#include "../robot_setup.h"
 
 struct message_info
 {
@@ -56,7 +56,7 @@ struct frame_info
 	uint8_t type;
 	int length;
 };
-///////////////Global variables/////////////////////////////////////////////////////////////////////
+//////////////[Global variables]////////////////////////////////////////////////////////////////////
 extern char obstacleAvoidanceEnabledFlag;
 
 /*

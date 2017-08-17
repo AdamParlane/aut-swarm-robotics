@@ -302,9 +302,6 @@
     <Compile Include="Interfaces\twimux_interface.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="robot_defines.c">
-      <SubType>compile</SubType>
-    </Compile>
     <Compile Include="Device_Startup\startup_sam4n.c">
       <SubType>compile</SubType>
     </Compile>
@@ -314,7 +311,10 @@
     <Compile Include="main.c">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="robot_defines.h">
+    <Compile Include="robot_setup.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="robot_setup.h">
       <SubType>compile</SubType>
     </Compile>
   </ItemGroup>
