@@ -73,6 +73,8 @@
 #define	RIN_3_H	(REG_PIOC_SODR |= (1<<10))
 #endif
 
+#define FORWARD	1
+#define REVERSE 0
 
 
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
@@ -204,8 +206,8 @@ void PWMSpeedTest(void);
 */
 void setTestMotors(uint8_t motorData[]);
 
-void motor1Drive(char speed, char direction);
-void motor2Drive(char speed, char direction);
-void motor3Drive(char speed, char direction);
+char motor1Drive(char speed, char direction);
+char motor2Drive(char speed, char direction);
+char motor3Drive(char speed, char direction);
 
 #endif /* MOTOR_DRIVER_H_ */

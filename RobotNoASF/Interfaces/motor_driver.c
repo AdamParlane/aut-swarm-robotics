@@ -580,17 +580,17 @@ void PWMSpeedTest(void)
 }
 
 
-void motor1Drive(char speed, char direction)
+char motor1Drive(char speed, char direction)
 {
 	if(speed > 100)
 		return 0;
 	REG_PWM_CUPD3 = speed;
-	if(direction = FORWARD)
+	if(direction == FORWARD)
 	{
 		FIN_1_H;
 		RIN_1_L;
 	}
-	else if(direction = REVERSE)
+	else if(direction == REVERSE)
 	{
 		RIN_1_H;
 		FIN_1_L;
@@ -604,17 +604,17 @@ void motor1Drive(char speed, char direction)
 	return 1;
 }
 
-void motor2Drive(char speed, char direction)
+char motor2Drive(char speed, char direction)
 {
 	if(speed > 100)
 		return 0;
 	REG_PWM_CUPD2 = speed;
-	if(direction = FORWARD)
+	if(direction == FORWARD)
 	{
 		FIN_2_H;
 		RIN_2_L;
 	}
-	else if(direction = REVERSE)
+	else if(direction == REVERSE)
 	{
 		RIN_2_H;
 		FIN_2_L;
@@ -628,17 +628,17 @@ void motor2Drive(char speed, char direction)
 	return 1;
 }
 
-void motor3Drive(char speed, char direction)
+char motor3Drive(char speed, char direction)
 {
 	if(speed > 100)
 		return 0;
 	REG_PWM_CUPD1 = speed;
-	if(direction = FORWARD)
+	if(direction == FORWARD)
 	{
 		FIN_3_H;
 		RIN_3_L;
 	}
-	else if(direction = REVERSE)
+	else if(direction == REVERSE)
 	{
 		RIN_3_H;
 		FIN_3_L;
