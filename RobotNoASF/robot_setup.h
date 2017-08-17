@@ -29,7 +29,7 @@ enum ROBOT_STATES{TEST, TEST_ALL, MANUAL, FORMATION, DOCKING, OBSTACLE_AVOIDANCE
 ///////////////Type Definitions/////////////////////////////////////////////////////////////////////
 struct Position
 //structure to store all the robot side navigation / positioning data
-//this will be written to by getMouseXY, imuGetEulerAngles, and another navigation function which
+//this will be written to by getMouseXY, nfGetEulerAngles, and another navigation function which
 //combines them. The structure will store the relevant info from both key sensors and fuse them in
 //an additional function (84bytes i think)
 {
@@ -79,6 +79,7 @@ struct Position
 #include "Functions/manual_mode.h"
 #include "Functions/obstacle_avoidance.h"
 #include "Functions/motion_functions.h"
+#include "Functions/navigation_functions.h"
 
 //////////////[Defines]/////////////////////////////////////////////////////////////////////////////
 	
@@ -92,9 +93,9 @@ struct Position
 
 //////////////[Global variables]////////////////////////////////////////////////////////////////////
 //used for test function calling
-char newDataFlag; //used for test function probably temporary
-char robotState, previousState;
-volatile char streamDelayCounter, streamIntervalFlag;
+char newDataFlag; //TODO:used for test function probably temporary ((still temporary?)
+char mainRobotState, mainRobotStatePrev;	//main function state machine states
+volatile char streamDelayCounter, streamIntervalFlag;	//TODO:What are these?
 
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*

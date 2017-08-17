@@ -113,16 +113,16 @@ void InterpretSwarmMessage(struct message_info message)
 	//handles the incoming commands and sets the appropriate states / flags calls functions
 	newDataFlag = 1;
 	if(message.command >= 0xE0) //test command range 0xE0-0xEF
-		robotState = TEST;
+		mainRobotState = TEST;
 	else if (message.command == 0xD0)
 		stopRobot();
 	else if(message.command >= 0xD1 && message.command <= 0xD3) //Manual command range 0xD1-0xD3
-		robotState = MANUAL;
+		mainRobotState = MANUAL;
 	else if (message.command == 0xD4)
 		//move robot randomly
 		randomMovementGenerator();		
 	else if (message.command == 0xD5)
-		robotState = DOCKING;
+		mainRobotState = DOCKING;
 		//0xD6 and D7 are also reserved for docking 
 		//at a later date for different methods if required
 	else if (message.command == 0xD8)

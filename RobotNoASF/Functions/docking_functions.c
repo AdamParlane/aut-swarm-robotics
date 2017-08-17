@@ -129,7 +129,6 @@ uint8_t dockRobot(struct Position *imuData)
 			return 0;
 		break;
 	}
-	
 	return dockingState;
 }
 
@@ -295,26 +294,10 @@ void followLine(void)
 {
 #if defined ROBOT_TARGET_V2
 	int8_t lineDirection = getLineDirection();
-	if (lineDirection > 0)			//Turn right
-		//rotateRobot(CCW, abs(lineDirection)*10);
-	else if (lineDirection < 0)			//Turn left
-		//rotateRobot(CW, abs(lineDirection)*10);
+	if(lineDirection != 0)				//Turn robot to face line
+		rotateRobot(lineDirection*10);
 	else
-	{
-		// moveRobot(0, 25) didn't do anything, hence this block of code (move forward at 25%)
-		//TODO: Want to replace this now Matt?
-		moveRobot(0, 35);
-		//RIN_1_H;
-		//FIN_1_L;
-		//RIN_3_L;
-		//FIN_3_H;
-		//REG_PWM_CUPD3 = 35;			//Left Front
-		//REG_PWM_CUPD1 = 35;			//Right front
-		//
-		//RIN_2_L;
-		//FIN_2_L;
-		//REG_PWM_CUPD2 = 0;			//rear
-	}
+		moveRobot(0, 35);				//Go straight
 #endif
 }
 

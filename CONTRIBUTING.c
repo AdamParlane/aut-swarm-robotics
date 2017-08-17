@@ -19,7 +19,9 @@
 * int functionName(char paramOne, int paramTwo, unsigned int paramThree)
 * void registerAccess(void)
 *
-*/ 
+*/
+ 
+//\/ \/ \/ \/Template file header\/ \/ \/ \/
 
 /*
 * filename.c/h
@@ -39,9 +41,21 @@
 * void funcName(void)
 *
 */ 
-//^^Template file header
 
+//////////////[Includes]////////////////////////////////////////////////////////////////////////////
 
+#include <libHeader1>
+
+//////////////[Defines]/////////////////////////////////////////////////////////////////////////////
+
+//Tabs keep values in line and easy to read
+#define macroOne	(REG_PIOB_CODR |= (1<<12))	//Macros camelCase because they are executing code
+#define macroTwo	(REG_PIOB_SODR |= (1<<12))
+//Constant values should be decimal or hex form. Not binary.
+//Values can be converted with programmer mode in windows calculator quite easily.
+#define CONST_ONE	0x00			//Constants use CAPS_UNDERSCORE_SPACE_FORMAT
+
+//////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*
 * Function: 
 * [function declaration]
@@ -57,29 +71,14 @@
 * Implementation:
 * [explain key steps of function]
 * [use heavy detail for anything complicated]
+* Template c file function header. H file function header will be the same without the 
+* implementation/improvement section
 *
 * Improvements:
 * [Ideas for improvements that are yet to be made](optional)
 *
 */
-//^^Template c file function header
 
-//^^H file function header will be the same without the implementation/improvement section
-
-///////////////Includes/////////////////////////////////////////////////////////////////////////////
-
-#include <libHeader1>
-
-///////////////Defines//////////////////////////////////////////////////////////////////////////////
-
-//Tabs keep values in line and easy to read
-#define macroOne	(REG_PIOB_CODR |= (1<<12))	//Macros camelCase because they are executing code
-#define macroTwo	(REG_PIOB_SODR |= (1<<12))
-//Constant values should be decimal or hex form. Not binary.
-//Values can be converted with programmer mode in windows calculator quite easily.
-#define CONST_ONE	0x00			//Constants use CAPS_UNDERSCORE_SPACE_FORMAT
-
-///////////////Functions////////////////////////////////////////////////////////////////////////////
 
 /*
 * Function: 
