@@ -17,7 +17,7 @@
 * void moveRobot(float direction, unsigned char speed);
 * void wiggleForward(uint8_t forwardSpeed, uint8_t lateralSpeed, uint8_t direction)
 * void stopRobot(void);
-* void rotateRobot(char direction, unsigned char speed);
+* void rotateRobot(signed char speed);
 * void dockRobot(void);
 * void setTestMotors(uint8_t motorData[]);
 * char motor1Drive(signed char speed)
@@ -35,8 +35,7 @@
 
 //////////////[Defines]/////////////////////////////////////////////////////////////////////////////
 //Miscellaneous
-#define CW	0xD2
-#define CCW 0xD3 // just changed these from 0 and 1, hopefully doesnt change anything
+ // just changed these from 0 and 1, hopefully doesnt change anything
 
 //****Motor Pins***//
 //	Robot Version 1 pin assignment
@@ -112,9 +111,10 @@ void moveRobot(signed int direction, unsigned char speed);
 
 /*
 * Function:
-* void rotateRobot(char direction, unsigned char speed)
+* void rotateRobot(signed char speed)
 *
-* Will rotate the robot on the spot in the given direction and relative speed.
+* Will rotate the robot on the spot in the given direcion and relative speed.
+* Sign of speed sets direction (negative is CW, positive is CCW)
 *
 * Inputs:
 * char direction
@@ -126,7 +126,7 @@ void moveRobot(signed int direction, unsigned char speed);
 * none
 *
 */
-void rotateRobot(char direction, unsigned char speed);
+void rotateRobot(signed char speed);
 
 /*
 * Function:

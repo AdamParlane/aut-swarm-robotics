@@ -24,10 +24,13 @@
 * void moveRobot(float direction, unsigned char speed);
 * void wiggleForward(uint8_t forwardSpeed, uint8_t lateralSpeed, uint8_t direction)
 * void stopRobot(void);
-* void rotateRobot(char direction, unsigned char speed);
+* void rotateRobot(signed char speed);
 * void dockRobot(void);
 * void setTestMotors(uint8_t motorData[]);
-* 
+* char motor1Drive(signed char speed)
+* char motor2Drive(signed char speed)
+* char motor3Drive(signed char speed)
+*
 */
  
 //////////////[Includes]////////////////////////////////////////////////////////////////////////////
@@ -265,9 +268,10 @@ void moveRobot(signed int direction, unsigned char speed)
 
 /*
 * Function:
-* void rotateRobot(char direction, unsigned char speed)
+* void rotateRobot(signed char speed)
 *
 * Will rotate the robot on the spot in the given direcion and relative speed.
+* Sign of speed sets direction (negative is CW, positive is CCW)
 *
 * Inputs:
 * char direction
@@ -279,6 +283,7 @@ void moveRobot(signed int direction, unsigned char speed)
 * none
 *
 * Implementation:
+* Sign of speed sets direction (negative is CW, positive is CCW)
 * To rotate Clockwise (CW) all FIN should be LOW and all RIN HIGH (all motors spin in reverse)
 * To rotate Counterclockwise (CCW) all FIN should be HIGH and all RIN LOW (all motors forward)
 * This is set with 2 simple if statements
@@ -289,12 +294,12 @@ void moveRobot(signed int direction, unsigned char speed)
 * None as of 26/7/17
 *
 */
-void rotateRobot(char direction, unsigned char speed)
+void rotateRobot(signed char speed)
 {
-	if(speed > 100)				//Safety
+	if(speed > 100 || speed < -100)	//In range check
 		speed = 0;
 		
-	if(direction == CW)			//enable all motors to spin the robot clockwise
+	if(speed < 0)		//enable all motors to spin the robot clockwise
 	{
 		RIN_1_H;
 		FIN_1_L;
@@ -303,7 +308,7 @@ void rotateRobot(char direction, unsigned char speed)
 		RIN_3_H;
 		FIN_3_L;
 	}
-	else if(direction == CCW)	//enable all motors to spin the robot counter-clockwise
+	else if(speed > 0)	//enable all motors to spin the robot counter-clockwise
 	{
 		RIN_1_L;
 		FIN_1_H;
@@ -313,9 +318,9 @@ void rotateRobot(char direction, unsigned char speed)
 		FIN_3_H;
 	}
 	//Update all duty cycles to match the desired rotation speed
-	REG_PWM_CUPD1 = speed;
-	REG_PWM_CUPD2 = speed;
-	REG_PWM_CUPD3 = speed;	
+	REG_PWM_CUPD1 = abs(speed);
+	REG_PWM_CUPD2 = abs(speed);
+	REG_PWM_CUPD3 = abs(speed);	
 }
 
 /*

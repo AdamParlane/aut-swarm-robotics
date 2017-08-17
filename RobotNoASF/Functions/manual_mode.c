@@ -62,8 +62,15 @@ void manualControl(struct message_info tmessage)
 		robotState = IDLE;
 		
 	}
-	else
+	else if(tmessage.command == CW)
 	{
-		rotateRobot(tmessage.command, receivedTestData[0]);
+		//CW is reverse so invert speed
+		signed char speed = -1*receivedTestData[0];
+		rotateRobot(speed);
+	}
+	else if(tmessage.command == CCW)
+	{
+		//CCW is forward so no need to invert speed
+		rotateRobot(receivedTestData[0]);
 	}
 }
