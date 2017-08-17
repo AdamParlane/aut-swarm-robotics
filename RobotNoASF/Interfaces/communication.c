@@ -169,6 +169,34 @@ void convertData(struct message_info message, uint8_t *data)
 	}
 }
 
+/*
+* Function:
+* void getNewCommunications(struct frame_info *frame, struct message_info *message)
+*
+* Checks for new communications and handlles the interpretation of them
+*
+* Inputs:
+* pointer to frame_info struct and pointer to message_info struct
+*
+* Returns:
+* none
+*
+* Implementation:
+* Checks if the XBee frame buffer is full indicating new data is ready to be read
+* If so, interpret the new XBee API frame and use to fill the message buffer
+* Then is the message buffer is full interpret the swarm message
+*
+*/
+void getNewCommunications(struct frame_info *frame, struct message_info *message)
+{
+	if(FrameBufferInfoGetFull(frame) == 0)	//Check for a received XBee Message
+	{
+		InterpretXbeeAPIFrame(*frame); //Interpret the received XBee Message
+		if(MessageBufferInfoGetFull(message) == 0) //Check for a message from the swarm
+		InterpretSwarmMessage(*message);//Interpret the message
+	}
+}
+
 void InterpretXbeeAPIFrame(struct frame_info frame)
 {
 	//copy information from the frame info structure to local variables

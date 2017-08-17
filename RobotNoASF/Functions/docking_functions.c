@@ -145,6 +145,7 @@ uint8_t dockRobot(struct Position *imuData)
 *
 * Returns:
 * 1 if line state change detected, otherwise 0
+* 2 if wrong robot selected
 *
 * Implementation:
 * - Read state value of sensor.
@@ -182,8 +183,9 @@ uint8_t updateLineSensorStates(void)
 		lf.innerRight = sensorValue;			//Update line follower data structure with new data
 	if(sensorValue == LINE)
 		returnVal = 1;
-		
 	return returnVal;
+#else
+	return 2; //if robot is not V2, still need to return something	
 #endif
 }
 
