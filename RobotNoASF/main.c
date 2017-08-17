@@ -25,9 +25,8 @@
 //////////////[Global variables]////////////////////////////////////////////////////////////////////
 uint8_t SBtest, SBtest1;
 uint16_t DBtest, DBtest1, DBtest2;
-struct Position robotPosition;
-extern uint8_t checkImuFifo;
-uint16_t battVoltage;
+uint16_t battVoltage;					//Stores battery voltage on start up
+extern struct Position robotPosition;	//Passed to docking functions
 
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*
@@ -58,16 +57,12 @@ int main(void)
 	char error; //used for developement to log and watch errors - AP
 	struct frame_info frame; //Xbee API frame
 	struct message_info message; //Incoming message with XBee metadata removed
-	robotPosition.x = 0; //Resets robot position
-	robotPosition.y = 0; //Resets robot position
-	robotPosition.imuYawOffset = 180;	//Ensures that whatever way the robot is facing when powered
-										//on is 0 degrees heading.
 	struct transmitDataStructure transmitMessage; //struct to transmit to PC
-	robotState = IDLE;
+	mainRobotState = IDLE;
 	
 	while(1)
 	{
-		switch (robotState)
+		switch (mainRobotState)
 		{
 			case TEST:
 				if(newDataFlag || streamIntervalFlag)//get the new test data
@@ -75,10 +70,10 @@ int main(void)
 					testMode = testManager(message, &transmitMessage, &robotPosition);//get the new test data
 				}
 				if(testMode == STOP_STREAMING)
-					robotState = IDLE;
+					mainRobotState = IDLE;
 				else if(testMode == SINGLE_SAMPLE)
 				{
-					robotState = IDLE;
+					mainRobotState = IDLE;
 					SendXbeeAPITransmitRequest(COORDINATOR_64,UNKNOWN_16, transmitMessage.Data, transmitMessage.DataSize);  //Send the Message
 				}
 				else if(streamIntervalFlag && testMode == STREAM_DATA)
@@ -99,8 +94,8 @@ int main(void)
 				chargeInfo = chargeDetector();
 				if (chargeInfo == BATT_CHARGING)
 				{
-					previousState = robotState;
-					robotState = CHARGING;
+					mainRobotStatePrev = mainRobotState;
+					mainRobotState = CHARGING;
 				}
 				else
 					error = chargeInfo;
@@ -121,9 +116,9 @@ int main(void)
 				if(chargeInfo == BATT_CHARGING)
 					break;
 				else if(chargeInfo == BATT_CHARGED)
-					robotState = previousState;
+					mainRobotState = mainRobotStatePrev;
 				else
-					robotState = MANUAL;
+					mainRobotState = MANUAL;
 				ledOff1;
 			break;
 			
@@ -132,14 +127,10 @@ int main(void)
 				stopRobot();
 			break;
 		}
+		
+		//State independent function calls go here. Important regular system tasks like reading from
+		//the communications port or from the navigation sensors.
 		getNewCommunications(&frame, &message);
-		//If ready, will read IMU data. Will be moved to a function when NAVIGATION module is added
-		if(checkImuFifo)
-		{
-			imuReadFifo(&robotPosition);		//Read IMU's FIFO buffer
-			checkImuFifo = 0;					//Reset interrupt flag
-			imuGetEulerAngles(&robotPosition);	//Convert IMU quats to Euler angles
-			getMouseXY(&robotPosition);			//Update mouse sensor data while at it
-		}
+		nfRetrieveNavData();
 	}
 }

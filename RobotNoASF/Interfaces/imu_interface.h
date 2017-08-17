@@ -26,7 +26,7 @@
 * unsigned char imuDmpStart(void)
 * unsigned short invOrientationMatrixToScalar(const signed char *mtx)
 * unsigned short invRow2Scale(const signed char *row)
-* void imuGetEulerAngles(struct Position *imuData)
+* void nfGetEulerAngles(struct Position *imuData)
 * uint8_t imuReadFifo(struct Position *imuData)
 * uint8_t imuCommTest(void)
 * void imuApplyYawCorrection(float correctHeading, struct Position *imuData)
@@ -175,23 +175,6 @@ unsigned short invOrientationMatrixToScalar(const signed char *mtx);
 *
 */
 unsigned short invRow2Scale(const signed char *row);
-
-/*
-* Function: void imuGetEulerAngles(struct Position *imuData)
-*
-* Convert Quaternion numbers from the IMU to Euler rotational angles
-*
-* Inputs:
-* ptQuat is a 4 element numeric array that holds the 4 parts of a quaternion complex number:
-* x(i), y(j), z(k), w(omega). Presumably ptQuat is a rate of change of orientation, not an absolute
-* orientation value.
-*
-* Returns:
-* eulerAngle is a pointer to an euler_packet_t structure that has three elements: yaw, pitch and
-* roll.
-*
-*/
-void imuGetEulerAngles(struct Position *imuData);
 
 /*
 * Function:
