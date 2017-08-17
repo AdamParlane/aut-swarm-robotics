@@ -1,18 +1,22 @@
 /*
-* timer0.c
+* timer0.h
 *
-* Author : Adam Parlane and Matthew Witt
-* Created: 6/08/2017 2:01:45 PM
+* Author : Adam Parlane & Matthew Witt
+* Created: 6/08/2017 1:23:27 PM
 *
-* Project Repository: https://github.com/AdamParlane/aut-swarm-robotics
+* Project Repository:https://github.com/AdamParlane/aut-swarm-robotics
 *
-* Provides functions for setting up the timer0 and delay functions
+* Sets up the timer, for the camera and 1ms interrupts
+* Has delay and get ms functions and the timer handler interrupt
 *
 * More Info:
 * Atmel SAM 4N Processor Datasheet:http://www.atmel.com/Images/Atmel-11158-32-bit%20Cortex-M4-Microcontroller-SAM4N16-SAM4N8_Datasheet.pdf
 *
-* TODO: Provide details
-*
+* Functions:
+* void timer0Init(void)
+* int get_ms(uint32_t *timestamp)
+* int delay_ms(uint32_t period_ms)
+* void TC1_Handler()
 *
 */
 
