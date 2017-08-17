@@ -101,9 +101,9 @@ float rotateToHeading(float heading, struct Position *imuData)
 		return 0;
 	} else {
 		if(pErr > 0.0 )	//If heading is less than IMU heading then rotate clockwise to correct
-			rotateRobot(CW, (unsigned char)motorSpeed);
-		else			//Otherwise rotate anti-clockwise
 			rotateRobot(CCW, (unsigned char)motorSpeed);
+		else			//Otherwise rotate anti-clockwise
+			rotateRobot(CW, (unsigned char)motorSpeed);
 		return pErr;	//If not, return pErr
 	}
 }

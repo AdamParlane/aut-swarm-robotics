@@ -67,7 +67,7 @@ int delay_ms(uint32_t period_ms);
 
 /*
 * Function:
-* int fdelay_ms(uint32_t period_ms)
+* uint8_t fdelay_ms(uint32_t period_ms)
 *
 * Multi-task friendly delay
 *
@@ -86,7 +86,7 @@ int delay_ms(uint32_t period_ms);
 * [Ideas for improvements that are yet to be made](optional)
 *
 */
-int fdelay_ms(uint32_t period_ms);
+uint8_t fdelay_ms(uint32_t period_ms);
 
 /*
 * Function: void TC0_Handler()

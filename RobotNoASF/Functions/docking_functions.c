@@ -53,46 +53,67 @@ struct LineSensorArray lf;
 */
 uint8_t dockRobot(struct Position *imuData)
 {
-	float bHeading = 0;
+	float bHeading = 0;	//Brightest Heading
 	enum {FINISHED, START, FACE_BRIGHTEST, MOVE_FORWARD, RESCAN_BRIGHTEST, FOLLOW_LINE};
 	static uint8_t dockingState = START;
-	
+	//uint8_t returnVal;
 	///////////////[WIP]///////////////
 	switch(dockingState)
 	{
 		case START:
-			//rotateToHeading(0, imuData);
-			ledOn1;
+//			rotateToHeading(0, imuData);
+			ledOff1;
 			ledOff2;
 			ledOff3;
-			//if(!scanBrightestLightSource(&bHeading, 359, imuData))
-				//dockingState = FACE_BRIGHTEST;
-			//if(!moveForwardByDistance(100, imuData))
-			{
-				dockingState = FINISHED;
-			}
+		//	returnVal = fdelay_ms(50);
+			if(!scanBrightestLightSource(&bHeading, 359, imuData))
+				dockingState = FACE_BRIGHTEST;
 		break;
 		
 		case FACE_BRIGHTEST:
-			ledOff1;
-			ledOn2;
+			ledOn1;
+			ledOff2;
 			ledOff3;
 			if(!rotateToHeading(bHeading, imuData))
-				dockingState = FINISHED;
+				dockingState = MOVE_FORWARD;
 		break; 
 		
 		case MOVE_FORWARD:
+			ledOn1;
+			ledOn2;
+			ledOff3;
+			moveRobot(0, 30);
+			if(!fdelay_ms(3000))			//After three seconds, look for LEDs again
+			{
+				stopRobot();
+				dockingState= RESCAN_BRIGHTEST;
+			}
+			if(updateLineSensorStates())	//If line found then follow it
+			{
+				stopRobot();
+				dockingState = FOLLOW_LINE;
+			}
 		break;
 		
 		case RESCAN_BRIGHTEST:
+			ledOff1;
+			ledOff2;
+			ledOn3;
+			//Only look in front, because we should still be roughly in the right direction
+			if(!scanBrightestLightSource(&bHeading, 120, imuData))
+				dockingState = FACE_BRIGHTEST;
 		break;
 		
 		case FOLLOW_LINE:
+			ledOn1;
+			ledOff2;
+			ledOn3;		
+			followLine();
 		break;
 		
 		case FINISHED:
-			ledOff1;
-			ledOff2;
+			ledOn1;
+			ledOn2;
 			ledOn3;
 			//trackLight(imuData);
 			return 0;
@@ -113,7 +134,7 @@ uint8_t dockRobot(struct Position *imuData)
 * none
 *
 * Returns:
-* none
+* 1 if line state change detected, otherwise 0
 *
 * Implementation:
 * - Read state value of sensor.
@@ -122,26 +143,39 @@ uint8_t dockRobot(struct Position *imuData)
 * - Repeat until all four sensors have been read.
 *
 */
-void updateLineSensorStates(void)
+uint8_t updateLineSensorStates(void)
 {
 #if defined ROBOT_TARGET_V2
 	uint8_t sensorValue;						//Temporarily stores state of a single sensor
-	
+	uint8_t returnVal = 0;						//Returns non 0 if any sensor has changed state
 	sensorValue = lfLineDetected(LF_OUTER_L);	//Look for line on outer left sensor
 	if (sensorValue != NO_CHANGE)				//If this sensor has changed state
+	{
+		returnVal = 1;
 		lf.outerLeft = sensorValue;				//Update line follower data structure with new data
-		
+	}
+	
 	sensorValue = lfLineDetected(LF_INNER_L);	//Look for line on inner left sensor
 	if (sensorValue != NO_CHANGE)				//If this sensor has changed state
+	{
+		returnVal = 1;
 		lf.innerLeft = sensorValue;				//Update line follower data structure with new data
-		
+	}
+	
 	sensorValue = lfLineDetected(LF_OUTER_R);	//Look for line on outer right sensor
 	if (sensorValue != NO_CHANGE)				//If this sensor has changed state
+	{
+		returnVal = 1;
 		lf.outerRight = sensorValue;			//Update line follower data structure with new data
-		
+	}
+	
 	sensorValue = lfLineDetected(LF_INNER_R);	//Look for line on inner right sensor
 	if (sensorValue != NO_CHANGE)				//If this sensor has changed state
+	{
+		returnVal = 1;
 		lf.innerRight = sensorValue;			//Update line follower data structure with new data
+	}
+	return returnVal;
 #endif
 }
 
@@ -252,24 +286,24 @@ void followLine(void)
 #if defined ROBOT_TARGET_V2
 	int8_t lineDirection = getLineDirection();
 	if (lineDirection > 0)			//Turn right
-		rotateRobot(CW, abs(lineDirection)*10);
-	else if (lineDirection < 0)			//Turn left
 		rotateRobot(CCW, abs(lineDirection)*10);
+	else if (lineDirection < 0)			//Turn left
+		rotateRobot(CW, abs(lineDirection)*10);
 	else
 	{
 		// moveRobot(0, 25) didn't do anything, hence this block of code (move forward at 25%)
 		//TODO: Want to replace this now Matt?
-		//moveRobot(0, 25);
-		RIN_1_H;
-		FIN_1_L;
-		RIN_3_L;
-		FIN_3_H;
-		REG_PWM_CUPD3 = 35;			//Left Front
-		REG_PWM_CUPD1 = 35;			//Right front
-		
-		RIN_2_L;
-		FIN_2_L;
-		REG_PWM_CUPD2 = 0;			//rear
+		moveRobot(0, 35);
+		//RIN_1_H;
+		//FIN_1_L;
+		//RIN_3_L;
+		//FIN_3_H;
+		//REG_PWM_CUPD3 = 35;			//Left Front
+		//REG_PWM_CUPD1 = 35;			//Right front
+		//
+		//RIN_2_L;
+		//FIN_2_L;
+		//REG_PWM_CUPD2 = 0;			//rear
 	}
 #endif
 }
