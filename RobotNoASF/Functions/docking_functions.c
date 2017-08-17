@@ -296,9 +296,9 @@ void followLine(void)
 #if defined ROBOT_TARGET_V2
 	int8_t lineDirection = getLineDirection();
 	if (lineDirection > 0)			//Turn right
-		rotateRobot(CCW, abs(lineDirection)*10);
+		//rotateRobot(CCW, abs(lineDirection)*10);
 	else if (lineDirection < 0)			//Turn left
-		rotateRobot(CW, abs(lineDirection)*10);
+		//rotateRobot(CW, abs(lineDirection)*10);
 	else
 	{
 		// moveRobot(0, 25) didn't do anything, hence this block of code (move forward at 25%)
