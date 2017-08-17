@@ -20,6 +20,9 @@
 * void rotateRobot(char direction, unsigned char speed);
 * void dockRobot(void);
 * void setTestMotors(uint8_t motorData[]);
+* char motor1Drive(char speed, char direction)
+* char motor2Drive(char speed, char direction)
+* char motor3Drive(char speed, char direction)
 *
 */
 
