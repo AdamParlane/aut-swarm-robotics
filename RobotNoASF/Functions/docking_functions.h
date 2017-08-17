@@ -13,11 +13,11 @@
 * Relevant reference materials or datasheets if applicable
 *
 * Functions:
-* void dockRobot(void)
-* void updateLineSensorStates(void)
-* int8_t getLineDirection(void)
-* void followLine(void)
-* uint8_t scanBrightestLightSource(int16_t *brightestHeading)
+* void dfDockRobot(void)
+* void dfUpdateLineSensorStates(void)
+* int8_t dfGetLineDirection(void)
+* void dfFollowLine(void)
+* uint8_t dfScanBrightestLightSource(int16_t *brightestHeading)
 *
 */
 
@@ -32,7 +32,7 @@
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*
 * Function:
-* void dockRobot(void)
+* void dfDockRobot(void)
 *
 * Function to guide the robot to the dock.
 *
@@ -43,11 +43,11 @@
 * none
 *
 */
-uint8_t dockRobot(struct Position *imuData);
+uint8_t dfDockRobot(struct Position *imuData);
 
 /*
 * Function:
-* void updateLineSensorStates(void)
+* void dfUpdateLineSensorStates(void)
 *
 * Sees if any sensors have made a definite state change and loads the states into the line sensor
 * state structure for use by other functions in this module.
@@ -59,11 +59,11 @@ uint8_t dockRobot(struct Position *imuData);
 * 1 if line state change detected, otherwise 0
 *
 */
-uint8_t updateLineSensorStates(void);
+uint8_t dfUpdateLineSensorStates(void);
 
 /*
 * Function:
-* int8_t getLineDirection(void)
+* int8_t dfGetLineDirection(void)
 *
 * This function examines the states of the line follower sensors and determines the direction and
 * urgency factor by which the robot should move to find its way to the centre of the line.
@@ -79,11 +79,11 @@ uint8_t updateLineSensorStates(void);
 * able to be derived from sensor array.
 *
 */
-int8_t getLineDirection(void);
+int8_t dfGetLineDirection(void);
 
 /*
 * Function:
-* void followLine(void)
+* void dfFollowLine(void)
 *
 * A basic function to follow a line that seems to work ok
 *
@@ -94,11 +94,11 @@ int8_t getLineDirection(void);
 * none
 *
 */
-void followLine(void);
+void dfFollowLine(void);
 
 /*
 * Function:
-* uint8_t scanBrightestLightSource(float *brightestHeading, uint16_t sweepAngle,
+* uint8_t dfScanBrightestLightSource(float *brightestHeading, uint16_t sweepAngle,
 *									struct Position *imuData);
 *
 * The robot will scan from -180 degrees to 180 degrees and record the heading with the brightest
@@ -113,9 +113,9 @@ void followLine(void);
 * it means the heading stored at *breightestHeading points to the brightest light source.
 *
 */
-uint8_t scanBrightestLightSource(float *brightestHeading, uint16_t sweepAngle,
+uint8_t dfScanBrightestLightSource(float *brightestHeading, uint16_t sweepAngle,
 								struct Position *imuData);
 
-float scanBrightestLightSourceProx(void);
+float dfScanBrightestLightSourceProx(void);
 
 #endif /* DOCKING_FUNCTIONS_H_ */

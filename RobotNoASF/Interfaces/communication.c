@@ -120,7 +120,7 @@ void InterpretSwarmMessage(struct message_info message)
 		mainRobotState = MANUAL;
 	else if (message.command == 0xD4)
 		//move robot randomly
-		randomMovementGenerator();		
+		mfRandomMovementGenerator();		
 	else if (message.command == 0xD5)
 		mainRobotState = DOCKING;
 		//0xD6 and D7 are also reserved for docking 

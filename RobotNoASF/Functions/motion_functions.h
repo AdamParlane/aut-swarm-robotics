@@ -25,10 +25,10 @@
 #include <stdlib.h>
 
 //////////////[Defines]/////////////////////////////////////////////////////////////////////////////
-//PID constants for rotateToHeading
+//PID constants for mfRotateToHeading
 #define RTH_KP	4.0
 
-//PID constants for trackLight
+//PID constants for mfTrackLight
 #define TL_KP	10.0
 #define TL_KI	0.001
 
@@ -39,7 +39,7 @@
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*
 * Function:
-* float rotateToHeading(float heading, struct Position *imuData)
+* float mfRotateToHeading(float heading, struct Position *imuData)
 *
 * Will rotate the robot to face the given heading
 *
@@ -54,13 +54,13 @@
 * error
 *
 */
-float rotateToHeading(float heading, struct Position *imuData);
+float mfRotateToHeading(float heading, struct Position *imuData);
 
 float moveForwardByDistance(uint16_t distance, struct Position *posData);
 
 /*
 * Function:
-* float trackLight(struct Position *imuData)
+* float mfTrackLight(struct Position *imuData)
 *
 * Robot while attempt to aim itself at a light source
 *
@@ -72,13 +72,13 @@ float moveForwardByDistance(uint16_t distance, struct Position *posData);
 * 0 if equilibrium is reached, otherwise will return the proportional error value
 *
 */
-float trackLight(struct Position *imuData);
+float mfTrackLight(struct Position *imuData);
 
-float trackLightProx(struct Position *imuData);
+float mfTrackLightProx(struct Position *imuData);
 
 /*
 * Function:
-* char randomMovementGenerator(void)
+* char mfRandomMovementGenerator(void)
 *
 * Will make the robot move around psuedo-randomly
 *
@@ -89,6 +89,6 @@ float trackLightProx(struct Position *imuData);
 * No return values
 *
 */
-char randomMovementGenerator(void);
+char mfRandomMovementGenerator(void);
 
 #endif /* MOTION_FUNCTIONS_H_ */

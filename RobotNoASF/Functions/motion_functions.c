@@ -19,14 +19,10 @@
 //////////////[Includes]////////////////////////////////////////////////////////////////////////////
 #include "motion_functions.h"
 
-//////////////[Global variables]////////////////////////////////////////////////////////////////////
-extern struct Position robotPosition;
-//extern uint32_t systemTimestamp;
-
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*
 * Function:
-* float rotateToHeading(float heading, struct Position *imuData)
+* float mfRotateToHeading(float heading, struct Position *imuData)
 *
 * Will rotate the robot to face the given heading
 *
@@ -67,12 +63,12 @@ extern struct Position robotPosition;
 * static vars between calls they could crosstalk.
 *
 */
-float rotateToHeading(float heading, struct Position *imuData)
+float mfRotateToHeading(float heading, struct Position *imuData)
 {
 	static float pErr;				//Proportional (signed) error
 	uint32_t motorSpeed;			//Stores motorSpeed calculated by PID sum
 	
-	//Make sure heading is in range
+	//Make sure heading is in range (-180 to 180)
 	heading = imuWrapAngle(heading);
 		
 	//Calculate proportional error values
@@ -87,9 +83,12 @@ float rotateToHeading(float heading, struct Position *imuData)
 		pErr += 360;
 		
 	//If motorSpeed ends up being out of range, then dial it back
-	motorSpeed = abs(RTH_KP*pErr);
+	motorSpeed = RTH_KP*pErr;
 	if(motorSpeed > 100)
 		motorSpeed = 100;
+	if(motorSpeed < -100)
+		motorSpeed = -100;
+	
 		
 	//If error is less than 0.5 deg and delta yaw is less than 0.5 degrees per second then we can
 	//stop
@@ -100,15 +99,12 @@ float rotateToHeading(float heading, struct Position *imuData)
 							//function
 		return 0;
 	} else {
-		if(pErr > 0.0 )	//If heading is less than IMU heading then rotate clockwise to correct
-			//rotateRobot(CCW, (unsigned char)motorSpeed);
-		//else			//Otherwise rotate anti-clockwise
-			//rotateRobot(CW, (unsigned char)motorSpeed);
+		rotateRobot(motorSpeed);
 		return pErr;	//If not, return pErr
 	}
 }
 
-float moveForwardByDistance(uint16_t distance, struct Position *posData)
+float mfMoveForwardByDistance(uint16_t distance, struct Position *posData)
 {
 	enum {START, MOVING, STOP};
 	static uint8_t movingState = START;
@@ -139,7 +135,7 @@ float moveForwardByDistance(uint16_t distance, struct Position *posData)
 
 /*
 * Function:
-* float trackLight(struct Position *imuData)
+* float mfTrackLight(struct Position *imuData)
 *
 * Robot while attempt to aim itself at a light source
 *
@@ -151,15 +147,15 @@ float moveForwardByDistance(uint16_t distance, struct Position *posData)
 * 0 if equilibrium is reached, otherwise will return the proportional error value
 *
 * Implementation:
-* Works similarly to rotateToHeading except that a normalised difference between the light sensors
+* Works similarly to mfRotateToHeading except that a normalised difference between the light sensors
 * is used for feedback. This generates a heading delta that can be applied to the current heading
-* by the rotateToHeading() function which tries to correct the imbalance between the sensors.
+* by the mfRotateToHeading() function which tries to correct the imbalance between the sensors.
 *
 * Improvements:
 * Possibility for integral run away if something goes wrong at the moment
 *
 */
-float trackLight(struct Position *imuData)
+float mfTrackLight(struct Position *imuData)
 {
 	static float pErr;			//Proportional error
 	static float iErr = 0;		//Integral error
@@ -191,13 +187,13 @@ float trackLight(struct Position *imuData)
 		iErr = 0;
 		return 0;
 	} else {
-		rotateToHeading(imuData->imuYaw + dHeading, imuData);
+		mfRotateToHeading(imuData->imuYaw + dHeading, imuData);
 		ledOff1;
 		return pErr;	//If not, return pErr
 	}
 }
 
-float trackLightProx(struct Position *imuData)
+float mfTrackLightProx(struct Position *imuData)
 {
 	static float pErr;			//Proportional error
 	static float iErr = 0;		//Integral error
@@ -239,7 +235,7 @@ float trackLightProx(struct Position *imuData)
 		iErr = 0;
 		return 0;
 	} else {
-		rotateToHeading(imuData->imuYaw + dHeading, imuData);
+		mfRotateToHeading(imuData->imuYaw + dHeading, imuData);
 		return dHeading;	//If not, return pErr
 	}
 	return 1;
@@ -247,7 +243,7 @@ float trackLightProx(struct Position *imuData)
 
 /*
 * Function:
-* char randomMovementGenerator(void)
+* char mfRandomMovementGenerator(void)
 *
 * Will make the robot move around psuedo-randomly
 *
@@ -282,7 +278,7 @@ float trackLightProx(struct Position *imuData)
 * each time the function is called
 *
 */
-char randomMovementGenerator(void)
+char mfRandomMovementGenerator(void)
 {
 	srand(streamIntervalFlag);		//Seed rand() to give unique random numbers
 	int direction = rand() % 360;	//get random direction range: 0 - 360 degrees
