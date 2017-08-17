@@ -1,7 +1,7 @@
 /*
 * fc_interface.c
 *
-* Author : Esmond Mather and Matthew Witt
+* Author : Esmond Mather, Matthew Witt and Adam Parlane
 * Created: 11/07/2017 11:21:08 AM
 *
 * Project Repository: https://github.com/AdamParlane/aut-swarm-robotics
@@ -172,7 +172,7 @@ uint16_t fcBatteryVoltage(void)
 *
 * Implementation:
 * Uses the struct union Register to separate the individual bits
-* reads the status control register
+* reads the status control register on the fast charge chip
 * returns whether CHARGING, CHARGED, or other
 *
 */
