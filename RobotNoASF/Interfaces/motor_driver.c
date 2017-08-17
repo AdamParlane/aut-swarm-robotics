@@ -579,7 +579,29 @@ void PWMSpeedTest(void)
 	stopRobot();
 }
 
-
+/*
+*
+* Function:
+* char motor1Drive(char speed, char direction)
+*
+* Runs motor 1 at desired speed and direction
+*
+* Inputs:
+* char speed 0-100
+* char direction (FORWARD(1) or REVERSE(0))
+*
+* Returns:
+* char: 1 if success
+*		0 if speed is out of range or direction is invalid
+*
+* Implementation:
+* checks speed is in range
+* updates duty cycle to speed
+* sets motor direction using FIN and RIN
+* if direction is neither forward nor reverse, motor is stopped
+* and will return 0
+*
+*/
 char motor1Drive(char speed, char direction)
 {
 	if(speed > 100)
@@ -604,6 +626,29 @@ char motor1Drive(char speed, char direction)
 	return 1;
 }
 
+/*
+*
+* Function:
+* char motor2Drive(char speed, char direction)
+*
+* Runs motor 2 at desired speed and direction
+*
+* Inputs:
+* char speed 0-100
+* char direction (FORWARD(1) or REVERSE(0))
+*
+* Returns:
+* char: 1 if success
+*		0 if speed is out of range or direction is invalid
+*
+* Implementation:
+* checks speed is in range
+* updates duty cycle to speed
+* sets motor direction using FIN and RIN
+* if direction is neither forward nor reverse, motor is stopped
+* and will return 0
+*
+*/
 char motor2Drive(char speed, char direction)
 {
 	if(speed > 100)
@@ -628,6 +673,29 @@ char motor2Drive(char speed, char direction)
 	return 1;
 }
 
+/*
+*
+* Function:
+* char motor3Drive(char speed, char direction)
+*
+* Runs motor 3 at desired speed and direction
+*
+* Inputs:
+* char speed 0-100
+* char direction (FORWARD(1) or REVERSE(0))
+*
+* Returns:
+* char: 1 if success
+*		0 if speed is out of range or direction is invalid
+*
+* Implementation:
+* checks speed is in range
+* updates duty cycle to speed
+* sets motor direction using FIN and RIN
+* if direction is neither forward nor reverse, motor is stopped
+* and will return 0
+*
+*/
 char motor3Drive(char speed, char direction)
 {
 	if(speed > 100)
