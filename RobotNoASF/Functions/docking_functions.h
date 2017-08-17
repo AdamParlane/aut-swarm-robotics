@@ -56,10 +56,10 @@ uint8_t dockRobot(struct Position *imuData);
 * none
 *
 * Returns:
-* none
+* 1 if line state change detected, otherwise 0
 *
 */
-void updateLineSensorStates(void);
+uint8_t updateLineSensorStates(void);
 
 /*
 * Function:

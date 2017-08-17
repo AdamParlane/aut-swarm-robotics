@@ -185,13 +185,13 @@ void mouseInit(void)
 * before being written to the opticaldx and opticaldy members of the position structure
 *
 * Improvements:
-* [Ideas for improvements that are yet to be made](optional)
+* Needs more descriptive var names
 *
 */
 void getMouseXY(struct Position *mousePos)
 {
 	int Xtemp = 0, Ytemp = 0;
-	char topX, topY, data2, data3, data4, data5;
+	char topX, topY, data2, data3, data4, data5;	
 	data2 = SPI_Read(OPT_OBSERVATION);
 	if(data2 & (1<<7))
 	{
@@ -206,7 +206,7 @@ void getMouseXY(struct Position *mousePos)
 		{
 			Xtemp -= 4096;
 		}
-		mousePos->opticalDY = Xtemp * RESOLUTION;
+		mousePos->opticalDX = Xtemp * RESOLUTION;
 		if(Ytemp & (1<<12))					//if MSB of Y is set (for 2s complement)
 		{
 			Ytemp -= 4096;
