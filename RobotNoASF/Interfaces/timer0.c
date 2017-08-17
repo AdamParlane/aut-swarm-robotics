@@ -148,31 +148,34 @@ int delay_ms(uint32_t period_ms)
 }
 
 /*
-* Function: void TC0_Handler()
+* Function: void TC1_Handler()
 *
-* Interrupt handler for Timer0. Is used to help implement get_ms() and delay_ms() functions
-* required by the IMU driver. Is also used to trigger reading the IMU's FIFO buffer (until
-* hardware interrupts are implemented). The only interrupt on Timer0 is on Register C compare,
-* which will trigger an interrupt once every millisecond
-*
+* Timer Counter 1 interrupt handler for get_ms, delay_ms and other various timing requirements
+* Triggered every 1ms
+* 
 * Inputs:
 * none
 *
 * Returns:
-* Increments systemTimestamp once every millisecond.
+* None
 *
 * Implementation:
-* If the RC compare flag is set then it increments the systemTimestamp, and also checks if 5ms
-* has elapsed. If so, will set a flag to read from the IMU's FIFO buffer (unimplemented)
+* Interrupt handler for Timer Counter 1 
+* Triggered every 1ms using register C compare match
+* Used to help implement get_ms() and delay_ms() functions required by the IMU driver. 
+* Every ms it increments the systemTimestamp, streamDelayCounter and delaymsCounter
+* streamDelayCounter is used to send test data to the PC every 100ms so this counts to 100ms
+* and then sets a flag letting main() know its time to send the next set of data
+* Also includes some IMU manual stuff for V1
 *
 */
 void TC1_Handler()
 {
-	//The interrupt handler for timer counter 0
+	//The interrupt handler for timer counter 1
 	//Triggers every 1ms
 	if(REG_TC0_SR1 & TC_SR_CPCS)	//If RC compare flag
 	{
-		systemTimestamp++;//used for getms
+		systemTimestamp++;//used for get ms
 		delaymsCounter++;//used for delay ms
 		streamDelayCounter++;//used for streaming data to pc every 100ms
 		if(streamDelayCounter == 100) //used for streaming data every 100ms
