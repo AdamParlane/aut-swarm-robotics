@@ -1,7 +1,7 @@
 /*
 * fc_interface.h
 *
-* Author : Esmond Mather and Matthew Witt
+* Author : Esmond Mather, Matthew Witt and Adam Parlane
 * Created: 11/07/2017 10:23:08 AM
 *
 * Project Repository:https://github.com/AdamParlane/aut-swarm-robotics

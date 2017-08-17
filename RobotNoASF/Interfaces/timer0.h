@@ -1,9 +1,25 @@
 /*
- * timer0.h
- *
- * Created: 6/08/2017 1:23:27 PM
- *  Author: adams
- */ 
+* timer0.h
+*
+* Author : Adam Parlane & Matthew Witt
+* Created: 6/08/2017 1:23:27 PM
+*
+* Project Repository:https://github.com/AdamParlane/aut-swarm-robotics
+*
+* Sets up the timer, for the camera and 1ms interrupts
+* Has delay and get ms functions and the timer handler interrupt
+*
+* More Info:
+* Atmel SAM 4N Processor Datasheet:http://www.atmel.com/Images/Atmel-11158-32-bit%20Cortex-M4-Microcontroller-SAM4N16-SAM4N8_Datasheet.pdf
+*
+* Functions:
+* void timer0Init(void)
+* int get_ms(uint32_t *timestamp)
+* int delay_ms(uint32_t period_ms)
+* void TC1_Handler()
+*
+*/
+ 
 
 
 #ifndef TIMER0_H_
@@ -17,20 +33,15 @@
 * Function:
 * void timer0Init(void)
 *
-* initialise timer0. will be moved to its own module soon
+* Initializes timer0 and timer counter 1
+* Used to time events with a 1ms interrupt on RC compare match
+* Sets timr0 CLK speed to 12.5MHz for camera
 *
 * Inputs:
 * none
 *
 * Returns:
 * none
-*
-* Implementation:
-* TODO:[explain key steps of function] timer0 init
-* [use heavy detail for anything complicated]
-*
-* Improvements:
-* Move to its own module.
 *
 */
 void timer0Init(void);
@@ -53,8 +64,8 @@ int get_ms(uint32_t *timestamp);
 /*
 * Function: int delay_ms(uint32_t period_ms)
 *
-* Required by the IMU drivers (hence naming convention). Halts execution for desired number of
-* milliseconds.
+* Halts execution for desired number of milliseconds.
+* Required by the IMU drivers (hence naming convention).
 *
 * Inputs:
 * period_ms is the number of milliseconds to wait
@@ -66,6 +77,7 @@ int get_ms(uint32_t *timestamp);
 int delay_ms(uint32_t period_ms);
 
 /*
+
 * Function:
 * uint8_t fdelay_ms(uint32_t period_ms)
 *
@@ -89,18 +101,16 @@ int delay_ms(uint32_t period_ms);
 uint8_t fdelay_ms(uint32_t period_ms);
 
 /*
-* Function: void TC0_Handler()
+* Function: void TC1_Handler()
 *
-* Interrupt handler for Timer0. Is used to help implement get_ms() and delay_ms() functions
-* required by the IMU driver. Is also used to trigger reading the IMU's FIFO buffer (until
-* hardware interrupts are implemented). The only interrupt on Timer0 is on Register C compare,
-* which will trigger an interrupt once every millisecond
+* Timer Counter 1 interrupt handler for get_ms, delay_ms and other various timing requirements
+* Triggered every 1ms
 *
 * Inputs:
 * none
 *
 * Returns:
-* Increments systemTimestamp once every millisecond.
+* None
 *
 */
 void TC1_Handler();
