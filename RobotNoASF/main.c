@@ -53,13 +53,11 @@ uint16_t battVoltage;
 */
 int main(void)
 {
-	//const char streamIntervalFlag = 1;
 	robotSetup();
 	battVoltage = fcBatteryVoltage();	//Add to your watch to keep an eye on the battery
 	uint8_t testMode = 0x00;
 	char chargeInfo;
 	char error; //used for developement to log and watch errors - AP
-	//TODO: Adam add error handling with GUI
 	//Comms
 	struct frame_info frame;
 	struct message_info message;
@@ -69,7 +67,6 @@ int main(void)
 	robotPosition.imuYawOffset = 180;	//Ensures that whatever way the robot is facing when powered
 										//on is 0 degrees heading.
 	struct transmitDataStructure transmitMessage;
-	
 	robotState = IDLE;
 	
 	while(1)
@@ -77,6 +74,8 @@ int main(void)
 		switch (robotState)
 		{
 			case TEST:
+			//should we move these into small functions to tidy main, tossing up whether it helps
+			//at the same time I had this in a function and mark didnt like it
 			if(newDataFlag || streamIntervalFlag)//get the new test data
 			{
 				testMode = testManager(message, &transmitMessage, &robotPosition);//get the new test data
@@ -100,10 +99,11 @@ int main(void)
 			break;
 			
 			case MANUAL:
+			//should we move these into small functions to tidy main, tossing up whether it helps
 				if(newDataFlag)
-				manualControl(message);
+					manualControl(message);
 				chargeInfo = chargeDetector();
-				if (chargeInfo == CHARGING)
+				if (chargeInfo == BATT_CHARGING)
 				{
 					previousState = robotState;
 					robotState = CHARGING;
@@ -129,6 +129,7 @@ int main(void)
 			break;
 			
 			case CHARGING:
+			//should we move these into small functions to tidy main, tossing up whether it helps
 				ledOn1;
 				chargeInfo = chargeDetector();
 				if(chargeInfo == BATT_CHARGING)
@@ -151,18 +152,7 @@ int main(void)
 				stopRobot();
 			break;
 		}
-		
-		//This should be in a function in Communications////////////////////////////////////////////
-		if(FrameBufferInfoGetFull(&frame) == 0)	//Check for a received XBee Message
-		{
-			InterpretXbeeAPIFrame(frame); //Interpret the received XBee Message
-
-			if(MessageBufferInfoGetFull(&message) == 0) //Check for a message from the swarm
-			{
-				InterpretSwarmMessage(message);//Interpret the message
-			}
-		}
-
+		getNewCommunications(&frame, &message);
 		//If ready, will read IMU data. Will be moved to a function when NAVIGATION module is added
 		if(checkImuFifo)
 		{

@@ -74,6 +74,21 @@ extern char obstacleAvoidanceEnabledFlag;
 */
 void convertData(struct message_info message, uint8_t *data);
 
+/*
+* Function:
+* void getNewCommunications(struct frame_info *frame, struct message_info *message)
+*
+* Checks for new communications and handlles the interpretation of them
+*
+* Inputs:
+* pointer to frame_info struct and pointer to message_info struct
+*
+* Returns:
+* none
+*
+*/
+void getNewCommunications(struct frame_info *frame, struct message_info *message);
+
 /**** Public Function Prototypes ****/
 void CommunicationSetup(void);								// Sets up UART3 and the required buffers
 void InterpretSwarmMessage(struct message_info message);	// Interprets and acts on a received swarm messages
