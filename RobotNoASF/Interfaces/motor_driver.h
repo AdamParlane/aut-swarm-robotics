@@ -17,12 +17,12 @@
 * void moveRobot(float direction, unsigned char speed);
 * void wiggleForward(uint8_t forwardSpeed, uint8_t lateralSpeed, uint8_t direction)
 * void stopRobot(void);
-* void rotateRobot(char direction, unsigned char speed);
+* void rotateRobot(signed char speed);
 * void dockRobot(void);
 * void setTestMotors(uint8_t motorData[]);
-* char motor1Drive(char speed, char direction)
-* char motor2Drive(char speed, char direction)
-* char motor3Drive(char speed, char direction)
+* char motor1Drive(signed char speed)
+* char motor2Drive(signed char speed)
+* char motor3Drive(signed char speed)
 *
 */
 
@@ -35,8 +35,7 @@
 
 //////////////[Defines]/////////////////////////////////////////////////////////////////////////////
 //Miscellaneous
-#define CW	0xD2
-#define CCW 0xD3 // just changed these from 0 and 1, hopefully doesnt change anything
+ // just changed these from 0 and 1, hopefully doesnt change anything
 
 //****Motor Pins***//
 //	Robot Version 1 pin assignment
@@ -76,10 +75,6 @@
 #define	RIN_3_H	(REG_PIOC_SODR |= (1<<10))
 #endif
 
-#define FORWARD	1
-#define REVERSE 0
-
-
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*
 * Function:
@@ -116,9 +111,10 @@ void moveRobot(signed int direction, unsigned char speed);
 
 /*
 * Function:
-* void rotateRobot(char direction, unsigned char speed)
+* void rotateRobot(signed char speed)
 *
-* Will rotate the robot on the spot in the given direction and relative speed.
+* Will rotate the robot on the spot in the given direcion and relative speed.
+* Sign of speed sets direction (negative is CW, positive is CCW)
 *
 * Inputs:
 * char direction
@@ -130,7 +126,7 @@ void moveRobot(signed int direction, unsigned char speed);
 * none
 *
 */
-void rotateRobot(char direction, unsigned char speed);
+void rotateRobot(signed char speed);
 
 /*
 * Function:
@@ -213,55 +209,52 @@ void setTestMotors(uint8_t motorData[]);
 /*
 *
 * Function:
-* char motor1Drive(char speed, char direction)
+* char rearMotorDrive(signed char speed)
 *
 * Runs motor 1 at desired speed and direction
 *
 * Inputs:
-* char speed 0-100
-* char direction (FORWARD(1) or REVERSE(0))
+* char speed -100- +100
 *
 * Returns:
 * char: 1 if success
-*		0 if speed is out of range or direction is invalid
+*		0 if speed is out of range
 *
 */
-char motor1Drive(char speed, char direction);
+char rearMotorDrive(signed char speed);
 
 /*
 *
 * Function:
-* char motor2Drive(char speed, char direction)
+* char frontRightMotorDrive(signed char speed)
 *
 * Runs motor 2 at desired speed and direction
 *
 * Inputs:
-* char speed 0-100
-* char direction (FORWARD(1) or REVERSE(0))
+* char speed -100- +100
 *
 * Returns:
 * char: 1 if success
-*		0 if speed is out of range or direction is invalid
+*		0 if speed is out of range
 *
 */
-char motor2Drive(char speed, char direction);
+char frontRightMotorDrive(signed char speed);
 
 /*
 *
 * Function:
-* char motor3Drive(char speed, char direction)
+* char frontLeftMotorDrive(signed char speed)
 *
 * Runs motor 3 at desired speed and direction
 *
 * Inputs:
-* char speed 0-100
-* char direction (FORWARD(1) or REVERSE(0))
+* char speed -100- +100
 *
 * Returns:
 * char: 1 if success
-*		0 if speed is out of range or direction is invalid
+*		0 if speed is out of range
 *
 */
-char motor3Drive(char speed, char direction);
+char frontLeftMotorDrive(signed char speed);
 
 #endif /* MOTOR_DRIVER_H_ */
