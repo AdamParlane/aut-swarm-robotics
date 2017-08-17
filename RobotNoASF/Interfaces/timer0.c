@@ -129,9 +129,9 @@ int get_ms(uint32_t *timestamp)
 * Always returns 0
 *
 * Implementation:
-* TODO: Adam; if you change something in the function you need to update implementation too plz :-)
-* Stores systemTimestamp at the start of the function, then waits until systemTimestamp has
-* increased by the amount given in period_ms before continuing.
+* The function uses a while loop to delay for period_ms number of milliseconds using TC1
+* Each time 1 ms has occurred (delaymsCounter, a flag set by TC1_handler)
+* Period_ms is decremented until it reaches 0 then the while loop quits and the function returns 0
 *
 */
 int delay_ms(uint32_t period_ms)
