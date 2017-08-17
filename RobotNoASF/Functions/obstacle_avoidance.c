@@ -63,3 +63,21 @@ uint8_t scanProxSensors(uint8_t *obstacleDetected)
 }
 
 
+typedef struct  
+{
+	float occupied; //P(occupied | s)
+	float empty;	//P(Empty | s)
+} P;
+
+void formOccupancyGrid (void)
+{
+	P occupancyGrid[50][50]; //each square is 0.5 x 0.5cm
+	//Region 1
+	//P occupied = ( ((R-r)/R) + ((B - a)/B) /2) * Max
+	//R is max range of prox sens
+	//B is max angular displacement
+	//r is distance to cell
+	//a is angle to axis of cell
+	//Max is correction constant
+	
+}
