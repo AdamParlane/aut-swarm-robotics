@@ -59,7 +59,7 @@ void manualControl(struct message_info tmessage)
 	else if(tmessage.command == MANUAL_STOP)
 	{
 		//stopRobot();
-		robotState = IDLE;
+		mainRobotState = IDLE;
 		
 	}
 	else if(tmessage.command == CW)
