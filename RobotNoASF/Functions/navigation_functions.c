@@ -41,6 +41,7 @@ struct Position robotPosition =
 	.imuYawOffset = 180		//Ensures that whatever way the robot is facing when powered
 							//on is 0 degrees heading.
 };
+
 //Read data flag that is set by the external interrupt from the IMU on the V2 or by timer on the V1.
 //Is defined in imu_interface.
 extern uint8_t checkImuFifo;

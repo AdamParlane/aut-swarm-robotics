@@ -18,7 +18,7 @@
 * void wiggleForward(uint8_t forwardSpeed, uint8_t lateralSpeed, uint8_t direction)
 * void stopRobot(void);
 * void rotateRobot(signed char speed);
-* void dockRobot(void);
+* void dfDockRobot(void);
 * void setTestMotors(uint8_t motorData[]);
 * char motor1Drive(signed char speed)
 * char motor2Drive(signed char speed)
