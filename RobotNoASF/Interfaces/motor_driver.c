@@ -99,10 +99,10 @@ void motor_init(void)
 	REG_PIOC_PER |= (1<<23);		//Enable PIO control of PB12
 	REG_PIOC_OER |= (1<<23);		//Set PB12 as output
 #endif
-	FIN_1_L;		
+	rearFwdLo;		
 	REG_PIOC_PER |= (1<<22);		//Enable PIO control of PC22
 	REG_PIOC_OER |= (1<<22);		//Set PC22 as output
-	RIN_1_L;
+	rearRevLo;
 								
 	//****Channel 2 (Motor 2)****//
 	REG_PWM_CMR2 |= (0x4<<0);		//Channel pre scale CLK by 16 = 24.4KHz
@@ -116,10 +116,10 @@ void motor_init(void)
 	REG_PIOC_ABCDSR = (1<<20);		//Assign VREF_1 to PWM Peripheral B			
 	REG_PIOC_PER |= (1<<19);		//Enable PIO control of PC19
 	REG_PIOC_OER |= (1<<19);		//Set PC19 as output
-	RIN_2_L;		
+	frontRightRevLo;		
 	REG_PIOA_PER |= (1<<31);		//Enable PIO control of PA31
 	REG_PIOA_OER |= (1<<31);		//Set PA31 as output
-	FIN_2_L;		
+	frontRightFwdLo;		
 
 	//****Channel 1 (Motor 3)****//
 	REG_PWM_CMR1 |= (0x4<<0);		//Channel pre scale CLK by 16 = 24.4KHz
@@ -133,7 +133,7 @@ void motor_init(void)
 	REG_PIOC_ABCDSR = (1<<9);		//Assign PC9 to PWM Peripheral B		
 	REG_PIOA_PER |= (1<<29);		//Enable PIO control of PA30
 	REG_PIOA_OER |= (1<<29);		//Set PA30 as output
-	RIN_3_L;		
+	frontLeftRevLo;		
 #if defined ROBOT_TARGET_V1
 	REG_PIOA_PER |= (1<<30);		//Enable PIO control of PA29
 	REG_PIOA_OER |= (1<<30);		//Set PA29 as output
@@ -142,7 +142,7 @@ void motor_init(void)
 	REG_PIOC_PER |= (1<<10);		//Enable PIO control of PC10
 	REG_PIOC_OER |= (1<<10);		//Set PC10 as output
 #endif
-	FIN_3_L;
+	frontLeftFwdLo;
 	
 	//****Enable PWM Channels as last step of setup****//	
 	REG_PWM_ENA |= PWM_ENA_CHID1;	//Enable PWM on channel 1
@@ -202,68 +202,9 @@ void moveRobot(signed int direction, unsigned char speed)
 	motor2Speed = speed * cos ((30  * M_PI) / 180 - directionRad );
 	motor3Speed = speed * cos ((150 * M_PI) / 180 - directionRad );
 	//motor 2 & 3 is wired backwards on test robot so forward and back is flipped
-	if(motor1Speed > 0)
-	{
-		//Forward
-		RIN_1_L;
-		FIN_1_H;		
-	}
-	else if (motor1Speed == 0)
-	{
-		//Motor off (coast not brake)
-		RIN_1_L;
-		FIN_1_L;
-	}
-	else
-	{
-		//Reverse
-		motor1Speed = motor1Speed * (-1); 
-		RIN_1_H;
-		FIN_1_L;
-	}
-
-	if(motor2Speed > 0)
-	{
-		//Forward
-		RIN_2_L;
-		FIN_2_H;
-	}
-	else if (motor2Speed == 0)
-	{
-		//Motor off (coast not brake)
-		RIN_2_L;
-		FIN_2_L;
-	}
-	else
-	{
-		//Reverse
-		motor2Speed = motor2Speed * (-1); 
-		RIN_2_H;
-		FIN_2_L;
-	}
-	
-	if(motor3Speed > 0)
-	{
-		//Forward
-		RIN_3_L;
-		FIN_3_H;			
-	}
-	else if (motor3Speed == 0)
-	{
-		//Motor off (coast not brake)
-		RIN_3_L;
-		FIN_3_L;
-	}
-	else
-	{
-		//Reverse
-		motor3Speed = motor3Speed * (-1); 
-		RIN_3_H;
-		FIN_3_L;
-	}
-	REG_PWM_CUPD1 = (motor3Speed); //Update duty cycle as per calculations
-	REG_PWM_CUPD2 = (motor2Speed); //Update duty cycle as per calculations
-	REG_PWM_CUPD3 = (motor1Speed); //Update duty cycle as per calculations
+	frontLeftMotorDrive(motor1Speed);
+	frontRightMotorDrive(motor2Speed);
+	rearMotorDrive(motor3Speed);
 }
 
 /*
@@ -296,31 +237,9 @@ void moveRobot(signed int direction, unsigned char speed)
 */
 void rotateRobot(signed char speed)
 {
-	if(speed > 100 || speed < -100)	//In range check
-		speed = 0;
-		
-	if(speed < 0)		//enable all motors to spin the robot clockwise
-	{
-		RIN_1_H;
-		FIN_1_L;
-		RIN_2_H;
-		FIN_2_L;
-		RIN_3_H;
-		FIN_3_L;
-	}
-	else if(speed > 0)	//enable all motors to spin the robot counter-clockwise
-	{
-		RIN_1_L;
-		FIN_1_H;
-		RIN_2_L;
-		FIN_2_H;
-		RIN_3_L;
-		FIN_3_H;
-	}
-	//Update all duty cycles to match the desired rotation speed
-	REG_PWM_CUPD1 = abs(speed);
-	REG_PWM_CUPD2 = abs(speed);
-	REG_PWM_CUPD3 = abs(speed);	
+	frontLeftMotorDrive(speed);
+	frontRightMotorDrive(speed);
+	rearMotorDrive(speed);
 }
 
 /*
@@ -368,21 +287,21 @@ void wiggleForward(uint8_t forwardSpeed, uint8_t lateralSpeed, uint8_t direction
 	switch(direction)
 	{
 		case CW:
-			RIN_2_H;
-			FIN_2_L;
+			frontRightRevHi;
+			frontRightFwdLo;
 		break;
 		
 		case CCW:
-			RIN_2_L;
-			FIN_2_H;
+			frontRightRevLo;
+			frontRightFwdHi;
 		break;
 	}
 
 	//Set front forward motion direction
-	RIN_1_H;
-	FIN_1_L;
-	RIN_3_L;
-	FIN_3_H;
+	rearRevHi;
+	rearFwdLo;
+	frontLeftRevLo;
+	frontLeftFwdHi;
 	
 	if (forwardSpeed+lateralSpeed > 100)		//If forwardSpeed+lateralSpeed will go over 100
 												//Then scale down speed values to fit
@@ -390,31 +309,31 @@ void wiggleForward(uint8_t forwardSpeed, uint8_t lateralSpeed, uint8_t direction
 		switch(direction)
 		{
 			case CW:
-				REG_PWM_CUPD3 = 100;							//Left Front
-				REG_PWM_CUPD1 = 100 - lateralSpeed*2;			//Right front
+				rearPwm = 100;							//Left Front
+				frontLeftPwm = 100 - lateralSpeed*2;			//Right front
 			break;
 		
 			case CCW:
-				REG_PWM_CUPD1 = 100;							//Right front
-				REG_PWM_CUPD3 = 100 - lateralSpeed*2;			//Left front
+				frontLeftPwm = 100;							//Right front
+				rearPwm = 100 - lateralSpeed*2;			//Left front
 			break;
 		}		
 	} else {
 		switch(direction)
 		{
 			case CW:
-				REG_PWM_CUPD1 = forwardSpeed-lateralSpeed;		//Right front
-				REG_PWM_CUPD3 = forwardSpeed+lateralSpeed;		//Left front
+				frontLeftPwm = forwardSpeed-lateralSpeed;		//Right front
+				rearPwm = forwardSpeed+lateralSpeed;		//Left front
 			break;
 			
 			case CCW:
-				REG_PWM_CUPD3 = forwardSpeed-lateralSpeed;		//Left front
-				REG_PWM_CUPD1 = forwardSpeed+lateralSpeed;		//Right front
+				rearPwm = forwardSpeed-lateralSpeed;		//Left front
+				frontLeftPwm = forwardSpeed+lateralSpeed;		//Right front
 			break;
 		}
 	}
 	
-	REG_PWM_CUPD2 = lateralSpeed;		//Rear motor speed (Rear motor)
+	frontRightPwm = lateralSpeed;		//Rear motor speed (Rear motor)
 }
 
 /*
@@ -437,15 +356,9 @@ void wiggleForward(uint8_t forwardSpeed, uint8_t lateralSpeed, uint8_t direction
 void stopRobot(void)
 {
 	//Stops the robot from moving
-	FIN_1_L;
-	RIN_1_L;
-	FIN_2_L;
-	RIN_2_L;
-	FIN_3_L;
-	RIN_3_L;
-	REG_PWM_CUPD1 = 0;
-	REG_PWM_CUPD2 = 0;
-	REG_PWM_CUPD3 = 0;
+	frontRightMotorDrive(0);
+	frontLeftMotorDrive(0);
+	rearMotorDrive(0);
 }
 
 /*
@@ -480,39 +393,39 @@ void setTestMotors(uint8_t motorData[])
 {
 	if(motorData[0] == MOTOR_1 && (motorData[1] & 0x80))//check if bit 7 is set meaning forward
 	{
-		FIN_1_H;
-		RIN_1_L;
-		REG_PWM_CUPD1 = (motorData[1] & 0x7F);
+		rearFwdHi;
+		rearRevLo;
+		frontLeftPwm = (motorData[1] & 0x7F);
 	}
 	else if(motorData[0] == MOTOR_1 && ~(motorData[1] & 0x80))
 	{
-		FIN_1_L;
-		RIN_1_H;
-		REG_PWM_CUPD1 = (motorData[1] & 0x7F);
+		rearFwdLo;
+		rearRevHi;
+		frontLeftPwm = (motorData[1] & 0x7F);
 	}
 	else if(motorData[0] == MOTOR_2 && (motorData[1] & 0x80))//check if bit 7 is set meaning forward
 	{
-		FIN_2_H;
-		RIN_2_L;
-		REG_PWM_CUPD2 = (motorData[1] & 0x7F);
+		frontRightFwdHi;
+		frontRightRevLo;
+		frontRightPwm = (motorData[1] & 0x7F);
 	}
 	else if(motorData[0] == MOTOR_2 && ~(motorData[1] & 0x80))
 	{
-		FIN_2_L;
-		RIN_2_H;
-		REG_PWM_CUPD2 = (motorData[1] & 0x7F);
+		frontRightFwdLo;
+		frontRightRevHi;
+		frontRightPwm = (motorData[1] & 0x7F);
 	}
 	else if(motorData[0] == MOTOR_3 && (motorData[1] & 0x80))//check if bit 7 is set meaning forward
 	{
-		FIN_3_H;
-		RIN_3_L;
-		REG_PWM_CUPD3 = (motorData[1] & 0x7F);
+		frontLeftFwdHi;
+		frontLeftRevLo;
+		rearPwm = (motorData[1] & 0x7F);
 	}
 	else if(motorData[0] == MOTOR_3 && ~(motorData[1] & 0x80))
 	{
-		FIN_3_L;
-		RIN_3_H;
-		REG_PWM_CUPD3 = (motorData[1] & 0x7F);
+		frontLeftFwdLo;
+		frontLeftRevHi;
+		rearPwm = (motorData[1] & 0x7F);
 	}
 }
 
@@ -537,49 +450,49 @@ void setTestMotors(uint8_t motorData[])
 void PWMSpeedTest(void)
 {
 	//Stops the robot from moving
-	FIN_2_H;
-	RIN_2_L;
-	REG_PWM_CUPD2 = 0;
+	frontRightFwdHi;
+	frontRightRevLo;
+	frontRightPwm = 0;
 	delay_ms(5000);
-	REG_PWM_CUPD2 = 0;
+	frontRightPwm = 0;
 	delay_ms(5000);
-	REG_PWM_CUPD2 = 10;
+	frontRightPwm = 10;
 	delay_ms(5000);
-	REG_PWM_CUPD2 = 0;
+	frontRightPwm = 0;
 	delay_ms(5000);
-	REG_PWM_CUPD2 = 20;
+	frontRightPwm = 20;
 	delay_ms(5000);
-	REG_PWM_CUPD2 = 0;
+	frontRightPwm = 0;
 	delay_ms(5000);
-	REG_PWM_CUPD2 = 30;
+	frontRightPwm = 30;
 	delay_ms(5000);
-	REG_PWM_CUPD2 = 0;
+	frontRightPwm = 0;
 	delay_ms(5000);
-	REG_PWM_CUPD2 = 40;
+	frontRightPwm = 40;
 	delay_ms(5000);
-	REG_PWM_CUPD2 = 0;
+	frontRightPwm = 0;
 	delay_ms(5000);
-	REG_PWM_CUPD2 = 50;
+	frontRightPwm = 50;
 	delay_ms(5000);
-	REG_PWM_CUPD2 = 0;
+	frontRightPwm = 0;
 	delay_ms(5000);
-	REG_PWM_CUPD2 = 60;
+	frontRightPwm = 60;
 	delay_ms(5000);
-	REG_PWM_CUPD2 = 0;
+	frontRightPwm = 0;
 	delay_ms(5000);
-	REG_PWM_CUPD2 = 70;
+	frontRightPwm = 70;
 	delay_ms(5000);
-	REG_PWM_CUPD2 = 0;
+	frontRightPwm = 0;
 	delay_ms(5000);
-	REG_PWM_CUPD2 = 80;
+	frontRightPwm = 80;
 	delay_ms(5000);
-	REG_PWM_CUPD2 = 0;
+	frontRightPwm = 0;
 	delay_ms(5000);
-	REG_PWM_CUPD2 = 90;
+	frontRightPwm = 90;
 	delay_ms(5000);
-	REG_PWM_CUPD2 = 0;
+	frontRightPwm = 0;
 	delay_ms(5000);
-	REG_PWM_CUPD2 = 100;
+	frontRightPwm = 100;
 	delay_ms(5000);
 	stopRobot();
 }
@@ -608,21 +521,21 @@ char rearMotorDrive(signed char speed)
 {
 	if(speed > 100 || speed < 100)
 		return 0;
-	REG_PWM_CUPD3 = abs(speed);
+	rearPwm = abs(speed);
 	if(speed > 0) //Forwards
 	{
-		FIN_1_H;
-		RIN_1_L;
+		rearFwdHi;
+		rearRevLo;
 	}
 	else if(speed < 0)//Reverse
 	{
-		RIN_1_H;
-		FIN_1_L;
+		rearRevHi;
+		rearFwdLo;
 	}
 	else
 	{
-		FIN_1_L;
-		RIN_1_L;
+		rearFwdLo;
+		rearRevLo;
 		return 0;
 	}
 	return 1;
@@ -652,21 +565,21 @@ char frontRightMotorDrive(signed char speed)
 {
 	if(speed > 100 || speed < 100)
 		return 0;
-	REG_PWM_CUPD2 = abs(speed);
+	frontRightPwm = abs(speed);
 	if(speed > 0) //Forwards
 	{
-		FIN_2_H;
-		RIN_2_L;
+		frontRightFwdHi;
+		frontRightRevLo;
 	}
 	else if(speed < 0)//Reverse
 	{
-		RIN_2_H;
-		FIN_2_L;
+		frontRightRevHi;
+		frontRightFwdLo;
 	}
 	else
 	{
-		FIN_2_L;
-		RIN_2_L;
+		frontRightFwdLo;
+		frontRightRevLo;
 		return 0;
 	}
 	return 1;
@@ -696,21 +609,21 @@ char frontLeftMotorDrive(signed char speed)
 {
 	if(speed > 100 || speed < 100)
 		return 0;
-	REG_PWM_CUPD1 = abs(speed);
+	frontLeftPwm = abs(speed);
 	if(speed > 0) //Forwards
 	{
-		FIN_3_H;
-		RIN_3_L;
+		frontLeftFwdHi;
+		frontLeftRevLo;
 	}
 	else if(speed < 0)//Reverse
 	{
-		RIN_3_H;
-		FIN_3_L;
+		frontLeftRevHi;
+		frontLeftFwdLo;
 	}
 	else
 	{
-		FIN_3_L;
-		RIN_3_L;
+		frontLeftFwdLo;
+		frontLeftRevLo;
 		return 0;
 	}
 	return 1;

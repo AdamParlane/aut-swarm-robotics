@@ -40,40 +40,74 @@
 //****Motor Pins***//
 //	Robot Version 1 pin assignment
 #if defined ROBOT_TARGET_V1
-//Motor 1
-#define	FIN_1_L	(REG_PIOB_CODR |= (1<<12))
-#define	FIN_1_H	(REG_PIOB_SODR |= (1<<12))
-#define	RIN_1_L	(REG_PIOC_CODR |= (1<<22))
-#define	RIN_1_H	(REG_PIOC_SODR |= (1<<22))
-//Motor 2
-#define	FIN_2_L	(REG_PIOC_CODR |= (1<<19))
-#define	FIN_2_H	(REG_PIOC_SODR |= (1<<19))
-#define	RIN_2_L	(REG_PIOA_CODR |= (1<<31))
-#define	RIN_2_H	(REG_PIOA_SODR |= (1<<31))
-//Motor 3
-#define	FIN_3_L	(REG_PIOA_CODR |= (1<<29))
-#define	FIN_3_H	(REG_PIOA_SODR |= (1<<29))
-#define	RIN_3_L	(REG_PIOA_CODR |= (1<<30))
-#define	RIN_3_H	(REG_PIOA_SODR |= (1<<30))
+//Rear motor (1)
+#define	rearFwdLo				(REG_PIOB_CODR |= (1<<12))
+#define	rearFwdHi				(REG_PIOB_SODR |= (1<<12))
+#define	rearRevLo				(REG_PIOC_CODR |= (1<<22))
+#define	rearRevHi				(REG_PIOC_SODR |= (1<<22))
+#define rearMotorForward		{rearFwdHi; rearRevLo;}
+#define rearMotorReverse		{rearRevHi; rearFwdLo;}
+#define rearMotorStop			{rearFwdLo; rearRevLo;}
+#define rearMotorBrake			{rearFwdHi; rearRevHi;}
+	
+//Front right motor (2)
+#define	frontRightFwdLo			(REG_PIOC_CODR |= (1<<19))
+#define	frontRightFwdHi			(REG_PIOC_SODR |= (1<<19))
+#define	frontRightRevLo			(REG_PIOA_CODR |= (1<<31))
+#define	frontRightRevHi			(REG_PIOA_SODR |= (1<<31))
+#define frontRightMotorForward	{frontRightFwdHi; frontRightRevLo;}
+#define frontRightMotorReverse	{frontRightRevHi; frontRightFwdLo;}
+#define frontRightMotorStop		{frontRightFwdLo; frontRightRevLo;}
+#define frontRightMotorBrake	{frontRightFwdHi; frontRightRevHi;}
+	
+//Front left motor (3)
+#define	frontLeftFwdLo			(REG_PIOA_CODR |= (1<<29))
+#define	frontLeftFwdHi			(REG_PIOA_SODR |= (1<<29))
+#define	frontLeftRevLo			(REG_PIOA_CODR |= (1<<30))
+#define	frontLeftRevHi			(REG_PIOA_SODR |= (1<<30))
+#define frontLeftMotorForward	{frontLeftFwdHi; frontLeftRevLo;}
+#define frontLeftMotorReverse	{frontLeftRevHi; frontLeftFwdLo;}
+#define frontLeftMotorStop		{frontLeftFwdLo; frontLeftRevLo;}
+#define frontLeftMotorBrake		{frontLeftFwdHi; frontLeftRevHi;}
 #endif
+
 //	Robot Version 2 pin assignment
 #if defined ROBOT_TARGET_V2
-//Motor 1
-#define	FIN_1_L	(REG_PIOC_CODR |= (1<<23))
-#define	FIN_1_H	(REG_PIOC_SODR |= (1<<23))
-#define	RIN_1_L	(REG_PIOC_CODR |= (1<<22))
-#define	RIN_1_H	(REG_PIOC_SODR |= (1<<22))
-//Motor 2
-#define	FIN_2_L	(REG_PIOC_CODR |= (1<<19))
-#define	FIN_2_H	(REG_PIOC_SODR |= (1<<19))
-#define	RIN_2_L	(REG_PIOA_CODR |= (1<<31))
-#define	RIN_2_H	(REG_PIOA_SODR |= (1<<31))
-//Motor 3
-#define	FIN_3_L	(REG_PIOA_CODR |= (1<<29))
-#define	FIN_3_H	(REG_PIOA_SODR |= (1<<29))
-#define	RIN_3_L	(REG_PIOC_CODR |= (1<<10))
-#define	RIN_3_H	(REG_PIOC_SODR |= (1<<10))
+//Rear motor (1)
+#define	rearFwdLo				(REG_PIOC_CODR |= (1<<23))
+#define	rearFwdHi				(REG_PIOC_SODR |= (1<<23))
+#define	rearRevLo				(REG_PIOC_CODR |= (1<<22))
+#define	rearRevHi				(REG_PIOC_SODR |= (1<<22))
+#define rearMotorForward		{rearFwdHi; rearRevLo;}
+#define rearMotorReverse		{rearRevHi; rearFwdLo;}
+#define rearMotorStop			{rearFwdLo; rearRevLo;}
+#define rearMotorBrake			{rearFwdHi; rearRevHi;}
+	
+//Front right motor (2)
+#define	frontRightFwdLo			(REG_PIOC_CODR |= (1<<19))
+#define	frontRightFwdHi			(REG_PIOC_SODR |= (1<<19))
+#define	frontRightRevLo			(REG_PIOA_CODR |= (1<<31))
+#define	frontRightRevHi			(REG_PIOA_SODR |= (1<<31))
+#define frontRightMotorForward	{frontRightFwdHi; frontRightRevLo;}
+#define frontRightMotorReverse	{frontRightRevHi; frontRightFwdLo;}
+#define frontRightMotorStop		{frontRightFwdLo; frontRightRevLo;}
+#define frontRightMotorBrake	{frontRightFwdHi; frontRightRevHi;}
+	
+//Front left motor (3)
+#define	frontLeftFwdLo			(REG_PIOA_CODR |= (1<<29))
+#define	frontLeftFwdHi			(REG_PIOA_SODR |= (1<<29))
+#define	frontLeftRevLo			(REG_PIOC_CODR |= (1<<10))
+#define	frontLeftRevHi			(REG_PIOC_SODR |= (1<<10))
+#define frontLeftMotorForward	{frontLeftFwdHi; frontLeftRevLo;}
+#define frontLeftMotorReverse	{frontLeftRevHi; frontLeftFwdLo;}
+#define frontLeftMotorStop		{frontLeftFwdLo; frontLeftRevLo;}
+#define frontLeftMotorBrake		{frontLeftFwdHi; frontLeftRevHi;}
 #endif
+
+//PWM duty cycle channels
+#define frontLeftPwm			REG_PWM_CUPD1
+#define frontRightPwm			REG_PWM_CUPD2
+#define rearPwm					REG_PWM_CUPD3
 
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*
