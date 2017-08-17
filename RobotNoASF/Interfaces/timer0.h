@@ -17,20 +17,15 @@
 * Function:
 * void timer0Init(void)
 *
-* initialise timer0. will be moved to its own module soon
+* Initializes timer0 and timer counter 1
+* Used to time events with a 1ms interrupt on RC compare match
+* Sets timr0 CLK speed to 12.5MHz for camera
 *
 * Inputs:
 * none
 *
 * Returns:
 * none
-*
-* Implementation:
-* TODO:[explain key steps of function] timer0 init
-* [use heavy detail for anything complicated]
-*
-* Improvements:
-* Move to its own module.
 *
 */
 void timer0Init(void);

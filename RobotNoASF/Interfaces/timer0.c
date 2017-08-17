@@ -37,7 +37,9 @@ uint32_t imuFifoNextReadTime = 0;	//The system time at which the IMU will be rea
 * Function:
 * void timer0Init(void)
 *
-* initialise timer0. will be moved to its own module soon
+* Initializes timer0 and timer counter 1
+* Used to time events with a 1ms interrupt on RC compare match
+* Sets timr0 CLK speed to 12.5MHz for camera
 *
 * Inputs:
 * none
@@ -46,11 +48,25 @@ uint32_t imuFifoNextReadTime = 0;	//The system time at which the IMU will be rea
 * none
 *
 * Implementation:
-* TODO:[explain key steps of function] timer0 init
-* [use heavy detail for anything complicated]
+* Gives Clock access to timer counter 0 and 1
+* Note	REG_TC0_CMR0 is TC0 channel 0
+*		Reg_TC0_CMR1 is TC0 channel 1
+*		For some reason this is a bit strange as the interrupt will only work as TC1
+*		This seems to act as the interrupt for channel 1 regardless of if it is timer0 or timer1
 *
+* Channel 0 is for the Clock and is set at 50MHz using divisor clock 1
+* The camera uses set on RA compare (RA is 2 giving f = 25MHz)
+* The camera also has clear on RC compare (RC is 4 giving 12.5MHz)
+* I believe RC is the main counter for the cameras
+* This channel is then enabled and the clock started
+*
+* Channel 1 is for generating ms timing triggers and is set to 3.125MHz using divisor clock3
+* An interrupt is setup  (named TC1_Handler) to trigger on RC compare match
+* RC = 3125 therefore match every 3.125MHz / 3125 = 1kHz -> 1ms
+* This channel is then enabled and the clock started
+* 
 * Improvements:
-* (more descriptive?)Commenting
+* Find out more about why camera has 2 compare matches
 *
 */
 void timer0Init(void)
@@ -73,14 +89,14 @@ void timer0Init(void)
 	|=	TC_CMR_TCCLKS_TIMER_CLOCK3			//Prescaler MCK/32 (100MHz/32 = MHz)
 	|	TC_CMR_WAVE							//Waveform mode
 	|	TC_CMR_WAVSEL_UP_RC					//Clear on RC compare
-	|	TC_CMR_ACPA_SET						// Set pulse on RA compare
-	|	TC_CMR_ACPC_CLEAR;					// Clear pulse on RC compare
+	|	TC_CMR_ACPA_SET						//Set pulse on RA compare
+	|	TC_CMR_ACPC_CLEAR;					//Clear pulse on RC compare
 	REG_TC0_IER1							//TC interrupt enable register
 	|=	TC_IER_CPCS;						//Enable Register C compare interrupt
 	REG_TC0_RC1	|= (TC_RC_RC(3125));		//Set Register C (the timer counter value at which the
 	//interrupt will be triggered) Trigger once every ms (100MHz/2/1M)
-	REG_TC0_RA0 |= (TC_RA_RA(2));			// RA set to 2 counts
-	REG_TC0_RC0 |= (TC_RC_RC(4));			// RC set to 4 counts (total square wave of 80ns period, 12.5MHZ)
+	REG_TC0_RA0 |= (TC_RA_RA(2));			//RA set to 2 counts
+	REG_TC0_RC0 |= (TC_RC_RC(4));			//RC set to 4 counts (total square wave of 80ns period, 12.5MHZ)
 	REG_TC0_CCR0							//Clock control register
 	|=	TC_CCR_CLKEN						//Enable the timer clk.
 	|	TC_CCR_SWTRG;						//Start timer register counter
@@ -119,8 +135,8 @@ int get_ms(uint32_t *timestamp)
 /*
 * Function: int delay_ms(uint32_t period_ms)
 *
-* Required by the IMU drivers (hence naming convention). Halts execution for desired number of
-* milliseconds.
+* Halts execution for desired number of milliseconds. 
+* Required by the IMU drivers (hence naming convention).
 *
 * Inputs:
 * period_ms is the number of milliseconds to wait
