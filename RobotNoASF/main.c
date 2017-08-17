@@ -67,19 +67,22 @@ int main(void)
 			case TEST:
 				if(newDataFlag || streamIntervalFlag)//get the new test data
 				{
-					testMode = testManager(message, &transmitMessage, &robotPosition);//get the new test data
+					//get the new test data
+					testMode = testManager(message, &transmitMessage, &robotPosition);
 				}
 				if(testMode == STOP_STREAMING)
 					mainRobotState = IDLE;
 				else if(testMode == SINGLE_SAMPLE)
 				{
 					mainRobotState = IDLE;
-					SendXbeeAPITransmitRequest(COORDINATOR_64,UNKNOWN_16, transmitMessage.Data, transmitMessage.DataSize);  //Send the Message
+					SendXbeeAPITransmitRequest(COORDINATOR_64,UNKNOWN_16, transmitMessage.Data, 
+												transmitMessage.DataSize);  //Send the Message
 				}
 				else if(streamIntervalFlag && testMode == STREAM_DATA)
 				{
 					streamIntervalFlag = 0;
-					SendXbeeAPITransmitRequest(COORDINATOR_64,UNKNOWN_16, transmitMessage.Data, transmitMessage.DataSize);  //Send the Message
+					SendXbeeAPITransmitRequest(COORDINATOR_64,UNKNOWN_16, transmitMessage.Data,
+												transmitMessage.DataSize);  //Send the Message
 				}
 			break;
 			
@@ -103,7 +106,7 @@ int main(void)
 			
 			case DOCKING:
 				//if battery low or manual command set
-				dockRobot(&robotPosition);	//Execute docking procedure state machine
+				dfDockRobot(&robotPosition);	//Execute docking procedure state machine
 			break;
 				
 			case FORMATION:

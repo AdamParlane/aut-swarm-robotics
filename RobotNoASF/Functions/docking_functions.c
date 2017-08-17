@@ -13,26 +13,26 @@
 * Relevant reference materials or datasheets if applicable
 *
 * Functions:
-* void dockRobot(void)
-* void updateLineSensorStates(void)
-* int8_t getLineDirection(void)
-* void followLine(void)
-* uint8_t scanBrightestLightSource(int16_t *brightestHeading)
+* void dfDockRobot(void)
+* void dfUpdateLineSensorStates(void)
+* int8_t dfGetLineDirection(void)
+* void dfFollowLine(void)
+* uint8_t dfScanBrightestLightSource(int16_t *brightestHeading)
 *
 */
 
 //////////////[Includes]////////////////////////////////////////////////////////////////////////////
 #include "docking_functions.h"
-#include <stdlib.h>				//abs() function in followLine()
+#include <stdlib.h>				//abs() function in dfFollowLine()
 
 //////////////[Global variables]////////////////////////////////////////////////////////////////////
-//Light follower sensor states.
+//Line follower sensor states.
 struct LineSensorArray lf;
 
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*
 * Function:
-* void dockRobot(void)
+* void dfDockRobot(void)
 *
 * Function to guide the robot to the dock.
 *
@@ -51,12 +51,12 @@ struct LineSensorArray lf;
 * [Ideas for improvements that are yet to be made](optional)
 *
 */
-uint8_t dockRobot(struct Position *imuData)
+uint8_t dfDockRobot(struct Position *imuData)
 {
 	float bHeading = 0;	//Brightest Heading
 	enum {FINISHED, START, FACE_BRIGHTEST, MOVE_FORWARD, RESCAN_BRIGHTEST, FOLLOW_LINE};
 	static uint8_t dockingState = START;
-	uint8_t returnVal;
+	//uint8_t returnVal;
 	///////////////[WIP]///////////////
 	switch(dockingState)
 	{
@@ -66,7 +66,7 @@ uint8_t dockRobot(struct Position *imuData)
 			led2Off;
 			led3Off;
 			//returnVal = updateLineSensorStates();
-			if(!scanBrightestLightSource(&bHeading, 359, imuData))
+			if(!dfScanBrightestLightSource(&bHeading, 359, imuData))
 				dockingState = FACE_BRIGHTEST;
 		break;
 		
@@ -74,7 +74,7 @@ uint8_t dockRobot(struct Position *imuData)
 			led1On;
 			led2Off;
 			led3Off;
-			if(!rotateToHeading(bHeading, imuData))
+			if(!mfRotateToHeading(bHeading, imuData))
 				dockingState = MOVE_FORWARD;
 		break; 
 		
@@ -98,7 +98,7 @@ uint8_t dockRobot(struct Position *imuData)
 				stopRobot();
 				dockingState= RESCAN_BRIGHTEST;
 			}
-			if(updateLineSensorStates())	//If line found then follow it
+			if(dfUpdateLineSensorStates())	//If line found then follow it
 			{
 				stopRobot();
 				dockingState = FOLLOW_LINE;
@@ -110,7 +110,7 @@ uint8_t dockRobot(struct Position *imuData)
 			led2Off;
 			led3On;
 			//Only look in front, because we should still be roughly in the right direction
-			if(!scanBrightestLightSource(&bHeading, 180, imuData))
+			if(!dfScanBrightestLightSource(&bHeading, 180, imuData))
 				dockingState = FACE_BRIGHTEST;
 		break;
 		
@@ -125,7 +125,7 @@ uint8_t dockRobot(struct Position *imuData)
 			led1On;
 			led2On;
 			led3On;
-			//trackLight(imuData);
+			//mfTrackLight(imuData);
 			return 0;
 		break;
 	}
@@ -134,7 +134,7 @@ uint8_t dockRobot(struct Position *imuData)
 
 /*
 * Function:
-* void updateLineSensorStates(void)
+* void dfUpdateLineSensorStates(void)
 *
 * Sees if any sensors have made a definite state change and loads the states into the line sensor
 * state structure for use by other functions in this module.
@@ -153,7 +153,7 @@ uint8_t dockRobot(struct Position *imuData)
 * - Repeat until all four sensors have been read.
 *
 */
-uint8_t updateLineSensorStates(void)
+uint8_t dfUpdateLineSensorStates(void)
 {
 #if defined ROBOT_TARGET_V2
 	uint8_t sensorValue;						//Temporarily stores state of a single sensor
@@ -190,7 +190,7 @@ uint8_t updateLineSensorStates(void)
 
 /*
 * Function:
-* int8_t getLineDirection(void)
+* int8_t dfGetLineDirection(void)
 *
 * This function examines the states of the line follower sensors and determines the direction and
 * urgency factor by which the robot should move to find its way to the centre of the line.
@@ -227,11 +227,11 @@ uint8_t updateLineSensorStates(void)
 *|__0x6___|____________|_____X______|______X______|_____________|__________0_____________|     
 *
 */
-int8_t getLineDirection(void)
+int8_t dfGetLineDirection(void)
 {
 #if defined ROBOT_TARGET_V2
 	//Get updated sensor data
-	updateLineSensorStates();
+	dfUpdateLineSensorStates();
 	//Combine sensor states from sensor structure into single byte that can be used by a switch
 	//statement. See above for description of each state.
 	uint8_t sensorStates
@@ -271,7 +271,7 @@ int8_t getLineDirection(void)
 
 /*
 * Function:
-* void followLine(void)
+* void dfFollowLine(void)
 *
 * A basic function to follow a line that seems to work ok
 *
@@ -290,10 +290,10 @@ int8_t getLineDirection(void)
 * Would be better with the wiggleForward function once its working.
 *
 */
-void followLine(void)
+void dfFollowLine(void)
 {
 #if defined ROBOT_TARGET_V2
-	int8_t lineDirection = getLineDirection();
+	int8_t lineDirection = dfGetLineDirection();
 	if(lineDirection != 0)				//Turn robot to face line
 		rotateRobot(lineDirection*10);
 	else
@@ -303,7 +303,7 @@ void followLine(void)
 
 /*
 * Function:
-* uint8_t scanBrightestLightSource(float *brightestHeading, uint16_t sweepAngle,
+* uint8_t dfScanBrightestLightSource(float *brightestHeading, uint16_t sweepAngle,
 *									struct Position *imuData);
 *
 * The robot will scan from -180 degrees to 180 degrees and record the heading with the brightest
@@ -322,7 +322,7 @@ void followLine(void)
 * brightestVal is a static variable that stored the brightest detected light value so far.
 * avgBrightness is a temporary variable that stores the average brightness between the two light
 * sensors.
-* First up the function calls the rotateToHeading function. If that function has completed (ie the
+* First up the function calls the mfRotateToHeading function. If that function has completed (ie the
 * robot is facing in the heading we want) then an average white light brightness reading is taken
 * from the light sensors. If the average brightness just read is greater than the last stored
 * brightness value then update brightestHeading with the current heading and update brightestVal
@@ -336,7 +336,7 @@ void followLine(void)
 * Currently it seems to not lock dead on with the light source.
 *
 */
-uint8_t scanBrightestLightSource(float *brightestHeading, uint16_t sweepAngle, 
+uint8_t dfScanBrightestLightSource(float *brightestHeading, uint16_t sweepAngle, 
 								struct Position *imuData)
 {
 	const float ROTATE_STEP_SZ = 2;
@@ -362,13 +362,13 @@ uint8_t scanBrightestLightSource(float *brightestHeading, uint16_t sweepAngle,
 		break;
 
 		case GOTO_START_POSITION:
-			if(!rotateToHeading(startHeading, imuData))
+			if(!mfRotateToHeading(startHeading, imuData))
 				functionState = SWEEP;						//In position, now perform sweep
 			return 1;
 		break;
 		
 		case SWEEP:
-			rotateError = rotateToHeading(sHeading, imuData);
+			rotateError = mfRotateToHeading(sHeading, imuData);
 			if(abs(rotateError) < 170 && sHeading < endHeading)//Keep sHeading only 25 degrees ahead
 															//of current heading so that robot will
 															//always take the long way around
@@ -400,7 +400,7 @@ uint8_t scanBrightestLightSource(float *brightestHeading, uint16_t sweepAngle,
 }
 
 //TODO:Header
-float scanBrightestLightSourceProx(void)
+float dfScanBrightestLightSourceProx(void)
 {
 	uint16_t sensor[6];
 	uint16_t brightestVal;
