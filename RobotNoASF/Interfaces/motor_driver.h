@@ -206,8 +206,59 @@ void PWMSpeedTest(void);
 */
 void setTestMotors(uint8_t motorData[]);
 
+
+/*
+*
+* Function:
+* char motor1Drive(char speed, char direction)
+*
+* Runs motor 1 at desired speed and direction
+*
+* Inputs:
+* char speed 0-100
+* char direction (FORWARD(1) or REVERSE(0))
+*
+* Returns:
+* char: 1 if success
+*		0 if speed is out of range or direction is invalid
+*
+*/
 char motor1Drive(char speed, char direction);
+
+/*
+*
+* Function:
+* char motor2Drive(char speed, char direction)
+*
+* Runs motor 2 at desired speed and direction
+*
+* Inputs:
+* char speed 0-100
+* char direction (FORWARD(1) or REVERSE(0))
+*
+* Returns:
+* char: 1 if success
+*		0 if speed is out of range or direction is invalid
+*
+*/
 char motor2Drive(char speed, char direction);
+
+/*
+*
+* Function:
+* char motor3Drive(char speed, char direction)
+*
+* Runs motor 3 at desired speed and direction
+*
+* Inputs:
+* char speed 0-100
+* char direction (FORWARD(1) or REVERSE(0))
+*
+* Returns:
+* char: 1 if success
+*		0 if speed is out of range or direction is invalid
+*
+*/
 char motor3Drive(char speed, char direction);
 
 #endif /* MOTOR_DRIVER_H_ */
