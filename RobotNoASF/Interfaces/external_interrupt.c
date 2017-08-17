@@ -86,7 +86,7 @@ void PIOA_Handler(void)
 	if(IMU_INT_PORT->PIO_ISR & IMU_INT_PIN)	//If IMU interrupt detected
 	{
 		checkImuFifo = 1;
-		//ledTog1;
+		//led1Tog;
 	}
 #endif	
 }

@@ -30,16 +30,19 @@
 #define LED_2_PIN	PIO_PC8
 #define LED_3_PORT	PIOA
 #define LED_3_PIN	PIO_PA27
+
 //LED control macros
-#define	ledOff1 	(LED_1_PORT->PIO_CODR |= LED_1_PIN)
-#define	ledOff2		(LED_2_PORT->PIO_CODR |= LED_2_PIN)
-#define	ledOff3 	(LED_3_PORT->PIO_CODR |= LED_3_PIN)
-#define	ledOn1 		(LED_1_PORT->PIO_SODR |= LED_1_PIN)
-#define	ledOn2 		(LED_2_PORT->PIO_SODR |= LED_2_PIN)
-#define	ledOn3 		(LED_3_PORT->PIO_SODR |= LED_3_PIN)
-#define ledTog1		{if(LED_1_PORT->PIO_ODSR&LED_1_PIN) ledOff1; else ledOn1;}
-#define ledTog2		{if(LED_2_PORT->PIO_ODSR&LED_2_PIN) ledOff2; else ledOn2;}
-#define ledTog3		{if(LED_3_PORT->PIO_ODSR&LED_3_PIN) ledOff3; else ledOn3;}
+#define	led1On 		(LED_1_PORT->PIO_SODR |= LED_1_PIN)
+#define	led1Off 	(LED_1_PORT->PIO_CODR |= LED_1_PIN)
+#define led1Tog		{if(LED_1_PORT->PIO_ODSR&LED_1_PIN) led1Off; else led1On;}
+	
+#define	led2On 		(LED_2_PORT->PIO_SODR |= LED_2_PIN)
+#define	led2Off		(LED_2_PORT->PIO_CODR |= LED_2_PIN)
+#define led2Tog		{if(LED_2_PORT->PIO_ODSR&LED_2_PIN) led2Off; else led2On;}
+	
+#define	led3On 		(LED_3_PORT->PIO_SODR |= LED_3_PIN)
+#define	led3Off 	(LED_3_PORT->PIO_CODR |= LED_3_PIN)
+#define led3Tog		{if(LED_3_PORT->PIO_ODSR&LED_3_PIN) led3Off; else led3On;}
 
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*
@@ -60,7 +63,7 @@ void pioInit(void);
 
 /*
 * Function:
-* void ledInit(void)
+* void pioLedInit(void)
 *
 * Initialises the PIO pins needed to use the LEDs. pioInit() MUST be run first.
 *
@@ -71,6 +74,23 @@ void pioInit(void);
 * none
 *
 */
-void ledInit(void);
+void pioLedInit(void);
+
+/*
+* Function:
+* void pioLedNumber(uint8_t numeral)
+*
+* Will display the given number in binary on the LEDs. Useful when debugging state machines (can
+* see the number of the state you are in)
+*
+* Inputs:
+* uint8_t numeral:
+*   An unsigned integer between 0-7 to display
+*
+* Returns:
+* none
+*
+*/
+void pioLedNumber(uint8_t numeral);
 
 #endif /* PIO_INTERFACE_H_ */

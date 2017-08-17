@@ -61,27 +61,27 @@ uint8_t dfDockRobot(struct Position *imuData)
 	switch(dockingState)
 	{
 		case START:
-//			mfRotateToHeading(0, imuData);
-			ledOff1;
-			ledOff2;
-			ledOff3;
-			//returnVal = dfUpdateLineSensorStates();
+//			rotateToHeading(0, imuData);
+			led1Off;
+			led2Off;
+			led3Off;
+			//returnVal = updateLineSensorStates();
 			if(!dfScanBrightestLightSource(&bHeading, 359, imuData))
 				dockingState = FACE_BRIGHTEST;
 		break;
 		
 		case FACE_BRIGHTEST:
-			ledOn1;
-			ledOff2;
-			ledOff3;
+			led1On;
+			led2Off;
+			led3Off;
 			if(!mfRotateToHeading(bHeading, imuData))
 				dockingState = MOVE_FORWARD;
 		break; 
 		
 		case MOVE_FORWARD:
-			ledOn1;
-			ledOn2;
-			ledOff3;
+			led1On;
+			led2On;
+			led3Off;
 			moveRobot(0, 50);
 			//RIN_3_H;
 			//FIN_3_L;
@@ -106,25 +106,25 @@ uint8_t dfDockRobot(struct Position *imuData)
 		break;
 		
 		case RESCAN_BRIGHTEST:
-			ledOff1;
-			ledOff2;
-			ledOn3;
+			led1Off;
+			led2Off;
+			led3On;
 			//Only look in front, because we should still be roughly in the right direction
 			if(!dfScanBrightestLightSource(&bHeading, 180, imuData))
 				dockingState = FACE_BRIGHTEST;
 		break;
 		
 		case FOLLOW_LINE:
-			ledOn1;
-			ledOff2;
-			ledOn3;		
-			dfFollowLine();
+			led1On;
+			led2Off;
+			led3On;		
+			followLine();
 		break;
 		
 		case FINISHED:
-			ledOn1;
-			ledOn2;
-			ledOn3;
+			led1On;
+			led2On;
+			led3On;
 			//mfTrackLight(imuData);
 			return 0;
 		break;

@@ -12,7 +12,7 @@
 *
 * Project Repository: https://github.com/AdamParlane/aut-swarm-robotics
 *
-* Functions for intialising PIO and setting up LEDs
+* Functions for intialising PIO and setting up/controlling LEDs
 *
 * More Info:
 * Atmel SAM 4N Processor Datasheet:http://www.atmel.com/Images/Atmel-11158-32-bit%20Cortex-M4-Microcontroller-SAM4N16-SAM4N8_Datasheet.pdf
@@ -61,7 +61,7 @@ void pioInit(void)
 
 /*
 * Function:
-* void ledInit(void)
+* void pioLedInit(void)
 *
 * Initialises the PIO pins needed to use the LEDs
 *
@@ -77,7 +77,7 @@ void pioInit(void)
 * - Switch all LEDs off by default
 *
 */
-void ledInit(void)
+void pioLedInit(void)
 {
 	REG_PIOA_PER
 	|=	(1<<28)					//PIO control enabled for D1 (LEDA)
@@ -89,7 +89,80 @@ void ledInit(void)
 	|	(1<<27);				//D3 as output
 	REG_PIOC_OER
 	|=	(1<<8);					//D2 as output
-	ledOff1;					//D1 starts up off
-	ledOff2;					//D2 starts up off
-	ledOff3;					//D3 starts up off
+	led1Off;					//D1 starts up off
+	led2Off;					//D2 starts up off
+	led3Off;					//D3 starts up off
+}
+
+/*
+* Function:
+* void pioLedNumber(uint8_t numeral)
+*
+* Will display the given number in binary on the LEDs. Useful when debugging state machines (can
+* see the number of the state you are in)
+*
+* Inputs:
+* uint8_t numeral:
+*   An unsigned integer between 0-7 to display
+*
+* Returns:
+* none
+*
+* Implementation:
+* A simply state machine selects which LEDs to turn on and off based on number given.
+* If number is out of range then it is ignored.
+*
+*/
+void pioLedNumber(uint8_t numeral)
+{
+	switch(numeral)
+	{
+		case 0:
+			led1Off;
+			led2Off;
+			led3Off;
+		break;
+
+		case 1:
+			led1On;
+			led2Off;
+			led3Off;
+		break;
+
+		case 2:
+			led1Off;
+			led2On;
+			led3Off;
+		break;
+
+		case 3:
+			led1On;
+			led2On;
+			led3Off;
+		break;
+
+		case 4:
+			led1Off;
+			led2Off;
+			led3On;
+		break;
+
+		case 5:
+			led1On;
+			led2Off;
+			led3On;
+		break;
+
+		case 6:
+			led1Off;
+			led2On;
+			led3On;
+		break;
+
+		case 7:
+			led1On;
+			led2On;
+			led3On;
+		break;
+	}
 }

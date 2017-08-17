@@ -26,7 +26,7 @@
 uint8_t SBtest, SBtest1;
 uint16_t DBtest, DBtest1, DBtest2;
 uint16_t battVoltage;					//Stores battery voltage on start up
-extern struct Position robotPosition;	//Passed to docking functions
+extern struct Position robotPosition;	//Passed to docking functions and test functions
 
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*
@@ -114,7 +114,7 @@ int main(void)
 			break;
 			
 			case CHARGING:
-				ledOn1;
+				led1On;
 				chargeInfo = chargeDetector();
 				if(chargeInfo == BATT_CHARGING)
 					break;
@@ -122,7 +122,7 @@ int main(void)
 					mainRobotState = mainRobotStatePrev;
 				else
 					mainRobotState = MANUAL;
-				ledOff1;
+				led1Off;
 			break;
 			
 			case IDLE:
