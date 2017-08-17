@@ -14,14 +14,13 @@
 *
 * Functions:
 * int main(void)
-* void setup(void)
+* 
 */
 
 //////////////[Includes]////////////////////////////////////////////////////////////////////////////
 #include "robot_setup.h"
 
 //////////////[Defines]/////////////////////////////////////////////////////////////////////////////
-#define		batteryLow	1
 
 //////////////[Global variables]////////////////////////////////////////////////////////////////////
 uint8_t SBtest, SBtest1;
@@ -29,7 +28,6 @@ uint16_t DBtest, DBtest1, DBtest2;
 struct Position robotPosition;
 extern uint8_t checkImuFifo;
 uint16_t battVoltage;
-
 
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*
@@ -58,15 +56,13 @@ int main(void)
 	uint8_t testMode = 0x00;
 	char chargeInfo;
 	char error; //used for developement to log and watch errors - AP
-	//Comms
-	struct frame_info frame;
-	struct message_info message;
-	//Optical
-	robotPosition.x = 0;
-	robotPosition.y = 0;
+	struct frame_info frame; //Xbee API frame
+	struct message_info message; //Incoming message with XBee metadata removed
+	robotPosition.x = 0; //Resets robot position
+	robotPosition.y = 0; //Resets robot position
 	robotPosition.imuYawOffset = 180;	//Ensures that whatever way the robot is facing when powered
 										//on is 0 degrees heading.
-	struct transmitDataStructure transmitMessage;
+	struct transmitDataStructure transmitMessage; //struct to transmit to PC
 	robotState = IDLE;
 	
 	while(1)
@@ -74,32 +70,30 @@ int main(void)
 		switch (robotState)
 		{
 			case TEST:
-			//should we move these into small functions to tidy main, tossing up whether it helps
-			//at the same time I had this in a function and mark didnt like it
-			if(newDataFlag || streamIntervalFlag)//get the new test data
-			{
-				testMode = testManager(message, &transmitMessage, &robotPosition);//get the new test data
-			}
-			if(testMode == STOP_STREAMING)
-				robotState = IDLE;
-			else if(testMode == SINGLE_SAMPLE)
-			{
-				robotState = IDLE;
-				SendXbeeAPITransmitRequest(COORDINATOR_64,UNKNOWN_16, transmitMessage.Data, transmitMessage.DataSize);  //Send the Message
-			}
-			else if(streamIntervalFlag && testMode == STREAM_DATA)
-			{
-				streamIntervalFlag = 0;
-				SendXbeeAPITransmitRequest(COORDINATOR_64,UNKNOWN_16, transmitMessage.Data, transmitMessage.DataSize);  //Send the Message
-			}
+				if(newDataFlag || streamIntervalFlag)//get the new test data
+				{
+					testMode = testManager(message, &transmitMessage, &robotPosition);//get the new test data
+				}
+				if(testMode == STOP_STREAMING)
+					robotState = IDLE;
+				else if(testMode == SINGLE_SAMPLE)
+				{
+					robotState = IDLE;
+					SendXbeeAPITransmitRequest(COORDINATOR_64,UNKNOWN_16, transmitMessage.Data, transmitMessage.DataSize);  //Send the Message
+				}
+				else if(streamIntervalFlag && testMode == STREAM_DATA)
+				{
+					streamIntervalFlag = 0;
+					SendXbeeAPITransmitRequest(COORDINATOR_64,UNKNOWN_16, transmitMessage.Data, transmitMessage.DataSize);  //Send the Message
+				}
 			break;
 			
 			case TEST_ALL:
-				//Place holder for state to test all peripherals at once
+				//Not tested
+				testAll(&transmitMessage);
 			break;
 			
 			case MANUAL:
-			//should we move these into small functions to tidy main, tossing up whether it helps
 				if(newDataFlag)
 					manualControl(message);
 				chargeInfo = chargeDetector();
@@ -116,35 +110,21 @@ int main(void)
 				//if battery low or manual command set
 				dockRobot(&robotPosition);	//Execute docking procedure state machine
 			break;
-			
-			case OBSTACLE_AVOIDANCE:
-			//Will execute code to guide robot around obstacles. Type of obstacle avoidance
-			//performed will depend on the previous state of the robot, ie docking will want
-			//to not move out of the way of other robots so as not to go out of alignment but
-			//still stop when the dock has been reached.
-			break;
-			
+				
 			case FORMATION:
 			//placeholder
 			break;
 			
 			case CHARGING:
-			//should we move these into small functions to tidy main, tossing up whether it helps
 				ledOn1;
 				chargeInfo = chargeDetector();
 				if(chargeInfo == BATT_CHARGING)
 					break;
 				else if(chargeInfo == BATT_CHARGED)
-				{
-					ledOff1;
 					robotState = previousState;
-				}
 				else
-				{
-					ledOff1;
-					error = chargeInfo;
 					robotState = MANUAL;
-				}
+				ledOff1;
 			break;
 			
 			case IDLE:
@@ -161,8 +141,5 @@ int main(void)
 			imuGetEulerAngles(&robotPosition);	//Convert IMU quats to Euler angles
 			getMouseXY(&robotPosition);			//Update mouse sensor data while at it
 		}
-		////////////////////////////////////////////////////////////////////////////////////////////
-		//if(obstacleAvoidanceEnabledFlag)
-			//obstacleAvoidanceManager();
 	}
 }
