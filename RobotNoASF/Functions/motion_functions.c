@@ -184,7 +184,7 @@ float trackLight(struct Position *imuData)
 	//stop
 	if((abs(dHeading) < 0.5) && (abs(imuData->imuGyroZ) < 0.5))
 	{
-		ledOn1;
+		led1On;
 		stopRobot();
 		pErr = 0;			//Clear the static vars so they don't interfere next time we call this
 							//function
@@ -192,7 +192,7 @@ float trackLight(struct Position *imuData)
 		return 0;
 	} else {
 		rotateToHeading(imuData->imuYaw + dHeading, imuData);
-		ledOff1;
+		led1Off;
 		return pErr;	//If not, return pErr
 	}
 }

@@ -52,7 +52,7 @@ void robotSetup(void)
 	masterClockInit();					//Initialise the master clock to 100MHz
 	pioInit();							//Initialise the PIO controllers
 	adcSingleConvInit();				//Initialise ADC for single conversion mode
-	ledInit();							//Initialise the LEDs on the mid board
+	pioLedInit();							//Initialise the LEDs on the mid board
 	motor_init();						//Initialise the motor driver chips
 	SPI_Init();							//Initialise SPI for talking with optical sensor
 	twi0Init();							//Initialise TWI0 interface
