@@ -71,13 +71,40 @@ typedef struct
 
 void formOccupancyGrid (void)
 {
-	P occupancyGrid[50][50]; //each square is 0.5 x 0.5cm
+	//this is way too complicated for the micro
+	P occupancyGrid[10][10]; //each square is 2 x 2cm
 	//Region 1
+	uint16_t proximity[6];
 	//P occupied = ( ((R-r)/R) + ((B - a)/B) /2) * Max
 	//R is max range of prox sens
 	//B is max angular displacement
 	//r is distance to cell
 	//a is angle to axis of cell
 	//Max is correction constant
-	
+	scanProximity(&proximity[6]);
+	for(char a = 0; a < 6; a++)
+	{
+		for(char i = 0; i < 10; i ++)
+		{
+			for(char j = 0; j < 10; j++)
+			{
+				//r = sqrt (i^2 + j^2)
+				//if r < proximity[a] * some scaling factor
+					//region I
+				//else region 2
+				occupancyGrid[i][j].occupied = 0.5 * (((P_MAX_DIST - i) / P_MAX_DIST) + ((P_MAX_ANG - angle)/P_MAX_ANG)) / 2;
+			}
+		}	
+	}
+
+}
+
+void scanProximity(uint16_t *proximity[6])
+{
+	proximity[0] -> proxSensRead(MUX_PROXSENS_A);
+	proximity[1] -> proxSensRead(MUX_PROXSENS_B);
+	proximity[2] -> proxSensRead(MUX_PROXSENS_C);
+	proximity[3] -> proxSensRead(MUX_PROXSENS_D);
+	proximity[4] -> proxSensRead(MUX_PROXSENS_E);
+	proximity[5] -> proxSensRead(MUX_PROXSENS_F);				
 }
