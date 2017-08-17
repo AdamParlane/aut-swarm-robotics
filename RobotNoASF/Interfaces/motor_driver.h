@@ -20,9 +20,9 @@
 * void rotateRobot(char direction, unsigned char speed);
 * void dockRobot(void);
 * void setTestMotors(uint8_t motorData[]);
-* char motor1Drive(char speed, char direction)
-* char motor2Drive(char speed, char direction)
-* char motor3Drive(char speed, char direction)
+* char motor1Drive(signed char speed)
+* char motor2Drive(signed char speed)
+* char motor3Drive(signed char speed)
 *
 */
 
@@ -75,10 +75,6 @@
 #define	RIN_3_L	(REG_PIOC_CODR |= (1<<10))
 #define	RIN_3_H	(REG_PIOC_SODR |= (1<<10))
 #endif
-
-#define FORWARD	1
-#define REVERSE 0
-
 
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*
@@ -213,55 +209,52 @@ void setTestMotors(uint8_t motorData[]);
 /*
 *
 * Function:
-* char motor1Drive(char speed, char direction)
+* char rearMotorDrive(signed char speed)
 *
 * Runs motor 1 at desired speed and direction
 *
 * Inputs:
-* char speed 0-100
-* char direction (FORWARD(1) or REVERSE(0))
+* char speed -100- +100
 *
 * Returns:
 * char: 1 if success
-*		0 if speed is out of range or direction is invalid
+*		0 if speed is out of range
 *
 */
-char motor1Drive(char speed, char direction);
+char rearMotorDrive(signed char speed);
 
 /*
 *
 * Function:
-* char motor2Drive(char speed, char direction)
+* char frontRightMotorDrive(signed char speed)
 *
 * Runs motor 2 at desired speed and direction
 *
 * Inputs:
-* char speed 0-100
-* char direction (FORWARD(1) or REVERSE(0))
+* char speed -100- +100
 *
 * Returns:
 * char: 1 if success
-*		0 if speed is out of range or direction is invalid
+*		0 if speed is out of range
 *
 */
-char motor2Drive(char speed, char direction);
+char frontRightMotorDrive(signed char speed);
 
 /*
 *
 * Function:
-* char motor3Drive(char speed, char direction)
+* char frontLeftMotorDrive(signed char speed)
 *
 * Runs motor 3 at desired speed and direction
 *
 * Inputs:
-* char speed 0-100
-* char direction (FORWARD(1) or REVERSE(0))
+* char speed -100- +100
 *
 * Returns:
 * char: 1 if success
-*		0 if speed is out of range or direction is invalid
+*		0 if speed is out of range
 *
 */
-char motor3Drive(char speed, char direction);
+char frontLeftMotorDrive(signed char speed);
 
 #endif /* MOTOR_DRIVER_H_ */

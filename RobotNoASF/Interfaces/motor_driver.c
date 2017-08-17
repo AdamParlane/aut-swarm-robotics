@@ -582,37 +582,34 @@ void PWMSpeedTest(void)
 /*
 *
 * Function:
-* char motor1Drive(char speed, char direction)
+* char rearMotorDrive(signed char speed)
 *
 * Runs motor 1 at desired speed and direction
 *
 * Inputs:
-* char speed 0-100
-* char direction (FORWARD(1) or REVERSE(0))
+* char speed -100 - +100
 *
 * Returns:
 * char: 1 if success
-*		0 if speed is out of range or direction is invalid
+*		0 if speed is out of range
 *
 * Implementation:
 * checks speed is in range
 * updates duty cycle to speed
-* sets motor direction using FIN and RIN
-* if direction is neither forward nor reverse, motor is stopped
-* and will return 0
+* sets motor direction based on whether speed is positive (forwards) or negative (reverse)
 *
 */
-char motor1Drive(char speed, char direction)
+char rearMotorDrive(signed char speed)
 {
-	if(speed > 100)
+	if(speed > 100 || speed < 100)
 		return 0;
-	REG_PWM_CUPD3 = speed;
-	if(direction == FORWARD)
+	REG_PWM_CUPD3 = abs(speed);
+	if(speed > 0) //Forwards
 	{
 		FIN_1_H;
 		RIN_1_L;
 	}
-	else if(direction == REVERSE)
+	else if(speed < 0)//Reverse
 	{
 		RIN_1_H;
 		FIN_1_L;
@@ -629,37 +626,34 @@ char motor1Drive(char speed, char direction)
 /*
 *
 * Function:
-* char motor2Drive(char speed, char direction)
+* char frontRightMotorDrive(signed char speed)
 *
 * Runs motor 2 at desired speed and direction
 *
 * Inputs:
-* char speed 0-100
-* char direction (FORWARD(1) or REVERSE(0))
+* char speed -100- +100
 *
 * Returns:
 * char: 1 if success
-*		0 if speed is out of range or direction is invalid
+*		0 if speed is out of range
 *
 * Implementation:
 * checks speed is in range
 * updates duty cycle to speed
-* sets motor direction using FIN and RIN
-* if direction is neither forward nor reverse, motor is stopped
-* and will return 0
+* sets motor direction based on whether speed is positive (forwards) or negative (reverse)
 *
 */
-char motor2Drive(char speed, char direction)
+char frontRightMotorDrive(signed char speed)
 {
-	if(speed > 100)
+	if(speed > 100 || speed < 100)
 		return 0;
-	REG_PWM_CUPD2 = speed;
-	if(direction == FORWARD)
+	REG_PWM_CUPD2 = abs(speed);
+	if(speed > 0) //Forwards
 	{
 		FIN_2_H;
 		RIN_2_L;
 	}
-	else if(direction == REVERSE)
+	else if(speed < 0)//Reverse
 	{
 		RIN_2_H;
 		FIN_2_L;
@@ -676,37 +670,34 @@ char motor2Drive(char speed, char direction)
 /*
 *
 * Function:
-* char motor3Drive(char speed, char direction)
+* char frontLeftMotorDrive(signed char speed)
 *
 * Runs motor 3 at desired speed and direction
 *
 * Inputs:
-* char speed 0-100
-* char direction (FORWARD(1) or REVERSE(0))
+* char speed -100- +100
 *
 * Returns:
 * char: 1 if success
-*		0 if speed is out of range or direction is invalid
+*		0 if speed is out of range
 *
 * Implementation:
 * checks speed is in range
 * updates duty cycle to speed
-* sets motor direction using FIN and RIN
-* if direction is neither forward nor reverse, motor is stopped
-* and will return 0
+* sets motor direction based on whether speed is positive (forwards) or negative (reverse)
 *
 */
-char motor3Drive(char speed, char direction)
+char frontLeftMotorDrive(signed char speed)
 {
-	if(speed > 100)
+	if(speed > 100 || speed < 100)
 		return 0;
-	REG_PWM_CUPD1 = speed;
-	if(direction == FORWARD)
+	REG_PWM_CUPD1 = abs(speed);
+	if(speed > 0) //Forwards
 	{
 		FIN_3_H;
 		RIN_3_L;
 	}
-	else if(direction == REVERSE)
+	else if(speed < 0)//Reverse
 	{
 		RIN_3_H;
 		FIN_3_L;
