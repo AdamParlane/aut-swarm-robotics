@@ -56,7 +56,7 @@ uint8_t dockRobot(struct Position *imuData)
 	float bHeading = 0;	//Brightest Heading
 	enum {FINISHED, START, FACE_BRIGHTEST, MOVE_FORWARD, RESCAN_BRIGHTEST, FOLLOW_LINE};
 	static uint8_t dockingState = START;
-	//uint8_t returnVal;
+	uint8_t returnVal;
 	///////////////[WIP]///////////////
 	switch(dockingState)
 	{
@@ -65,7 +65,7 @@ uint8_t dockRobot(struct Position *imuData)
 			ledOff1;
 			ledOff2;
 			ledOff3;
-		//	returnVal = fdelay_ms(50);
+			//returnVal = updateLineSensorStates();
 			if(!scanBrightestLightSource(&bHeading, 359, imuData))
 				dockingState = FACE_BRIGHTEST;
 		break;
@@ -82,8 +82,18 @@ uint8_t dockRobot(struct Position *imuData)
 			ledOn1;
 			ledOn2;
 			ledOff3;
-			moveRobot(0, 30);
-			if(!fdelay_ms(3000))			//After three seconds, look for LEDs again
+			moveRobot(0, 50);
+			//RIN_3_H;
+			//FIN_3_L;
+			//RIN_2_L;
+			//FIN_2_H;
+			//REG_PWM_CUPD2 = 30;			//Left Front
+			//REG_PWM_CUPD3 = 45;			//Right front
+			//
+			//RIN_1_L;
+			//FIN_1_L;
+			//REG_PWM_CUPD1 = 0;			//rear
+			if(!fdelay_ms(3000))			//After five seconds, look for LEDs again
 			{
 				stopRobot();
 				dockingState= RESCAN_BRIGHTEST;
@@ -100,7 +110,7 @@ uint8_t dockRobot(struct Position *imuData)
 			ledOff2;
 			ledOn3;
 			//Only look in front, because we should still be roughly in the right direction
-			if(!scanBrightestLightSource(&bHeading, 120, imuData))
+			if(!scanBrightestLightSource(&bHeading, 180, imuData))
 				dockingState = FACE_BRIGHTEST;
 		break;
 		
@@ -148,33 +158,31 @@ uint8_t updateLineSensorStates(void)
 #if defined ROBOT_TARGET_V2
 	uint8_t sensorValue;						//Temporarily stores state of a single sensor
 	uint8_t returnVal = 0;						//Returns non 0 if any sensor has changed state
+	
 	sensorValue = lfLineDetected(LF_OUTER_L);	//Look for line on outer left sensor
 	if (sensorValue != NO_CHANGE)				//If this sensor has changed state
-	{
-		returnVal = 1;
 		lf.outerLeft = sensorValue;				//Update line follower data structure with new data
-	}
+	if(sensorValue == LINE)
+		returnVal = 1;
 	
 	sensorValue = lfLineDetected(LF_INNER_L);	//Look for line on inner left sensor
 	if (sensorValue != NO_CHANGE)				//If this sensor has changed state
-	{
-		returnVal = 1;
 		lf.innerLeft = sensorValue;				//Update line follower data structure with new data
-	}
+	if(sensorValue == LINE)
+		returnVal = 1;
 	
 	sensorValue = lfLineDetected(LF_OUTER_R);	//Look for line on outer right sensor
 	if (sensorValue != NO_CHANGE)				//If this sensor has changed state
-	{
-		returnVal = 1;
 		lf.outerRight = sensorValue;			//Update line follower data structure with new data
-	}
+	if(sensorValue == LINE)
+		returnVal = 1;
 	
 	sensorValue = lfLineDetected(LF_INNER_R);	//Look for line on inner right sensor
 	if (sensorValue != NO_CHANGE)				//If this sensor has changed state
-	{
-		returnVal = 1;
 		lf.innerRight = sensorValue;			//Update line follower data structure with new data
-	}
+	if(sensorValue == LINE)
+		returnVal = 1;
+		
 	return returnVal;
 #endif
 }
@@ -406,7 +414,7 @@ uint8_t scanBrightestLightSource(float *brightestHeading, uint16_t sweepAngle,
 	return 1;
 }
 
-
+//TODO:Header
 float scanBrightestLightSourceProx(void)
 {
 	uint16_t sensor[6];
