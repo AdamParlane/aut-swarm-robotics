@@ -53,8 +53,8 @@ int get_ms(uint32_t *timestamp);
 /*
 * Function: int delay_ms(uint32_t period_ms)
 *
-* Required by the IMU drivers (hence naming convention). Halts execution for desired number of
-* milliseconds.
+* Halts execution for desired number of milliseconds.
+* Required by the IMU drivers (hence naming convention).
 *
 * Inputs:
 * period_ms is the number of milliseconds to wait
@@ -66,18 +66,16 @@ int get_ms(uint32_t *timestamp);
 int delay_ms(uint32_t period_ms);
 
 /*
-* Function: void TC0_Handler()
+* Function: void TC1_Handler()
 *
-* Interrupt handler for Timer0. Is used to help implement get_ms() and delay_ms() functions
-* required by the IMU driver. Is also used to trigger reading the IMU's FIFO buffer (until
-* hardware interrupts are implemented). The only interrupt on Timer0 is on Register C compare,
-* which will trigger an interrupt once every millisecond
+* Timer Counter 1 interrupt handler for get_ms, delay_ms and other various timing requirements
+* Triggered every 1ms
 *
 * Inputs:
 * none
 *
 * Returns:
-* Increments systemTimestamp once every millisecond.
+* None
 *
 */
 void TC1_Handler();
