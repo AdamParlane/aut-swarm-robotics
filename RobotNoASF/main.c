@@ -70,7 +70,7 @@ int main(void)
 										//on is 0 degrees heading.
 	struct transmitDataStructure transmitMessage;
 	
-	robotState = DOCKING;
+	robotState = IDLE;
 	
 	while(1)
 	{
