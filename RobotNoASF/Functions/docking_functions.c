@@ -61,38 +61,20 @@ uint8_t dfDockRobot(struct Position *imuData)
 	switch(dockingState)
 	{
 		case START:
-//			rotateToHeading(0, imuData);
-			led1Off;
-			led2Off;
-			led3Off;
-			//returnVal = updateLineSensorStates();
+			pioLedNumber(0);
 			if(!dfScanBrightestLightSource(&bHeading, 359, imuData))
 				dockingState = FACE_BRIGHTEST;
 		break;
 		
 		case FACE_BRIGHTEST:
-			led1On;
-			led2Off;
-			led3Off;
+			pioLedNumber(1);
 			if(!mfRotateToHeading(bHeading, imuData))
 				dockingState = MOVE_FORWARD;
 		break; 
 		
 		case MOVE_FORWARD:
-			led1On;
-			led2On;
-			led3Off;
-			moveRobot(0, 50);
-			//frontLeftRevHi;
-			//frontLeftFwdLo;
-			//frontRightRevLo;
-			//frontRightFwdHi;
-			//frontRightPwm = 30;			//Left Front
-			//rearPwm = 45;			//Right front
-			//
-			//rearRevLo;
-			//rearFwdLo;
-			//frontLeftPwm = 0;			//rear
+			pioLedNumber(2);
+			mfMoveToHeading(bHeading, 35, imuData);
 			if(!fdelay_ms(3000))			//After five seconds, look for LEDs again
 			{
 				stopRobot();
@@ -106,26 +88,19 @@ uint8_t dfDockRobot(struct Position *imuData)
 		break;
 		
 		case RESCAN_BRIGHTEST:
-			led1Off;
-			led2Off;
-			led3On;
+			pioLedNumber(3);
 			//Only look in front, because we should still be roughly in the right direction
 			if(!dfScanBrightestLightSource(&bHeading, 180, imuData))
 				dockingState = FACE_BRIGHTEST;
 		break;
 		
 		case FOLLOW_LINE:
-			led1On;
-			led2Off;
-			led3On;		
-			dfFollowLine();
+			pioLedNumber(4);	
+			dfFollowLine(35, imuData);
 		break;
 		
 		case FINISHED:
-			led1On;
-			led2On;
-			led3On;
-			//mfTrackLight(imuData);
+			pioLedNumber(7);
 			return 0;
 		break;
 	}
@@ -290,14 +265,11 @@ int8_t dfGetLineDirection(void)
 * Would be better with the wiggleForward function once its working.
 *
 */
-void dfFollowLine(void)
+void dfFollowLine(uint8_t speed, struct Position *imuData)
 {
 #if defined ROBOT_TARGET_V2
 	int8_t lineDirection = dfGetLineDirection();
-	if(lineDirection != 0)				//Turn robot to face line
-		rotateRobot(lineDirection*10);
-	else
-		moveRobot(0, 35);				//Go straight
+	mfMoveToHeading(imuData->imuYaw + 15*lineDirection, speed, imuData);
 #endif
 }
 

@@ -94,7 +94,7 @@ int8_t dfGetLineDirection(void);
 * none
 *
 */
-void dfFollowLine(void);
+void dfFollowLine(uint8_t speed, struct Position *imuData);
 
 /*
 * Function:
