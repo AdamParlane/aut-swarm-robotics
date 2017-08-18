@@ -527,18 +527,20 @@ void PWMSpeedTest(void)
 */
 uint8_t steerRobot(uint8_t speed, int8_t turnRatio)
 {
+	//Make sure parameters are in range and correct if necessary
 	if(speed > 100)
 		speed = 100;
-		
 	if(turnRatio > 100)
 		turnRatio = 100;
 	if(turnRatio < -100)
 		turnRatio = -100;
-		
+	
+	//Calculate speed ratios	
 	float rotationalSpeed = speed*(turnRatio/100.0);
 	float forwardSpeed = speed - (abs(rotationalSpeed));
 	
-	
+	//Apply speeds and directions to motors
+	//Only front motors provide forward drive. Rear motor is for rotation only.
 	frontRightMotorDrive((int8_t)(-forwardSpeed + rotationalSpeed));
 	frontLeftMotorDrive((int8_t)(forwardSpeed + rotationalSpeed));
 	rearMotorDrive((int8_t)rotationalSpeed);
