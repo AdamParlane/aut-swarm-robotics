@@ -130,6 +130,13 @@ int main(void)
 			case IDLE:
 				//idle
 				stopRobot();
+				if(!fdelay_ms(500))					//Blink LED in charge mode
+				{
+					led1Tog;
+					led2Tog;
+					led3Tog;	
+				}
+				
 			break;
 		}
 		

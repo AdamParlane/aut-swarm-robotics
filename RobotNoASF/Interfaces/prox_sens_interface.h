@@ -84,6 +84,7 @@
 //Distance Threshold values
 #define PS_IN_RANGE		0x0070	//Should be prox value when an object is around 100mm away. Value
 								//increases as object draws closer. Max is 0x03FF.
+#define PS_CLOSEST		0x03FF	//Value from sensor when item is close up
 
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*
