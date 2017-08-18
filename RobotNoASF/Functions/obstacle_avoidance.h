@@ -28,7 +28,7 @@
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
 void decision(void);
 void scanProximity(void);//uint16_t proximity[6]);
-
+void dodgeObstacle(signed int aim);
 uint16_t proximity[6];
 
 #endif /* OBSTACLE_AVOIDANCE_H_ */

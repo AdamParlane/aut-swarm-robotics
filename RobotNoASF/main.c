@@ -27,7 +27,7 @@ uint8_t SBtest, SBtest1;
 uint16_t DBtest, DBtest1, DBtest2;
 uint16_t battVoltage;					//Stores battery voltage on start up
 extern struct Position robotPosition;	//Passed to docking functions and test functions
-
+signed int aim;
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*
 * Function:
@@ -58,7 +58,8 @@ int main(void)
 	struct frame_info frame; //Xbee API frame
 	struct message_info message; //Incoming message with XBee metadata removed
 	struct transmitDataStructure transmitMessage; //struct to transmit to PC
-	
+	moveRobot(0, 30);
+	aim = 0;
 	mainRobotState = IDLE;
 	//moveRobot(0, 40);	
 	while(1)
@@ -129,11 +130,10 @@ int main(void)
 			
 			case IDLE:
 				//idle
-				decision();
-				stopRobot();
-				if(!fdelay_ms(500))					//Blink LED in charge mode
+				dodgeObstacle(aim);
+				//stopRobot();
+				if(!fdelay_ms(500))					//Blink LED in Idle mode
 				{
-					led1Tog;
 					led2Tog;
 					led3Tog;	
 				}

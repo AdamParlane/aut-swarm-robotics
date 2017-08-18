@@ -66,9 +66,120 @@ void decision(void)
 void scanProximity(void)//uint16_t proximity[6])
 {
 	uint8_t index = 0;
-	for(uint8_t i = MUX_PROXSENS_A; i < MUX_PROXSENS_B; i++)
+	for(uint16_t i = MUX_PROXSENS_A; i <= MUX_PROXSENS_B; i++)
 	{
 		proximity[index] = proxSensRead(i);
 		index++;
-	}			
+		
+		uint16_t adam = proxSensRead(MUX_PROXSENS_A);
+		uint16_t matt = adam;	
+	}		
+}
+
+void dodgeObstacle(signed int aim)
+{
+	//static uint16_t previousProximity[6];
+	//memcpy(previousProximity, proximity, 6);
+	scanProximity();//proximity);
+
+	if( (aim > 330) && (aim < 30))//A
+	{
+		if(proximity[0] > OBSTACLE_THRESHOLD )//Prox A obstacle
+		{
+			if(proximity[1] > proximity[5])
+			{
+				aim -= 60;
+				moveRobot(aim, 40);
+			}
+			else if (proximity[1] < proximity[5])
+			{
+				aim += 60;
+				moveRobot(aim, 40);//move left
+			}
+		}
+	}
+	if( (aim > 30) && (aim < 90))//F
+	{
+		if(proximity[1] > OBSTACLE_THRESHOLD )//Prox F obstacle
+		{
+			if(proximity[2] > proximity[0])
+			{
+				aim -= 60;
+				moveRobot(aim, 40);
+			}
+			else if (proximity[2] < proximity[0])
+			{
+				aim += 60;
+				moveRobot(aim, 40);//move left
+			}
+		}
+	}
+	if( (aim > 90) && (aim < 150))//E
+	{
+		if(proximity[2] > OBSTACLE_THRESHOLD )//Prox E obstacle
+		{
+			if(proximity[3] > proximity[1])
+			{
+				aim -= 60;
+				moveRobot(aim, 40);
+			}
+			else if (proximity[3] < proximity[1])
+			{
+				aim += 60;
+				moveRobot(aim, 40);//move left
+			}
+		}
+	}
+	if( (aim > 150) && (aim < 210))//D
+	{
+		if(proximity[3] > OBSTACLE_THRESHOLD )//Prox D obstacle
+		{
+			if(proximity[4] > proximity[2])
+			{
+				aim -= 60;
+				moveRobot(aim, 40);
+			}
+			else if (proximity[4] < proximity[2])
+			{
+				aim += 60;
+				moveRobot(aim, 40);//move left
+			}
+		}
+	}
+	if( (aim > 210) && (aim < 270))//C
+	{
+		if(proximity[4] > OBSTACLE_THRESHOLD )//Prox C obstacle
+		{
+			if(proximity[5] > proximity[3])
+			{
+				aim -= 60;
+				moveRobot(aim, 40);
+			}
+			else if (proximity[5] < proximity[3])
+			{
+				aim += 60;
+				moveRobot(aim, 40);//move left
+			}
+		}
+	}
+	if( (aim > 270) && (aim < 360))//B
+	{
+		if(proximity[5] > OBSTACLE_THRESHOLD )//Prox B obstacle
+		{
+			if(proximity[0] > proximity[4])
+			{
+				aim -= 60;
+				moveRobot(aim, 40);
+			}
+			else if (proximity[0] < proximity[4])
+			{
+				aim += 60;
+				moveRobot(aim, 40);//move left
+			}
+		}
+	}
+	if(aim > 360)
+		aim -= 360;	
+	if(aim < 0)
+		aim += 360;					
 }
