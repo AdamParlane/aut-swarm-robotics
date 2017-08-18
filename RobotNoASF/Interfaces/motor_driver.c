@@ -153,7 +153,8 @@ void motorInit(void)
 * Function:
 * char rearMotorDrive(signed char speed)
 *
-* Runs motor 1 at desired speed and direction
+* Runs rear motor at desired speed and direction. Negative speed value will make robot turn to the 
+* left (CCW), whereas positive speed will make robot turn to the right (CW)
 *
 * Inputs:
 * char speed -100 - +100
@@ -170,14 +171,14 @@ void motorInit(void)
 */
 char rearMotorDrive(signed char speed)
 {
-	if(speed > 100 || speed < 100)
-		return 0;
+	if(speed > 100 || speed < -100)
+		return 1;
 	rearPwm = abs(speed);
 	if(speed > 0)		//Forwards
 		rearMotorForward;
-	else if(speed < 0)	//Reverse
+	if(speed < 0)		//Reverse
 		rearMotorReverse;
-	else
+	if(speed == 0)	
 		rearMotorStop;
 	return 0;
 }
@@ -187,7 +188,8 @@ char rearMotorDrive(signed char speed)
 * Function:
 * char frontRightMotorDrive(signed char speed)
 *
-* Runs motor 2 at desired speed and direction
+* Runs front right motor at desired speed and direction. Negative speed value will make robot turn 
+* to the left (CCW), whereas positive speed will make robot turn to the right (CW)
 *
 * Inputs:
 * char speed -100- +100
@@ -204,14 +206,14 @@ char rearMotorDrive(signed char speed)
 */
 char frontRightMotorDrive(signed char speed)
 {
-	if(speed > 100 || speed < 100)
+	if(speed > 100 || speed < -100)
 		return 1;
 	frontRightPwm = abs(speed);
 	if(speed > 0)		//Forwards
 		frontRightMotorForward;
-	else if(speed < 0)	//Reverse
+	if(speed < 0)	//Reverse
 		frontRightMotorReverse;
-	else
+	if(speed == 0)	
 		frontRightMotorStop;
 	return 0;	//Always return 0 on success, non zero on error
 }
@@ -221,7 +223,8 @@ char frontRightMotorDrive(signed char speed)
 * Function:
 * char frontLeftMotorDrive(signed char speed)
 *
-* Runs motor 3 at desired speed and direction
+* Runs front left motor at desired speed and direction. Negative speed value will make robot turn
+* to the left (CCW), whereas positive speed will make robot turn to the right (CW)
 *
 * Inputs:
 * char speed -100- +100
@@ -238,14 +241,14 @@ char frontRightMotorDrive(signed char speed)
 */
 char frontLeftMotorDrive(signed char speed)
 {
-	if(speed > 100 || speed < 100)
+	if(speed > 100 || speed < -100)
 		return 1;
 	frontLeftPwm = abs(speed);
 	if(speed > 0) //Forwards
 		frontLeftMotorForward;
-	else if(speed < 0)//Reverse
+	if(speed < 0)//Reverse
 		frontLeftMotorReverse;
-	else
+	if(speed == 0)	
 		frontLeftMotorStop;
 	return 0;
 }
@@ -496,4 +499,49 @@ void PWMSpeedTest(void)
 	frontRightPwm = 100;
 	delay_ms(5000);
 	stopRobot();
+}
+
+/*
+* Function:
+* uint8_t steerRobot(uint8_t speed, int8_t turnRatio)
+*
+* Allows robot to turn while moving forward by a percentage of the forward speed.
+*
+* Inputs:
+* uint8_t speed:
+*   A percentage of maximum speed (0-100%)
+* int8_t turnRatio:
+*   The ratio of rotation to be applied to the motion (+-%). if turnRatio is 0%, then robot just
+*   drives straight at 'speed'. -100% will have robot rotating on the spot anti-clockwise at 
+*   'speed'. 50% would be half and half driving forward with a clockwise rotational element applied.
+*
+* Returns:
+* 0 on success
+*
+* Implementation:
+* First check that speed and turnRatio are in the correct range and fix if necessary.
+* Next calculate the speed ratios for forward motion and rotational motion based on the speed and
+* turn ratio passed to the function. forwardSpeed is inversely proportional to the absolute value
+* of rotational speed. Finally, apply speeds to the motors.
+*
+*/
+uint8_t steerRobot(uint8_t speed, int8_t turnRatio)
+{
+	if(speed > 100)
+		speed = 100;
+		
+	if(turnRatio > 100)
+		turnRatio = 100;
+	if(turnRatio < -100)
+		turnRatio = -100;
+		
+	float rotationalSpeed = speed*(turnRatio/100.0);
+	float forwardSpeed = speed - (abs(rotationalSpeed));
+	
+	
+	frontRightMotorDrive((int8_t)(-forwardSpeed + rotationalSpeed));
+	frontLeftMotorDrive((int8_t)(forwardSpeed + rotationalSpeed));
+	rearMotorDrive((int8_t)rotationalSpeed);
+	
+	return 0;
 }

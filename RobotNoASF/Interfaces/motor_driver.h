@@ -32,9 +32,9 @@
 #include "../robot_setup.h"
 
 //////////////[Defines]/////////////////////////////////////////////////////////////////////////////
-//Miscellaneous
- // just changed these from 0 and 1, hopefully doesnt change anything
-
+//[[[IMPORTANT]]]
+//Forward drives the motors in a direction that gets the robot moving in a clockwise direction.
+//Reverse drives the motors in a direction that gets the robot moving in an anti-clockwise direction
 //****Motor Pins***//
 //	Robot Version 1 pin assignment
 #if defined ROBOT_TARGET_V1
@@ -128,7 +128,8 @@ void motorInit(void);
 * Function:
 * char rearMotorDrive(signed char speed)
 *
-* Runs motor 1 at desired speed and direction
+* Runs rear motor at desired speed and direction. Negative speed value will make robot turn to the
+* left (CCW), whereas positive speed will make robot turn to the right (CW)
 *
 * Inputs:
 * char speed -100- +100
@@ -145,7 +146,8 @@ char rearMotorDrive(signed char speed);
 * Function:
 * char frontRightMotorDrive(signed char speed)
 *
-* Runs motor 2 at desired speed and direction
+* Runs front right motor at desired speed and direction. Negative speed value will make robot turn
+* to the left (CCW), whereas positive speed will make robot turn to the right (CW)
 *
 * Inputs:
 * char speed -100- +100
@@ -162,7 +164,8 @@ char frontRightMotorDrive(signed char speed);
 * Function:
 * char frontLeftMotorDrive(signed char speed)
 *
-* Runs motor 3 at desired speed and direction
+* Runs front left motor at desired speed and direction. Negative speed value will make robot turn
+* to the left (CCW), whereas positive speed will make robot turn to the right (CW)
 *
 * Inputs:
 * char speed -100- +100
@@ -210,31 +213,6 @@ void moveRobot(signed int direction, unsigned char speed);
 *
 */
 void rotateRobot(signed char speed);
-
-/*
-* Function:
-* void wiggleForward(uint8_t forwardSpeed, uint8_t lateralSpeed, uint8_t direction)
-*
-* Will move robot forward at desired speed forward, but will also allow front motor to be turned on
-* so that direction of travel will become an arc to the left or right. Allows for line following and
-* docking.
-*
-* Inputs:
-* uint8_t forwardSpeed:
-*   Percentage of full speed that the robot will move forward at (0-100)
-*
-* uint8_t lateralSpeed:
-*   Percentage of full speed that the lateral wheel will be allowed to spin at to steer robot left
-*   or right. (0-100)
-*
-* uint8_t direction:
-*   Direction that robot will rotate towards on its arc (CW and CCW)
-*
-* Returns:
-* none
-*
-*/
-void wiggleForward(uint8_t forwardSpeed, uint8_t lateralSpeed, uint8_t direction);
 
 /*
 * Function:
@@ -287,5 +265,25 @@ void PWMSpeedTest(void);
 *
 */
 void setTestMotors(uint8_t motorData[]);
+
+/*
+* Function:
+* uint8_t steerRobot(uint8_t speed, int8_t turnRatio)
+*
+* Allows robot to turn while moving forward.
+*
+* Inputs:
+* uint8_t speed:
+*   A percentage of maximum speed (0-100%)
+* int8_t turnRatio:
+*   The ratio of rotation to be applied to the motion (+-%). if turnRatio is 0%, then robot just
+*   drives straight at 'speed'. -100% will have robot rotating on the spot anti-clockwise at
+*   'speed'. 50% would be half and half driving forward with a clockwise rotational element applied.
+*
+* Returns:
+* 0 on success
+*
+*/
+uint8_t steerRobot(uint8_t speed, int8_t turnRatio);
 
 #endif /* MOTOR_DRIVER_H_ */
