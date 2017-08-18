@@ -37,24 +37,20 @@
 * error
 *
 * Implementation:
-* pErr and iErr store the proportional and integral error values. They are declared as static as
-* they need to retain their values between function calls. pErrOld and dErr are the old
-* proportional error value and the delta or change in error value. motorSpeed stores the duty cycle
-* (%) that will be sent to the rotateRobot() function.
-* First, the function checks that heading is within the required range (between -180 and 180 
-* degrees). If it is out of range, the number is scaled down by a while function until the heading
-* is in range. This works because the heading is periodic ie, 540 deg = 180 deg and so on.
-* Next, the proportional (or signed), integral and derivative (or delta) error values are 
-* calculated. The resulting error values are multiplied by their respective constants and summed.
-* The result of this is the corrective speed and direction to be applied to the motors. The
-* absolute value of this is stored in motorSpeed and is then checked to make sure that its value
-* is no greater than 100 (the maximum speed of the motors). After that, the proportional error is
-* checked to see if it is with 1 degree of the desired heading. If it is, AND the motorSpeed is less
-* than 15%, then this is deemed close enough to end seeking the desired heading. The static error
-* variables are cleared, the robot is stopped and the function exits with a 0 value. If the prior
-* conditions are not met, then pErr is checked for signedness (which determines which direction
-* the motors should spin) and rotates the robot in the speed and direction necessary to correct the
-* error.
+* pErr stores the proportional error value. It is declared as static as they need to retain their 
+* values between function calls. motorSpeed stores the duty cycle (%) that will be sent to the 
+* rotateRobot() function. First, the function checks that heading is within the required range 
+* (between -180 and 180 degrees). If it is out of range, the number is scaled down by imuWrapAngle.
+* Next, the proportional (or signed) error value is calculated. It is simply the difference between 
+* the desired heading and the current actual heading. The resulting error value is multiplied by a
+* tuning constant and summed. The result of this is the corrective speed and direction to be applied
+* to the motors. The absolute value of this is stored in motorSpeed and is then checked to make sure
+* that its value is no greater than 100 (the maximum speed of the motors). After that, the
+* proportional error is checked to see if it is with 0.5 degrees of the desired heading. If it is, 
+* and delta yaw is less than 0.5dps, then this is deemed close enough to end seeking the desired
+* heading. The static error variable is cleared, the robot is stopped and the function exits with a
+* 0 value. If the prior conditions are not met, then the motorSpeed value is passed to the
+* rotateRobot function in order to correct the error.
 *
 * Improvements:
 * the PID controller functionality might be able to be moved to its own function to be used by
@@ -66,7 +62,7 @@
 float mfRotateToHeading(float heading, struct Position *imuData)
 {
 	static float pErr;				//Proportional (signed) error
-	uint32_t motorSpeed;			//Stores motorSpeed calculated by PID sum
+	int32_t motorSpeed;				//Stores motorSpeed calculated by PID sum
 	
 	//Make sure heading is in range (-180 to 180)
 	heading = imuWrapAngle(heading);
@@ -88,8 +84,7 @@ float mfRotateToHeading(float heading, struct Position *imuData)
 		motorSpeed = 100;
 	if(motorSpeed < -100)
 		motorSpeed = -100;
-	
-		
+
 	//If error is less than 0.5 deg and delta yaw is less than 0.5 degrees per second then we can
 	//stop
 	if((abs(pErr) < 0.5) && (abs(imuData->imuGyroZ) < 0.5))	
@@ -102,6 +97,83 @@ float mfRotateToHeading(float heading, struct Position *imuData)
 		rotateRobot(motorSpeed);
 		return pErr;	//If not, return pErr
 	}
+}
+
+/*
+* Function:
+* float mfMoveToHeading(float heading, uint8_t speed, struct Position *imuData)
+*
+* Will rotate and then move the robot along the given heading at the given speed.
+*
+* Inputs:
+* float heading:
+*   The heading in degrees that we wish the robot to face (-180 < heading < 180)
+* uint8_t speed:
+*   Absolute speed as a percentage of maximum speed (0-100)
+* struct Position *imuData:
+*   A pointer to the robotPosition structure so we can get imuYaw
+*
+* Returns:
+* Will return 0 if the robot moving along the desired heading, otherwise will return the signed
+* error
+*
+* Implementation:
+* Works similarly to mfRotateToHeading() except that robot will move along heading at the speed
+* specified in the parameters. Direction of travel is controlled by closed loop system with the IMU.
+* pErr stores the proportional error value. It is declared as static as they need to retain their
+* values between function calls. motorSpeed stores the duty cycle (%) that will be sent to the
+* rotateRobot() function. First, the function checks that heading is within the required range
+* (between -180 and 180 degrees). If it is out of range, the number is scaled down by imuWrapAngle.
+* Next, the proportional (or signed) error value is calculated. It is simply the difference between
+* the desired heading and the current actual heading. The resulting error value is multiplied by a
+* tuning constant and summed. The result of this is the corrective speed and direction to be applied
+* to the motors. The absolute value of this is stored in motorSpeed and is then checked to make sure
+* that its value is no greater than 100 (the maximum speed of the motors). After that, the
+* proportional error is checked to see if it is with 0.5 degrees of the desired heading. If it is,
+* and delta yaw is less than 0.5dps, then this is deemed close enough to end seeking the desired
+* heading. The static error variable is cleared, the robot is stopped and the function exits with a
+* 0 value. If the prior conditions are not met, then the motorSpeed value is passed to the
+* rotateRobot function in order to correct the error.
+*
+*/
+float mfMoveToHeading(float heading, uint8_t speed, struct Position *imuData)
+{
+	static float pErr;				//Proportional (signed) error
+	int32_t rotationSpeed = 0;		//Stores turn ratio calculated by PID sum
+	
+	//Make sure heading is in range (-180 to 180)
+	heading = imuWrapAngle(heading);
+	
+	//Make sure speed is in range
+	if(speed > 100)
+		speed = 100;
+		
+	//Calculate proportional error values
+	pErr = heading - imuData->imuYaw;				//Signed Error
+	
+	//Force the P controller to always take the shortest path to the destination.
+	//For example if the robot was currently facing at -120 degrees and the target was 130 degrees,
+	//instead of going right around from -120 to 130, it will go to -180 and down to 130.
+	if(pErr > 180)
+		pErr -= 360;
+	if(pErr < -180)
+		pErr += 360;
+	
+	//If motorSpeed ends up being out of range, then dial it back
+	rotationSpeed = MTH_KP*pErr;
+	if(rotationSpeed > 100)
+		rotationSpeed = 100;
+	if(rotationSpeed < -100)
+		rotationSpeed = -100;
+	
+	steerRobot(speed, rotationSpeed);
+	
+	//If error is less than 0.5 deg and delta yaw is less than 0.5 degrees per second then we can
+	//return 0 (ie robot is more or less on correct heading)
+	if((abs(pErr) < 0.5) && (abs(imuData->imuGyroZ) < 0.5))
+		return 0;
+	else
+		return pErr;	//If not, return pErr	
 }
 
 float mfMoveForwardByDistance(uint16_t distance, struct Position *posData)

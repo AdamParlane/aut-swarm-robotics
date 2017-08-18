@@ -28,11 +28,14 @@
 //PID constants for mfRotateToHeading
 #define RTH_KP	4.0
 
+//PID constants for mfMoveToHeading
+#define MTH_KP	4.0
+
 //PID constants for mfTrackLight
 #define TL_KP	10.0
 #define TL_KI	0.001
 
-//PID constants for trackLightprox
+//PID constants for mfTrackLightprox
 #define TL_KP	10.0
 #define TL_KI	0.001
 
@@ -55,6 +58,27 @@
 *
 */
 float mfRotateToHeading(float heading, struct Position *imuData);
+
+/*
+* Function:
+* float mfMoveToHeading(float heading, uint8_t speed, struct Position *imuData)
+*
+* Will rotate and then move the robot along the given heading at the given speed.
+*
+* Inputs:
+* float heading:
+*   The heading in degrees that we wish the robot to face (-180 < heading < 180)
+* uint8_t speed:
+*   Absolute speed as a percentage of maximum speed (0-100)
+* struct Position *imuData:
+*   A pointer to the robotPosition structure so we can get imuYaw
+*
+* Returns:
+* Will return 0 if the robot moving along the desired heading, otherwise will return the signed
+* error
+*
+*/
+float mfMoveToHeading(float heading, uint8_t speed, struct Position *imuData);
 
 float moveForwardByDistance(uint16_t distance, struct Position *posData);
 
