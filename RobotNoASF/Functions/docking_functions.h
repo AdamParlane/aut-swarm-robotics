@@ -16,7 +16,7 @@
 * void dfDockRobot(void)
 * void dfUpdateLineSensorStates(void)
 * int8_t dfGetLineDirection(void)
-* void dfFollowLine(void)
+* uint8_t dfFollowLine(void)
 * uint8_t dfScanBrightestLightSource(int16_t *brightestHeading)
 *
 */
@@ -83,7 +83,7 @@ int8_t dfGetLineDirection(void);
 
 /*
 * Function:
-* void dfFollowLine(void)
+* uint8_t dfFollowLine(void)
 *
 * A basic function to follow a line that seems to work ok
 *
@@ -91,10 +91,10 @@ int8_t dfGetLineDirection(void);
 * none
 *
 * Returns:
-* none
+* 0 when finished, otherwise current state
 *
 */
-void dfFollowLine(uint8_t speed, struct Position *imuData);
+uint8_t dfFollowLine(uint8_t speed, struct Position *imuData);
 
 /*
 * Function:

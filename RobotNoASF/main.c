@@ -58,7 +58,8 @@ int main(void)
 	struct frame_info frame; //Xbee API frame
 	struct message_info message; //Incoming message with XBee metadata removed
 	struct transmitDataStructure transmitMessage; //struct to transmit to PC
-	mainRobotState = IDLE;
+	
+	mainRobotState = DOCKING;
 	
 	while(1)
 	{
