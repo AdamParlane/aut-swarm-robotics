@@ -16,7 +16,7 @@
 * void dfDockRobot(void)
 * void dfUpdateLineSensorStates(void)
 * int8_t dfGetLineDirection(void)
-* void dfFollowLine(void)
+* uint8_t dfFollowLine(void)
 * uint8_t dfScanBrightestLightSource(int16_t *brightestHeading)
 *
 */
@@ -60,15 +60,21 @@ uint8_t dfDockRobot(struct Position *imuData)
 	switch(dockingState)
 	{
 		case START:
-			pioLedNumber(0);
+			//pioLedNumber(0);
 			if(!dfScanBrightestLightSource(&bHeading, 359, imuData))
+				dockingState = FACE_BRIGHTEST;
+		break;
+		
+		case FACE_BRIGHTEST:
+			if(!mfRotateToHeading(bHeading, imuData))
 				dockingState = MOVE_FORWARD;
 		break;
 		
 		case MOVE_FORWARD:
-			pioLedNumber(2);
-			mfMoveToHeading(bHeading, 40, imuData);
-			if(!fdelay_ms(4000))			//After five seconds, look for LEDs again
+			//pioLedNumber(2);
+			//mfMoveToHeading(bHeading, 40, imuData);
+			mfTrackLight(imuData);
+			if(!fdelay_ms(3700))			//After five seconds, look for LEDs again
 			{
 				stopRobot();
 				dockingState= RESCAN_BRIGHTEST;
@@ -81,19 +87,20 @@ uint8_t dfDockRobot(struct Position *imuData)
 		break;
 		
 		case RESCAN_BRIGHTEST:
-			pioLedNumber(3);
+			//pioLedNumber(3);
 			//Only look in front, because we should still be roughly in the right direction
 			if(!dfScanBrightestLightSource(&bHeading, 180, imuData))
-				dockingState = MOVE_FORWARD;
+				dockingState = FACE_BRIGHTEST;
 		break;
 		
 		case FOLLOW_LINE:
-			pioLedNumber(4);	
-			dfFollowLine(35, imuData);
+			//pioLedNumber(4);
+			if(!dfFollowLine(35, imuData))
+				dockingState = FINISHED;
 		break;
 		
 		case FINISHED:
-			pioLedNumber(7);
+			//pioLedNumber(7);
 			return 0;
 		break;
 	}
@@ -211,7 +218,7 @@ int8_t dfGetLineDirection(void)
 	switch(sensorStates)
 	{
 		case 0x0:
-			return 0;		//Straight
+			return 0;		//Straight, no line
 		case 0x8:
 			return -3;		//Move left by factor 3
 		case 0xC:
@@ -219,7 +226,7 @@ int8_t dfGetLineDirection(void)
 		case 0xE:
 			return -1;		//Move left by factor 1
 		case 0xF:
-			return 0;		//Straight
+			return 0;		//Straight, line
 		case 0x7:
 			return 1;		//Move right by factor 1
 		case 0x3:
@@ -231,7 +238,7 @@ int8_t dfGetLineDirection(void)
 		case 0x4:
 			return -1;		//Move left by factor 1
 		case 0x6:
-			return 0;		//Straight
+			return 0;		//Straight, line
 	}
 #endif
 	return 0;
@@ -239,7 +246,7 @@ int8_t dfGetLineDirection(void)
 
 /*
 * Function:
-* void dfFollowLine(void)
+* uint8_t dfFollowLine(void)
 *
 * A basic function to follow a line
 *
@@ -250,9 +257,10 @@ int8_t dfGetLineDirection(void)
 *   Pointer to the global robotPosition data structure
 *
 * Returns:
-* none
+* 0 when finished, otherwise current state
 *
 * Implementation:
+* TODO:Update implementation description here -Matt
 * Get the direction of the detected line. Multiply this by 15 and apply as a corrective heading
 * to mfMoveToHeading.
 *
@@ -260,11 +268,65 @@ int8_t dfGetLineDirection(void)
 * Need to find a way to make it smoother.
 *
 */
-void dfFollowLine(uint8_t speed, struct Position *imuData)
+uint8_t dfFollowLine(uint8_t speed, struct Position *imuData)
 {
 #if defined ROBOT_TARGET_V2
+	enum {START, FIRST_CONTACT, ALIGN, FOLLOW, FINISH};
 	int8_t lineDirection = dfGetLineDirection();
-	mfMoveToHeading(imuData->imuYaw + 15*lineDirection, speed, imuData);
+	uint16_t forwardProxSens = proxSensRead(MUX_PROXSENS_A);	//Will use obstacle data structure once
+															//implemented.
+	static uint8_t lineFollowerState = FIRST_CONTACT;
+	static float lineHeading = 0;
+	
+	switch(lineFollowerState)
+	{
+		case START:
+			lineFollowerState = FIRST_CONTACT;
+		break;
+		
+		case FIRST_CONTACT:
+			//pioLedNumber(1);
+			if(!lineDirection)
+				lineFollowerState = FOLLOW;
+			else 
+				steerRobot(25, 0);
+		break;
+		
+		case ALIGN:
+			//pioLedNumber(2);
+			if(lineDirection)
+			{
+				if(lineDirection < 0)
+					rotateRobot(-10 + lineDirection*2);
+				if(lineDirection > 0)
+					rotateRobot(10 + lineDirection*2);
+			}
+			else 
+			{
+				lineHeading = imuData->imuYaw;
+				lineFollowerState = FOLLOW;
+			}
+		break;
+		
+		case FOLLOW:
+			//pioLedNumber(3);
+			if(abs(lineDirection) < 2)
+				mfMoveToHeading(lineHeading, speed - (forwardProxSens*speed/1023) + 5, imuData);
+			else
+				lineFollowerState = ALIGN;
+			if(forwardProxSens >= PS_CLOSEST)
+				lineFollowerState = FINISH;
+		break;
+		
+		case FINISH:
+			//pioLedNumber(7);
+			lineFollowerState = START;
+		break;
+	}
+	return lineFollowerState;	
+#endif
+#if defined ROBOT_TARGET_V1
+	return 0;
 #endif
 }
 

@@ -58,6 +58,7 @@ int main(void)
 	struct frame_info frame; //Xbee API frame
 	struct message_info message; //Incoming message with XBee metadata removed
 	struct transmitDataStructure transmitMessage; //struct to transmit to PC
+	
 	mainRobotState = IDLE;
 	
 	while(1)
@@ -129,6 +130,12 @@ int main(void)
 			case IDLE:
 				//idle
 				stopRobot();
+				if(!fdelay_ms(500))					//Blink LED in charge mode
+				{
+					led1Tog;
+					led2Tog;
+					led3Tog;	
+				}
 			break;
 		}
 		

@@ -300,8 +300,7 @@ float mfTrackLight(struct Position *imuData)
 		iErr = 0;
 		return 0;
 	} else {
-		mfRotateToHeading(imuData->imuYaw + dHeading, imuData);
-		led1Off;
+		mfMoveToHeading(imuData->imuYaw + dHeading, 40, imuData);
 		return pErr;	//If not, return pErr
 	}
 }
