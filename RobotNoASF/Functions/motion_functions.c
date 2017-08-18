@@ -176,7 +176,41 @@ float mfMoveToHeading(float heading, uint8_t speed, struct Position *imuData)
 		return pErr;	//If not, return pErr	
 }
 
-float mfMoveForwardByDistance(uint16_t distance, struct Position *posData)
+/*
+* Function:
+* float mfMoveToHeadingByDistance(float heading, uint8_t speed, uint32_t distance,
+*                                  struct Position *posData)
+*
+* Will allow robot to move along the given heading a given distance.
+*
+* Inputs:
+* float heading:
+*   Heading to move along (-180 to 180 degrees)
+* uint8_t speed:
+*   Percentage of max speed to move at (0-100%)
+* uint32_t distance:
+*   Distance to travel before stopping.
+* struct Position *posData:
+* Pointer to the robotPosition global structure.
+*
+* Returns:
+* 0 when maneuver is complete, otherwise returns distance remaining before maneuver complete.
+*
+* Implementation:
+* TODO:[[Currently not working as we don't seem able to retrieve data from the mouse yet.]]
+* This function consists of a state machine. In the start state, the robot rotates to face the 
+* correct heading. When it is facing the right way it moves to the move state. This is so the robot
+* doesn't start measuring distance while the robot is rotating as this will through off the final
+* distance traveled. In the move state, the robot moves along the given heading, summing the delta
+* Y values from the mouse sensor to track the total distance traveled. When the traveled distance is
+* found to be greater than the desired distance, then move to the stop state. In the stop state,
+* the robot stops the motors and returns a 0 value. Also, the distance variable is reset to 0 and
+* the function state reset to start, ready for the next call. If the function hasn't moved the
+* desired distance then the function returns the distance remaining to be traveled.
+*
+*/
+float mfMoveToHeadingByDistance(float heading, uint8_t speed, uint32_t distance,
+								struct Position *posData)
 {
 	enum {START, MOVING, STOP};
 	static uint8_t movingState = START;
@@ -185,31 +219,33 @@ float mfMoveForwardByDistance(uint16_t distance, struct Position *posData)
 	switch(movingState)
 	{
 		case START:
-			movingState = MOVING;
-			moveRobot(0, 30);
+			if(!mfRotateToHeading(heading, &robotPosition))//Face the right direction
+				movingState = MOVING;
 		break;
 		
 		case MOVING:
-			distanceTravelled += posData->opticalDY;
-			if(distanceTravelled > distance)
-				movingState = STOP;
+			mfMoveToHeading(heading, speed, posData);
+			distanceTravelled += posData->opticalDY;//Once we are facing the right direction we can
+													//start keeping track of the distance traveled.
+			if(distanceTravelled > distance)		//If we have gone the distance
+				movingState = STOP;					//Time to stop.
 		break;
 						
 		case STOP:
-			stopRobot();
-			distanceTravelled = 0;
-			movingState = START;
-			return 0;
+			stopRobot();							//Stop robot
+			distanceTravelled = 0;					//Reset static distance variable
+			movingState = START;					//Reset function state.
+			return 0;								//Indicate that maneuver is complete
 		break;
 	}
-	return distance - distanceTravelled;
+	return distance - distanceTravelled;	//If not complete return how far we have to go.
 }
 
 /*
 * Function:
 * float mfTrackLight(struct Position *imuData)
 *
-* Robot while attempt to aim itself at a light source
+* Robot will attempt to aim itself at a light source using colour sensors
 *
 * Inputs:
 * struct Position *imuData:
@@ -252,7 +288,6 @@ float mfTrackLight(struct Position *imuData)
 	//stop
 	if((abs(dHeading) < 0.5) && (abs(imuData->imuGyroZ) < 0.5))
 	{
-		led1On;
 		stopRobot();
 		pErr = 0;			//Clear the static vars so they don't interfere next time we call this
 							//function
@@ -265,6 +300,28 @@ float mfTrackLight(struct Position *imuData)
 	}
 }
 
+/*
+* Function:
+* float mfTrackLightProx(struct Position *imuData)
+*
+* Function to track a light source using the proximity sensors.
+*
+* Inputs:
+* struct Position *imuData:
+*   Pointer to the global robotPosition data structure.
+*
+* Returns:
+* 0 if facing light source, otherwise will return heading error value
+*
+* Implementation:
+* Works similarly to mfRotateToHeading except that a difference between the light sensors
+* is used for feedback. This generates a heading delta that can be applied to the current heading
+* by the mfRotateToHeading() function which tries to correct the imbalance between the sensors.
+*
+* Improvements:
+* TODO:Switching the prox sensors to ambient mode makes the IMU bug out. No solution yet.
+*
+*/
 float mfTrackLightProx(struct Position *imuData)
 {
 	static float pErr;			//Proportional error
