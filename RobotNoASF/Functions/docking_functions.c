@@ -83,16 +83,16 @@ uint8_t dfDockRobot(struct Position *imuData)
 			led2On;
 			led3Off;
 			moveRobot(0, 50);
-			//RIN_3_H;
-			//FIN_3_L;
-			//RIN_2_L;
-			//FIN_2_H;
-			//REG_PWM_CUPD2 = 30;			//Left Front
-			//REG_PWM_CUPD3 = 45;			//Right front
+			//frontLeftRevHi;
+			//frontLeftFwdLo;
+			//frontRightRevLo;
+			//frontRightFwdHi;
+			//frontRightPwm = 30;			//Left Front
+			//rearPwm = 45;			//Right front
 			//
-			//RIN_1_L;
-			//FIN_1_L;
-			//REG_PWM_CUPD1 = 0;			//rear
+			//rearRevLo;
+			//rearFwdLo;
+			//frontLeftPwm = 0;			//rear
 			if(!fdelay_ms(3000))			//After five seconds, look for LEDs again
 			{
 				stopRobot();
@@ -118,7 +118,7 @@ uint8_t dfDockRobot(struct Position *imuData)
 			led1On;
 			led2Off;
 			led3On;		
-			followLine();
+			dfFollowLine();
 		break;
 		
 		case FINISHED:

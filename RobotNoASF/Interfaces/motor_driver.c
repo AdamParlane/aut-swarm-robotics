@@ -20,16 +20,14 @@
 * VREF uses PWM with duty cycle 0-100(%) to set the speed of the motor
 *
 * Functions:
-* void motor_init(void);
+* void motorInit(void);
+* char rearMotorDrive(signed char speed)
+* char frontRightMotorDrive(signed char speed)
+* char frontLeftMotorDrive(signed char speed)
 * void moveRobot(float direction, unsigned char speed);
-* void wiggleForward(uint8_t forwardSpeed, uint8_t lateralSpeed, uint8_t direction)
 * void stopRobot(void);
 * void rotateRobot(signed char speed);
-* void dfDockRobot(void);
 * void setTestMotors(uint8_t motorData[]);
-* char motor1Drive(signed char speed)
-* char motor2Drive(signed char speed)
-* char motor3Drive(signed char speed)
 *
 */
  
@@ -39,7 +37,7 @@
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*
 * Function:
-* void motor_init(void)
+* void motorInit(void)
 *
 * Initializes micro controller's PWM feature and PIO on the pins connected to the motor drivers.
 *
@@ -74,7 +72,7 @@
 * TODO: convert code to be using the SAM4N macros
 *
 */
-void motor_init(void)
+void motorInit(void)
 {
 #if defined ROBOT_TARGET_V1
 	REG_CCFG_SYSIO |= CCFG_SYSIO_SYSIO12; //disable erase pin to give access to PB12 via PIO
@@ -99,10 +97,10 @@ void motor_init(void)
 	REG_PIOC_PER |= (1<<23);		//Enable PIO control of PB12
 	REG_PIOC_OER |= (1<<23);		//Set PB12 as output
 #endif
-	FIN_1_L;		
+	rearFwdLo;		
 	REG_PIOC_PER |= (1<<22);		//Enable PIO control of PC22
 	REG_PIOC_OER |= (1<<22);		//Set PC22 as output
-	RIN_1_L;
+	rearRevLo;
 								
 	//****Channel 2 (Motor 2)****//
 	REG_PWM_CMR2 |= (0x4<<0);		//Channel pre scale CLK by 16 = 24.4KHz
@@ -116,10 +114,10 @@ void motor_init(void)
 	REG_PIOC_ABCDSR = (1<<20);		//Assign VREF_1 to PWM Peripheral B			
 	REG_PIOC_PER |= (1<<19);		//Enable PIO control of PC19
 	REG_PIOC_OER |= (1<<19);		//Set PC19 as output
-	RIN_2_L;		
+	frontRightRevLo;		
 	REG_PIOA_PER |= (1<<31);		//Enable PIO control of PA31
 	REG_PIOA_OER |= (1<<31);		//Set PA31 as output
-	FIN_2_L;		
+	frontRightFwdLo;		
 
 	//****Channel 1 (Motor 3)****//
 	REG_PWM_CMR1 |= (0x4<<0);		//Channel pre scale CLK by 16 = 24.4KHz
@@ -133,7 +131,7 @@ void motor_init(void)
 	REG_PIOC_ABCDSR = (1<<9);		//Assign PC9 to PWM Peripheral B		
 	REG_PIOA_PER |= (1<<29);		//Enable PIO control of PA30
 	REG_PIOA_OER |= (1<<29);		//Set PA30 as output
-	RIN_3_L;		
+	frontLeftRevLo;		
 #if defined ROBOT_TARGET_V1
 	REG_PIOA_PER |= (1<<30);		//Enable PIO control of PA29
 	REG_PIOA_OER |= (1<<30);		//Set PA29 as output
@@ -142,12 +140,117 @@ void motor_init(void)
 	REG_PIOC_PER |= (1<<10);		//Enable PIO control of PC10
 	REG_PIOC_OER |= (1<<10);		//Set PC10 as output
 #endif
-	FIN_3_L;
+	frontLeftFwdLo;
 	
 	//****Enable PWM Channels as last step of setup****//	
 	REG_PWM_ENA |= PWM_ENA_CHID1;	//Enable PWM on channel 1
 	REG_PWM_ENA |= PWM_ENA_CHID2;	//Enable PWM on channel 2
 	REG_PWM_ENA |= PWM_ENA_CHID3;	//Enable PWM on channel 3
+}
+
+/*
+*
+* Function:
+* char rearMotorDrive(signed char speed)
+*
+* Runs rear motor at desired speed and direction. Negative speed value will make robot turn to the 
+* left (CCW), whereas positive speed will make robot turn to the right (CW)
+*
+* Inputs:
+* char speed -100 - +100
+*
+* Returns:
+* char: 0 if success
+*		1 if speed is out of range
+*
+* Implementation:
+* checks speed is in range
+* updates duty cycle to speed
+* sets motor direction based on whether speed is positive (forwards) or negative (reverse)
+*
+*/
+char rearMotorDrive(signed char speed)
+{
+	if(speed > 100 || speed < -100)
+		return 1;
+	rearPwm = abs(speed);
+	if(speed > 0)		//Forwards
+		rearMotorForward;
+	if(speed < 0)		//Reverse
+		rearMotorReverse;
+	if(speed == 0)	
+		rearMotorStop;
+	return 0;
+}
+
+/*
+*
+* Function:
+* char frontRightMotorDrive(signed char speed)
+*
+* Runs front right motor at desired speed and direction. Negative speed value will make robot turn 
+* to the left (CCW), whereas positive speed will make robot turn to the right (CW)
+*
+* Inputs:
+* char speed -100- +100
+*
+* Returns:
+* char: 0 if success
+*		1 if speed is out of range
+*
+* Implementation:
+* checks speed is in range
+* updates duty cycle to speed
+* sets motor direction based on whether speed is positive (forwards) or negative (reverse)
+*
+*/
+char frontRightMotorDrive(signed char speed)
+{
+	if(speed > 100 || speed < -100)
+		return 1;
+	frontRightPwm = abs(speed);
+	if(speed > 0)		//Forwards
+		frontRightMotorForward;
+	if(speed < 0)	//Reverse
+		frontRightMotorReverse;
+	if(speed == 0)	
+		frontRightMotorStop;
+	return 0;	//Always return 0 on success, non zero on error
+}
+
+/*
+*
+* Function:
+* char frontLeftMotorDrive(signed char speed)
+*
+* Runs front left motor at desired speed and direction. Negative speed value will make robot turn
+* to the left (CCW), whereas positive speed will make robot turn to the right (CW)
+*
+* Inputs:
+* char speed -100- +100
+*
+* Returns:
+* char: 0 if success
+*		1 if speed is out of range
+*
+* Implementation:
+* checks speed is in range
+* updates duty cycle to speed
+* sets motor direction based on whether speed is positive (forwards) or negative (reverse)
+*
+*/
+char frontLeftMotorDrive(signed char speed)
+{
+	if(speed > 100 || speed < -100)
+		return 1;
+	frontLeftPwm = abs(speed);
+	if(speed > 0) //Forwards
+		frontLeftMotorForward;
+	if(speed < 0)//Reverse
+		frontLeftMotorReverse;
+	if(speed == 0)	
+		frontLeftMotorStop;
+	return 0;
 }
 
 /*
@@ -188,7 +291,7 @@ void motor_init(void)
 */
 void moveRobot(signed int direction, unsigned char speed)
 {
-	signed int motor1Speed, motor2Speed, motor3Speed;
+	signed int rearMotorSpeed, frontRightMotorSpeed, frontLeftMotorSpeed;
 	float directionRad;
 
 	//keep direction in range +/-180degrees
@@ -198,72 +301,14 @@ void moveRobot(signed int direction, unsigned char speed)
 	if(speed > 100)
 		speed = 100;
 	directionRad = (direction * M_PI) / 180; //convert desired direction to radians
-	motor1Speed = speed * cos ((270 * M_PI) / 180 - directionRad );//radians
-	motor2Speed = speed * cos ((30  * M_PI) / 180 - directionRad );
-	motor3Speed = speed * cos ((150 * M_PI) / 180 - directionRad );
-	//motor 2 & 3 is wired backwards on test robot so forward and back is flipped
-	if(motor1Speed > 0)
-	{
-		//Forward
-		RIN_1_L;
-		FIN_1_H;		
-	}
-	else if (motor1Speed == 0)
-	{
-		//Motor off (coast not brake)
-		RIN_1_L;
-		FIN_1_L;
-	}
-	else
-	{
-		//Reverse
-		motor1Speed = motor1Speed * (-1); 
-		RIN_1_H;
-		FIN_1_L;
-	}
-
-	if(motor2Speed > 0)
-	{
-		//Forward
-		RIN_2_L;
-		FIN_2_H;
-	}
-	else if (motor2Speed == 0)
-	{
-		//Motor off (coast not brake)
-		RIN_2_L;
-		FIN_2_L;
-	}
-	else
-	{
-		//Reverse
-		motor2Speed = motor2Speed * (-1); 
-		RIN_2_H;
-		FIN_2_L;
-	}
+	rearMotorSpeed = speed * cos ((270 * M_PI) / 180 - directionRad );//radians
+	frontRightMotorSpeed = speed * cos ((30  * M_PI) / 180 - directionRad );
+	frontLeftMotorSpeed = speed * cos ((150 * M_PI) / 180 - directionRad );
 	
-	if(motor3Speed > 0)
-	{
-		//Forward
-		RIN_3_L;
-		FIN_3_H;			
-	}
-	else if (motor3Speed == 0)
-	{
-		//Motor off (coast not brake)
-		RIN_3_L;
-		FIN_3_L;
-	}
-	else
-	{
-		//Reverse
-		motor3Speed = motor3Speed * (-1); 
-		RIN_3_H;
-		FIN_3_L;
-	}
-	REG_PWM_CUPD1 = (motor3Speed); //Update duty cycle as per calculations
-	REG_PWM_CUPD2 = (motor2Speed); //Update duty cycle as per calculations
-	REG_PWM_CUPD3 = (motor1Speed); //Update duty cycle as per calculations
+	//motor 2 & 3 is wired backwards on test robot so forward and back is flipped
+	frontLeftMotorDrive(frontLeftMotorSpeed);
+	frontRightMotorDrive(frontRightMotorSpeed);
+	rearMotorDrive(rearMotorSpeed);
 }
 
 /*
@@ -296,125 +341,9 @@ void moveRobot(signed int direction, unsigned char speed)
 */
 void rotateRobot(signed char speed)
 {
-	if(speed > 100 || speed < -100)	//In range check
-		speed = 0;
-		
-	if(speed < 0)		//enable all motors to spin the robot clockwise
-	{
-		RIN_1_H;
-		FIN_1_L;
-		RIN_2_H;
-		FIN_2_L;
-		RIN_3_H;
-		FIN_3_L;
-	}
-	else if(speed > 0)	//enable all motors to spin the robot counter-clockwise
-	{
-		RIN_1_L;
-		FIN_1_H;
-		RIN_2_L;
-		FIN_2_H;
-		RIN_3_L;
-		FIN_3_H;
-	}
-	//Update all duty cycles to match the desired rotation speed
-	REG_PWM_CUPD1 = abs(speed);
-	REG_PWM_CUPD2 = abs(speed);
-	REG_PWM_CUPD3 = abs(speed);	
-}
-
-/*
-* Function:
-* void wiggleForward(uint8_t forwardSpeed, uint8_t lateralSpeed, uint8_t direction)
-*
-* Will move robot forward at desired speed forward, but will also allow front motor to be turned on
-* so that direction of travel will become an arc to the left or right. Allows for line following and
-* docking.
-*
-* Inputs:
-* uint8_t forwardSpeed:
-*   Percentage of full speed that the robot will move forward at (0-100)
-*
-* uint8_t lateralSpeed:
-*   Percentage of full speed that the lateral wheel will be allowed to spin at to steer robot left
-*   or right. (0-100)
-*
-* uint8_t direction:
-*   Direction that robot will rotate towards on its arc (CW and CCW)
-*
-* Returns:
-* none
-*
-* Implementation:
-* TODO: Better documentation, Tidier layout.
-* - Needs more work and fine tuning in general.
-* - Turn on front two motors and set their speed
-* - Turn on rear (lateral) motor and set its speed and direction.
-*
-* Improvements:
-* May add ability to move backwards in this manner too.
-*
-*/
-void wiggleForward(uint8_t forwardSpeed, uint8_t lateralSpeed, uint8_t direction)
-{
-	//Make sure parameters are within range.
-	if (forwardSpeed > 100)
-		forwardSpeed = 0;
-	if (lateralSpeed > 100)
-		lateralSpeed = 0;
-		
-	//lateralSpeed /= 2;						//Scale down lateral speed value so it doesn't overwhelm
-											//forward speed
-	switch(direction)
-	{
-		case CW:
-			RIN_2_H;
-			FIN_2_L;
-		break;
-		
-		case CCW:
-			RIN_2_L;
-			FIN_2_H;
-		break;
-	}
-
-	//Set front forward motion direction
-	RIN_1_H;
-	FIN_1_L;
-	RIN_3_L;
-	FIN_3_H;
-	
-	if (forwardSpeed+lateralSpeed > 100)		//If forwardSpeed+lateralSpeed will go over 100
-												//Then scale down speed values to fit
-	{
-		switch(direction)
-		{
-			case CW:
-				REG_PWM_CUPD3 = 100;							//Left Front
-				REG_PWM_CUPD1 = 100 - lateralSpeed*2;			//Right front
-			break;
-		
-			case CCW:
-				REG_PWM_CUPD1 = 100;							//Right front
-				REG_PWM_CUPD3 = 100 - lateralSpeed*2;			//Left front
-			break;
-		}		
-	} else {
-		switch(direction)
-		{
-			case CW:
-				REG_PWM_CUPD1 = forwardSpeed-lateralSpeed;		//Right front
-				REG_PWM_CUPD3 = forwardSpeed+lateralSpeed;		//Left front
-			break;
-			
-			case CCW:
-				REG_PWM_CUPD3 = forwardSpeed-lateralSpeed;		//Left front
-				REG_PWM_CUPD1 = forwardSpeed+lateralSpeed;		//Right front
-			break;
-		}
-	}
-	
-	REG_PWM_CUPD2 = lateralSpeed;		//Rear motor speed (Rear motor)
+	frontLeftMotorDrive(speed);
+	frontRightMotorDrive(speed);
+	rearMotorDrive(speed);
 }
 
 /*
@@ -437,15 +366,9 @@ void wiggleForward(uint8_t forwardSpeed, uint8_t lateralSpeed, uint8_t direction
 void stopRobot(void)
 {
 	//Stops the robot from moving
-	FIN_1_L;
-	RIN_1_L;
-	FIN_2_L;
-	RIN_2_L;
-	FIN_3_L;
-	RIN_3_L;
-	REG_PWM_CUPD1 = 0;
-	REG_PWM_CUPD2 = 0;
-	REG_PWM_CUPD3 = 0;
+	frontRightMotorDrive(0);
+	frontLeftMotorDrive(0);
+	rearMotorDrive(0);
 }
 
 /*
@@ -478,41 +401,35 @@ void stopRobot(void)
 */
 void setTestMotors(uint8_t motorData[])
 {
-	if(motorData[0] == MOTOR_1 && (motorData[1] & 0x80))//check if bit 7 is set meaning forward
+	if(motorData[0] == REAR_MOTOR && (motorData[1] & 0x80))//check if bit 7 is set meaning forward
 	{
-		FIN_1_H;
-		RIN_1_L;
-		REG_PWM_CUPD1 = (motorData[1] & 0x7F);
+		rearMotorForward;
+		rearPwm = (motorData[1] & 0x7F);
 	}
-	else if(motorData[0] == MOTOR_1 && ~(motorData[1] & 0x80))
+	else if(motorData[0] == REAR_MOTOR && ~(motorData[1] & 0x80))
 	{
-		FIN_1_L;
-		RIN_1_H;
-		REG_PWM_CUPD1 = (motorData[1] & 0x7F);
+		rearMotorReverse;
+		rearPwm = (motorData[1] & 0x7F);
 	}
-	else if(motorData[0] == MOTOR_2 && (motorData[1] & 0x80))//check if bit 7 is set meaning forward
+	else if(motorData[0] == F_RIGHT_MOTOR && (motorData[1] & 0x80))//check if bit 7 is set meaning forward
 	{
-		FIN_2_H;
-		RIN_2_L;
-		REG_PWM_CUPD2 = (motorData[1] & 0x7F);
+		frontRightMotorForward;
+		frontRightPwm = (motorData[1] & 0x7F);
 	}
-	else if(motorData[0] == MOTOR_2 && ~(motorData[1] & 0x80))
+	else if(motorData[0] == F_RIGHT_MOTOR && ~(motorData[1] & 0x80))
 	{
-		FIN_2_L;
-		RIN_2_H;
-		REG_PWM_CUPD2 = (motorData[1] & 0x7F);
+		frontRightMotorReverse;
+		frontRightPwm = (motorData[1] & 0x7F);
 	}
-	else if(motorData[0] == MOTOR_3 && (motorData[1] & 0x80))//check if bit 7 is set meaning forward
+	else if(motorData[0] == F_LEFT_MOTOR && (motorData[1] & 0x80))//check if bit 7 is set meaning forward
 	{
-		FIN_3_H;
-		RIN_3_L;
-		REG_PWM_CUPD3 = (motorData[1] & 0x7F);
+		frontLeftMotorForward;
+		frontLeftPwm = (motorData[1] & 0x7F);
 	}
-	else if(motorData[0] == MOTOR_3 && ~(motorData[1] & 0x80))
+	else if(motorData[0] == F_LEFT_MOTOR && ~(motorData[1] & 0x80))
 	{
-		FIN_3_L;
-		RIN_3_H;
-		REG_PWM_CUPD3 = (motorData[1] & 0x7F);
+		frontLeftMotorReverse;
+		frontLeftPwm = (motorData[1] & 0x7F);
 	}
 }
 
@@ -537,181 +454,96 @@ void setTestMotors(uint8_t motorData[])
 void PWMSpeedTest(void)
 {
 	//Stops the robot from moving
-	FIN_2_H;
-	RIN_2_L;
-	REG_PWM_CUPD2 = 0;
+	frontRightFwdHi;
+	frontRightRevLo;
+	frontRightPwm = 0;
 	delay_ms(5000);
-	REG_PWM_CUPD2 = 0;
+	frontRightPwm = 0;
 	delay_ms(5000);
-	REG_PWM_CUPD2 = 10;
+	frontRightPwm = 10;
 	delay_ms(5000);
-	REG_PWM_CUPD2 = 0;
+	frontRightPwm = 0;
 	delay_ms(5000);
-	REG_PWM_CUPD2 = 20;
+	frontRightPwm = 20;
 	delay_ms(5000);
-	REG_PWM_CUPD2 = 0;
+	frontRightPwm = 0;
 	delay_ms(5000);
-	REG_PWM_CUPD2 = 30;
+	frontRightPwm = 30;
 	delay_ms(5000);
-	REG_PWM_CUPD2 = 0;
+	frontRightPwm = 0;
 	delay_ms(5000);
-	REG_PWM_CUPD2 = 40;
+	frontRightPwm = 40;
 	delay_ms(5000);
-	REG_PWM_CUPD2 = 0;
+	frontRightPwm = 0;
 	delay_ms(5000);
-	REG_PWM_CUPD2 = 50;
+	frontRightPwm = 50;
 	delay_ms(5000);
-	REG_PWM_CUPD2 = 0;
+	frontRightPwm = 0;
 	delay_ms(5000);
-	REG_PWM_CUPD2 = 60;
+	frontRightPwm = 60;
 	delay_ms(5000);
-	REG_PWM_CUPD2 = 0;
+	frontRightPwm = 0;
 	delay_ms(5000);
-	REG_PWM_CUPD2 = 70;
+	frontRightPwm = 70;
 	delay_ms(5000);
-	REG_PWM_CUPD2 = 0;
+	frontRightPwm = 0;
 	delay_ms(5000);
-	REG_PWM_CUPD2 = 80;
+	frontRightPwm = 80;
 	delay_ms(5000);
-	REG_PWM_CUPD2 = 0;
+	frontRightPwm = 0;
 	delay_ms(5000);
-	REG_PWM_CUPD2 = 90;
+	frontRightPwm = 90;
 	delay_ms(5000);
-	REG_PWM_CUPD2 = 0;
+	frontRightPwm = 0;
 	delay_ms(5000);
-	REG_PWM_CUPD2 = 100;
+	frontRightPwm = 100;
 	delay_ms(5000);
 	stopRobot();
 }
 
 /*
-*
 * Function:
-* char rearMotorDrive(signed char speed)
+* uint8_t steerRobot(uint8_t speed, int8_t turnRatio)
 *
-* Runs motor 1 at desired speed and direction
+* Allows robot to turn while moving forward by a percentage of the forward speed.
 *
 * Inputs:
-* char speed -100 - +100
+* uint8_t speed:
+*   A percentage of maximum speed (0-100%)
+* int8_t turnRatio:
+*   The ratio of rotation to be applied to the motion (+-%). if turnRatio is 0%, then robot just
+*   drives straight at 'speed'. -100% will have robot rotating on the spot anti-clockwise at 
+*   'speed'. 50% would be half and half driving forward with a clockwise rotational element applied.
 *
 * Returns:
-* char: 1 if success
-*		0 if speed is out of range
+* 0 on success
 *
 * Implementation:
-* checks speed is in range
-* updates duty cycle to speed
-* sets motor direction based on whether speed is positive (forwards) or negative (reverse)
+* First check that speed and turnRatio are in the correct range and fix if necessary.
+* Next calculate the speed ratios for forward motion and rotational motion based on the speed and
+* turn ratio passed to the function. forwardSpeed is inversely proportional to the absolute value
+* of rotational speed. Finally, apply speeds to the motors.
 *
 */
-char rearMotorDrive(signed char speed)
+uint8_t steerRobot(uint8_t speed, int8_t turnRatio)
 {
-	if(speed > 100 || speed < 100)
-		return 0;
-	REG_PWM_CUPD3 = abs(speed);
-	if(speed > 0) //Forwards
-	{
-		FIN_1_H;
-		RIN_1_L;
-	}
-	else if(speed < 0)//Reverse
-	{
-		RIN_1_H;
-		FIN_1_L;
-	}
-	else
-	{
-		FIN_1_L;
-		RIN_1_L;
-		return 0;
-	}
-	return 1;
-}
-
-/*
-*
-* Function:
-* char frontRightMotorDrive(signed char speed)
-*
-* Runs motor 2 at desired speed and direction
-*
-* Inputs:
-* char speed -100- +100
-*
-* Returns:
-* char: 1 if success
-*		0 if speed is out of range
-*
-* Implementation:
-* checks speed is in range
-* updates duty cycle to speed
-* sets motor direction based on whether speed is positive (forwards) or negative (reverse)
-*
-*/
-char frontRightMotorDrive(signed char speed)
-{
-	if(speed > 100 || speed < 100)
-		return 0;
-	REG_PWM_CUPD2 = abs(speed);
-	if(speed > 0) //Forwards
-	{
-		FIN_2_H;
-		RIN_2_L;
-	}
-	else if(speed < 0)//Reverse
-	{
-		RIN_2_H;
-		FIN_2_L;
-	}
-	else
-	{
-		FIN_2_L;
-		RIN_2_L;
-		return 0;
-	}
-	return 1;
-}
-
-/*
-*
-* Function:
-* char frontLeftMotorDrive(signed char speed)
-*
-* Runs motor 3 at desired speed and direction
-*
-* Inputs:
-* char speed -100- +100
-*
-* Returns:
-* char: 1 if success
-*		0 if speed is out of range
-*
-* Implementation:
-* checks speed is in range
-* updates duty cycle to speed
-* sets motor direction based on whether speed is positive (forwards) or negative (reverse)
-*
-*/
-char frontLeftMotorDrive(signed char speed)
-{
-	if(speed > 100 || speed < 100)
-		return 0;
-	REG_PWM_CUPD1 = abs(speed);
-	if(speed > 0) //Forwards
-	{
-		FIN_3_H;
-		RIN_3_L;
-	}
-	else if(speed < 0)//Reverse
-	{
-		RIN_3_H;
-		FIN_3_L;
-	}
-	else
-	{
-		FIN_3_L;
-		RIN_3_L;
-		return 0;
-	}
-	return 1;
+	//Make sure parameters are in range and correct if necessary
+	if(speed > 100)
+		speed = 100;
+	if(turnRatio > 100)
+		turnRatio = 100;
+	if(turnRatio < -100)
+		turnRatio = -100;
+	
+	//Calculate speed ratios	
+	float rotationalSpeed = speed*(turnRatio/100.0);
+	float forwardSpeed = speed - (abs(rotationalSpeed));
+	
+	//Apply speeds and directions to motors
+	//Only front motors provide forward drive. Rear motor is for rotation only.
+	frontRightMotorDrive((int8_t)(-forwardSpeed + rotationalSpeed));
+	frontLeftMotorDrive((int8_t)(forwardSpeed + rotationalSpeed));
+	rearMotorDrive((int8_t)rotationalSpeed);
+	
+	return 0;
 }
