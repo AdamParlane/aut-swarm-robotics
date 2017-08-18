@@ -6,7 +6,7 @@
 *
 * Project Repository: https://github.com/AdamParlane/aut-swarm-robotics
 *
-* [WIP] Contains functions for docking... [WIP]
+* Contains the docking routine state machine and functions that are useful for docking...
 *
 * More Info:
 * Atmel SAM 4N Processor Datasheet:http://www.atmel.com/Images/Atmel-11158-32-bit%20Cortex-M4-Microcontroller-SAM4N16-SAM4N8_Datasheet.pdf
@@ -115,7 +115,19 @@ void dfFollowLine(uint8_t speed, struct Position *imuData);
 */
 uint8_t dfScanBrightestLightSource(float *brightestHeading, uint16_t sweepAngle,
 								struct Position *imuData);
-
+/*
+* Function:
+* float dfScanBrightestLightSourceProx(void)
+*
+* Uses all of the proximity sensors simultaneously to find the brightest source of light.
+*
+* Inputs:
+* none
+*
+* Returns:
+* Heading angle at which the brightest light source was detected.
+*
+*/
 float dfScanBrightestLightSourceProx(void);
 
 #endif /* DOCKING_FUNCTIONS_H_ */
