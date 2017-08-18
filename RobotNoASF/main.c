@@ -107,7 +107,7 @@ int main(void)
 			case DOCKING:
 				//if battery low or manual command set
 				if(!dfDockRobot(&robotPosition))	//Execute docking procedure state machine
-					mainRobotState() = IDLE;		//If finished docking, go IDLE
+					mainRobotState = IDLE;			//If finished docking, go IDLE
 			break;
 				
 			case FORMATION:

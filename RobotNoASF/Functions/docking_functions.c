@@ -61,9 +61,7 @@ uint8_t dfDockRobot(struct Position *imuData)
 	switch(dockingState)
 	{
 		case START:
-//			rotateToHeading(0, imuData);
 			pioLedNumber(0);
-			//returnVal = updateLineSensorStates();
 			if(!dfScanBrightestLightSource(&bHeading, 359, imuData))
 				dockingState = FACE_BRIGHTEST;
 		break;
@@ -98,7 +96,7 @@ uint8_t dfDockRobot(struct Position *imuData)
 		
 		case FOLLOW_LINE:
 			pioLedNumber(4);	
-			dfFollowLine();
+			dfFollowLine(35, imuData);
 		break;
 		
 		case FINISHED:
@@ -267,14 +265,11 @@ int8_t dfGetLineDirection(void)
 * Would be better with the wiggleForward function once its working.
 *
 */
-void dfFollowLine(void)
+void dfFollowLine(uint8_t speed, struct Position *imuData)
 {
 #if defined ROBOT_TARGET_V2
 	int8_t lineDirection = dfGetLineDirection();
-	if(lineDirection != 0)				//Turn robot to face line
-		rotateRobot(lineDirection*10);
-	else
-		moveRobot(0, 35);				//Go straight
+	mfMoveToHeading(imuData->imuYaw + 15*lineDirection, speed, imuData);
 #endif
 }
 
