@@ -6,7 +6,7 @@
 *
 * Project Repository: https://github.com/AdamParlane/aut-swarm-robotics
 *
-* [WIP] Contains functions for docking... [WIP]
+* Contains the docking routine state machine and functions that are useful for docking...
 *
 * More Info:
 * Atmel SAM 4N Processor Datasheet:http://www.atmel.com/Images/Atmel-11158-32-bit%20Cortex-M4-Microcontroller-SAM4N16-SAM4N8_Datasheet.pdf
@@ -56,7 +56,6 @@ uint8_t dfDockRobot(struct Position *imuData)
 	static float bHeading = 0;	//Brightest Heading
 	enum {FINISHED, START, FACE_BRIGHTEST, MOVE_FORWARD, RESCAN_BRIGHTEST, FOLLOW_LINE};
 	static uint8_t dockingState = START;
-	//uint8_t returnVal;
 	///////////////[WIP]///////////////
 	switch(dockingState)
 	{
@@ -242,21 +241,23 @@ int8_t dfGetLineDirection(void)
 * Function:
 * void dfFollowLine(void)
 *
-* A basic function to follow a line that seems to work ok
+* A basic function to follow a line
 *
 * Inputs:
-* none
+* uint8_t speed:
+*   Speed at which to follow the line (0-100%)
+* struct Position *imuData
+*   Pointer to the global robotPosition data structure
 *
 * Returns:
 * none
 *
 * Implementation:
-* Get the direction of the detected line. If line is to the left, rotate left until it isn't. If
-* line is to the right then rotate to the right until it isn't. If no line detected or line is in
-* middle of sensor array then move straight.
+* Get the direction of the detected line. Multiply this by 15 and apply as a corrective heading
+* to mfMoveToHeading.
 *
 * Improvements:
-* Would be better with the wiggleForward function once its working.
+* Need to find a way to make it smoother.
 *
 */
 void dfFollowLine(uint8_t speed, struct Position *imuData)
@@ -365,7 +366,33 @@ uint8_t dfScanBrightestLightSource(float *brightestHeading, uint16_t sweepAngle,
 	return 1;
 }
 
-//TODO:Header
+/*
+* Function:
+* float dfScanBrightestLightSourceProx(void)
+*
+* Uses all of the proximity sensors simultaneously to find the brightest source of light.
+*
+* Inputs:
+* none
+*
+* Returns:
+* Heading angle at which the brightest light source was detected.
+*
+* Implementation:
+* The sensor array holds the values retrieved from each sensor. brightestVal holds the brightest
+* detected value from any of the sensors. brightest sensor holds the index number of the sensor
+* with the brightest ambient light detected.
+* First the function enables ambient light detection on the proximity sensors. Then it reads the 
+* light reading from each one into the sensor array. After this, proximity mode is re enabled on the
+* proximity sensors. After that a for loop is used to see which sensor contained the brightes value.
+* Finally, the number of the sensor multiplied by 60 (the angle in degrees that each sensor is
+* apart) is returned from the function, indicating the direction of the brightest light source.
+*
+* Improvements:
+* [NOT WORKING]: When proxAmbModeEnabled() is called, the IMU stops updating. I think its todo with
+* the delay function that waits 50ms for data to be ready. Need to do more experimentation. -Matt
+*
+*/
 float dfScanBrightestLightSourceProx(void)
 {
 	uint16_t sensor[6];
