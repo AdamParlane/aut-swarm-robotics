@@ -28,8 +28,8 @@ void decision(void)
 {
 	static uint16_t proximity[6], previousProximity[6];
 	memcpy(previousProximity, proximity, 6);
-	scanProximity(&proximity);
-	for(char index = 0; index < 6; index++)
+	scanProximity(proximity);
+	for(uint8_t index = 0; index < 6; index++)
 	{
 		if(proximity[index] > OBSTACLE_THRESHOLD)//obstacle detected
 		{
@@ -44,10 +44,10 @@ void decision(void)
 }
 
 //CW starting at A, F, E, D, C, B
-void scanProximity(uint16_t *proximity[6])
+void scanProximity(uint16_t proximity[6])
 {
-	char index = 0;
-	for(char i = MUX_PROXSENS_A; i < MUX_PROXSENS_B; i++)
+	uint8_t index = 0;
+	for(uint8_t i = MUX_PROXSENS_A; i < MUX_PROXSENS_B; i++)
 	{
 		proximity[index] = proxSensRead(i);
 		index++;
