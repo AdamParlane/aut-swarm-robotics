@@ -13,14 +13,14 @@
 * BD6211 Motor driver Datasheet:http://rohmfs.rohm.com/en/products/databook/datasheet/ic/motor/dc/bd621x-e.pdf
 *
 * Functions:
-* void motorInit(void)
-* void moveRobot(float direction, unsigned char speed)
-* void stopRobot(void)
-* void rotateRobot(signed char speed)
-* void setTestMotors(uint8_t motorData[])
+* void motorInit(void);
 * char rearMotorDrive(signed char speed)
 * char frontRightMotorDrive(signed char speed)
 * char frontLeftMotorDrive(signed char speed)
+* void moveRobot(float direction, unsigned char speed);
+* void stopRobot(void);
+* void rotateRobot(signed char speed);
+* void setTestMotors(uint8_t motorData[]);
 *
 */
 
@@ -122,6 +122,57 @@
 *
 */
 void motorInit(void);
+
+/*
+*
+* Function:
+* char rearMotorDrive(signed char speed)
+*
+* Runs motor 1 at desired speed and direction
+*
+* Inputs:
+* char speed -100- +100
+*
+* Returns:
+* char: 0 if success
+*		1 if speed is out of range
+*
+*/
+char rearMotorDrive(signed char speed);
+
+/*
+*
+* Function:
+* char frontRightMotorDrive(signed char speed)
+*
+* Runs motor 2 at desired speed and direction
+*
+* Inputs:
+* char speed -100- +100
+*
+* Returns:
+* char: 0 if success
+*		1 if speed is out of range
+*
+*/
+char frontRightMotorDrive(signed char speed);
+
+/*
+*
+* Function:
+* char frontLeftMotorDrive(signed char speed)
+*
+* Runs motor 3 at desired speed and direction
+*
+* Inputs:
+* char speed -100- +100
+*
+* Returns:
+* char: 0 if success
+*		1 if speed is out of range
+*
+*/
+char frontLeftMotorDrive(signed char speed);
 
 /*
 * Function:
@@ -236,57 +287,5 @@ void PWMSpeedTest(void);
 *
 */
 void setTestMotors(uint8_t motorData[]);
-
-
-/*
-*
-* Function:
-* char rearMotorDrive(signed char speed)
-*
-* Runs motor 1 at desired speed and direction
-*
-* Inputs:
-* char speed -100- +100
-*
-* Returns:
-* char: 1 if success
-*		0 if speed is out of range
-*
-*/
-char rearMotorDrive(signed char speed);
-
-/*
-*
-* Function:
-* char frontRightMotorDrive(signed char speed)
-*
-* Runs motor 2 at desired speed and direction
-*
-* Inputs:
-* char speed -100- +100
-*
-* Returns:
-* char: 1 if success
-*		0 if speed is out of range
-*
-*/
-char frontRightMotorDrive(signed char speed);
-
-/*
-*
-* Function:
-* char frontLeftMotorDrive(signed char speed)
-*
-* Runs motor 3 at desired speed and direction
-*
-* Inputs:
-* char speed -100- +100
-*
-* Returns:
-* char: 1 if success
-*		0 if speed is out of range
-*
-*/
-char frontLeftMotorDrive(signed char speed);
 
 #endif /* MOTOR_DRIVER_H_ */

@@ -127,7 +127,8 @@ int main(void)
 			
 			case IDLE:
 				//idle
-				stopRobot();
+				//stopRobot();
+				rotateRobot(-100);
 			break;
 		}
 		

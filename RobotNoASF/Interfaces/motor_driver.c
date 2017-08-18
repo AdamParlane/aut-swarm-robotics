@@ -21,13 +21,13 @@
 *
 * Functions:
 * void motorInit(void);
+* char rearMotorDrive(signed char speed)
+* char frontRightMotorDrive(signed char speed)
+* char frontLeftMotorDrive(signed char speed)
 * void moveRobot(float direction, unsigned char speed);
 * void stopRobot(void);
 * void rotateRobot(signed char speed);
 * void setTestMotors(uint8_t motorData[]);
-* char rearMotorDrive(signed char speed)
-* char frontRightMotorDrive(signed char speed)
-* char frontLeftMotorDrive(signed char speed)
 *
 */
  
@@ -149,6 +149,108 @@ void motorInit(void)
 }
 
 /*
+*
+* Function:
+* char rearMotorDrive(signed char speed)
+*
+* Runs motor 1 at desired speed and direction
+*
+* Inputs:
+* char speed -100 - +100
+*
+* Returns:
+* char: 0 if success
+*		1 if speed is out of range
+*
+* Implementation:
+* checks speed is in range
+* updates duty cycle to speed
+* sets motor direction based on whether speed is positive (forwards) or negative (reverse)
+*
+*/
+char rearMotorDrive(signed char speed)
+{
+	if(speed > 100 || speed < 100)
+		return 0;
+	rearPwm = abs(speed);
+	if(speed > 0)		//Forwards
+		rearMotorForward;
+	else if(speed < 0)	//Reverse
+		rearMotorReverse;
+	else
+		rearMotorStop;
+	return 0;
+}
+
+/*
+*
+* Function:
+* char frontRightMotorDrive(signed char speed)
+*
+* Runs motor 2 at desired speed and direction
+*
+* Inputs:
+* char speed -100- +100
+*
+* Returns:
+* char: 0 if success
+*		1 if speed is out of range
+*
+* Implementation:
+* checks speed is in range
+* updates duty cycle to speed
+* sets motor direction based on whether speed is positive (forwards) or negative (reverse)
+*
+*/
+char frontRightMotorDrive(signed char speed)
+{
+	if(speed > 100 || speed < 100)
+		return 1;
+	frontRightPwm = abs(speed);
+	if(speed > 0)		//Forwards
+		frontRightMotorForward;
+	else if(speed < 0)	//Reverse
+		frontRightMotorReverse;
+	else
+		frontRightMotorStop;
+	return 0;	//Always return 0 on success, non zero on error
+}
+
+/*
+*
+* Function:
+* char frontLeftMotorDrive(signed char speed)
+*
+* Runs motor 3 at desired speed and direction
+*
+* Inputs:
+* char speed -100- +100
+*
+* Returns:
+* char: 0 if success
+*		1 if speed is out of range
+*
+* Implementation:
+* checks speed is in range
+* updates duty cycle to speed
+* sets motor direction based on whether speed is positive (forwards) or negative (reverse)
+*
+*/
+char frontLeftMotorDrive(signed char speed)
+{
+	if(speed > 100 || speed < 100)
+		return 1;
+	frontLeftPwm = abs(speed);
+	if(speed > 0) //Forwards
+		frontLeftMotorForward;
+	else if(speed < 0)//Reverse
+		frontLeftMotorReverse;
+	else
+		frontLeftMotorStop;
+	return 0;
+}
+
+/*
 * Function:
 * void moveRobot(float direction, unsigned char speed)
 *
@@ -186,7 +288,7 @@ void motorInit(void)
 */
 void moveRobot(signed int direction, unsigned char speed)
 {
-	signed int motor1Speed, motor2Speed, motor3Speed;
+	signed int rearMotorSpeed, frontRightMotorSpeed, frontLeftMotorSpeed;
 	float directionRad;
 
 	//keep direction in range +/-180degrees
@@ -196,13 +298,14 @@ void moveRobot(signed int direction, unsigned char speed)
 	if(speed > 100)
 		speed = 100;
 	directionRad = (direction * M_PI) / 180; //convert desired direction to radians
-	motor1Speed = speed * cos ((270 * M_PI) / 180 - directionRad );//radians
-	motor2Speed = speed * cos ((30  * M_PI) / 180 - directionRad );
-	motor3Speed = speed * cos ((150 * M_PI) / 180 - directionRad );
+	rearMotorSpeed = speed * cos ((270 * M_PI) / 180 - directionRad );//radians
+	frontRightMotorSpeed = speed * cos ((30  * M_PI) / 180 - directionRad );
+	frontLeftMotorSpeed = speed * cos ((150 * M_PI) / 180 - directionRad );
+	
 	//motor 2 & 3 is wired backwards on test robot so forward and back is flipped
-	frontLeftMotorDrive(motor1Speed);
-	frontRightMotorDrive(motor2Speed);
-	rearMotorDrive(motor3Speed);
+	frontLeftMotorDrive(frontLeftMotorSpeed);
+	frontRightMotorDrive(frontRightMotorSpeed);
+	rearMotorDrive(rearMotorSpeed);
 }
 
 /*
@@ -295,41 +398,35 @@ void stopRobot(void)
 */
 void setTestMotors(uint8_t motorData[])
 {
-	if(motorData[0] == MOTOR_1 && (motorData[1] & 0x80))//check if bit 7 is set meaning forward
+	if(motorData[0] == REAR_MOTOR && (motorData[1] & 0x80))//check if bit 7 is set meaning forward
 	{
-		rearFwdHi;
-		rearRevLo;
-		frontLeftPwm = (motorData[1] & 0x7F);
-	}
-	else if(motorData[0] == MOTOR_1 && ~(motorData[1] & 0x80))
-	{
-		rearFwdLo;
-		rearRevHi;
-		frontLeftPwm = (motorData[1] & 0x7F);
-	}
-	else if(motorData[0] == MOTOR_2 && (motorData[1] & 0x80))//check if bit 7 is set meaning forward
-	{
-		frontRightFwdHi;
-		frontRightRevLo;
-		frontRightPwm = (motorData[1] & 0x7F);
-	}
-	else if(motorData[0] == MOTOR_2 && ~(motorData[1] & 0x80))
-	{
-		frontRightFwdLo;
-		frontRightRevHi;
-		frontRightPwm = (motorData[1] & 0x7F);
-	}
-	else if(motorData[0] == MOTOR_3 && (motorData[1] & 0x80))//check if bit 7 is set meaning forward
-	{
-		frontLeftFwdHi;
-		frontLeftRevLo;
+		rearMotorForward;
 		rearPwm = (motorData[1] & 0x7F);
 	}
-	else if(motorData[0] == MOTOR_3 && ~(motorData[1] & 0x80))
+	else if(motorData[0] == REAR_MOTOR && ~(motorData[1] & 0x80))
 	{
-		frontLeftFwdLo;
-		frontLeftRevHi;
+		rearMotorReverse;
 		rearPwm = (motorData[1] & 0x7F);
+	}
+	else if(motorData[0] == F_RIGHT_MOTOR && (motorData[1] & 0x80))//check if bit 7 is set meaning forward
+	{
+		frontRightMotorForward;
+		frontRightPwm = (motorData[1] & 0x7F);
+	}
+	else if(motorData[0] == F_RIGHT_MOTOR && ~(motorData[1] & 0x80))
+	{
+		frontRightMotorReverse;
+		frontRightPwm = (motorData[1] & 0x7F);
+	}
+	else if(motorData[0] == F_LEFT_MOTOR && (motorData[1] & 0x80))//check if bit 7 is set meaning forward
+	{
+		frontLeftMotorForward;
+		frontLeftPwm = (motorData[1] & 0x7F);
+	}
+	else if(motorData[0] == F_LEFT_MOTOR && ~(motorData[1] & 0x80))
+	{
+		frontLeftMotorReverse;
+		frontLeftPwm = (motorData[1] & 0x7F);
 	}
 }
 
@@ -399,106 +496,4 @@ void PWMSpeedTest(void)
 	frontRightPwm = 100;
 	delay_ms(5000);
 	stopRobot();
-}
-
-/*
-*
-* Function:
-* char rearMotorDrive(signed char speed)
-*
-* Runs motor 1 at desired speed and direction
-*
-* Inputs:
-* char speed -100 - +100
-*
-* Returns:
-* char: 1 if success
-*		0 if speed is out of range
-*
-* Implementation:
-* checks speed is in range
-* updates duty cycle to speed
-* sets motor direction based on whether speed is positive (forwards) or negative (reverse)
-*
-*/
-char rearMotorDrive(signed char speed)
-{
-	if(speed > 100 || speed < 100)
-		return 0;
-	rearPwm = abs(speed);
-	if(speed > 0)		//Forwards
-		rearMotorForward;
-	else if(speed < 0)	//Reverse
-		rearMotorReverse;
-	else
-		rearMotorStop;
-	return 0;
-}
-
-/*
-*
-* Function:
-* char frontRightMotorDrive(signed char speed)
-*
-* Runs motor 2 at desired speed and direction
-*
-* Inputs:
-* char speed -100- +100
-*
-* Returns:
-* char: 1 if success
-*		0 if speed is out of range
-*
-* Implementation:
-* checks speed is in range
-* updates duty cycle to speed
-* sets motor direction based on whether speed is positive (forwards) or negative (reverse)
-*
-*/
-char frontRightMotorDrive(signed char speed)
-{
-	if(speed > 100 || speed < 100)
-		return 1;
-	frontRightPwm = abs(speed);
-	if(speed > 0)		//Forwards
-		frontRightMotorForward;
-	else if(speed < 0)	//Reverse
-		frontRightMotorReverse;
-	else
-		frontRightMotorStop;
-	return 0;	//Always return 0 on success, non zero on error
-}
-
-/*
-*
-* Function:
-* char frontLeftMotorDrive(signed char speed)
-*
-* Runs motor 3 at desired speed and direction
-*
-* Inputs:
-* char speed -100- +100
-*
-* Returns:
-* char: 1 if success
-*		0 if speed is out of range
-*
-* Implementation:
-* checks speed is in range
-* updates duty cycle to speed
-* sets motor direction based on whether speed is positive (forwards) or negative (reverse)
-*
-*/
-char frontLeftMotorDrive(signed char speed)
-{
-	if(speed > 100 || speed < 100)
-		return 1;
-	frontLeftPwm = abs(speed);
-	if(speed > 0) //Forwards
-		frontLeftMotorForward;
-	else if(speed < 0)//Reverse
-		frontLeftMotorReverse;
-	else
-		frontLeftMotorStop;
-	return 0;
 }
