@@ -27,7 +27,7 @@ uint8_t SBtest, SBtest1;
 uint16_t DBtest, DBtest1, DBtest2;
 uint16_t battVoltage;					//Stores battery voltage on start up
 extern struct Position robotPosition;	//Passed to docking functions
-
+uint16_t adam, matt;
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*
 * Function:
@@ -59,7 +59,7 @@ int main(void)
 	struct message_info message; //Incoming message with XBee metadata removed
 	struct transmitDataStructure transmitMessage; //struct to transmit to PC
 	mainRobotState = IDLE;
-	
+	//moveRobot(0, 40);	
 	while(1)
 	{
 		switch (mainRobotState)
@@ -124,6 +124,7 @@ int main(void)
 			
 			case IDLE:
 				//idle
+				decision();
 				stopRobot();
 			break;
 		}
@@ -132,5 +133,6 @@ int main(void)
 		//the communications port or from the navigation sensors.
 		getNewCommunications(&frame, &message);
 		nfRetrieveNavData();
+
 	}
 }

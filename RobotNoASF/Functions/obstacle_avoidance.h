@@ -23,11 +23,12 @@
 #include <string.h>
 
 //////////////[Defines]/////////////////////////////////////////////////////////////////////////////
-#define OBSTACLE_THRESHOLD 0x1000
+#define OBSTACLE_THRESHOLD 0x0100
 
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
 void decision(void);
-void scanProximity(uint16_t proximity[6]);
+void scanProximity(void);//uint16_t proximity[6]);
 
+uint16_t proximity[6];
 
 #endif /* OBSTACLE_AVOIDANCE_H_ */

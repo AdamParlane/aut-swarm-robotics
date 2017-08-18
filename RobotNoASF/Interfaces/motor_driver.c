@@ -133,7 +133,7 @@ void motor_init(void)
 	REG_PIOC_ABCDSR = (1<<9);		//Assign PC9 to PWM Peripheral B		
 	REG_PIOA_PER |= (1<<29);		//Enable PIO control of PA30
 	REG_PIOA_OER |= (1<<29);		//Set PA30 as output
-	RIN_3_L;		
+	//RIN_3_L;		
 #if defined ROBOT_TARGET_V1
 	REG_PIOA_PER |= (1<<30);		//Enable PIO control of PA29
 	REG_PIOA_OER |= (1<<30);		//Set PA29 as output
@@ -192,7 +192,7 @@ void moveRobot(signed int direction, unsigned char speed)
 	float directionRad;
 
 	//keep direction in range +/-180degrees
-	direction = imuWrapAngle(direction);
+	//direction = imuWrapAngle(direction);
 
 	//stop speed from being over max in case of user input error
 	if(speed > 100)
@@ -201,6 +201,14 @@ void moveRobot(signed int direction, unsigned char speed)
 	motor1Speed = speed * cos ((270 * M_PI) / 180 - directionRad );//radians
 	motor2Speed = speed * cos ((30  * M_PI) / 180 - directionRad );
 	motor3Speed = speed * cos ((150 * M_PI) / 180 - directionRad );
+#if defined ROBOT_TARGET_V1
+	//if(motor1Speed < 10)
+		//motor1Speed = 0;
+	//if(motor2Speed < 10)
+		//motor2Speed = 0;
+	//if(motor3Speed < 10)
+		//motor3Speed = 0;
+#endif
 	//motor 2 & 3 is wired backwards on test robot so forward and back is flipped
 	if(motor1Speed > 0)
 	{
@@ -314,7 +322,7 @@ void rotateRobot(signed char speed)
 		FIN_1_H;
 		RIN_2_L;
 		FIN_2_H;
-		RIN_3_L;
+		//RIN_3_L;
 		FIN_3_H;
 	}
 	//Update all duty cycles to match the desired rotation speed

@@ -22,29 +22,48 @@
 
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
 
-
+char  currentDirection = 0;
+#define speed 40
 
 void decision(void)
 {
-	static uint16_t proximity[6], previousProximity[6];
+	
+	//static uint16_t proximity[6], previousProximity[6];
+	static uint16_t previousProximity[6];
 	memcpy(previousProximity, proximity, 6);
-	scanProximity(proximity);
+	scanProximity();//proximity);
+	signed int desiredDirectionPlus = currentDirection;
+	signed int desiredDirectionMinus = currentDirection;
 	for(uint8_t index = 0; index < 6; index++)
 	{
-		if(proximity[index] > OBSTACLE_THRESHOLD)//obstacle detected
+		if((proximity[index] > OBSTACLE_THRESHOLD) && (((index*60) - currentDirection) > 30))//obstacle detected in the way
 		{
 			if(proximity[index] > previousProximity[index])//obstacle approaching
 			{
 				//bash it out, could end up in a function
-				
+				//desiredDirection[index] = (index * 60 - 180);
+				desiredDirectionPlus = (desiredDirectionPlus + (60*index));
+				desiredDirectionMinus = (desiredDirectionMinus - (60*index));				
 			}
 		}
 	}
-	
+	//average desired directions
+	//choose closest
+	if((desiredDirectionPlus - currentDirection) > (desiredDirectionMinus + currentDirection))
+	{
+		moveRobot(desiredDirectionMinus, speed);
+		currentDirection = desiredDirectionMinus;
+	}
+	else if((desiredDirectionPlus - currentDirection) < (desiredDirectionMinus + currentDirection))
+	{
+		moveRobot(desiredDirectionPlus, speed);
+		currentDirection = desiredDirectionPlus;
+	}
+
 }
 
 //CW starting at A, F, E, D, C, B
-void scanProximity(uint16_t proximity[6])
+void scanProximity(void)//uint16_t proximity[6])
 {
 	uint8_t index = 0;
 	for(uint8_t i = MUX_PROXSENS_A; i < MUX_PROXSENS_B; i++)
