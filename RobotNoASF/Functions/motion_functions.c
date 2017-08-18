@@ -219,7 +219,7 @@ float mfMoveToHeadingByDistance(float heading, uint8_t speed, uint32_t distance,
 	switch(movingState)
 	{
 		case START:
-			if(!mfRotateToHeading(heading, &robotPosition))//Face the right direction
+			if(!mfRotateToHeading(heading, posData))//Face the right direction
 				movingState = MOVING;
 		break;
 		

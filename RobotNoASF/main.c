@@ -127,8 +127,7 @@ int main(void)
 			
 			case IDLE:
 				//idle
-				//stopRobot();
-				mfMoveToHeading(90, 50, &robotPosition);
+				stopRobot();
 			break;
 		}
 		
