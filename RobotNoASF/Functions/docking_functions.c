@@ -53,7 +53,7 @@ struct LineSensorArray lf;
 */
 uint8_t dfDockRobot(struct Position *imuData)
 {
-	float bHeading = 0;	//Brightest Heading
+	static float bHeading = 0;	//Brightest Heading
 	enum {FINISHED, START, FACE_BRIGHTEST, MOVE_FORWARD, RESCAN_BRIGHTEST, FOLLOW_LINE};
 	static uint8_t dockingState = START;
 	//uint8_t returnVal;
@@ -63,19 +63,13 @@ uint8_t dfDockRobot(struct Position *imuData)
 		case START:
 			pioLedNumber(0);
 			if(!dfScanBrightestLightSource(&bHeading, 359, imuData))
-				dockingState = FACE_BRIGHTEST;
-		break;
-		
-		case FACE_BRIGHTEST:
-			pioLedNumber(1);
-			if(!mfRotateToHeading(bHeading, imuData))
 				dockingState = MOVE_FORWARD;
-		break; 
+		break;
 		
 		case MOVE_FORWARD:
 			pioLedNumber(2);
-			mfMoveToHeading(bHeading, 35, imuData);
-			if(!fdelay_ms(3000))			//After five seconds, look for LEDs again
+			mfMoveToHeading(bHeading, 40, imuData);
+			if(!fdelay_ms(4000))			//After five seconds, look for LEDs again
 			{
 				stopRobot();
 				dockingState= RESCAN_BRIGHTEST;
@@ -91,7 +85,7 @@ uint8_t dfDockRobot(struct Position *imuData)
 			pioLedNumber(3);
 			//Only look in front, because we should still be roughly in the right direction
 			if(!dfScanBrightestLightSource(&bHeading, 180, imuData))
-				dockingState = FACE_BRIGHTEST;
+				dockingState = MOVE_FORWARD;
 		break;
 		
 		case FOLLOW_LINE:
@@ -311,15 +305,15 @@ void dfFollowLine(uint8_t speed, struct Position *imuData)
 uint8_t dfScanBrightestLightSource(float *brightestHeading, uint16_t sweepAngle, 
 								struct Position *imuData)
 {
-	const float ROTATE_STEP_SZ = 2;
+	const float ROTATE_STEP_SZ = 3;
 	enum {FUNCTION_INIT, GOTO_START_POSITION, SWEEP, END};
 	static uint8_t functionState = FUNCTION_INIT;
 	static float startHeading;
 	static float endHeading;
 	static float sHeading;
-	static uint16_t brightestVal;
+	static uint32_t brightestVal;
 	float rotateError;
-	uint16_t avgBrightness = 0;
+	uint32_t avgBrightness = 0;
 	
 	switch(functionState)
 	{
