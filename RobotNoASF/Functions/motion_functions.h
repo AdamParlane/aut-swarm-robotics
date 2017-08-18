@@ -13,7 +13,13 @@
 * Relevant reference materials or datasheets if applicable
 *
 * Functions:
-* void funcName(void)
+* float mfRotateToHeading(float heading, struct Position *imuData)
+* float mfMoveToHeading(float heading, uint8_t speed, struct Position *imuData)
+* float mfMoveToHeadingByDistance(float heading, uint8_t speed, uint32_t distance,
+*                                  struct Position *posData)
+* float mfTrackLight(struct Position *imuData)
+* float mfTrackLightProx(struct Position *imuData)
+* char mfRandomMovementGenerator(void) 
 *
 */
 
@@ -36,8 +42,8 @@
 #define TL_KI	0.001
 
 //PID constants for mfTrackLightprox
-#define TL_KP	10.0
-#define TL_KI	0.001
+#define TLP_KP	10.0
+#define TLP_KI	0.001
 
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*

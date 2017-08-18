@@ -13,7 +13,13 @@
 * Relevant reference materials or datasheets if applicable
 *
 * Functions:
-* void funcName(void)
+* float mfRotateToHeading(float heading, struct Position *imuData)
+* float mfMoveToHeading(float heading, uint8_t speed, struct Position *imuData)
+* float mfMoveToHeadingByDistance(float heading, uint8_t speed, uint32_t distance,
+*                                  struct Position *posData)
+* float mfTrackLight(struct Position *imuData)
+* float mfTrackLightProx(struct Position *imuData)
+* char mfRandomMovementGenerator(void)
 *
 */
 //////////////[Includes]////////////////////////////////////////////////////////////////////////////
@@ -348,7 +354,7 @@ float mfTrackLightProx(struct Position *imuData)
 	iErr += pErr;
 	
 	//If dHeading ends up being out of range, then dial it back
-	dHeading = TL_KP*pErr + TL_KI*iErr;
+	dHeading = TLP_KP*pErr + TLP_KI*iErr;
 	if(dHeading > 90)
 		dHeading = 90;
 	if(dHeading < -90)
