@@ -115,7 +115,8 @@ int main(void)
 			break;
 			
 			case CHARGING:
-				led1On;
+				if(!fdelay_ms(500))					//Blink LED in charge mode
+					led1Tog;
 				chargeInfo = chargeDetector();
 				if(chargeInfo == BATT_CHARGING)
 					break;
@@ -123,7 +124,6 @@ int main(void)
 					mainRobotState = mainRobotStatePrev;
 				else
 					mainRobotState = MANUAL;
-				led1Off;
 			break;
 			
 			case IDLE:
