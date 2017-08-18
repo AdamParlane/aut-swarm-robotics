@@ -118,7 +118,7 @@ uint8_t dfDockRobot(struct Position *imuData)
 			led1On;
 			led2Off;
 			led3On;		
-			followLine();
+			dfFollowLine();
 		break;
 		
 		case FINISHED:

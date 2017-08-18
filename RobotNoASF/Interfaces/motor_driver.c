@@ -20,16 +20,14 @@
 * VREF uses PWM with duty cycle 0-100(%) to set the speed of the motor
 *
 * Functions:
-* void motor_init(void);
+* void motorInit(void);
 * void moveRobot(float direction, unsigned char speed);
-* void wiggleForward(uint8_t forwardSpeed, uint8_t lateralSpeed, uint8_t direction)
 * void stopRobot(void);
 * void rotateRobot(signed char speed);
-* void dfDockRobot(void);
 * void setTestMotors(uint8_t motorData[]);
-* char motor1Drive(signed char speed)
-* char motor2Drive(signed char speed)
-* char motor3Drive(signed char speed)
+* char rearMotorDrive(signed char speed)
+* char frontRightMotorDrive(signed char speed)
+* char frontLeftMotorDrive(signed char speed)
 *
 */
  
@@ -39,7 +37,7 @@
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*
 * Function:
-* void motor_init(void)
+* void motorInit(void)
 *
 * Initializes micro controller's PWM feature and PIO on the pins connected to the motor drivers.
 *
@@ -74,7 +72,7 @@
 * TODO: convert code to be using the SAM4N macros
 *
 */
-void motor_init(void)
+void motorInit(void)
 {
 #if defined ROBOT_TARGET_V1
 	REG_CCFG_SYSIO |= CCFG_SYSIO_SYSIO12; //disable erase pin to give access to PB12 via PIO
@@ -240,100 +238,6 @@ void rotateRobot(signed char speed)
 	frontLeftMotorDrive(speed);
 	frontRightMotorDrive(speed);
 	rearMotorDrive(speed);
-}
-
-/*
-* Function:
-* void wiggleForward(uint8_t forwardSpeed, uint8_t lateralSpeed, uint8_t direction)
-*
-* Will move robot forward at desired speed forward, but will also allow front motor to be turned on
-* so that direction of travel will become an arc to the left or right. Allows for line following and
-* docking.
-*
-* Inputs:
-* uint8_t forwardSpeed:
-*   Percentage of full speed that the robot will move forward at (0-100)
-*
-* uint8_t lateralSpeed:
-*   Percentage of full speed that the lateral wheel will be allowed to spin at to steer robot left
-*   or right. (0-100)
-*
-* uint8_t direction:
-*   Direction that robot will rotate towards on its arc (CW and CCW)
-*
-* Returns:
-* none
-*
-* Implementation:
-* TODO: Better documentation, Tidier layout.
-* - Needs more work and fine tuning in general.
-* - Turn on front two motors and set their speed
-* - Turn on rear (lateral) motor and set its speed and direction.
-*
-* Improvements:
-* May add ability to move backwards in this manner too.
-*
-*/
-void wiggleForward(uint8_t forwardSpeed, uint8_t lateralSpeed, uint8_t direction)
-{
-	//Make sure parameters are within range.
-	if (forwardSpeed > 100)
-		forwardSpeed = 0;
-	if (lateralSpeed > 100)
-		lateralSpeed = 0;
-		
-	//lateralSpeed /= 2;						//Scale down lateral speed value so it doesn't overwhelm
-											//forward speed
-	switch(direction)
-	{
-		case CW:
-			frontRightRevHi;
-			frontRightFwdLo;
-		break;
-		
-		case CCW:
-			frontRightRevLo;
-			frontRightFwdHi;
-		break;
-	}
-
-	//Set front forward motion direction
-	rearRevHi;
-	rearFwdLo;
-	frontLeftRevLo;
-	frontLeftFwdHi;
-	
-	if (forwardSpeed+lateralSpeed > 100)		//If forwardSpeed+lateralSpeed will go over 100
-												//Then scale down speed values to fit
-	{
-		switch(direction)
-		{
-			case CW:
-				rearPwm = 100;							//Left Front
-				frontLeftPwm = 100 - lateralSpeed*2;			//Right front
-			break;
-		
-			case CCW:
-				frontLeftPwm = 100;							//Right front
-				rearPwm = 100 - lateralSpeed*2;			//Left front
-			break;
-		}		
-	} else {
-		switch(direction)
-		{
-			case CW:
-				frontLeftPwm = forwardSpeed-lateralSpeed;		//Right front
-				rearPwm = forwardSpeed+lateralSpeed;		//Left front
-			break;
-			
-			case CCW:
-				rearPwm = forwardSpeed-lateralSpeed;		//Left front
-				frontLeftPwm = forwardSpeed+lateralSpeed;		//Right front
-			break;
-		}
-	}
-	
-	frontRightPwm = lateralSpeed;		//Rear motor speed (Rear motor)
 }
 
 /*
@@ -522,23 +426,13 @@ char rearMotorDrive(signed char speed)
 	if(speed > 100 || speed < 100)
 		return 0;
 	rearPwm = abs(speed);
-	if(speed > 0) //Forwards
-	{
-		rearFwdHi;
-		rearRevLo;
-	}
-	else if(speed < 0)//Reverse
-	{
-		rearRevHi;
-		rearFwdLo;
-	}
+	if(speed > 0)		//Forwards
+		rearMotorForward;
+	else if(speed < 0)	//Reverse
+		rearMotorReverse;
 	else
-	{
-		rearFwdLo;
-		rearRevLo;
-		return 0;
-	}
-	return 1;
+		rearMotorStop;
+	return 0;
 }
 
 /*
@@ -564,25 +458,15 @@ char rearMotorDrive(signed char speed)
 char frontRightMotorDrive(signed char speed)
 {
 	if(speed > 100 || speed < 100)
-		return 0;
+		return 1;
 	frontRightPwm = abs(speed);
-	if(speed > 0) //Forwards
-	{
-		frontRightFwdHi;
-		frontRightRevLo;
-	}
-	else if(speed < 0)//Reverse
-	{
-		frontRightRevHi;
-		frontRightFwdLo;
-	}
+	if(speed > 0)		//Forwards
+		frontRightMotorForward;
+	else if(speed < 0)	//Reverse
+		frontRightMotorReverse;
 	else
-	{
-		frontRightFwdLo;
-		frontRightRevLo;
-		return 0;
-	}
-	return 1;
+		frontRightMotorStop;
+	return 0;	//Always return 0 on success, non zero on error
 }
 
 /*
@@ -608,23 +492,13 @@ char frontRightMotorDrive(signed char speed)
 char frontLeftMotorDrive(signed char speed)
 {
 	if(speed > 100 || speed < 100)
-		return 0;
+		return 1;
 	frontLeftPwm = abs(speed);
 	if(speed > 0) //Forwards
-	{
-		frontLeftFwdHi;
-		frontLeftRevLo;
-	}
+		frontLeftMotorForward;
 	else if(speed < 0)//Reverse
-	{
-		frontLeftRevHi;
-		frontLeftFwdLo;
-	}
+		frontLeftMotorReverse;
 	else
-	{
-		frontLeftFwdLo;
-		frontLeftRevLo;
-		return 0;
-	}
-	return 1;
+		frontLeftMotorStop;
+	return 0;
 }

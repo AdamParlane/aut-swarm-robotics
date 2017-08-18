@@ -13,16 +13,14 @@
 * BD6211 Motor driver Datasheet:http://rohmfs.rohm.com/en/products/databook/datasheet/ic/motor/dc/bd621x-e.pdf
 *
 * Functions:
-* void motor_init(void);
-* void moveRobot(float direction, unsigned char speed);
-* void wiggleForward(uint8_t forwardSpeed, uint8_t lateralSpeed, uint8_t direction)
-* void stopRobot(void);
-* void rotateRobot(signed char speed);
-* void dfDockRobot(void);
-* void setTestMotors(uint8_t motorData[]);
-* char motor1Drive(signed char speed)
-* char motor2Drive(signed char speed)
-* char motor3Drive(signed char speed)
+* void motorInit(void)
+* void moveRobot(float direction, unsigned char speed)
+* void stopRobot(void)
+* void rotateRobot(signed char speed)
+* void setTestMotors(uint8_t motorData[])
+* char rearMotorDrive(signed char speed)
+* char frontRightMotorDrive(signed char speed)
+* char frontLeftMotorDrive(signed char speed)
 *
 */
 
@@ -112,7 +110,7 @@
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*
 * Function:
-* void motor_init(void)
+* void motorInit(void)
 *
 * Initialises microcontroller's PWM feature and PIO on the pins connected to the motor drivers.
 *
@@ -123,7 +121,7 @@
 * none
 *
 */
-void motor_init(void);
+void motorInit(void);
 
 /*
 * Function:

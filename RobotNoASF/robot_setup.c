@@ -53,7 +53,7 @@ void robotSetup(void)
 	pioInit();							//Initialise the PIO controllers
 	adcSingleConvInit();				//Initialise ADC for single conversion mode
 	pioLedInit();							//Initialise the LEDs on the mid board
-	motor_init();						//Initialise the motor driver chips
+	motorInit();						//Initialise the motor driver chips
 	SPI_Init();							//Initialise SPI for talking with optical sensor
 	twi0Init();							//Initialise TWI0 interface
 	twi2Init();							//Initialise TWI2 interface
