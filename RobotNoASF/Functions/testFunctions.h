@@ -32,9 +32,9 @@
 #define STOP_STREAMING			0xFF
 
 
-#define MOTOR_1					0x01
-#define MOTOR_2					0x02
-#define MOTOR_3					0x03
+#define REAR_MOTOR				0x01
+#define F_RIGHT_MOTOR					0x02
+#define F_LEFT_MOTOR					0x03
 
 struct transmitDataStructure
 {

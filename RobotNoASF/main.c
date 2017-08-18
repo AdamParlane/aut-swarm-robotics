@@ -26,8 +26,8 @@
 uint8_t SBtest, SBtest1;
 uint16_t DBtest, DBtest1, DBtest2;
 uint16_t battVoltage;					//Stores battery voltage on start up
-extern struct Position robotPosition;	//Passed to docking functions
-uint16_t adam, matt;
+extern struct Position robotPosition;	//Passed to docking functions and test functions
+
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*
 * Function:
@@ -58,6 +58,7 @@ int main(void)
 	struct frame_info frame; //Xbee API frame
 	struct message_info message; //Incoming message with XBee metadata removed
 	struct transmitDataStructure transmitMessage; //struct to transmit to PC
+	
 	mainRobotState = IDLE;
 	//moveRobot(0, 40);	
 	while(1)
@@ -67,19 +68,22 @@ int main(void)
 			case TEST:
 				if(newDataFlag || streamIntervalFlag)//get the new test data
 				{
-					testMode = testManager(message, &transmitMessage, &robotPosition);//get the new test data
+					//get the new test data
+					testMode = testManager(message, &transmitMessage, &robotPosition);
 				}
 				if(testMode == STOP_STREAMING)
 					mainRobotState = IDLE;
 				else if(testMode == SINGLE_SAMPLE)
 				{
 					mainRobotState = IDLE;
-					SendXbeeAPITransmitRequest(COORDINATOR_64,UNKNOWN_16, transmitMessage.Data, transmitMessage.DataSize);  //Send the Message
+					SendXbeeAPITransmitRequest(COORDINATOR_64,UNKNOWN_16, transmitMessage.Data, 
+												transmitMessage.DataSize);  //Send the Message
 				}
 				else if(streamIntervalFlag && testMode == STREAM_DATA)
 				{
 					streamIntervalFlag = 0;
-					SendXbeeAPITransmitRequest(COORDINATOR_64,UNKNOWN_16, transmitMessage.Data, transmitMessage.DataSize);  //Send the Message
+					SendXbeeAPITransmitRequest(COORDINATOR_64,UNKNOWN_16, transmitMessage.Data,
+												transmitMessage.DataSize);  //Send the Message
 				}
 			break;
 			
@@ -103,7 +107,8 @@ int main(void)
 			
 			case DOCKING:
 				//if battery low or manual command set
-				dockRobot(&robotPosition);	//Execute docking procedure state machine
+				if(!dfDockRobot(&robotPosition))	//Execute docking procedure state machine
+					mainRobotState = IDLE;			//If finished docking, go IDLE
 			break;
 				
 			case FORMATION:
@@ -111,7 +116,8 @@ int main(void)
 			break;
 			
 			case CHARGING:
-				ledOn1;
+				if(!fdelay_ms(500))					//Blink LED in charge mode
+					led1Tog;
 				chargeInfo = chargeDetector();
 				if(chargeInfo == BATT_CHARGING)
 					break;
@@ -119,13 +125,18 @@ int main(void)
 					mainRobotState = mainRobotStatePrev;
 				else
 					mainRobotState = MANUAL;
-				ledOff1;
 			break;
 			
 			case IDLE:
 				//idle
 				decision();
 				stopRobot();
+				if(!fdelay_ms(500))					//Blink LED in charge mode
+				{
+					led1Tog;
+					led2Tog;
+					led3Tog;	
+				}
 			break;
 		}
 		

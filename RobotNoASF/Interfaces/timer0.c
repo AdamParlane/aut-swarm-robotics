@@ -181,11 +181,11 @@ int delay_ms(uint32_t period_ms)
 * 0 when time is up, otherwise 1
 *
 * Implementation:
-* TODO:[explain key steps of function]
-* [use heavy detail for anything complicated]
-*
-* Improvements:
-* [Ideas for improvements that are yet to be made](optional)
+* A state machine governs this timer. The start state will read off the time that the delay started
+* from the system time stamp. From here it moves to the wait state. If the system time stamp isn't
+* greater than the start time plus the delay period, then time isn;t up, so return 1. If the desired
+* amount of time has elapsed, then move to the stop state, and reset the function. Return 0 when
+* done.
 *
 */
 uint8_t fdelay_ms(uint32_t period_ms)
@@ -198,19 +198,19 @@ uint8_t fdelay_ms(uint32_t period_ms)
 	switch(delayState)
 	{
 		case START:
-		get_ms(&startTime);
-		delayState = WAIT;
+			get_ms(&startTime);
+			delayState = WAIT;
 		break;
 		
 		case WAIT:
-		get_ms(&timeStamp);
-		if(timeStamp > startTime + period_ms)
-		delayState = STOP;
+			get_ms(&timeStamp);
+			if(timeStamp > startTime + period_ms)
+			delayState = STOP;
 		break;
 		
 		case STOP:
-		delayState = START;
-		return 0;
+			delayState = START;
+			return 0;
 		break;
 	}
 	return 1;

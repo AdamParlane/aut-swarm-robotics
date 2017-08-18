@@ -52,8 +52,8 @@ void robotSetup(void)
 	masterClockInit();					//Initialise the master clock to 100MHz
 	pioInit();							//Initialise the PIO controllers
 	adcSingleConvInit();				//Initialise ADC for single conversion mode
-	ledInit();							//Initialise the LEDs on the mid board
-	motor_init();						//Initialise the motor driver chips
+	pioLedInit();						//Initialise the LEDs on the mid board
+	motorInit();						//Initialise the motor driver chips
 	SPI_Init();							//Initialise SPI for talking with optical sensor
 	twi0Init();							//Initialise TWI0 interface
 	twi2Init();							//Initialise TWI2 interface
@@ -66,7 +66,7 @@ void robotSetup(void)
 	imuInit();							//Initialise IMU.
 	extIntInit();						//Initialise external interrupts.
 	imuDmpInit();						//Initialise DMP system
-	mouseInit();						//May require further testing - Adam
+	mouseInit();						//Initialise mouse sensor
 #if defined ROBOT_TARGET_V2
 	lfInit();							//Initialise line follow sensors. Only on V2.
 #endif

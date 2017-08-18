@@ -13,16 +13,14 @@
 * BD6211 Motor driver Datasheet:http://rohmfs.rohm.com/en/products/databook/datasheet/ic/motor/dc/bd621x-e.pdf
 *
 * Functions:
-* void motor_init(void);
+* void motorInit(void);
+* char rearMotorDrive(signed char speed)
+* char frontRightMotorDrive(signed char speed)
+* char frontLeftMotorDrive(signed char speed)
 * void moveRobot(float direction, unsigned char speed);
-* void wiggleForward(uint8_t forwardSpeed, uint8_t lateralSpeed, uint8_t direction)
 * void stopRobot(void);
 * void rotateRobot(signed char speed);
-* void dockRobot(void);
 * void setTestMotors(uint8_t motorData[]);
-* char motor1Drive(signed char speed)
-* char motor2Drive(signed char speed)
-* char motor3Drive(signed char speed)
 *
 */
 
@@ -34,51 +32,85 @@
 #include "../robot_setup.h"
 
 //////////////[Defines]/////////////////////////////////////////////////////////////////////////////
-//Miscellaneous
- // just changed these from 0 and 1, hopefully doesnt change anything
-
+//[[[IMPORTANT]]]
+//Forward drives the motors in a direction that gets the robot moving in a clockwise direction.
+//Reverse drives the motors in a direction that gets the robot moving in an anti-clockwise direction
 //****Motor Pins***//
 //	Robot Version 1 pin assignment
 #if defined ROBOT_TARGET_V1
-//Motor 1
-#define	FIN_1_L	(REG_PIOB_CODR |= (1<<12))
-#define	FIN_1_H	(REG_PIOB_SODR |= (1<<12))
-#define	RIN_1_L	(REG_PIOC_CODR |= (1<<22))
-#define	RIN_1_H	(REG_PIOC_SODR |= (1<<22))
-//Motor 2
-#define	FIN_2_L	(REG_PIOC_CODR |= (1<<19))
-#define	FIN_2_H	(REG_PIOC_SODR |= (1<<19))
-#define	RIN_2_L	(REG_PIOA_CODR |= (1<<31))
-#define	RIN_2_H	(REG_PIOA_SODR |= (1<<31))
-//Motor 3
-#define	FIN_3_L	(REG_PIOA_CODR |= (1<<29))
-#define	FIN_3_H	(REG_PIOA_SODR |= (1<<29))
-#define	RIN_3_L	(REG_PIOA_CODR |= (1<<30))
-#define	RIN_3_H	(REG_PIOA_SODR |= (1<<30))
+//Rear motor (1)
+#define	rearFwdLo				(REG_PIOB_CODR |= (1<<12))
+#define	rearFwdHi				(REG_PIOB_SODR |= (1<<12))
+#define	rearRevLo				(REG_PIOC_CODR |= (1<<22))
+#define	rearRevHi				(REG_PIOC_SODR |= (1<<22))
+#define rearMotorForward		{rearFwdHi; rearRevLo;}
+#define rearMotorReverse		{rearRevHi; rearFwdLo;}
+#define rearMotorStop			{rearFwdLo; rearRevLo;}
+#define rearMotorBrake			{rearFwdHi; rearRevHi;}
+	
+//Front right motor (2)
+#define	frontRightFwdLo			(REG_PIOC_CODR |= (1<<19))
+#define	frontRightFwdHi			(REG_PIOC_SODR |= (1<<19))
+#define	frontRightRevLo			(REG_PIOA_CODR |= (1<<31))
+#define	frontRightRevHi			(REG_PIOA_SODR |= (1<<31))
+#define frontRightMotorForward	{frontRightFwdHi; frontRightRevLo;}
+#define frontRightMotorReverse	{frontRightRevHi; frontRightFwdLo;}
+#define frontRightMotorStop		{frontRightFwdLo; frontRightRevLo;}
+#define frontRightMotorBrake	{frontRightFwdHi; frontRightRevHi;}
+	
+//Front left motor (3)
+#define	frontLeftFwdLo			(REG_PIOA_CODR |= (1<<29))
+#define	frontLeftFwdHi			(REG_PIOA_SODR |= (1<<29))
+#define	frontLeftRevLo			(REG_PIOA_CODR |= (1<<30))
+#define	frontLeftRevHi			(REG_PIOA_SODR |= (1<<30))
+#define frontLeftMotorForward	{frontLeftFwdHi; frontLeftRevLo;}
+#define frontLeftMotorReverse	{frontLeftRevHi; frontLeftFwdLo;}
+#define frontLeftMotorStop		{frontLeftFwdLo; frontLeftRevLo;}
+#define frontLeftMotorBrake		{frontLeftFwdHi; frontLeftRevHi;}
 #endif
+
 //	Robot Version 2 pin assignment
 #if defined ROBOT_TARGET_V2
-//Motor 1
-#define	FIN_1_L	(REG_PIOC_CODR |= (1<<23))
-#define	FIN_1_H	(REG_PIOC_SODR |= (1<<23))
-#define	RIN_1_L	(REG_PIOC_CODR |= (1<<22))
-#define	RIN_1_H	(REG_PIOC_SODR |= (1<<22))
-//Motor 2
-#define	FIN_2_L	(REG_PIOC_CODR |= (1<<19))
-#define	FIN_2_H	(REG_PIOC_SODR |= (1<<19))
-#define	RIN_2_L	(REG_PIOA_CODR |= (1<<31))
-#define	RIN_2_H	(REG_PIOA_SODR |= (1<<31))
-//Motor 3
-#define	FIN_3_L	(REG_PIOA_CODR |= (1<<29))
-#define	FIN_3_H	(REG_PIOA_SODR |= (1<<29))
-#define	RIN_3_L	(REG_PIOC_CODR |= (1<<10))
-#define	RIN_3_H	(REG_PIOC_SODR |= (1<<10))
+//Rear motor (1)
+#define	rearFwdLo				(REG_PIOC_CODR |= (1<<23))
+#define	rearFwdHi				(REG_PIOC_SODR |= (1<<23))
+#define	rearRevLo				(REG_PIOC_CODR |= (1<<22))
+#define	rearRevHi				(REG_PIOC_SODR |= (1<<22))
+#define rearMotorForward		{rearFwdHi; rearRevLo;}
+#define rearMotorReverse		{rearRevHi; rearFwdLo;}
+#define rearMotorStop			{rearFwdLo; rearRevLo;}
+#define rearMotorBrake			{rearFwdHi; rearRevHi;}
+	
+//Front right motor (2)
+#define	frontRightFwdLo			(REG_PIOC_CODR |= (1<<19))
+#define	frontRightFwdHi			(REG_PIOC_SODR |= (1<<19))
+#define	frontRightRevLo			(REG_PIOA_CODR |= (1<<31))
+#define	frontRightRevHi			(REG_PIOA_SODR |= (1<<31))
+#define frontRightMotorForward	{frontRightFwdHi; frontRightRevLo;}
+#define frontRightMotorReverse	{frontRightRevHi; frontRightFwdLo;}
+#define frontRightMotorStop		{frontRightFwdLo; frontRightRevLo;}
+#define frontRightMotorBrake	{frontRightFwdHi; frontRightRevHi;}
+	
+//Front left motor (3)
+#define	frontLeftFwdLo			(REG_PIOA_CODR |= (1<<29))
+#define	frontLeftFwdHi			(REG_PIOA_SODR |= (1<<29))
+#define	frontLeftRevLo			(REG_PIOC_CODR |= (1<<10))
+#define	frontLeftRevHi			(REG_PIOC_SODR |= (1<<10))
+#define frontLeftMotorForward	{frontLeftFwdHi; frontLeftRevLo;}
+#define frontLeftMotorReverse	{frontLeftRevHi; frontLeftFwdLo;}
+#define frontLeftMotorStop		{frontLeftFwdLo; frontLeftRevLo;}
+#define frontLeftMotorBrake		{frontLeftFwdHi; frontLeftRevHi;}
 #endif
+
+//PWM duty cycle channels
+#define frontLeftPwm			REG_PWM_CUPD1
+#define frontRightPwm			REG_PWM_CUPD2
+#define rearPwm					REG_PWM_CUPD3
 
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*
 * Function:
-* void motor_init(void)
+* void motorInit(void)
 *
 * Initialises microcontroller's PWM feature and PIO on the pins connected to the motor drivers.
 *
@@ -89,7 +121,61 @@
 * none
 *
 */
-void motor_init(void);
+void motorInit(void);
+
+/*
+*
+* Function:
+* char rearMotorDrive(signed char speed)
+*
+* Runs rear motor at desired speed and direction. Negative speed value will make robot turn to the
+* left (CCW), whereas positive speed will make robot turn to the right (CW)
+*
+* Inputs:
+* char speed -100- +100
+*
+* Returns:
+* char: 0 if success
+*		1 if speed is out of range
+*
+*/
+char rearMotorDrive(signed char speed);
+
+/*
+*
+* Function:
+* char frontRightMotorDrive(signed char speed)
+*
+* Runs front right motor at desired speed and direction. Negative speed value will make robot turn
+* to the left (CCW), whereas positive speed will make robot turn to the right (CW)
+*
+* Inputs:
+* char speed -100- +100
+*
+* Returns:
+* char: 0 if success
+*		1 if speed is out of range
+*
+*/
+char frontRightMotorDrive(signed char speed);
+
+/*
+*
+* Function:
+* char frontLeftMotorDrive(signed char speed)
+*
+* Runs front left motor at desired speed and direction. Negative speed value will make robot turn
+* to the left (CCW), whereas positive speed will make robot turn to the right (CW)
+*
+* Inputs:
+* char speed -100- +100
+*
+* Returns:
+* char: 0 if success
+*		1 if speed is out of range
+*
+*/
+char frontLeftMotorDrive(signed char speed);
 
 /*
 * Function:
@@ -127,31 +213,6 @@ void moveRobot(signed int direction, unsigned char speed);
 *
 */
 void rotateRobot(signed char speed);
-
-/*
-* Function:
-* void wiggleForward(uint8_t forwardSpeed, uint8_t lateralSpeed, uint8_t direction)
-*
-* Will move robot forward at desired speed forward, but will also allow front motor to be turned on
-* so that direction of travel will become an arc to the left or right. Allows for line following and
-* docking.
-*
-* Inputs:
-* uint8_t forwardSpeed:
-*   Percentage of full speed that the robot will move forward at (0-100)
-*
-* uint8_t lateralSpeed:
-*   Percentage of full speed that the lateral wheel will be allowed to spin at to steer robot left
-*   or right. (0-100)
-*
-* uint8_t direction:
-*   Direction that robot will rotate towards on its arc (CW and CCW)
-*
-* Returns:
-* none
-*
-*/
-void wiggleForward(uint8_t forwardSpeed, uint8_t lateralSpeed, uint8_t direction);
 
 /*
 * Function:
@@ -205,56 +266,24 @@ void PWMSpeedTest(void);
 */
 void setTestMotors(uint8_t motorData[]);
 
-
 /*
-*
 * Function:
-* char rearMotorDrive(signed char speed)
+* uint8_t steerRobot(uint8_t speed, int8_t turnRatio)
 *
-* Runs motor 1 at desired speed and direction
+* Allows robot to turn while moving forward.
 *
 * Inputs:
-* char speed -100- +100
+* uint8_t speed:
+*   A percentage of maximum speed (0-100%)
+* int8_t turnRatio:
+*   The ratio of rotation to be applied to the motion (+-%). if turnRatio is 0%, then robot just
+*   drives straight at 'speed'. -100% will have robot rotating on the spot anti-clockwise at
+*   'speed'. 50% would be half and half driving forward with a clockwise rotational element applied.
 *
 * Returns:
-* char: 1 if success
-*		0 if speed is out of range
+* 0 on success
 *
 */
-char rearMotorDrive(signed char speed);
-
-/*
-*
-* Function:
-* char frontRightMotorDrive(signed char speed)
-*
-* Runs motor 2 at desired speed and direction
-*
-* Inputs:
-* char speed -100- +100
-*
-* Returns:
-* char: 1 if success
-*		0 if speed is out of range
-*
-*/
-char frontRightMotorDrive(signed char speed);
-
-/*
-*
-* Function:
-* char frontLeftMotorDrive(signed char speed)
-*
-* Runs motor 3 at desired speed and direction
-*
-* Inputs:
-* char speed -100- +100
-*
-* Returns:
-* char: 1 if success
-*		0 if speed is out of range
-*
-*/
-char frontLeftMotorDrive(signed char speed);
+uint8_t steerRobot(uint8_t speed, int8_t turnRatio);
 
 #endif /* MOTOR_DRIVER_H_ */
