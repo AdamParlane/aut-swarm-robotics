@@ -1,7 +1,7 @@
 /*
 * obstacle_avoidance.c
 *
-* Author : Matthew Witt (pxf5695@autuni.ac.nz)
+* Author : Adam Parlane
 * Created: 8/08/2017 3:08:20 PM
 *
 * Project Repository: https://github.com/AdamParlane/aut-swarm-robotics
@@ -13,7 +13,8 @@
 * Relevant reference materials or datasheets if applicable
 *
 * Functions:
-* uint8_t scanProxSensors(uint8_t obstacleDetected)
+* uint8_t scanProximity(void)
+* void dodgeObstacle(signed int aim, char speed)
 *
 */
 
@@ -21,45 +22,86 @@
 #include "obstacle_avoidance.h"
 
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
+
 /*
 * Function:
-* uint8_t scanProxSensors(uint8_t obstacleDetected)
+* char void scanProximity(void)
 *
-* Scans all proximity sensors. If any sensor has a value below the distance threshold then it
-* returns a 1. Tells the program when it should switch to the obstacle avoidance state.
+* Updates latest proximity values in an array
 *
 * Inputs:
-* uint8_t obstacleDetected
-*   A reference parameter that returns a 1 if anything is detected by the proximity sensors, 
-*   otherwise returns a 0.
+* No Inputs
 *
 * Returns:
-* Returns non zero on error when reading proximity sensors. 
-* TODO: Define error codes for scanProxSensors()
+* No return values
 *
 * Implementation:
-* Reads the value from each proximity sensor one by one using a for loop. If a proximity sensor is
-* found to have a value that exceeds the 'in range' threshold (ie something is within 100mm of the
-* robot) then set obstacleDetected to 1 and return from the function without error.
-*
-* Improvements:
-* Add error code returns. (requires error returns for proxSensRead())
+* Loops through proximity sensors using a for loop
+* CW starting at A, F, E, D, C, B
+* Reads each proximity sensor and fills the proximity array with their values
 *
 */
-uint8_t scanProxSensors(uint8_t *obstacleDetected)
+void scanProximity(void)
 {
-	uint16_t sensorValue = 0;
-	*obstacleDetected = 0;  
-	for(uint16_t sensor = MUX_PROXSENS_A; sensor <= MUX_PROXSENS_B; sensor++)
+	uint8_t index = 0;
+	for(uint16_t i = MUX_PROXSENS_A; i <= MUX_PROXSENS_B; i++)
 	{
-		sensorValue = proxSensRead(sensor);
-		if (sensorValue > PS_IN_RANGE)
-		{
-			*obstacleDetected = 1;
-			return 0;
-		}
-	} 
-	return 0;
+		proximity[index] = proxSensRead(i);
+		index++;
+	}		
 }
 
 
+/*
+* Function:
+* void dodgeObstacle(signed int aim, char speed)
+*
+* Will make the robot avoid obstacles while (hopefully remain on the current track
+*
+* Inputs:
+* Aim, the direction robot was heading irrespective of obstacles
+* Speed, the speed the robot was heading irrespective of obstacles
+*
+* Returns:
+* No return values
+*
+* Implementation:
+* [WIP] - AP
+*
+* Improvements:
+* [WIP]
+*
+*/
+void dodgeObstacle(signed int aim, char speed)
+{
+	scanProximity();	//update proximity readings
+	uint16_t proxRange = 0;
+	uint8_t indexLeft, indexRight;
+	for(uint8_t index = 0; index < 6 ; index++)
+	{
+		proxRange = index * 60; //convert angle to degrees
+		indexLeft = index + 1;
+		indexRight = index - 1;
+		//keep left and right indexes in range
+		if(indexLeft > 5)
+			indexLeft = 0;
+		if(indexRight > 5)
+			indexRight = 5;
+		if((aim > (proxRange - 30) && (aim < (proxRange + 30))) || ((index == 0) && (aim > 330) && (aim < 30)))
+		{
+			if((proximity[index] > OBSTACLE_THRESHOLD) || (proximity[indexLeft] > 1000) || (proximity[indexRight] > 1000))
+			{
+				if(proximity[indexLeft] > proximity[indexRight])
+				{
+					moveRobot((aim - 60), speed);//moveRight
+				}
+				else if (proximity[indexLeft] < proximity[indexRight])
+				{
+					moveRobot((aim + 60), speed);//move left
+				}
+			}
+			else
+				moveRobot(aim, speed);
+		}	
+	}				
+}

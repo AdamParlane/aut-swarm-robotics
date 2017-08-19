@@ -53,14 +53,15 @@ int main(void)
 	robotSetup();
 	battVoltage = fcBatteryVoltage();	//Add to your watch to keep an eye on the battery
 	uint8_t testMode = 0x00;
+	aim = 0; 
+	aimSpeed = 30;
 	char chargeInfo;
 	char error; //used for developement to log and watch errors - AP
 	struct frame_info frame; //Xbee API frame
 	struct message_info message; //Incoming message with XBee metadata removed
 	struct transmitDataStructure transmitMessage; //struct to transmit to PC
-	
+	srand(streamDelayCounter);		//Seed rand() to give unique random numbers
 	mainRobotState = IDLE;
-	
 	while(1)
 	{
 		switch (mainRobotState)
@@ -130,9 +131,8 @@ int main(void)
 			case IDLE:
 				//idle
 				stopRobot();
-				if(!fdelay_ms(500))					//Blink LED in charge mode
+				if(!fdelay_ms(500))					//Blink LED in Idle mode
 				{
-					led1Tog;
 					led2Tog;
 					led3Tog;	
 				}
@@ -143,5 +143,7 @@ int main(void)
 		//the communications port or from the navigation sensors.
 		getNewCommunications(&frame, &message);
 		nfRetrieveNavData();
+		if(obstacleAvoidanceEnabledFlag)
+			dodgeObstacle(aim, aimSpeed);
 	}
 }

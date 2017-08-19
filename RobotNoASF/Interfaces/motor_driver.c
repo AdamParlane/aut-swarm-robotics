@@ -173,6 +173,9 @@ char rearMotorDrive(signed char speed)
 {
 	if(speed > 100 || speed < -100)
 		return 1;
+#if defined ROBOT_TARGET_V1
+	speed = speed *0.8; //robot #2 has the read wheel as 30:1 and is too fast 
+#endif
 	rearPwm = abs(speed);
 	if(speed > 0)		//Forwards
 		rearMotorForward;
@@ -280,7 +283,7 @@ char frontLeftMotorDrive(signed char speed)
 * The robot speed is then cos(motor direction - desired robot direction) (performed in radians)
 * This will produce a ratio up to 1 of the full speed in order to achieve the correct direction
 * This is also multiplied by the desired speed to achieve an overall robot speed
-* The long part with if statments simply turns on the correct FIN and RIN pins to achieve the 
+* The long part with if statements simply turns on the correct FIN and RIN pins to achieve the 
 * desired MOTOR direction, this is based off the speed calculation which could return negative
 * Finally the ABSOLUTE value of the motorxspeed is written to the PWM_CUPD register to update
 * the duty cycle.
@@ -295,7 +298,7 @@ void moveRobot(signed int direction, unsigned char speed)
 	float directionRad;
 
 	//keep direction in range +/-180degrees
-	direction = imuWrapAngle(direction);
+	//direction = imuWrapAngle(direction);
 
 	//stop speed from being over max in case of user input error
 	if(speed > 100)
@@ -304,8 +307,7 @@ void moveRobot(signed int direction, unsigned char speed)
 	rearMotorSpeed = speed * cos ((270 * M_PI) / 180 - directionRad );//radians
 	frontRightMotorSpeed = speed * cos ((30  * M_PI) / 180 - directionRad );
 	frontLeftMotorSpeed = speed * cos ((150 * M_PI) / 180 - directionRad );
-	
-	//motor 2 & 3 is wired backwards on test robot so forward and back is flipped
+
 	frontLeftMotorDrive(frontLeftMotorSpeed);
 	frontRightMotorDrive(frontRightMotorSpeed);
 	rearMotorDrive(rearMotorSpeed);
@@ -341,6 +343,8 @@ void moveRobot(signed int direction, unsigned char speed)
 */
 void rotateRobot(signed char speed)
 {
+	if(speed > 100 || speed < -100)	//In range check
+		speed = 0;
 	frontLeftMotorDrive(speed);
 	frontRightMotorDrive(speed);
 	rearMotorDrive(speed);
