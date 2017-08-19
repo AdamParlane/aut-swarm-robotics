@@ -96,7 +96,8 @@ struct Position
 char newDataFlag; //TODO:used for test function probably temporary ((still temporary?)
 char mainRobotState, mainRobotStatePrev;	//main function state machine states
 volatile char streamDelayCounter, streamIntervalFlag;	//TODO:What are these?
-
+signed int aim;
+char aimSpeed;
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*
 * Function:

@@ -418,6 +418,8 @@ char mfRandomMovementGenerator(void)
 	char speed = rand() % 100;		//get random speed:up to 100%
 	char runTime = rand() % 5;		//get random delay time: up to 5 seconds
 	moveRobot(direction, speed);	//moveRobot at random speed and direction
+	aim = direction;
+	aimSpeed = speed;
 	delay_ms(runTime * 1000);		//Delay for random milliseconds
 	return 0;
 }

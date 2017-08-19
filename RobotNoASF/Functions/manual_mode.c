@@ -55,6 +55,8 @@ void manualControl(struct message_info tmessage)
 	if(tmessage.command == MANUAL_STRAIGHT)
 	{
 		moveRobot(straightDirection, receivedTestData[2]);
+		aim = straightDirection;
+		aimSpeed = receivedTestData[2];
 	}
 	else if(tmessage.command == MANUAL_STOP)
 	{

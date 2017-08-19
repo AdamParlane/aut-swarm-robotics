@@ -53,8 +53,8 @@ int main(void)
 	robotSetup();
 	battVoltage = fcBatteryVoltage();	//Add to your watch to keep an eye on the battery
 	uint8_t testMode = 0x00;
-	signed int aim = 0;
-	char speed = 0;
+	aim = 0; 
+	aimSpeed = 30;
 	char chargeInfo;
 	char error; //used for developement to log and watch errors - AP
 	struct frame_info frame; //Xbee API frame
@@ -144,6 +144,6 @@ int main(void)
 		getNewCommunications(&frame, &message);
 		nfRetrieveNavData();
 		if(obstacleAvoidanceEnabledFlag)
-			dodgeObstacle(aim, speed);
+			dodgeObstacle(aim, aimSpeed);
 	}
 }
