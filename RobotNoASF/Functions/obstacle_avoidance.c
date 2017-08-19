@@ -81,8 +81,37 @@ signed int dodgeObstacle(signed int aim)
 	//static uint16_t previousProximity[6];
 	//memcpy(previousProximity, proximity, 6);
 	scanProximity();//proximity);
-
-	if( (aim > 330) || (aim < 30))//A
+	uint16_t set;
+	uint8_t indexLeft, indexRight;
+	for(uint8_t index = 0; index < 6 ; index++;)
+	{
+		set = index * 60;
+		indexLeft = index++
+		indexRight = index--;
+		if(indexLeft > 5)
+			indexLeft = 0;
+		if(indexRight > 5)
+			indexRight = 5;
+		if((aim > (set - 30) && (aim < (set+30))) || ((index == 0) && (aim > 330) && (aim < 30)))
+		{
+			if((proximity[index] > OBSTACLE_THRESHOLD) || (proximity[indexLeft] > 1000) || (proximity[indexRight] > 1000))
+			{
+				if(proximity[indexLeft] > proximity[indexRight])
+				{
+					aim -= 60;
+					moveRobot(aim, 40);//moveRight
+				}
+				else if (proximity[indexLeft] < proximity[indexRight])
+				{
+					aim += 60;
+					moveRobot(aim, 40);//move left
+				}
+			}
+			//else
+			//moveRobot(aim, 40);
+		}	
+	}
+	/*if( (aim > 330) || (aim < 30))//A
 	{
 		if((proximity[0] > OBSTACLE_THRESHOLD) || (proximity[1] > 1000) || (proximity[5] > 1000))//Prox A obstacle
 		{
@@ -189,10 +218,10 @@ signed int dodgeObstacle(signed int aim)
 		}
 		else
 		moveRobot(aim, 40);
-	}
+	}*/
 	if(aim > 360)
 		aim -= 360;	
 	if(aim < 0)
 		aim += 360;			
-	return 0;		
+	return aim;		
 }
