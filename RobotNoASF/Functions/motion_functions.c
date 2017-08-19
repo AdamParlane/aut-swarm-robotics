@@ -414,7 +414,6 @@ float mfTrackLightProx(struct Position *imuData)
 */
 char mfRandomMovementGenerator(void)
 {
-	srand(streamIntervalFlag);		//Seed rand() to give unique random numbers
 	int direction = rand() % 360;	//get random direction range: 0 - 360 degrees
 	char speed = rand() % 100;		//get random speed:up to 100%
 	char runTime = rand() % 5;		//get random delay time: up to 5 seconds

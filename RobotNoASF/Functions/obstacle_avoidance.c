@@ -76,15 +76,15 @@ void scanProximity(void)//uint16_t proximity[6])
 	}		
 }
 
-void dodgeObstacle(signed int aim)
+signed int dodgeObstacle(signed int aim)
 {
 	//static uint16_t previousProximity[6];
 	//memcpy(previousProximity, proximity, 6);
 	scanProximity();//proximity);
 
-	if( (aim > 330) && (aim < 30))//A
+	if( (aim > 330) || (aim < 30))//A
 	{
-		if(proximity[0] > OBSTACLE_THRESHOLD )//Prox A obstacle
+		if((proximity[0] > OBSTACLE_THRESHOLD) || (proximity[1] > 1000) || (proximity[5] > 1000))//Prox A obstacle
 		{
 			if(proximity[1] > proximity[5])
 			{
@@ -100,7 +100,7 @@ void dodgeObstacle(signed int aim)
 	}
 	if( (aim > 30) && (aim < 90))//F
 	{
-		if(proximity[1] > OBSTACLE_THRESHOLD )//Prox F obstacle
+		if((proximity[1] > OBSTACLE_THRESHOLD) || (proximity[2] > 1000) || (proximity[0] > 1000) )//Prox F obstacle
 		{
 			if(proximity[2] > proximity[0])
 			{
@@ -116,7 +116,7 @@ void dodgeObstacle(signed int aim)
 	}
 	if( (aim > 90) && (aim < 150))//E
 	{
-		if(proximity[2] > OBSTACLE_THRESHOLD )//Prox E obstacle
+		if((proximity[2] > OBSTACLE_THRESHOLD) || (proximity[3] > 1000) || (proximity[1] > 1000) )//Prox E obstacle
 		{
 			if(proximity[3] > proximity[1])
 			{
@@ -132,7 +132,7 @@ void dodgeObstacle(signed int aim)
 	}
 	if( (aim > 150) && (aim < 210))//D
 	{
-		if(proximity[3] > OBSTACLE_THRESHOLD )//Prox D obstacle
+		if((proximity[3] > OBSTACLE_THRESHOLD) || (proximity[4] > 1000) || (proximity[2] > 1000) )//Prox D obstacle
 		{
 			if(proximity[4] > proximity[2])
 			{
@@ -148,7 +148,7 @@ void dodgeObstacle(signed int aim)
 	}
 	if( (aim > 210) && (aim < 270))//C
 	{
-		if(proximity[4] > OBSTACLE_THRESHOLD )//Prox C obstacle
+		if((proximity[4] > OBSTACLE_THRESHOLD) || (proximity[5] > 1000) || (proximity[3] > 1000) )//Prox C obstacle
 		{
 			if(proximity[5] > proximity[3])
 			{
@@ -164,7 +164,7 @@ void dodgeObstacle(signed int aim)
 	}
 	if( (aim > 270) && (aim < 360))//B
 	{
-		if(proximity[5] > OBSTACLE_THRESHOLD )//Prox B obstacle
+		if((proximity[5] > OBSTACLE_THRESHOLD) || (proximity[0] > 1000) || (proximity[4] > 1000) )//Prox B obstacle
 		{
 			if(proximity[0] > proximity[4])
 			{
@@ -181,5 +181,6 @@ void dodgeObstacle(signed int aim)
 	if(aim > 360)
 		aim -= 360;	
 	if(aim < 0)
-		aim += 360;					
+		aim += 360;			
+	return aim;		
 }

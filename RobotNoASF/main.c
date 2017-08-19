@@ -60,6 +60,8 @@ int main(void)
 	struct transmitDataStructure transmitMessage; //struct to transmit to PC
 	moveRobot(0, 30);
 	aim = 0;
+	srand(streamDelayCounter);		//Seed rand() to give unique random numbers
+
 	mainRobotState = IDLE;
 	//moveRobot(0, 40);	
 	while(1)
@@ -130,8 +132,9 @@ int main(void)
 			
 			case IDLE:
 				//idle
-				dodgeObstacle(aim);
-				//stopRobot();
+				//aim = dodgeObstacle(aim);
+				
+				mfRandomMovementGenerator();//stopRobot();
 				if(!fdelay_ms(500))					//Blink LED in Idle mode
 				{
 					led2Tog;
