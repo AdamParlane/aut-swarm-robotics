@@ -70,9 +70,6 @@ void scanProximity(void)//uint16_t proximity[6])
 	{
 		proximity[index] = proxSensRead(i);
 		index++;
-		
-		uint16_t adam = proxSensRead(MUX_PROXSENS_A);
-		uint16_t matt = adam;	
 	}		
 }
 
@@ -83,10 +80,10 @@ signed int dodgeObstacle(signed int aim)
 	scanProximity();//proximity);
 	uint16_t set;
 	uint8_t indexLeft, indexRight;
-	for(uint8_t index = 0; index < 6 ; index++;)
+	for(uint8_t index = 0; index < 6 ; index++)
 	{
 		set = index * 60;
-		indexLeft = index++
+		indexLeft = index++;
 		indexRight = index--;
 		if(indexLeft > 5)
 			indexLeft = 0;
