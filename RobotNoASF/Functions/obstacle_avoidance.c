@@ -1,7 +1,7 @@
 /*
 * obstacle_avoidance.c
 *
-* Author : Matthew Witt (pxf5695@autuni.ac.nz)
+* Author : Adam Parlane
 * Created: 8/08/2017 3:08:20 PM
 *
 * Project Repository: https://github.com/AdamParlane/aut-swarm-robotics
@@ -13,7 +13,8 @@
 * Relevant reference materials or datasheets if applicable
 *
 * Functions:
-* uint8_t scanProxSensors(uint8_t obstacleDetected)
+* uint8_t scanProximity(void)
+* void dodgeObstacle(signed int aim, char speed)
 *
 */
 
@@ -22,48 +23,25 @@
 
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
 
-char  currentDirection = 0;
-#define speed 40
-
-void decision(void)
-{
-	
-	//static uint16_t proximity[6], previousProximity[6];
-	static uint16_t previousProximity[6];
-	memcpy(previousProximity, proximity, 6);
-	scanProximity();//proximity);
-	signed int desiredDirectionPlus = currentDirection;
-	signed int desiredDirectionMinus = currentDirection;
-	for(uint8_t index = 0; index < 6; index++)
-	{
-		if((proximity[index] > OBSTACLE_THRESHOLD) && (((index*60) - currentDirection) > 30))//obstacle detected in the way
-		{
-			if(proximity[index] > previousProximity[index])//obstacle approaching
-			{
-				//bash it out, could end up in a function
-				//desiredDirection[index] = (index * 60 - 180);
-				desiredDirectionPlus = (desiredDirectionPlus + (60*index));
-				desiredDirectionMinus = (desiredDirectionMinus - (60*index));				
-			}
-		}
-	}
-	//average desired directions
-	//choose closest
-	if((desiredDirectionPlus - currentDirection) > (desiredDirectionMinus + currentDirection))
-	{
-		moveRobot(desiredDirectionMinus, speed);
-		currentDirection = desiredDirectionMinus;
-	}
-	else if((desiredDirectionPlus - currentDirection) < (desiredDirectionMinus + currentDirection))
-	{
-		moveRobot(desiredDirectionPlus, speed);
-		currentDirection = desiredDirectionPlus;
-	}
-
-}
-
-//CW starting at A, F, E, D, C, B
-void scanProximity(void)//uint16_t proximity[6])
+/*
+* Function:
+* char void scanProximity(void)
+*
+* Updates latest proximity values in an array
+*
+* Inputs:
+* No Inputs
+*
+* Returns:
+* No return values
+*
+* Implementation:
+* Loops through proximity sensors using a for loop
+* CW starting at A, F, E, D, C, B
+* Reads each proximity sensor and fills the proximity array with their values
+*
+*/
+void scanProximity(void)
 {
 	uint8_t index = 0;
 	for(uint16_t i = MUX_PROXSENS_A; i <= MUX_PROXSENS_B; i++)
@@ -73,152 +51,57 @@ void scanProximity(void)//uint16_t proximity[6])
 	}		
 }
 
-signed int dodgeObstacle(signed int aim)
+
+/*
+* Function:
+* void dodgeObstacle(signed int aim, char speed)
+*
+* Will make the robot avoid obstacles while (hopefully remain on the current track
+*
+* Inputs:
+* Aim, the direction robot was heading irrespective of obstacles
+* Speed, the speed the robot was heading irrespective of obstacles
+*
+* Returns:
+* No return values
+*
+* Implementation:
+* [WIP] - AP
+*
+* Improvements:
+* [WIP]
+*
+*/
+void dodgeObstacle(signed int aim, char speed)
 {
-	//static uint16_t previousProximity[6];
-	//memcpy(previousProximity, proximity, 6);
-	scanProximity();//proximity);
-	uint16_t set;
+	scanProximity();	//update proximity readings
+	uint16_t proxRange = 0;
 	uint8_t indexLeft, indexRight;
 	for(uint8_t index = 0; index < 6 ; index++)
 	{
-		set = index * 60;
-		indexLeft = index++;
-		indexRight = index--;
+		proxRange = index * 60; //convert angle to degrees
+		indexLeft = index + 1;
+		indexRight = index - 1;
+		//keep left and right indexes in range
 		if(indexLeft > 5)
 			indexLeft = 0;
 		if(indexRight > 5)
 			indexRight = 5;
-		if((aim > (set - 30) && (aim < (set+30))) || ((index == 0) && (aim > 330) && (aim < 30)))
+		if((aim > (proxRange - 30) && (aim < (proxRange + 30))) || ((index == 0) && (aim > 330) && (aim < 30)))
 		{
 			if((proximity[index] > OBSTACLE_THRESHOLD) || (proximity[indexLeft] > 1000) || (proximity[indexRight] > 1000))
 			{
 				if(proximity[indexLeft] > proximity[indexRight])
 				{
-					aim -= 60;
-					moveRobot(aim, 40);//moveRight
+					moveRobot((aim - 60), speed);//moveRight
 				}
 				else if (proximity[indexLeft] < proximity[indexRight])
 				{
-					aim += 60;
-					moveRobot(aim, 40);//move left
+					moveRobot((aim + 60), speed);//move left
 				}
 			}
-			//else
-			//moveRobot(aim, 40);
+			else
+				moveRobot(aim, speed);
 		}	
-	}
-	/*if( (aim > 330) || (aim < 30))//A
-	{
-		if((proximity[0] > OBSTACLE_THRESHOLD) || (proximity[1] > 1000) || (proximity[5] > 1000))//Prox A obstacle
-		{
-			if(proximity[1] > proximity[5])
-			{
-				aim -= 60;
-				moveRobot(aim, 40);
-			}
-			else if (proximity[1] < proximity[5])
-			{
-				aim += 60;
-				moveRobot(aim, 40);//move left
-			}
-		}
-		else
-			moveRobot(aim, 40);
-	}
-	if( (aim > 30) && (aim < 90))//F
-	{
-		if((proximity[1] > OBSTACLE_THRESHOLD) || (proximity[2] > 1000) || (proximity[0] > 1000) )//Prox F obstacle
-		{
-			if(proximity[2] > proximity[0])
-			{
-				aim -= 60;
-				moveRobot(aim, 40);
-			}
-			else if (proximity[2] < proximity[0])
-			{
-				aim += 60;
-				moveRobot(aim, 40);//move left
-			}
-		}
-		else
-		moveRobot(aim, 40);		
-	}
-	if( (aim > 90) && (aim < 150))//E
-	{
-		if((proximity[2] > OBSTACLE_THRESHOLD) || (proximity[3] > 1000) || (proximity[1] > 1000) )//Prox E obstacle
-		{
-			if(proximity[3] > proximity[1])
-			{
-				aim -= 60;
-				moveRobot(aim, 40);
-			}
-			else if (proximity[3] < proximity[1])
-			{
-				aim += 60;
-				moveRobot(aim, 40);//move left
-			}
-		}
-		else
-		moveRobot(aim, 40);
-	}
-	if( (aim > 150) && (aim < 210))//D
-	{
-		if((proximity[3] > OBSTACLE_THRESHOLD) || (proximity[4] > 1000) || (proximity[2] > 1000) )//Prox D obstacle
-		{
-			if(proximity[4] > proximity[2])
-			{
-				aim -= 60;
-				moveRobot(aim, 40);
-			}
-			else if (proximity[4] < proximity[2])
-			{
-				aim += 60;
-				moveRobot(aim, 40);//move left
-			}
-		}
-		else
-		moveRobot(aim, 40);
-	}
-	if( (aim > 210) && (aim < 270))//C
-	{
-		if((proximity[4] > OBSTACLE_THRESHOLD) || (proximity[5] > 1000) || (proximity[3] > 1000) )//Prox C obstacle
-		{
-			if(proximity[5] > proximity[3])
-			{
-				aim -= 60;
-				moveRobot(aim, 40);
-			}
-			else if (proximity[5] < proximity[3])
-			{
-				aim += 60;
-				moveRobot(aim, 40);//move left
-			}
-		}
-		else
-		moveRobot(aim, 40);
-	}
-	if( (aim > 270) && (aim < 360))//B
-	{
-		if((proximity[5] > OBSTACLE_THRESHOLD) || (proximity[0] > 1000) || (proximity[4] > 1000) )//Prox B obstacle
-		{
-			if(proximity[0] > proximity[4])
-			{
-				aim -= 60;
-				moveRobot(aim, 40);
-			}
-			else if (proximity[0] < proximity[4])
-			{
-				aim += 60;
-				moveRobot(aim, 40);//move left
-			}
-		}
-		else
-		moveRobot(aim, 40);
-	}*/
-	if(aim > 360)
-		aim -= 360;	
-	if(aim < 0)
-		aim += 360;			
-	return aim;		
+	}				
 }

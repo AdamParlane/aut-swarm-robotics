@@ -27,7 +27,7 @@ uint8_t SBtest, SBtest1;
 uint16_t DBtest, DBtest1, DBtest2;
 uint16_t battVoltage;					//Stores battery voltage on start up
 extern struct Position robotPosition;	//Passed to docking functions and test functions
-signed int aim;
+
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*
 * Function:
@@ -53,17 +53,15 @@ int main(void)
 	robotSetup();
 	battVoltage = fcBatteryVoltage();	//Add to your watch to keep an eye on the battery
 	uint8_t testMode = 0x00;
+	signed int aim = 0;
+	char speed = 0;
 	char chargeInfo;
 	char error; //used for developement to log and watch errors - AP
 	struct frame_info frame; //Xbee API frame
 	struct message_info message; //Incoming message with XBee metadata removed
 	struct transmitDataStructure transmitMessage; //struct to transmit to PC
-	moveRobot(0, 30);
-	aim = 0;
 	srand(streamDelayCounter);		//Seed rand() to give unique random numbers
-
 	mainRobotState = IDLE;
-	//moveRobot(0, 40);	
 	while(1)
 	{
 		switch (mainRobotState)
@@ -132,9 +130,7 @@ int main(void)
 			
 			case IDLE:
 				//idle
-				aim = dodgeObstacle(aim);
-				
-				//mfRandomMovementGenerator();//stopRobot();
+				stopRobot();
 				if(!fdelay_ms(500))					//Blink LED in Idle mode
 				{
 					led2Tog;
@@ -147,6 +143,7 @@ int main(void)
 		//the communications port or from the navigation sensors.
 		getNewCommunications(&frame, &message);
 		nfRetrieveNavData();
-
+		if(obstacleAvoidanceEnabledFlag)
+			dodgeObstacle(aim, speed);
 	}
 }

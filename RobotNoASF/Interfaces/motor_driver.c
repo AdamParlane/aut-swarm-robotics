@@ -173,6 +173,9 @@ char rearMotorDrive(signed char speed)
 {
 	if(speed > 100 || speed < -100)
 		return 1;
+#if defined ROBOT_TARGET_V1
+	speed = speed *0.8; //robot #2 has the read wheel as 30:1 and is too fast 
+#endif
 	rearPwm = abs(speed);
 	if(speed > 0)		//Forwards
 		rearMotorForward;
