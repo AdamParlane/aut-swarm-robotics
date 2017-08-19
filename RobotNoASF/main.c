@@ -132,9 +132,9 @@ int main(void)
 			
 			case IDLE:
 				//idle
-				//aim = dodgeObstacle(aim);
+				aim = dodgeObstacle(aim);
 				
-				mfRandomMovementGenerator();//stopRobot();
+				//mfRandomMovementGenerator();//stopRobot();
 				if(!fdelay_ms(500))					//Blink LED in Idle mode
 				{
 					led2Tog;

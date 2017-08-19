@@ -97,6 +97,8 @@ signed int dodgeObstacle(signed int aim)
 				moveRobot(aim, 40);//move left
 			}
 		}
+		else
+			moveRobot(aim, 40);
 	}
 	if( (aim > 30) && (aim < 90))//F
 	{
@@ -113,6 +115,8 @@ signed int dodgeObstacle(signed int aim)
 				moveRobot(aim, 40);//move left
 			}
 		}
+		else
+		moveRobot(aim, 40);		
 	}
 	if( (aim > 90) && (aim < 150))//E
 	{
@@ -129,6 +133,8 @@ signed int dodgeObstacle(signed int aim)
 				moveRobot(aim, 40);//move left
 			}
 		}
+		else
+		moveRobot(aim, 40);
 	}
 	if( (aim > 150) && (aim < 210))//D
 	{
@@ -145,6 +151,8 @@ signed int dodgeObstacle(signed int aim)
 				moveRobot(aim, 40);//move left
 			}
 		}
+		else
+		moveRobot(aim, 40);
 	}
 	if( (aim > 210) && (aim < 270))//C
 	{
@@ -161,6 +169,8 @@ signed int dodgeObstacle(signed int aim)
 				moveRobot(aim, 40);//move left
 			}
 		}
+		else
+		moveRobot(aim, 40);
 	}
 	if( (aim > 270) && (aim < 360))//B
 	{
@@ -177,10 +187,12 @@ signed int dodgeObstacle(signed int aim)
 				moveRobot(aim, 40);//move left
 			}
 		}
+		else
+		moveRobot(aim, 40);
 	}
 	if(aim > 360)
 		aim -= 360;	
 	if(aim < 0)
 		aim += 360;			
-	return aim;		
+	return 0;		
 }
