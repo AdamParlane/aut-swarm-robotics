@@ -178,9 +178,9 @@ char rearMotorDrive(signed char speed)
 #endif
 	rearPwm = abs(speed);
 	if(speed > 0)		//Forwards
-		rearMotorForward;
+		rearMotorCW;
 	if(speed < 0)		//Reverse
-		rearMotorReverse;
+		rearMotorCCW;
 	if(speed == 0)	
 		rearMotorStop;
 	return 0;
@@ -213,9 +213,9 @@ char frontRightMotorDrive(signed char speed)
 		return 1;
 	frontRightPwm = abs(speed);
 	if(speed > 0)		//Forwards
-		frontRightMotorForward;
+		frontRightMotorCW;
 	if(speed < 0)	//Reverse
-		frontRightMotorReverse;
+		frontRightMotorCCW;
 	if(speed == 0)	
 		frontRightMotorStop;
 	return 0;	//Always return 0 on success, non zero on error
@@ -248,9 +248,9 @@ char frontLeftMotorDrive(signed char speed)
 		return 1;
 	frontLeftPwm = abs(speed);
 	if(speed > 0) //Forwards
-		frontLeftMotorForward;
+		frontLeftMotorCW;
 	if(speed < 0)//Reverse
-		frontLeftMotorReverse;
+		frontLeftMotorCCW;
 	if(speed == 0)	
 		frontLeftMotorStop;
 	return 0;
@@ -407,32 +407,32 @@ void setTestMotors(uint8_t motorData[])
 {
 	if(motorData[0] == REAR_MOTOR && (motorData[1] & 0x80))//check if bit 7 is set meaning forward
 	{
-		rearMotorForward;
+		rearMotorCW;
 		rearPwm = (motorData[1] & 0x7F);
 	}
 	else if(motorData[0] == REAR_MOTOR && ~(motorData[1] & 0x80))
 	{
-		rearMotorReverse;
+		rearMotorCCW;
 		rearPwm = (motorData[1] & 0x7F);
 	}
 	else if(motorData[0] == F_RIGHT_MOTOR && (motorData[1] & 0x80))//check if bit 7 is set meaning forward
 	{
-		frontRightMotorForward;
+		frontRightMotorCW;
 		frontRightPwm = (motorData[1] & 0x7F);
 	}
 	else if(motorData[0] == F_RIGHT_MOTOR && ~(motorData[1] & 0x80))
 	{
-		frontRightMotorReverse;
+		frontRightMotorCCW;
 		frontRightPwm = (motorData[1] & 0x7F);
 	}
 	else if(motorData[0] == F_LEFT_MOTOR && (motorData[1] & 0x80))//check if bit 7 is set meaning forward
 	{
-		frontLeftMotorForward;
+		frontLeftMotorCW;
 		frontLeftPwm = (motorData[1] & 0x7F);
 	}
 	else if(motorData[0] == F_LEFT_MOTOR && ~(motorData[1] & 0x80))
 	{
-		frontLeftMotorReverse;
+		frontLeftMotorCCW;
 		frontLeftPwm = (motorData[1] & 0x7F);
 	}
 }

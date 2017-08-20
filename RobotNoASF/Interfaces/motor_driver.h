@@ -43,8 +43,8 @@
 #define	rearFwdHi				(REG_PIOB_SODR |= (1<<12))
 #define	rearRevLo				(REG_PIOC_CODR |= (1<<22))
 #define	rearRevHi				(REG_PIOC_SODR |= (1<<22))
-#define rearMotorForward		{rearFwdHi; rearRevLo;}
-#define rearMotorReverse		{rearRevHi; rearFwdLo;}
+#define rearMotorCW		{rearFwdHi; rearRevLo;}
+#define rearMotorCCW		{rearRevHi; rearFwdLo;}
 #define rearMotorStop			{rearFwdLo; rearRevLo;}
 #define rearMotorBrake			{rearFwdHi; rearRevHi;}
 	
@@ -53,8 +53,8 @@
 #define	frontRightFwdHi			(REG_PIOC_SODR |= (1<<19))
 #define	frontRightRevLo			(REG_PIOA_CODR |= (1<<31))
 #define	frontRightRevHi			(REG_PIOA_SODR |= (1<<31))
-#define frontRightMotorForward	{frontRightFwdHi; frontRightRevLo;}
-#define frontRightMotorReverse	{frontRightRevHi; frontRightFwdLo;}
+#define frontRightMotorCW	{frontRightFwdHi; frontRightRevLo;}
+#define frontRightMotorCCW	{frontRightRevHi; frontRightFwdLo;}
 #define frontRightMotorStop		{frontRightFwdLo; frontRightRevLo;}
 #define frontRightMotorBrake	{frontRightFwdHi; frontRightRevHi;}
 	
@@ -63,8 +63,8 @@
 #define	frontLeftFwdHi			(REG_PIOA_SODR |= (1<<29))
 #define	frontLeftRevLo			(REG_PIOA_CODR |= (1<<30))
 #define	frontLeftRevHi			(REG_PIOA_SODR |= (1<<30))
-#define frontLeftMotorForward	{frontLeftFwdHi; frontLeftRevLo;}
-#define frontLeftMotorReverse	{frontLeftRevHi; frontLeftFwdLo;}
+#define frontLeftMotorCW	{frontLeftFwdHi; frontLeftRevLo;}
+#define frontLeftMotorCCW	{frontLeftRevHi; frontLeftFwdLo;}
 #define frontLeftMotorStop		{frontLeftFwdLo; frontLeftRevLo;}
 #define frontLeftMotorBrake		{frontLeftFwdHi; frontLeftRevHi;}
 #endif
@@ -76,8 +76,8 @@
 #define	rearFwdHi				(REG_PIOC_SODR |= (1<<23))
 #define	rearRevLo				(REG_PIOC_CODR |= (1<<22))
 #define	rearRevHi				(REG_PIOC_SODR |= (1<<22))
-#define rearMotorForward		{rearFwdHi; rearRevLo;}
-#define rearMotorReverse		{rearRevHi; rearFwdLo;}
+#define rearMotorCW				{rearFwdHi; rearRevLo;}
+#define rearMotorCCW			{rearRevHi; rearFwdLo;}
 #define rearMotorStop			{rearFwdLo; rearRevLo;}
 #define rearMotorBrake			{rearFwdHi; rearRevHi;}
 	
@@ -86,8 +86,8 @@
 #define	frontRightFwdHi			(REG_PIOC_SODR |= (1<<19))
 #define	frontRightRevLo			(REG_PIOA_CODR |= (1<<31))
 #define	frontRightRevHi			(REG_PIOA_SODR |= (1<<31))
-#define frontRightMotorForward	{frontRightFwdHi; frontRightRevLo;}
-#define frontRightMotorReverse	{frontRightRevHi; frontRightFwdLo;}
+#define frontRightMotorCW		{frontRightFwdHi; frontRightRevLo;}
+#define frontRightMotorCCW		{frontRightRevHi; frontRightFwdLo;}
 #define frontRightMotorStop		{frontRightFwdLo; frontRightRevLo;}
 #define frontRightMotorBrake	{frontRightFwdHi; frontRightRevHi;}
 	
@@ -96,8 +96,8 @@
 #define	frontLeftFwdHi			(REG_PIOA_SODR |= (1<<29))
 #define	frontLeftRevLo			(REG_PIOC_CODR |= (1<<10))
 #define	frontLeftRevHi			(REG_PIOC_SODR |= (1<<10))
-#define frontLeftMotorForward	{frontLeftFwdHi; frontLeftRevLo;}
-#define frontLeftMotorReverse	{frontLeftRevHi; frontLeftFwdLo;}
+#define frontLeftMotorCW		{frontLeftFwdHi; frontLeftRevLo;}
+#define frontLeftMotorCCW		{frontLeftRevHi; frontLeftFwdLo;}
 #define frontLeftMotorStop		{frontLeftFwdLo; frontLeftRevLo;}
 #define frontLeftMotorBrake		{frontLeftFwdHi; frontLeftRevHi;}
 #endif
