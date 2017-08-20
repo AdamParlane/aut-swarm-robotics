@@ -56,6 +56,7 @@ int main(void)
 	aim = 0; 
 	aimSpeed = 30;
 	char chargeInfo;
+			short interruptStatus = 0;
 	char error; //used for developement to log and watch errors - AP
 	struct frame_info frame; //Xbee API frame
 	struct message_info message; //Incoming message with XBee metadata removed
@@ -131,11 +132,12 @@ int main(void)
 			case IDLE:
 				//idle
 				stopRobot();
-				if(!fdelay_ms(500))					//Blink LED in Idle mode
-				{
-					led2Tog;
-					led3Tog;	
-				}
+				//if(!fdelay_ms(500))					//Blink LED in Idle mode
+				//{
+					//led2Tog;
+					//led3Tog;	
+				//}
+						//mpu_get_int_status(&interruptStatus);
 			break;
 		}
 		

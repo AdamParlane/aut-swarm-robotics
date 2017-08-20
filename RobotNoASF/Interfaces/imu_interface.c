@@ -114,9 +114,22 @@ int imuInit(void)
 int imuDmpInit(void)
 {
 	int result = 0;			//If > 0 then error has occurred
+	
 	//Orientation correction matrix for the IMU. Allows the output to be corrected, no matter
 	//how the IMU is orientated relative to the robot.
-	
+#if defined ROBOT_TARGET_V1
+	//This is the orientation matrix for the V1 robots with the IMU mounted on the top of the
+	//main board.
+	static signed char gyro_orientation[9] =
+	//  X    Y   Z
+	{  -1,   0,	 0,  //X
+		0,	-1,	 0,  //Y
+		0,	 0,	 1	 //Z
+	};
+	//Both Y and Z axis are inverted because the chip is mounted upside down.
+#endif
+
+#if defined ROBOT_TARGET_V2	
 	//This is the orientation matrix for the V2 robots with the IMU mounted on the underside of the
 	//main board.
 	static signed char gyro_orientation[9] =
@@ -126,6 +139,7 @@ int imuDmpInit(void)
 		0,	 0,	 -1  //Z
 	};
 	//Both Y and Z axis are inverted because the chip is mounted upside down.
+#endif
 	
 	result += dmp_load_motion_driver_firmware();		// Load the DMP firmware
 	//Send the orientation correction matrix
@@ -411,39 +425,9 @@ uint8_t imuCommTest(void)
 void imuApplyYawCorrection(float correctHeading, struct Position *imuData)
 {
 	//Make sure correctHeading is in range
-	correctHeading = imuWrapAngle(correctHeading);
+	correctHeading = nfWrapAngle(correctHeading);
 	//Take difference and apply it to imuYawOffset.
 	imuData->imuYawOffset += correctHeading - imuData->imuYaw;
 	//Wrap imuYawOffset so its always between -180 and 180 degrees
-	imuData->imuYawOffset = imuWrapAngle(imuData->imuYawOffset);
-}
-
-/*
-* Function:
-* float imuWrapAngle(float angleDeg)
-*
-* Will take any angle in degrees and convert it to its equivalent value between -180 and 180 degrees
-*
-* Inputs:
-* float angleDeg
-*   Angle to wrap
-*
-* Returns:
-* Wrapped equivalent of the given angle
-*
-* Implementation:
-* Uses modulus to return the remainder of the given angle divided by 180. If the given angle was 
-* less than -180 then this is the new angle. Otherwise if the original angle is greater than 180
-* then the remainder has 180 subtracted from it and this becomes the new value. In any other case
-* (Which is just if the input angle is less than 180 and greater than -180) just return the input
-* value because it is already in range.
-*
-*/
-float imuWrapAngle(float angleDeg)
-{
-	while(angleDeg > 180.0)
-		angleDeg -= 360.0;
-	while(angleDeg < -179.99)
-		angleDeg += 360.0;
-	return angleDeg;
+	imuData->imuYawOffset = nfWrapAngle(imuData->imuYawOffset);
 }

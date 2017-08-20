@@ -26,7 +26,6 @@
 * unsigned char imuDmpStart(void)
 * unsigned short invOrientationMatrixToScalar(const signed char *mtx)
 * unsigned short invRow2Scale(const signed char *row)
-* void nfGetEulerAngles(struct Position *imuData)
 * uint8_t imuReadFifo(struct Position *imuData)
 * uint8_t imuCommTest(void)
 * void imuApplyYawCorrection(float correctHeading, struct Position *imuData)
@@ -224,21 +223,5 @@ uint8_t imuCommTest(void);
 *
 */
 void imuApplyYawCorrection(float correctHeading, struct Position *imuData);
-
-/*
-* Function:
-* float imuWrapAngle(float angleDeg)
-*
-* Will take any angle in degrees and convert it to its equivalent value between -180 and 180 degrees
-*
-* Inputs:
-* float angleDeg
-*   Angle to wrap
-*
-* Returns:
-* Wrapped equivalent of the given angle
-*
-*/
-float imuWrapAngle(float angleDeg);
 
 #endif /* IMU_INTERFACE_H_ */

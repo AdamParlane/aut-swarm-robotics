@@ -15,6 +15,7 @@
 * Functions:
 * uint8_t nfRetrieveNavData(void)
 * void nfGetEulerAngles(struct Position *imuData)
+* float nfWrapAngle(float angleDeg)
 *
 */
 
@@ -23,6 +24,7 @@
 
 //////////////[Includes]////////////////////////////////////////////////////////////////////////////
 #include "../robot_setup.h"
+#include "../IMU-DMP/inv_mpu_CUSTOM.h"
 
 //////////////[Defines]/////////////////////////////////////////////////////////////////////////////
 
@@ -66,5 +68,21 @@ uint8_t nfRetrieveNavData(void);
 *
 */
 void nfGetEulerAngles(struct Position *imuData);
+
+/*
+* Function:
+* float nfWrapAngle(float angleDeg)
+*
+* Will take any angle in degrees and convert it to its equivalent value between -180 and 180 degrees
+*
+* Inputs:
+* float angleDeg
+*   Angle to wrap
+*
+* Returns:
+* Wrapped equivalent of the given angle
+*
+*/
+float nfWrapAngle(float angleDeg);
 
 #endif /* NAVIGATION_FUNCTIONS_H_ */
