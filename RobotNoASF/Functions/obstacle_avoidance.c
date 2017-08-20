@@ -93,11 +93,14 @@ void dodgeObstacle(signed int aim, char speed)
 			{
 				if(proximity[indexLeft] > proximity[indexRight])
 				{
-					moveRobot((aim - 60), speed);//moveRight
+					aim +=90;
+					moveRobot(aim, speed);//moveLeft
+					
 				}
 				else if (proximity[indexLeft] < proximity[indexRight])
 				{
-					moveRobot((aim + 60), speed);//move left
+					aim -= 90;
+					moveRobot(aim, speed);//move right
 				}
 			}
 			else

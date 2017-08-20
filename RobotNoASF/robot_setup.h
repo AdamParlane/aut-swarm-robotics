@@ -98,6 +98,7 @@ char mainRobotState, mainRobotStatePrev;	//main function state machine states
 volatile char streamDelayCounter, streamIntervalFlag;	//TODO:What are these?
 signed int aim;
 char aimSpeed;
+char movingFlag;
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*
 * Function:
