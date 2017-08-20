@@ -403,40 +403,56 @@ void stopRobot(void)
 * Maybe some of the PWM registers could be given more read-friendly names?
 *
 */
+//void setTestMotors(uint8_t motorData[])
+//{
+	//if(motorData[0] == REAR_MOTOR && (motorData[1] & 0x80))//check if bit 7 is set meaning forward
+	//{
+		//rearMotorCW;
+		//rearPwm = (motorData[1] & 0x7F);
+	//}
+	//else if(motorData[0] == REAR_MOTOR && ~(motorData[1] & 0x80))
+	//{
+		//rearMotorCCW;
+		//rearPwm = (motorData[1] & 0x7F);
+	//}
+	//else if(motorData[0] == F_RIGHT_MOTOR && (motorData[1] & 0x80))//check if bit 7 is set meaning forward
+	//{
+		//frontRightMotorCW;
+		//frontRightPwm = (motorData[1] & 0x7F);
+	//}
+	//else if(motorData[0] == F_RIGHT_MOTOR && ~(motorData[1] & 0x80))
+	//{
+		//frontRightMotorCCW;
+		//frontRightPwm = (motorData[1] & 0x7F);
+	//}
+	//else if(motorData[0] == F_LEFT_MOTOR && (motorData[1] & 0x80))//check if bit 7 is set meaning forward
+	//{
+		//frontLeftMotorCW;
+		//frontLeftPwm = (motorData[1] & 0x7F);
+	//}
+	//else if(motorData[0] == F_LEFT_MOTOR && ~(motorData[1] & 0x80))
+	//{
+		//frontLeftMotorCCW;
+		//frontLeftPwm = (motorData[1] & 0x7F);
+	//}
+//}
 void setTestMotors(uint8_t motorData[])
 {
-	if(motorData[0] == REAR_MOTOR && (motorData[1] & 0x80))//check if bit 7 is set meaning forward
-	{
-		rearMotorCW;
-		rearPwm = (motorData[1] & 0x7F);
-	}
-	else if(motorData[0] == REAR_MOTOR && ~(motorData[1] & 0x80))
-	{
-		rearMotorCCW;
-		rearPwm = (motorData[1] & 0x7F);
-	}
-	else if(motorData[0] == F_RIGHT_MOTOR && (motorData[1] & 0x80))//check if bit 7 is set meaning forward
-	{
-		frontRightMotorCW;
-		frontRightPwm = (motorData[1] & 0x7F);
-	}
-	else if(motorData[0] == F_RIGHT_MOTOR && ~(motorData[1] & 0x80))
-	{
-		frontRightMotorCCW;
-		frontRightPwm = (motorData[1] & 0x7F);
-	}
-	else if(motorData[0] == F_LEFT_MOTOR && (motorData[1] & 0x80))//check if bit 7 is set meaning forward
-	{
-		frontLeftMotorCW;
-		frontLeftPwm = (motorData[1] & 0x7F);
-	}
-	else if(motorData[0] == F_LEFT_MOTOR && ~(motorData[1] & 0x80))
-	{
-		frontLeftMotorCCW;
-		frontLeftPwm = (motorData[1] & 0x7F);
-	}
+	if(motorData[0] == REAR_MOTOR && (motorData[1] & 0x80))			//if bit 7 is set then CW
+		rearMotorDrive((motorData[1] & 0x7F));						//Rear motor, Clockwise
+	else if(motorData[0] == REAR_MOTOR && ~(motorData[1] & 0x80))	//else CCW
+		rearMotorDrive(-(motorData[1] & 0x7F));						//Rear motor, AntiClockwise
+		
+	else if(motorData[0] == F_RIGHT_MOTOR && (motorData[1] & 0x80))	//if bit 7 is set then CW
+		frontRightMotorDrive((motorData[1] & 0x7F));				//FR motor, Clockwise
+	else if(motorData[0] == F_RIGHT_MOTOR && ~(motorData[1] & 0x80))//else CCW
+		frontRightMotorDrive(-(motorData[1] & 0x7F));				//FR motor, AntiClockwise
+		
+	else if(motorData[0] == F_LEFT_MOTOR && (motorData[1] & 0x80))	//if bit 7 is set then CW
+		frontLeftMotorDrive((motorData[1] & 0x7F));					//FL motor, Clockwise
+	else if(motorData[0] == F_LEFT_MOTOR && ~(motorData[1] & 0x80))	//else CCW
+		frontLeftMotorDrive(-(motorData[1] & 0x7F));				//FL motor, AntiClockwise
 }
-
 /*
 *
 * Function:
@@ -541,12 +557,12 @@ uint8_t steerRobot(uint8_t speed, int8_t turnRatio)
 	
 	//Calculate speed ratios	
 	float rotationalSpeed = speed*(turnRatio/100.0);
-	float forwardSpeed = speed - (abs(rotationalSpeed));
+	float straightSpeed = speed - (abs(rotationalSpeed));
 	
 	//Apply speeds and directions to motors
 	//Only front motors provide forward drive. Rear motor is for rotation only.
-	frontRightMotorDrive((int8_t)(-forwardSpeed + rotationalSpeed));
-	frontLeftMotorDrive((int8_t)(forwardSpeed + rotationalSpeed));
+	frontRightMotorDrive((int8_t)(-straightSpeed + rotationalSpeed));
+	frontLeftMotorDrive((int8_t)(straightSpeed + rotationalSpeed));
 	rearMotorDrive((int8_t)rotationalSpeed);
 	
 	return 0;
