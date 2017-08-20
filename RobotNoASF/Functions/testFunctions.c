@@ -174,7 +174,12 @@ uint8_t testManager(struct message_info message, struct transmitDataStructure *t
 		break;
 		
 		case TEST_LINE_FOLLOWERS:
-		//TO DO Adam & Matt
+		peripheralReturnData = adcRead(receivedTestData[1]);
+		transmit->Data[1] = DATA_RETURN; //sending data out
+		transmit->Data[2] = receivedTestData[1];//Transmit the specific proximity sensor ID
+		transmit->Data[3] = peripheralReturnData >> 8; //upper data byte
+		transmit->Data[4] = peripheralReturnData & 0xFF; //lower data byte
+		transmit->DataSize = 5;
 		break;
 		
 		case TEST_FAST_CHARGE_CHIP:

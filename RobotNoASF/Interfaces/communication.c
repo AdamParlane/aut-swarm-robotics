@@ -124,14 +124,18 @@ void InterpretSwarmMessage(struct message_info message)
 	else if (message.command == 0xD4)
 		//move robot randomly
 		mfRandomMovementGenerator();		
-	else if (message.command == 0xD5)
+	else if (message.command == 0xD7)
 		mainRobotState = DOCKING;
-		//0xD6 and D7 are also reserved for docking 
+		//0xD6 and D5 are also reserved for docking 
 		//at a later date for different methods if required
 	else if (message.command == 0xD8)
 		obstacleAvoidanceEnabledFlag = 0;
 	else if (message.command == 0xD9)
 		obstacleAvoidanceEnabledFlag = 1;
+	else if (message.command == 0xDA)
+		mainRobotState = LIGHT_FOLLOW;
+	else if (message.command == 0xDB)
+		mainRobotState = LINE_FOLLOW;
 }
 
 /*
