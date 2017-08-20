@@ -114,9 +114,9 @@ int main(void)
 			break;
 			
 			case LINE_FOLLOW:
-				if(!dfFollowLine(35, &robotPosition));
-					movingFlag = 1;
+				if(!dfFollowLine(35, &robotPosition))
 					mainRobotState = IDLE;
+				movingFlag = 1;
 				break;
 					
 			case LIGHT_FOLLOW:

@@ -171,16 +171,15 @@ void motorInit(void)
 */
 char rearMotorDrive(signed char speed)
 {
-	if(speed > 100 || speed < -100)
-		return 1;
+	speed = capToRangeInt(speed, -100, 100);	//Make sure speed is in range
 #if defined ROBOT_TARGET_V1
 	speed = speed *0.8; //robot #2 has the read wheel as 30:1 and is too fast 
 #endif
 	rearPwm = abs(speed);
 	if(speed > 0)		//Forwards
-		rearMotorForward;
+		rearMotorCW;
 	if(speed < 0)		//Reverse
-		rearMotorReverse;
+		rearMotorCCW;
 	if(speed == 0)	
 		rearMotorStop;
 	return 0;
@@ -209,13 +208,12 @@ char rearMotorDrive(signed char speed)
 */
 char frontRightMotorDrive(signed char speed)
 {
-	if(speed > 100 || speed < -100)
-		return 1;
+	speed = capToRangeInt(speed, -100, 100);	//Make sure speed is in range
 	frontRightPwm = abs(speed);
 	if(speed > 0)		//Forwards
-		frontRightMotorForward;
+		frontRightMotorCW;
 	if(speed < 0)	//Reverse
-		frontRightMotorReverse;
+		frontRightMotorCCW;
 	if(speed == 0)	
 		frontRightMotorStop;
 	return 0;	//Always return 0 on success, non zero on error
@@ -244,13 +242,12 @@ char frontRightMotorDrive(signed char speed)
 */
 char frontLeftMotorDrive(signed char speed)
 {
-	if(speed > 100 || speed < -100)
-		return 1;
+	speed = capToRangeInt(speed, -100, 100);	//Make sure speed is in range
 	frontLeftPwm = abs(speed);
-	if(speed > 0) //Forwards
-		frontLeftMotorForward;
-	if(speed < 0)//Reverse
-		frontLeftMotorReverse;
+	if(speed > 0)	//Forwards
+		frontLeftMotorCW;
+	if(speed < 0)	//Reverse
+		frontLeftMotorCCW;
 	if(speed == 0)	
 		frontLeftMotorStop;
 	return 0;
@@ -301,8 +298,8 @@ void moveRobot(signed int direction, unsigned char speed)
 	//direction = nfWrapAngle(direction);
 
 	//stop speed from being over max in case of user input error
-	if(speed > 100)
-		speed = 100;
+	speed = capToRangeUint(speed, 0, 100);
+
 	directionRad = (direction * M_PI) / 180; //convert desired direction to radians
 	rearMotorSpeed = -1 * (speed * cos ((270 * M_PI) / 180 - directionRad ));//radians
 	frontRightMotorSpeed = -1 *(speed * cos ((30  * M_PI) / 180 - directionRad ));
@@ -343,8 +340,7 @@ void moveRobot(signed int direction, unsigned char speed)
 */
 void rotateRobot(signed char speed)
 {
-	if(speed > 100 || speed < -100)	//In range check
-		speed = 0;
+	speed = capToRangeInt(speed, -100, 100);	//In range check.
 	frontLeftMotorDrive(speed);
 	frontRightMotorDrive(speed);
 	rearMotorDrive(speed);
@@ -399,42 +395,23 @@ void stopRobot(void)
 * The speed will be used to update the duty cycle 
 * with bit masking to ensure only the first 7 bits are used
 *
-* Improvements:
-* Maybe some of the PWM registers could be given more read-friendly names?
-*
 */
 void setTestMotors(uint8_t motorData[])
 {
-	if(motorData[0] == REAR_MOTOR && (motorData[1] & 0x80))//check if bit 7 is set meaning forward
-	{
-		rearMotorForward;
-		rearPwm = (motorData[1] & 0x7F);
-	}
-	else if(motorData[0] == REAR_MOTOR && ~(motorData[1] & 0x80))
-	{
-		rearMotorReverse;
-		rearPwm = (motorData[1] & 0x7F);
-	}
-	else if(motorData[0] == F_RIGHT_MOTOR && (motorData[1] & 0x80))//check if bit 7 is set meaning forward
-	{
-		frontRightMotorForward;
-		frontRightPwm = (motorData[1] & 0x7F);
-	}
-	else if(motorData[0] == F_RIGHT_MOTOR && ~(motorData[1] & 0x80))
-	{
-		frontRightMotorReverse;
-		frontRightPwm = (motorData[1] & 0x7F);
-	}
-	else if(motorData[0] == F_LEFT_MOTOR && (motorData[1] & 0x80))//check if bit 7 is set meaning forward
-	{
-		frontLeftMotorForward;
-		frontLeftPwm = (motorData[1] & 0x7F);
-	}
-	else if(motorData[0] == F_LEFT_MOTOR && ~(motorData[1] & 0x80))
-	{
-		frontLeftMotorReverse;
-		frontLeftPwm = (motorData[1] & 0x7F);
-	}
+	if(motorData[0] == REAR_MOTOR && (motorData[1] & 0x80))			//if bit 7 is set then CW
+		rearMotorDrive((motorData[1] & 0x7F));						//Rear motor, Clockwise
+	else if(motorData[0] == REAR_MOTOR && ~(motorData[1] & 0x80))	//else CCW
+		rearMotorDrive(-(motorData[1] & 0x7F));						//Rear motor, AntiClockwise
+		
+	else if(motorData[0] == F_RIGHT_MOTOR && (motorData[1] & 0x80))	//if bit 7 is set then CW
+		frontRightMotorDrive((motorData[1] & 0x7F));				//FR motor, Clockwise
+	else if(motorData[0] == F_RIGHT_MOTOR && ~(motorData[1] & 0x80))//else CCW
+		frontRightMotorDrive(-(motorData[1] & 0x7F));				//FR motor, AntiClockwise
+		
+	else if(motorData[0] == F_LEFT_MOTOR && (motorData[1] & 0x80))	//if bit 7 is set then CW
+		frontLeftMotorDrive((motorData[1] & 0x7F));					//FL motor, Clockwise
+	else if(motorData[0] == F_LEFT_MOTOR && ~(motorData[1] & 0x80))	//else CCW
+		frontLeftMotorDrive(-(motorData[1] & 0x7F));				//FL motor, AntiClockwise
 }
 
 /*
@@ -532,21 +509,17 @@ void PWMSpeedTest(void)
 uint8_t steerRobot(uint8_t speed, int8_t turnRatio)
 {
 	//Make sure parameters are in range and correct if necessary
-	if(speed > 100)
-		speed = 100;
-	if(turnRatio > 100)
-		turnRatio = 100;
-	if(turnRatio < -100)
-		turnRatio = -100;
+	speed = capToRangeUint(speed, 0, 100);
+	turnRatio = capToRangeInt(turnRatio, -100, 100);
 	
 	//Calculate speed ratios	
 	float rotationalSpeed = speed*(turnRatio/100.0);
-	float forwardSpeed = speed - (abs(rotationalSpeed));
+	float straightSpeed = speed - (abs(rotationalSpeed));
 	
 	//Apply speeds and directions to motors
 	//Only front motors provide forward drive. Rear motor is for rotation only.
-	frontRightMotorDrive((int8_t)(-forwardSpeed + rotationalSpeed));
-	frontLeftMotorDrive((int8_t)(forwardSpeed + rotationalSpeed));
+	frontRightMotorDrive((int8_t)(-straightSpeed + rotationalSpeed));
+	frontLeftMotorDrive((int8_t)(straightSpeed + rotationalSpeed));
 	rearMotorDrive((int8_t)rotationalSpeed);
 	
 	return 0;

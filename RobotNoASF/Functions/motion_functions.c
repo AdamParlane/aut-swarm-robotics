@@ -86,10 +86,7 @@ float mfRotateToHeading(float heading, struct Position *imuData)
 		
 	//If motorSpeed ends up being out of range, then dial it back
 	motorSpeed = RTH_KP*pErr;
-	if(motorSpeed > 100)
-		motorSpeed = 100;
-	if(motorSpeed < -100)
-		motorSpeed = -100;
+	motorSpeed = capToRangeInt(motorSpeed, -100, 100);
 
 	//If error is less than 0.5 deg and delta yaw is less than 0.5 degrees per second then we can
 	//stop
@@ -151,8 +148,7 @@ float mfMoveToHeading(float heading, uint8_t speed, struct Position *imuData)
 	heading = nfWrapAngle(heading);
 	
 	//Make sure speed is in range
-	if(speed > 100)
-		speed = 100;
+	speed = capToRangeUint(speed, 0, 100);
 		
 	//Calculate proportional error values
 	pErr = heading - imuData->imuYaw;				//Signed Error
@@ -167,10 +163,7 @@ float mfMoveToHeading(float heading, uint8_t speed, struct Position *imuData)
 	
 	//If motorSpeed ends up being out of range, then dial it back
 	rotationSpeed = MTH_KP*pErr;
-	if(rotationSpeed > 100)
-		rotationSpeed = 100;
-	if(rotationSpeed < -100)
-		rotationSpeed = -100;
+	rotationSpeed = capToRangeInt(rotationSpeed, -100, 100);
 	
 	steerRobot(speed, rotationSpeed);
 	
@@ -266,7 +259,8 @@ float mfMoveToHeadingByDistance(float heading, uint8_t speed, uint32_t distance,
 * by the mfRotateToHeading() function which tries to correct the imbalance between the sensors.
 *
 * Improvements:
-* Possibility for integral run away if something goes wrong at the moment
+* Possibility for integral run away if something goes wrong at the moment.
+* Add speed parameter
 *
 */
 float mfTrackLight(struct Position *imuData)
@@ -285,10 +279,7 @@ float mfTrackLight(struct Position *imuData)
 			
 	//If dHeading ends up being out of range, then dial it back
 	dHeading = TL_KP*pErr + TL_KI*iErr;
-	if(dHeading > 90)
-		dHeading = 90;
-	if(dHeading < -90)
-		dHeading = -90;
+	dHeading = capToRangeInt(dHeading, -90, 90);
 	
 	//If error is less than 0.5 deg and delta yaw is less than 0.5 degrees per second then we can
 	//stop
@@ -309,7 +300,7 @@ float mfTrackLight(struct Position *imuData)
 * Function:
 * float mfTrackLightProx(struct Position *imuData)
 *
-* Function to track a light source using the proximity sensors.
+* Function to track a light source using the proximity sensors. [WIP]
 *
 * Inputs:
 * struct Position *imuData:
@@ -354,10 +345,7 @@ float mfTrackLightProx(struct Position *imuData)
 	
 	//If dHeading ends up being out of range, then dial it back
 	dHeading = TLP_KP*pErr + TLP_KI*iErr;
-	if(dHeading > 90)
-		dHeading = 90;
-	if(dHeading < -90)
-		dHeading = -90;
+	dHeading = capToRangeInt(dHeading, -90, 90);
 	
 	//If error is less than 0.5 deg and delta yaw is less than 0.5 degrees per second then we can
 	//stop
