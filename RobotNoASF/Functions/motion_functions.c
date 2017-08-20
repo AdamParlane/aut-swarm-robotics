@@ -259,7 +259,8 @@ float mfMoveToHeadingByDistance(float heading, uint8_t speed, uint32_t distance,
 * by the mfRotateToHeading() function which tries to correct the imbalance between the sensors.
 *
 * Improvements:
-* Possibility for integral run away if something goes wrong at the moment
+* Possibility for integral run away if something goes wrong at the moment.
+* Add speed parameter
 *
 */
 float mfTrackLight(struct Position *imuData)
@@ -299,7 +300,7 @@ float mfTrackLight(struct Position *imuData)
 * Function:
 * float mfTrackLightProx(struct Position *imuData)
 *
-* Function to track a light source using the proximity sensors.
+* Function to track a light source using the proximity sensors. [WIP]
 *
 * Inputs:
 * struct Position *imuData:
