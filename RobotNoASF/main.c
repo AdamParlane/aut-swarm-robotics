@@ -53,8 +53,9 @@ int main(void)
 	robotSetup();
 	battVoltage = fcBatteryVoltage();	//Add to your watch to keep an eye on the battery
 	uint8_t testMode = 0x00;
-	aim = 0; 
-	aimSpeed = 30;
+	aim = 180; 
+	aimSpeed = 50;
+	movingFlag = 1; //keeps track of whether robot should / shouldnt be moving
 	char chargeInfo;
 			short interruptStatus = 0;
 	char error; //used for developement to log and watch errors - AP
@@ -130,14 +131,12 @@ int main(void)
 			break;
 			
 			case IDLE:
-				//idle
 				stopRobot();
-				//if(!fdelay_ms(500))					//Blink LED in Idle mode
-				//{
-					//led2Tog;
-					//led3Tog;	
-				//}
-						//mpu_get_int_status(&interruptStatus);
+				if(!fdelay_ms(500))					//Blink LED in Idle mode
+				{
+					led2Tog;
+					led3Tog;	
+				}
 			break;
 		}
 		
@@ -145,7 +144,7 @@ int main(void)
 		//the communications port or from the navigation sensors.
 		getNewCommunications(&frame, &message);
 		nfRetrieveNavData();
-		if(obstacleAvoidanceEnabledFlag)
+		if(obstacleAvoidanceEnabledFlag && movingFlag)
 			dodgeObstacle(aim, aimSpeed);
 	}
 }

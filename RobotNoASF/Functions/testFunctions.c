@@ -139,25 +139,38 @@ uint8_t testManager(struct message_info message, struct transmitDataStructure *t
 		break;
 				
 		case TEST_IMU:
-		//The quaternions are long integers. (4bytes each).
+		//Pitch, Roll, Yaw all floats
 		transmit->Data[1] = DATA_RETURN; //sending data out
-		transmit->Data[2] = robotPosition->imuQW >> 24;		//upper byte
-		transmit->Data[3] = robotPosition->imuQW >> 16;		//upper middle byte
-		transmit->Data[4] = robotPosition->imuQW >> 8;		//lower middle byte
-		transmit->Data[5] = robotPosition->imuQW & 0xFF;	//lower byte		
-		transmit->Data[6] = robotPosition->imuQX >> 24;		//upper byte
-		transmit->Data[7] = robotPosition->imuQX >> 16;		//upper middle byte
-		transmit->Data[8] = robotPosition->imuQX >> 8;		//lower middle byte
-		transmit->Data[9] = robotPosition->imuQX & 0xFF;	//lower byte
-		transmit->Data[10] = robotPosition->imuQY >> 24;	//upper byte
-		transmit->Data[11] = robotPosition->imuQY >> 16;	//upper middle byte
-		transmit->Data[12] = robotPosition->imuQY >> 8;		//lower middle byte
-		transmit->Data[13] = robotPosition->imuQY & 0xFF;	//lower byte
-		transmit->Data[14] = robotPosition->imuQZ >> 24;	//upper byte
-		transmit->Data[15] = robotPosition->imuQZ >> 16;	//upper middle byte
-		transmit->Data[16] = robotPosition->imuQZ >> 8;		//lower middle byte
-		transmit->Data[17] = robotPosition->imuQZ & 0xFF;	//lower byte		
-		transmit->DataSize = 18;
+		data.val = robotPosition -> imuPitch;
+		transmit->Data[2] = data.bytes[3];		//upper byte
+		transmit->Data[3] = data.bytes[2];	//upper middle byte
+		transmit->Data[4] = data.bytes[1];		//lower middle byte
+		transmit->Data[5] = data.bytes[0];	//lower byte
+		data.val = robotPosition -> imuRoll;
+		transmit->Data[6] = data.bytes[3];			//upper byte
+		transmit->Data[7] = data.bytes[2];			//upper middle byte
+		transmit->Data[8] = data.bytes[1];			//lower middle byte
+		transmit->Data[9] = data.bytes[0];			//lower byte
+		data.val = robotPosition -> imuYaw;
+		transmit->Data[10] = data.bytes[3];			//upper byte
+		transmit->Data[11] = data.bytes[2];			//upper middle byte
+		transmit->Data[12] = data.bytes[1];		//lower middle byte
+		transmit->Data[13] = data.bytes[0];			//lower byte
+		transmit->DataSize = 14;
+		//transmit->Data[1] = DATA_RETURN; //sending data out
+		//transmit->Data[2] = robotPosition->imuPitch >> 24;		//upper byte
+		//transmit->Data[3] = robotPosition->imuPitch >> 16;		//upper middle byte
+		//transmit->Data[4] = robotPosition->imuPitch >> 8;		//lower middle byte
+		//transmit->Data[5] = robotPosition->imuPitch & 0xFF;		//lower byte		
+		//transmit->Data[6] = robotPosition->imuRoll >> 24;		//upper byte
+		//transmit->Data[7] = robotPosition->imuRoll >> 16;		//upper middle byte
+		//transmit->Data[8] = robotPosition->imuRoll >> 8;		//lower middle byte
+		//transmit->Data[9] = robotPosition->imuRoll & 0xFF;		//lower byte
+		//transmit->Data[10] = robotPosition->imuYaw >> 24;		//upper byte
+		//transmit->Data[11] = robotPosition->imuYaw >> 16;		//upper middle byte
+		//transmit->Data[12] = robotPosition->imuYaw >> 8;		//lower middle byte
+		//transmit->Data[13] = robotPosition->imuYaw & 0xFF;		//lower byte	
+		//transmit->DataSize = 14;
 		break;
 		
 		case TEST_LINE_FOLLOWERS:
@@ -199,8 +212,9 @@ uint8_t testManager(struct message_info message, struct transmitDataStructure *t
 		transmit->Data[2] = receivedTestData[1];//Transmit the specific motor ID
 		transmit->Data[3] = receivedTestData[2];//Echo's the command
 		//TODO: instead of echo read what motor is on with direction and speed and return it
+		testMode = SINGLE_SAMPLE;
 		transmit->DataSize = 4;
-		stopRobot();
+		//stopRobot();
 		break;
 
 	}

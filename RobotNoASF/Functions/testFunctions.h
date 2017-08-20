@@ -79,4 +79,11 @@ struct Position *robotPosition);
 */
 void testAll(struct transmitDataStructure *transmit);
 
+union float_bytes {
+	float val;
+	unsigned char bytes[sizeof(float)];
+}data;
+
+
+
 #endif /* TESTFUNCTIONS_H_ */

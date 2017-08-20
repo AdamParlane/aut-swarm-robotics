@@ -115,7 +115,10 @@ void InterpretSwarmMessage(struct message_info message)
 	if(message.command >= 0xE0) //test command range 0xE0-0xEF
 		mainRobotState = TEST;
 	else if (message.command == 0xD0)
+	{
+		movingFlag = 0;
 		stopRobot();
+	}
 	else if(message.command >= 0xD1 && message.command <= 0xD3) //Manual command range 0xD1-0xD3
 		mainRobotState = MANUAL;
 	else if (message.command == 0xD4)
@@ -193,7 +196,7 @@ void getNewCommunications(struct frame_info *frame, struct message_info *message
 	{
 		InterpretXbeeAPIFrame(*frame); //Interpret the received XBee Message
 		if(MessageBufferInfoGetFull(message) == 0) //Check for a message from the swarm
-		InterpretSwarmMessage(*message);//Interpret the message
+			InterpretSwarmMessage(*message);//Interpret the message
 	}
 }
 
