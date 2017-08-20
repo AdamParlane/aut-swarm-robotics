@@ -89,7 +89,7 @@ uint8_t nfRetrieveNavData(void)
 #endif
 	//No need to read interrupt registers on the V2 as we have the external interrupt tp tell us
 	//when to read the FIFO.
-
+#if defined ROBOT_TARGET_V2
 		imuReadFifo(&robotPosition);		//Read IMU's FIFO buffer
 		nfGetEulerAngles(&robotPosition);	//Convert IMU quats to Euler angles
 		//getMouseXY(&robotPosition);			//Update mouse sensor data while at it
