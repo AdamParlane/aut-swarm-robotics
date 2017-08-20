@@ -46,7 +46,7 @@
 * pErr stores the proportional error value. It is declared as static as they need to retain their 
 * values between function calls. motorSpeed stores the duty cycle (%) that will be sent to the 
 * rotateRobot() function. First, the function checks that heading is within the required range 
-* (between -180 and 180 degrees). If it is out of range, the number is scaled down by imuWrapAngle.
+* (between -180 and 180 degrees). If it is out of range, the number is scaled down by nfWrapAngle.
 * Next, the proportional (or signed) error value is calculated. It is simply the difference between 
 * the desired heading and the current actual heading. The resulting error value is multiplied by a
 * tuning constant and summed. The result of this is the corrective speed and direction to be applied
@@ -71,7 +71,7 @@ float mfRotateToHeading(float heading, struct Position *imuData)
 	int32_t motorSpeed;				//Stores motorSpeed calculated by PID sum
 	
 	//Make sure heading is in range (-180 to 180)
-	heading = imuWrapAngle(heading);
+	heading = nfWrapAngle(heading);
 		
 	//Calculate proportional error values
 	pErr = heading - imuData->imuYaw;				//Signed Error
@@ -129,7 +129,7 @@ float mfRotateToHeading(float heading, struct Position *imuData)
 * pErr stores the proportional error value. It is declared as static as they need to retain their
 * values between function calls. motorSpeed stores the duty cycle (%) that will be sent to the
 * rotateRobot() function. First, the function checks that heading is within the required range
-* (between -180 and 180 degrees). If it is out of range, the number is scaled down by imuWrapAngle.
+* (between -180 and 180 degrees). If it is out of range, the number is scaled down by nfWrapAngle.
 * Next, the proportional (or signed) error value is calculated. It is simply the difference between
 * the desired heading and the current actual heading. The resulting error value is multiplied by a
 * tuning constant and summed. The result of this is the corrective speed and direction to be applied
@@ -148,7 +148,7 @@ float mfMoveToHeading(float heading, uint8_t speed, struct Position *imuData)
 	int32_t rotationSpeed = 0;		//Stores turn ratio calculated by PID sum
 	
 	//Make sure heading is in range (-180 to 180)
-	heading = imuWrapAngle(heading);
+	heading = nfWrapAngle(heading);
 	
 	//Make sure speed is in range
 	if(speed > 100)

@@ -298,7 +298,7 @@ void moveRobot(signed int direction, unsigned char speed)
 	float directionRad;
 	direction = -1 * direction;
 	//keep direction in range +/-180degrees
-	//direction = imuWrapAngle(direction);
+	//direction = nfWrapAngle(direction);
 
 	//stop speed from being over max in case of user input error
 	if(speed > 100)

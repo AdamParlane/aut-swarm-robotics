@@ -57,7 +57,7 @@ int main(void)
 	aimSpeed = 50;
 	movingFlag = 0; //keeps track of whether robot should / shouldnt be moving
 	char chargeInfo;
-	char error; //used for development to log and watch errors - AP
+	char error; //used for developement to log and watch errors - AP
 	struct frame_info frame; //Xbee API frame
 	struct message_info message; //Incoming message with XBee metadata removed
 	struct transmitDataStructure transmitMessage; //struct to transmit to PC
@@ -142,8 +142,8 @@ int main(void)
 			
 			case IDLE:
 				//idle				
-				//stopRobot();
 				movingFlag = 0;
+				stopRobot();
 				if(!fdelay_ms(500))					//Blink LED in Idle mode
 				{
 					led2Tog;
