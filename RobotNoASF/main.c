@@ -57,7 +57,6 @@ int main(void)
 	aimSpeed = 50;
 	movingFlag = 1; //keeps track of whether robot should / shouldnt be moving
 	char chargeInfo;
-			short interruptStatus = 0;
 	char error; //used for developement to log and watch errors - AP
 	struct frame_info frame; //Xbee API frame
 	struct message_info message; //Incoming message with XBee metadata removed

@@ -73,6 +73,9 @@ uint8_t nfRetrieveNavData(void)
 {
 	if(checkImuFifo)
 	{
+	//On V1s there is no external interrupt. In order to read data from the FIFO at the right time
+	//we check bit 1 in the DMP interrupt status register. If it is set, then we can read from the 
+	//FIFO.
 #if defined ROBOT_TARGET_V1
 		short interruptStatus = 0;
 		mpu_get_int_status(&interruptStatus);
@@ -84,6 +87,8 @@ uint8_t nfRetrieveNavData(void)
 			checkImuFifo = 0;					//Reset interrupt flag			
 		}
 #endif
+	//No need to read interrupt registers on the V2 as we have the external interrupt tp tell us
+	//when to read the FIFO.
 #if defined ROBOT_TARGET_V2
 		imuReadFifo(&robotPosition);		//Read IMU's FIFO buffer
 		nfGetEulerAngles(&robotPosition);	//Convert IMU quats to Euler angles
@@ -162,8 +167,8 @@ void nfGetEulerAngles(struct Position *imuData)
 * Wrapped equivalent of the given angle
 *
 * Implementation:
-* Uses modulus to return the remainder of the given angle divided by 180. If the given angle was
-* less than -180 then this is the new angle. Otherwise if the original angle is greater than 180
+* TODO:Uses modulus to return the remainder of the given angle divided by 180. If the given angle 
+* was less than -180 then this is the new angle. Otherwise if the original angle is greater than 180
 * then the remainder has 180 subtracted from it and this becomes the new value. In any other case
 * (Which is just if the input angle is less than 180 and greater than -180) just return the input
 * value because it is already in range.
