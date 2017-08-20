@@ -74,7 +74,7 @@ uint8_t dfDockRobot(struct Position *imuData)
 			//pioLedNumber(2);
 			//mfMoveToHeading(bHeading, 40, imuData);
 			mfTrackLight(imuData);
-			if(!fdelay_ms(3700))			//After five seconds, look for LEDs again
+			if(!fdelay_ms(3700))			//After 3.7 seconds, look for LEDs again
 			{
 				stopRobot();
 				dockingState= RESCAN_BRIGHTEST;
@@ -159,7 +159,7 @@ uint8_t dfUpdateLineSensorStates(void)
 		returnVal = 1;
 	return returnVal;
 #else
-	return 2; //if robot is not V2, still need to return something	
+	return 0; //if robot is not V2, still need to return something	
 #endif
 }
 
@@ -273,17 +273,21 @@ uint8_t dfFollowLine(uint8_t speed, struct Position *imuData)
 #if defined ROBOT_TARGET_V2
 	enum {START, FIRST_CONTACT, ALIGN, FOLLOW, FINISH};
 	int8_t lineDirection = dfGetLineDirection();
-	uint16_t forwardProxSens = proxSensRead(MUX_PROXSENS_A);	//Will use obstacle data structure once
+	uint16_t forwardProxSens = proxSensRead(MUX_PROXSENS_A);//Will use obstacle data structure once
 															//implemented.
 	static uint8_t lineFollowerState = FIRST_CONTACT;
 	static float lineHeading = 0;
 	
 	switch(lineFollowerState)
 	{
+		//Starting state. Has value of 0 so when line following is fineshed will return 0
 		case START:
 			lineFollowerState = FIRST_CONTACT;
 		break;
 		
+		//On first contact, drive forward slowly until line is detected on the middle two sensors.
+		//Once that is the case, then we must be over the line properly, so move to the FOLLOW
+		//state.
 		case FIRST_CONTACT:
 			//pioLedNumber(1);
 			if(!lineDirection)
@@ -292,6 +296,12 @@ uint8_t dfFollowLine(uint8_t speed, struct Position *imuData)
 				steerRobot(25, 0);
 		break;
 		
+		//Given the position of the line sensors relative to the wheels on the underside of the 
+		//robot, the robot must stop and rotate on the spot in order to accurately locate the 
+		//position of the line relative to the robot. The robot will rotate clockwise or anti-
+		//clockwise depending on the directional data from the line sensors, and if the line is
+		//detected as being directly underneath the robot, then that heading is recorded and the
+		//function switches to the FOLLOW state.
 		case ALIGN:
 			//pioLedNumber(2);
 			if(lineDirection)
@@ -308,6 +318,11 @@ uint8_t dfFollowLine(uint8_t speed, struct Position *imuData)
 			}
 		break;
 		
+		//If the directional data from the line sensors suggests that we are centred over the line
+		//then drive along the heading established (in the ALIGN state) as the heading of the line.
+		//Otherwise, switch to the ALIGN state and re-centre over the line. If the forward prox
+		//sensor has been triggered, then slow the robot down proportional to the value of the
+		//sensor, and if maximum value is reached on the proximity sensor, then stop line following.
 		case FOLLOW:
 			//pioLedNumber(3);
 			if(abs(lineDirection) < 2)
@@ -318,6 +333,7 @@ uint8_t dfFollowLine(uint8_t speed, struct Position *imuData)
 				lineFollowerState = FINISH;
 		break;
 		
+		//If finished, reset the state machine for next time and return a 0.
 		case FINISH:
 			//pioLedNumber(7);
 			lineFollowerState = START;
@@ -360,9 +376,7 @@ uint8_t dfFollowLine(uint8_t speed, struct Position *imuData)
 * left behind in brightest heading is the heading with the greatest amount of light.
 *
 * Improvements:
-* Have the robot scan in one continuous sweep rather than stopping at each heading to read light 
-* values
-* Currently it seems to not lock dead on with the light source.
+* TODO: more comments
 *
 */
 uint8_t dfScanBrightestLightSource(float *brightestHeading, uint16_t sweepAngle, 

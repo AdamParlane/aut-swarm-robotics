@@ -86,10 +86,7 @@ float mfRotateToHeading(float heading, struct Position *imuData)
 		
 	//If motorSpeed ends up being out of range, then dial it back
 	motorSpeed = RTH_KP*pErr;
-	if(motorSpeed > 100)
-		motorSpeed = 100;
-	if(motorSpeed < -100)
-		motorSpeed = -100;
+	motorSpeed = capToRangeInt(motorSpeed, -100, 100);
 
 	//If error is less than 0.5 deg and delta yaw is less than 0.5 degrees per second then we can
 	//stop
@@ -151,8 +148,7 @@ float mfMoveToHeading(float heading, uint8_t speed, struct Position *imuData)
 	heading = nfWrapAngle(heading);
 	
 	//Make sure speed is in range
-	if(speed > 100)
-		speed = 100;
+	speed = capToRangeUint(speed, 0, 100);
 		
 	//Calculate proportional error values
 	pErr = heading - imuData->imuYaw;				//Signed Error
@@ -167,10 +163,7 @@ float mfMoveToHeading(float heading, uint8_t speed, struct Position *imuData)
 	
 	//If motorSpeed ends up being out of range, then dial it back
 	rotationSpeed = MTH_KP*pErr;
-	if(rotationSpeed > 100)
-		rotationSpeed = 100;
-	if(rotationSpeed < -100)
-		rotationSpeed = -100;
+	rotationSpeed = capToRangeInt(rotationSpeed, -100, 100);
 	
 	steerRobot(speed, rotationSpeed);
 	
@@ -285,10 +278,7 @@ float mfTrackLight(struct Position *imuData)
 			
 	//If dHeading ends up being out of range, then dial it back
 	dHeading = TL_KP*pErr + TL_KI*iErr;
-	if(dHeading > 90)
-		dHeading = 90;
-	if(dHeading < -90)
-		dHeading = -90;
+	dHeading = capToRangeInt(dHeading, -90, 90);
 	
 	//If error is less than 0.5 deg and delta yaw is less than 0.5 degrees per second then we can
 	//stop
@@ -354,10 +344,7 @@ float mfTrackLightProx(struct Position *imuData)
 	
 	//If dHeading ends up being out of range, then dial it back
 	dHeading = TLP_KP*pErr + TLP_KI*iErr;
-	if(dHeading > 90)
-		dHeading = 90;
-	if(dHeading < -90)
-		dHeading = -90;
+	dHeading = capToRangeInt(dHeading, -90, 90);
 	
 	//If error is less than 0.5 deg and delta yaw is less than 0.5 degrees per second then we can
 	//stop
