@@ -24,7 +24,7 @@
 
 //TODO: change something so that this doesn't have to be first
 //Or maybe all defines should be before includes
-enum ROBOT_STATES{TEST, TEST_ALL, MANUAL, FORMATION, DOCKING, OBSTACLE_AVOIDANCE, IDLE, CHARGING}; //main loop functionality
+enum ROBOT_STATES{TEST, TEST_ALL, MANUAL, FORMATION, DOCKING, OBSTACLE_AVOIDANCE, IDLE, CHARGING, LINE_FOLLOW, LIGHT_FOLLOW}; //main loop functionality
 
 ///////////////Type Definitions/////////////////////////////////////////////////////////////////////
 struct Position

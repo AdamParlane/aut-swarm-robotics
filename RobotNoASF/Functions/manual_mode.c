@@ -57,6 +57,7 @@ void manualControl(struct message_info tmessage)
 		moveRobot(straightDirection, receivedTestData[2]);
 		aim = straightDirection;
 		aimSpeed = receivedTestData[2];
+		movingFlag = 1;
 	}
 	else if(tmessage.command == MANUAL_STOP)
 	{
@@ -64,15 +65,17 @@ void manualControl(struct message_info tmessage)
 		mainRobotState = IDLE;
 		
 	}
-	else if(tmessage.command == CW)
+	else if(tmessage.command == CCW)
 	{
 		//CW is reverse so invert speed
 		signed char speed = -1*receivedTestData[0];
 		rotateRobot(speed);
+		movingFlag = 1;
 	}
-	else if(tmessage.command == CCW)
+	else if(tmessage.command == CW)
 	{
 		//CCW is forward so no need to invert speed
 		rotateRobot(receivedTestData[0]);
+		movingFlag = 1;
 	}
 }

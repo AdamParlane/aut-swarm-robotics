@@ -70,15 +70,15 @@ extern uint8_t checkImuFifo;
 */
 uint8_t nfRetrieveNavData(void)
 {
-	if(checkImuFifo)
-	{
+	//if(checkImuFifo)
+	//{
 		imuReadFifo(&robotPosition);		//Read IMU's FIFO buffer
 		nfGetEulerAngles(&robotPosition);	//Convert IMU quats to Euler angles
 		getMouseXY(&robotPosition);			//Update mouse sensor data while at it
 		checkImuFifo = 0;					//Reset interrupt flag
 		return 0;
-	} else
-		return 1;
+	//} else
+		//return 1;
 }
 
 /*
