@@ -296,17 +296,17 @@ void moveRobot(signed int direction, unsigned char speed)
 {
 	signed int rearMotorSpeed, frontRightMotorSpeed, frontLeftMotorSpeed;
 	float directionRad;
-
+	direction = -1 * direction;
 	//keep direction in range +/-180degrees
-	//direction = imuWrapAngle(direction);
+	//direction = nfWrapAngle(direction);
 
 	//stop speed from being over max in case of user input error
 	if(speed > 100)
 		speed = 100;
 	directionRad = (direction * M_PI) / 180; //convert desired direction to radians
-	rearMotorSpeed = speed * cos ((270 * M_PI) / 180 - directionRad );//radians
-	frontRightMotorSpeed = speed * cos ((30  * M_PI) / 180 - directionRad );
-	frontLeftMotorSpeed = speed * cos ((150 * M_PI) / 180 - directionRad );
+	rearMotorSpeed = -1 * (speed * cos ((270 * M_PI) / 180 - directionRad ));//radians
+	frontRightMotorSpeed = -1 *(speed * cos ((30  * M_PI) / 180 - directionRad ));
+	frontLeftMotorSpeed = -1 * (speed * cos ((150 * M_PI) / 180 - directionRad ));
 
 	frontLeftMotorDrive(frontLeftMotorSpeed);
 	frontRightMotorDrive(frontRightMotorSpeed);

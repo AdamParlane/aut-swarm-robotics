@@ -483,5 +483,5 @@ float dfScanBrightestLightSourceProx(void)
 		}
 	}
 	
-	return imuWrapAngle(60*brightestSensor);
+	return nfWrapAngle(60*brightestSensor);
 }
