@@ -53,7 +53,7 @@ int main(void)
 	robotSetup();
 	battVoltage = fcBatteryVoltage();	//Add to your watch to keep an eye on the battery
 	uint8_t testMode = 0x00;
-	aim = 180; 
+	aim = 0; 
 	aimSpeed = 50;
 	movingFlag = 0; //keeps track of whether robot should / shouldnt be moving
 	char chargeInfo;
@@ -68,6 +68,7 @@ int main(void)
 		switch (mainRobotState)
 		{
 			case TEST:
+				pioLedNumber(1);
 				if(newDataFlag || streamIntervalFlag)//get the new test data
 				{
 					//get the new test data
@@ -90,11 +91,13 @@ int main(void)
 			break;
 			
 			case TEST_ALL:
+				pioLedNumber(2);
 				//Not tested
 				testAll(&transmitMessage);
 			break;
 			
 			case MANUAL:
+				pioLedNumber(3);
 				if(newDataFlag)
 					manualControl(message);
 				chargeInfo = chargeDetector();
@@ -108,18 +111,21 @@ int main(void)
 			break;
 			
 			case DOCKING:
+				pioLedNumber(4);
 				//if battery low or manual command set
 				if(!dfDockRobot(&robotPosition))	//Execute docking procedure state machine
 					mainRobotState = IDLE;			//If finished docking, go IDLE
 			break;
 			
 			case LINE_FOLLOW:
+				pioLedNumber(5);
 				if(!dfFollowLine(35, &robotPosition))
 					mainRobotState = IDLE;
 				movingFlag = 1;
 				break;
 					
 			case LIGHT_FOLLOW:
+				pioLedNumber(6);
 				mfTrackLight(&robotPosition);
 				movingFlag = 1;
 				break;

@@ -1,4 +1,4 @@
-/*
+ /*
 * motion_functions.h
 *
 * Author : Matthew Witt (pxf5695@autuni.ac.nz)

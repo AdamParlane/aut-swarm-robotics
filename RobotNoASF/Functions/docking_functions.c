@@ -101,6 +101,7 @@ uint8_t dfDockRobot(struct Position *imuData)
 		
 		case FINISHED:
 			//pioLedNumber(7);
+			dockingState = START;
 			return 0;
 		break;
 	}
