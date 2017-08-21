@@ -50,7 +50,7 @@ extern struct message_info message;
 */
 int main(void)
 {
-	robotSetup();
+	robotSetup(); //Set up the system and peripherals
 	battVoltage = fcBatteryVoltage();	//Add to your watch to keep an eye on the battery
 	char chargeInfo;
 	mainRobotState = IDLE;
@@ -58,12 +58,14 @@ int main(void)
 	{
 		switch (mainRobotState)
 		{
-			case TEST:
+			case TEST: //System Test Mode
+			//Entered when test command received from PC
 				testManager(message, &robotPosition);
-			break;
+				break;
 			
-			case MANUAL:
-				if(newDataFlag)
+			case MANUAL: //User controlled mode
+			//Entered when manual movement command received from PC
+				if(newDataFlag) //if there is new data
 					manualControl(message, &robotPosition);
 				chargeInfo = chargeDetector();
 				if (chargeInfo == BATT_CHARGING)
@@ -71,31 +73,31 @@ int main(void)
 					mainRobotStatePrev = mainRobotState;
 					mainRobotState = CHARGING;
 				}
-			break;
+				break;
 			
 			case DOCKING:
-				//if battery low or manual command set
+			//if battery low or manual docking command sent from PC
 				if(!dfDockRobot(&robotPosition))	//Execute docking procedure state machine
 					mainRobotState = IDLE;			//If finished docking, go IDLE
-			break;
+				break;
 			
 			case LINE_FOLLOW:
-				if(!dfFollowLine(35, &robotPosition))
+			//Entered when line follow command received from PC
+				if(!dfFollowLine(35, &robotPosition))//Line follower will return 0 when complete
 					mainRobotState = IDLE;
-				movingFlag = 1;
 				break;
 					
 			case LIGHT_FOLLOW:
+			//Entered when light follow command received from PC
 				mfTrackLight(&robotPosition);
-				movingFlag = 1;
 				break;
 				
 			case FORMATION:
 			//placeholder
-			break;
+				break;
 			
 			case CHARGING:
-				if(!fdelay_ms(500))					//Blink LED in charge mode
+				if(!fdelay_ms(500))					//Blink LED 1 in charge mode
 					led1Tog;
 				chargeInfo = chargeDetector();
 				if(chargeInfo == BATT_CHARGING)
@@ -104,19 +106,16 @@ int main(void)
 					mainRobotState = mainRobotStatePrev;
 				else
 					mainRobotState = MANUAL;
-			break;
+				break;
 			
 			case IDLE:				
 				stopRobot();
-				if(!fdelay_ms(500))					//Blink LED in Idle mode
-				{
-					led2Tog;
+				if(!fdelay_ms(500))					//Blink LED 3 in Idle mode
 					led3Tog;	
-				}
-			break;
+				break;
 		}
 		getNewCommunications(); //Checks for and interprets new communications
-		nfRetrieveNavData(); //checks if there is new navigation data and updates robotPosition
+		nfRetrieveNavData();	//checks if there is new navigation data and updates robotPosition
 		//check to see if obstacle avoidance is enabled AND the robot is moving
 		if(obstacleAvoidanceEnabledFlag && movingFlag)
 			dodgeObstacle(&robotPosition); //avoid obstacles using proximity sensors

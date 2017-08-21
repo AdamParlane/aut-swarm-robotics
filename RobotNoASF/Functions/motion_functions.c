@@ -265,6 +265,7 @@ float mfMoveToHeadingByDistance(float heading, uint8_t speed, uint32_t distance,
 */
 float mfTrackLight(struct Position *imuData)
 {
+	movingFlag = 1;	
 	static float pErr;			//Proportional error
 	static float iErr = 0;		//Integral error
 	float dHeading;				//Delta heading to adjust by
