@@ -62,8 +62,12 @@ struct transmitDataStructure
 * ***Streaming Interval = 100ms***
 *
 */
-uint8_t testManager(struct message_info message, struct transmitDataStructure *transmit, 
+uint8_t getTestData(struct message_info message, struct transmitDataStructure *transmit, 
 struct Position *robotPosition);
+
+void testManager(struct message_info message, struct Position *robotPosition);
+
+
 
 /*
 * Function: void testAll(struct transmitDataStructure *transmit)
@@ -78,6 +82,9 @@ struct Position *robotPosition);
 *
 */
 void testAll(struct transmitDataStructure *transmit);
+
+
+
 
 union float_bytes {
 	float val;

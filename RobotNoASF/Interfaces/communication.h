@@ -87,7 +87,7 @@ void convertData(struct message_info message, uint8_t *data);
 * none
 *
 */
-void getNewCommunications(struct frame_info *frame, struct message_info *message);
+void getNewCommunications();
 
 /**** Public Function Prototypes ****/
 void CommunicationSetup(void);								// Sets up UART3 and the required buffers

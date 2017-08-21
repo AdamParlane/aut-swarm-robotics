@@ -45,7 +45,7 @@
 * TODO: Adam Comment this -AP
 *
 */
-void manualControl(struct message_info tmessage)
+void manualControl(struct message_info tmessage, struct Position *robotPosition)
 {
 	static uint8_t receivedTestData[5];
 	newDataFlag = 0;
@@ -55,8 +55,8 @@ void manualControl(struct message_info tmessage)
 	if(tmessage.command == MANUAL_STRAIGHT)
 	{
 		moveRobot(straightDirection, receivedTestData[2]);
-		aim = straightDirection;
-		aimSpeed = receivedTestData[2];
+		robotPosition->targetHeading = straightDirection;
+		robotPosition->targetSpeed = receivedTestData[2];
 		movingFlag = 1;
 	}
 	else if(tmessage.command == MANUAL_STOP)

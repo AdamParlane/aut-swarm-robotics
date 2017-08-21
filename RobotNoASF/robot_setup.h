@@ -61,7 +61,10 @@ struct Position
 	float x;				//Absolute X position in arena
 	float y;				//Absolute Y position in arena
 	float h;				//Absolute Z position in arena
+	signed int targetHeading; //For obstacle avoidance, desired heading before an obstacel is detected
+	char targetSpeed;	//For obstacle avoidance, desired speed
 };
+
 
 //////////////[Includes]////////////////////////////////////////////////////////////////////////////
 #include "Interfaces/spi.h"
@@ -101,8 +104,6 @@ struct Position
 char newDataFlag; //TODO:used for test function probably temporary ((still temporary?)
 char mainRobotState, mainRobotStatePrev;	//main function state machine states
 volatile char streamDelayCounter, streamIntervalFlag;	//TODO:What are these?
-signed int aim;
-char aimSpeed;
 char movingFlag;
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*

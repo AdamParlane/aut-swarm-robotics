@@ -14,7 +14,7 @@
 *
 * Functions:
 * void scanProximity(void)
-* void dodgeObstacle(signed int aim, char speed)
+* void dodgeObstacle(struct Position *robotPosition)
 *
 */
 
@@ -48,7 +48,7 @@ void scanProximity(void);
 
 /*
 * Function:
-* void dodgeObstacle(signed int aim, char speed)
+* void dodgeObstacle(struct Position *robotPosition)
 *
 * Will make the robot avoid obstacles while (hopefully remain on the current track
 *
@@ -61,7 +61,7 @@ void scanProximity(void);
 *
 *
 */
-void dodgeObstacle(signed int aim, char speed);
+void dodgeObstacle(struct Position *robotPosition);
 
 
 

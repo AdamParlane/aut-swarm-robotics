@@ -37,10 +37,14 @@
 //needed it is usually passed to functions as a pointer to avoid duplication.
 struct Position robotPosition =
 {
+	.opticalX = 0,			//Reset mouse's position
+	.opticalY = 0,			//Reset mouse's position
 	.x = 0,					//Resets robot position
 	.y = 0,					//Resets robot position
-	.imuYawOffset = 180		//Ensures that whatever way the robot is facing when powered
+	.imuYawOffset = 180,	//Ensures that whatever way the robot is facing when powered
 							//on is 0 degrees heading.
+	.targetHeading = 0,		//Default heading is 0 degrees
+	.targetSpeed = 50		//Default speed is 50%
 };
 
 //Read data flag that is set by the external interrupt from the IMU on the V2 or by timer on the V1.
