@@ -143,7 +143,8 @@ int main(void)
 			case IDLE:
 				//idle				
 				movingFlag = 0;
-				stopRobot();
+				//getMouseXY(&robotPosition);
+				delay_ms(100);
 				if(!fdelay_ms(500))					//Blink LED in Idle mode
 				{
 					led2Tog;

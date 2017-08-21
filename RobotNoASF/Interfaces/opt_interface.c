@@ -137,9 +137,9 @@ void mouseInit(void)
 
 	//initialize mouse sensor
 	SPI_Write(OPT_PWR_UP_RESET, 0x5A);		//Power Up Reset
-	mouseInitDelay();
+	delay_ms(1);
 	SPI_Write(OPT_OBSERVATION, 0x00);		//clear observation register
-	mouseInitDelay();								//wait at least 1 frame
+	delay_ms(1);								//wait at least 1 frame
 	dummyVar = SPI_Read(OPT_OBSERVATION);	//read observation register to check bits 0-3 are set	
 	while((dummyVar & 0x0F) != 0x0F)			//check if bits 0-3 have been set
 	{
@@ -192,7 +192,7 @@ void getMouseXY(struct Position *mousePos)
 {
 	int Xtemp = 0, Ytemp = 0;
 	char topX, topY, data2, data3, data4, data5;	
-	data2 = SPI_Read(OPT_OBSERVATION);
+	data2 = SPI_Read(OPT_MOTION);
 	if(data2 & (1<<7))
 	{
 		data3 = SPI_Read(OPT_DELTA_X_L);	//delta x low
@@ -347,7 +347,7 @@ char SPI_Read(char readAddress)
 */
 void mouseInitDelay(void)
 {
-	for (volatile uint16_t i=0; i<65535; i++)
+	for (volatile uint16_t i=0; i<6555; i++)
 	{
 		
 	}
