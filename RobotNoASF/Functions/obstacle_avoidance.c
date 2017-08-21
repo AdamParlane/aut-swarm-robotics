@@ -106,5 +106,5 @@ void dodgeObstacle(signed int aim, char speed)
 			else
 				moveRobot(aim, speed);
 		}	
-	}				
+	}		
 }
