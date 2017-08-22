@@ -36,8 +36,8 @@ struct Position
 //combines them. The structure will store the relevant info from both key sensors and fuse them in
 //an additional function (84bytes i think)
 {
-	signed short opticalDX;		//Rate of change from optical sensor (X axis is left to right)
-	signed short opticalDY;		//Rate of change from optical sensor (Y axis is fwd/bckwd)
+	float opticalDX;		//Rate of change from optical sensor (X axis is left to right)
+	float opticalDY;		//Rate of change from optical sensor (Y axis is fwd/bckwd)
 	float opticalX;
 	float opticalY;
 	float opticalHdg;		//Heading calculated from optical sensor

@@ -34,7 +34,7 @@
 #include "../robot_setup.h"
 
 //////////////[Defines]/////////////////////////////////////////////////////////////////////////////
-#define RESOLUTION			0.125
+#define RESOLUTION			0.004
 
 #define SPI_KEY				0x535049 //SPI write protect key for SAM4N8C
 

@@ -53,7 +53,7 @@ int main(void)
 	robotSetup(); //Set up the system and peripherals
 	battVoltage = fcBatteryVoltage();	//Add to your watch to keep an eye on the battery
 	char chargeInfo;
-	mainRobotState = IDLE;
+	mainRobotState = FORMATION;
 	while(1)
 	{
 		switch (mainRobotState)
@@ -94,6 +94,9 @@ int main(void)
 				
 			case FORMATION:
 			//placeholder
+				if(!mfMoveToHeadingByDistance(0, 50, 200, &robotPosition))
+					mainRobotState = IDLE;
+				getMouseXY(&robotPosition);
 				break;
 			
 			case CHARGING:
@@ -108,8 +111,12 @@ int main(void)
 					mainRobotState = MANUAL;
 				break;
 
-			case IDLE:				
+			case IDLE:		
+
+							
 				stopRobot();
+				
+				//getMouseXY(&robotPosition);
 				if(!fdelay_ms(500))					//Blink LED 3 in Idle mode
 					led3Tog;	
 				break;

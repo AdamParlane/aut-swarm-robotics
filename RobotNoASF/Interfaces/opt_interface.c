@@ -190,7 +190,8 @@ void mouseInit(void)
 */
 void getMouseXY(struct Position *mousePos)
 {
-	int Xtemp = 0, Ytemp = 0;
+	uint16_t Xtemp = 0, Ytemp = 0;
+	int16_t Xx, Yy; 
 	char topX, topY, data2, data3, data4, data5;	
 	data2 = SPI_Read(OPT_MOTION);
 	if(data2 & (1<<7))
@@ -202,14 +203,21 @@ void getMouseXY(struct Position *mousePos)
 		topY = data5 & (0x0F);				//only read the 4 LSB of data5
 		Xtemp = data3 | (topX << 8);
 		Ytemp = data4 | (topY << 8);
-		if(Xtemp & (1<<12))					//if MSB of X is set (for 2s complement)
-			Xtemp ^= 0b1000100000000000;	//Make the 2s complement bit be MSB of short
-		mousePos->opticalDX = Xtemp * RESOLUTION;
-		if(Ytemp & (1<<12))					//if MSB of Y is set (for 2s complement)
-			Ytemp ^= 0b1000100000000000;	//Make the 2s complement bit be MSB of short
-		mousePos->opticalDY = Ytemp * RESOLUTION;
+		Xx = Xtemp << 4;
+		Yy = Ytemp << 4;
+		//if(Xtemp & (1<<12))					//if MSB of X is set (for 2s complement)
+			//Xtemp ^= 0b1000100000000000;	//Make the 2s complement bit be MSB of short
+		mousePos->opticalDX = (float)(Xx * RESOLUTION);
+		//if(Ytemp & (1<<12))					//if MSB of Y is set (for 2s complement)
+			//Ytemp ^= 0b1000100000000000;	//Make the 2s complement bit be MSB of short
+		mousePos->opticalDY = (float)(Yy * RESOLUTION);
 		mousePos->opticalX += mousePos->opticalDX;
 		mousePos->opticalY += mousePos->opticalDY;
+	}
+	else
+	{
+		mousePos->opticalDX = 0;
+		mousePos->opticalDY = 0;
 	}
 }
 

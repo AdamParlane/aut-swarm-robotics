@@ -213,7 +213,7 @@ float mfMoveToHeadingByDistance(float heading, uint8_t speed, uint32_t distance,
 {
 	enum {START, MOVING, STOP};
 	static uint8_t movingState = START;
-	uint16_t distanceTravelled = 0;
+	static float distanceTravelled = 0;
 	
 	switch(movingState)
 	{

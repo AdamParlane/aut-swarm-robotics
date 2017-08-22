@@ -129,10 +129,10 @@ uint8_t getTestData(struct message_info message, struct transmitDataStructure *t
 		case TEST_MOUSE_SENSOR:
 		//Only 1 mouse sensor just trying to attain dx & dy
 		transmit->Data[1] = DATA_RETURN; //sending data out
-		transmit->Data[2] = robotPosition->opticalDX >> 8; //upper byte
-		transmit->Data[3] = robotPosition->opticalDX & 0xFF; //lower byte
-		transmit->Data[4] = robotPosition->opticalDX >> 8; //upper byte
-		transmit->Data[5] = robotPosition->opticalDX & 0xFF; //lower byte
+		//transmit->Data[2] = robotPosition->opticalDX >> 8; //upper byte
+		//transmit->Data[3] = robotPosition->opticalDX & 0xFF; //lower byte
+		//transmit->Data[4] = robotPosition->opticalDX >> 8; //upper byte
+		//transmit->Data[5] = robotPosition->opticalDX & 0xFF; //lower byte
 		transmit->DataSize = 6;
 		break;
 		
@@ -280,10 +280,10 @@ void testAll(struct transmitDataStructure *transmit)
 	transmit->Data[15] = doubleByteData >> 8;
 	transmit->Data[16] = doubleByteData & 0xFF;
 	getMouseXY(&testPosition);
-	transmit->Data[17] = testPosition.opticalDX >> 8;	//upper byte
-	transmit->Data[18] = testPosition.opticalDX & 0xFF; //lower byte
-	transmit->Data[19] = testPosition.opticalDX >> 8;	//upper byte
-	transmit->Data[20] = testPosition.opticalDX & 0xFF; //lower byte
+	//transmit->Data[17] = testPosition.opticalDX >> 8;	//upper byte
+	//transmit->Data[18] = testPosition.opticalDX & 0xFF; //lower byte
+	//transmit->Data[19] = testPosition.opticalDX >> 8;	//upper byte
+	//transmit->Data[20] = testPosition.opticalDX & 0xFF; //lower byte
 	//[WIP] Need to check if our comms can handle this before finishing it
 	//If it goes well I might abstract the tests to functions that fill the array also
 	//TODO: Adam Parlane
