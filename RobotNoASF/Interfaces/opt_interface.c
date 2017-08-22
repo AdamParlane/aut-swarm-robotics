@@ -18,7 +18,7 @@
 * void mouseInit(void);
 * int mouseTestBasic(void);
 * void Get_Mouse_XY(struct Position *mousePos);
-* void mouseInitDelay(void);
+* 
 *
 * Functionality of each function is explained before each function
 * This .c file should be paired with optInterface.h
@@ -122,6 +122,7 @@ void SPI_Init(void)
 */
 void mouseInit(void)
 {
+	//default CPI = 800, run rate = 8ms
 	//temporary variables used to read the observation register on mouse startup
 	char dummyVar;
 	
@@ -330,28 +331,4 @@ char SPI_Read(char readAddress)
 	while(!(REG_SPI_SR & (1<<0)));			//Wait for second RDRF flag.
 	data = REG_SPI_RDR;						//Read the correct data
 	return data;
-}
-
-
-/*
-* Function: void mouseInitDelay(void)
-*
-* Simple Delay using a for loop called throughout the mouse sensor setup
-* To meet mouseInit timing requirements
-* Delay is 1/CLK(MHz) * 65535
-* 
-* This program uses a 100MHz Clock making the delay approx 0.66ms
-* 
-* No return value
-*
-* Improvements:
-* [Ideas for improvements that are yet to be made](optional)
-*
-*/
-void mouseInitDelay(void)
-{
-	for (volatile uint16_t i=0; i<6555; i++)
-	{
-		
-	}
 }

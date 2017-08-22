@@ -105,7 +105,7 @@ char newDataFlag; //TODO:used for test function probably temporary ((still tempo
 char mainRobotState, mainRobotStatePrev;	//main function state machine states
 volatile char streamDelayCounter, streamIntervalFlag;	//TODO:What are these?
 char movingFlag;
-char tMit;
+char chargeInfo;
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*
 * Function:
