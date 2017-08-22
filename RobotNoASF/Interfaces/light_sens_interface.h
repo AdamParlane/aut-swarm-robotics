@@ -33,7 +33,7 @@ struct ColourSensorData
 	uint16_t green;
 	uint16_t blue;
 	uint16_t white;
-	uint16_t hue;
+	float hue;
 	uint16_t saturation;
 	uint16_t value;
 };
@@ -57,6 +57,11 @@ struct ColourSensorData
 #define LS_320MS			0x30		//3200ms integration time
 #define LS_640MS			0x40		//640ms integration time
 #define LS_1280MS			0x50		//1280ms integration time, (Low sensitivity)
+////Maximum light sensor value
+#define MAX_LIGHT_CHANNEL_VAL	65535
+
+////Hue angle colour ranges
+
 
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*

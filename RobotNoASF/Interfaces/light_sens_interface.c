@@ -32,6 +32,7 @@
 //////////////[Includes]////////////////////////////////////////////////////////////////////////////
 #include "light_sens_interface.h"
 #include "twimux_interface.h"
+#include <tgmath.h>				//Required for atan2 in lightSensRGB2HSV()
 
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*
@@ -123,10 +124,10 @@ uint8_t lightSensCapture(uint8_t channel, struct ColourSensorData *colours)
 {
 	uint8_t returnVal = 0;
 
-	colours->red; = lightSensRead(channel, LS_RED_REG);		//Read red channel
-	colours->green; = lightSensRead(channel, LS_GREEN_REG);	//Read green channel
-	colours->blue; = lightSensRead(channel, LS_BLUE_REG);	//Read blue channel
-	colours->white; = lightSensRead(channel, LS_WHITE_REG);	//Read white channel
+	colours->red = lightSensRead(channel, LS_RED_REG);		//Read red channel
+	colours->green = lightSensRead(channel, LS_GREEN_REG);	//Read green channel
+	colours->blue = lightSensRead(channel, LS_BLUE_REG);	//Read blue channel
+	colours->white = lightSensRead(channel, LS_WHITE_REG);	//Read white channel
 	
 	lightSensRGB2HSV(colours);								//Derive HSV figures from RGB
 	
@@ -149,6 +150,7 @@ uint8_t lightSensCapture(uint8_t channel, struct ColourSensorData *colours)
 * Implementation:
 * See
 * http://www.rapidtables.com/convert/color/rgb-to-hsv.htm
+* https://en.wikipedia.org/wiki/Hue#Computing_hue_from_RGB
 *
 */
 void lightSensRGB2HSV(struct ColourSensorData *colours)
@@ -166,22 +168,23 @@ void lightSensRGB2HSV(struct ColourSensorData *colours)
 	
 	//Find minimum colour channel value (cMin)
 	if(colours->red < cMin)
-		cMax = colours->red;
+		cMin = colours->red;
 	if(colours->green < cMin)
-		cMax = colours->green;
+		cMin = colours->green;
 	if(colours->blue < cMin)
-		cMax = colours->blue;
+		cMin = colours->blue;
 	
 	//Get Hue (0-360)
-	colours->hue = atan2(sqrt(3)*(colours->green - colours->blue),
-									2*colours->red - colours->green - colours->blue);
 	
-	//Get Saturation (0-65535)
+	colours->hue = (atan2(sqrt(3)*(colours->green - colours->blue),
+									2*colours->red - colours->green - colours->blue)*180/M_PI);
+	
+	//Get Saturation (0-MAX_LIGHT_CHANNEL_VAL)
 	if(cMax == 0)
 		colours->saturation = 0;
 	else
-		colours->saturation = (cMax - cMin)/cMax;
+		colours->saturation = (uint16_t)(((cMax - cMin)/(float)cMax)*MAX_LIGHT_CHANNEL_VAL);
 	
-	//Get Value	(0-65535)							
+	//Get Value	(0-MAX_LIGHT_CHANNEL_VAL)							
 	colours->value = cMax;
 }

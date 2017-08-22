@@ -63,6 +63,8 @@ int main(void)
 	struct transmitDataStructure transmitMessage; //struct to transmit to PC
 	srand(streamDelayCounter);		//Seed rand() to give unique random numbers
 	mainRobotState = IDLE;
+	struct ColourSensorData tempColour;
+	
 	while(1)
 	{
 		switch (mainRobotState)
@@ -150,6 +152,9 @@ int main(void)
 				//idle				
 				movingFlag = 0;
 				stopRobot();
+				
+				lightSensCapture(MUX_LIGHTSENS_R, &tempColour);
+				
 				if(!fdelay_ms(500))					//Blink LED in Idle mode
 				{
 					led2Tog;
