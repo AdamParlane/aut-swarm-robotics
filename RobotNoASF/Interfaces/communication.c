@@ -104,8 +104,11 @@ void UART3_Handler(void);									//UART3 Interrupt handler, receives XBee Frame
 void UART3_Write(uint8_t data);								//Writes a byte to UART3
 void SendXbeeAPIFrame(uint8_t * frame_data, int len);		//Sends an XBee API Frame
 
-char obstacleAvoidanceEnabledFlag = 0;
 
+//Global Variables
+char obstacleAvoidanceEnabledFlag = 0;
+struct frame_info frame; //Xbee API frame
+struct message_info message; //Incoming message with XBee metadata removed
 
 //Improvements: is it worth defining all these codes, im thinking no
 void InterpretSwarmMessage(struct message_info message)
@@ -194,22 +197,22 @@ void convertData(struct message_info message, uint8_t *data)
 * Then is the message buffer is full interpret the swarm message
 *
 */
-void getNewCommunications(struct frame_info *frame, struct message_info *message)
+void getNewCommunications()
 {
-	if(FrameBufferInfoGetFull(frame) == 0)	//Check for a received XBee Message
+	if(FrameBufferInfoGetFull(&frame) == 0)	//Check for a received XBee Message
 	{
-		InterpretXbeeAPIFrame(*frame); //Interpret the received XBee Message
-		if(MessageBufferInfoGetFull(message) == 0) //Check for a message from the swarm
-			InterpretSwarmMessage(*message);//Interpret the message
+		InterpretXbeeAPIFrame(frame); //Interpret the received XBee Message
+		if(MessageBufferInfoGetFull(&message) == 0) //Check for a message from the swarm
+			InterpretSwarmMessage(message);//Interpret the message
 	}
 }
 
-void InterpretXbeeAPIFrame(struct frame_info frame)
+void InterpretXbeeAPIFrame(struct frame_info Xbeeframe)
 {
 	//copy information from the frame info structure to local variables
-	int index = frame.index;
-	uint8_t frame_type = frame.type;
-	int length = frame.length;
+	int index = Xbeeframe.index;
+	uint8_t frame_type = Xbeeframe.type;
+	int length = Xbeeframe.length;
 
 	//Temporary variable to store value from buffer
 	uint8_t temp;

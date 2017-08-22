@@ -36,8 +36,8 @@ struct Position
 //combines them. The structure will store the relevant info from both key sensors and fuse them in
 //an additional function (84bytes i think)
 {
-	short opticalDX;		//Rate of change from optical sensor (X axis is left to right)
-	short opticalDY;		//Rate of change from optical sensor (Y axis is fwd/bckwd)
+	float opticalDX;		//Rate of change from optical sensor (X axis is left to right)
+	float opticalDY;		//Rate of change from optical sensor (Y axis is fwd/bckwd)
 	float opticalX;
 	float opticalY;
 	float opticalHdg;		//Heading calculated from optical sensor
@@ -61,7 +61,10 @@ struct Position
 	float x;				//Absolute X position in arena
 	float y;				//Absolute Y position in arena
 	float h;				//Absolute Z position in arena
+	signed int targetHeading; //For obstacle avoidance, desired heading before an obstacel is detected
+	char targetSpeed;	//For obstacle avoidance, desired speed
 };
+
 
 //////////////[Includes]////////////////////////////////////////////////////////////////////////////
 #include "Interfaces/spi.h"
@@ -101,9 +104,8 @@ struct Position
 char newDataFlag; //TODO:used for test function probably temporary ((still temporary?)
 char mainRobotState, mainRobotStatePrev;	//main function state machine states
 volatile char streamDelayCounter, streamIntervalFlag;	//TODO:What are these?
-signed int aim;
-char aimSpeed;
 char movingFlag;
+char chargeInfo;
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*
 * Function:

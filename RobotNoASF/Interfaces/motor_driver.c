@@ -366,6 +366,7 @@ void rotateRobot(signed char speed)
 void stopRobot(void)
 {
 	//Stops the robot from moving
+	movingFlag = 0;
 	frontRightMotorDrive(0);
 	frontLeftMotorDrive(0);
 	rearMotorDrive(0);

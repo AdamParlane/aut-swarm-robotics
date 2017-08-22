@@ -23,10 +23,9 @@
 //////////////[Defines]/////////////////////////////////////////////////////////////////////////////
 
 //////////////[Global variables]////////////////////////////////////////////////////////////////////
-uint8_t SBtest, SBtest1;
-uint16_t DBtest, DBtest1, DBtest2;
 uint16_t battVoltage;					//Stores battery voltage on start up
 extern struct Position robotPosition;	//Passed to docking functions and test functions
+extern struct message_info message;		//Incoming message structure
 
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*
@@ -42,127 +41,113 @@ extern struct Position robotPosition;	//Passed to docking functions and test fun
 * N/A
 *
 * Implementation:
-* [[[[[WIP]]]]]
+* 
+* The main system runs on a state machine in a while(1) loop to control the robot
+* Before this state machine is run robotSetup() is called to initialise all peripherals
+* The main robot state is initialised at IDLE to allow the user (on PC GUI) to input control
+*
+* The cases are:
+* TEST:			***module: test_functions.c/h
+*				System test where the robot sends back peripheral data when requested from the PC
+*				This may be 1 sample of data or streaming data every 100ms
+*				Used to ensure the robot is functioning correctly and the data can be read from the GUI
+* MANUAL:		***module: manual_mode.c/h
+*				Manual mode allows the user to drive the robot around in real time
+*				Again this is called and controlled by the GUI
+*				Movement options are move (N, NE, E, SE, S, SW, W, NW) rotate (CW, CCW) at any speed
+*				The manualControl function which handles the command is called when it get a new command
+*				Charge detector is called to check if the user has docked the robot
+* DOCKING:		***module: docking_functions.c/h
+*				Executes the ideal docking routine to charge the robot
+*				This function returns 0 when complete and changes states to IDLE
+* LINE_FOLLOW:	***module: motion_functions.c/h
+*				Executes the line follow routine to either charge the robot or just follow a line
+*				This function returns 0 when complete and changes states to IDLE
+* LIGHT_FOLLOW:	***module: motion_functions.c/h
+*				Executes the light follow routine to either charge the robot or just follow a light
+* FORMATION:	***module: [WIP]
+* CHARGING:		***module: fc_Interface.c/h
+*				Checks the robot is still charging and the status of the battery
+*				Entered when the robot is docked
+*				Charge_info also contains the charging status should other functions require it
+* IDLE:			***module: N/A
+*				Stops the robot motion by calling stopRobot()
+*				Blinks LED 3 every 500ms to show externally that robot is in IDLE
+*				Entered when other majour blocking functions or states are finished
+*				Exitied by PC commands
+*
+* After the state machine 3 functions are run every loop to check key peripherals
+* These are:	getNewCommunications()			checks and handles incoming commands
+*				nfRetrieveData()				updates the robot's navigation structure
+*				dodgeObstacle()					executes obstacle avoidance routine
+* Note that doegeObstacle() is guarded by 2 flags: obstacleAvoidance enabled and the robot is moving
 *
 * Improvements:
-* Yes.
+*
+* More functionality incoming (formations, smarter obstacle avoidance, high level error codes etc)
 *
 */
 int main(void)
 {
-	robotSetup();
+	robotSetup(); //Set up the system and peripherals
 	battVoltage = fcBatteryVoltage();	//Add to your watch to keep an eye on the battery
-	uint8_t testMode = 0x00;
-	aim = 0; 
-	aimSpeed = 50;
-	movingFlag = 0; //keeps track of whether robot should / shouldnt be moving
-	char chargeInfo;
-	char error; //used for developement to log and watch errors - AP
-	struct frame_info frame; //Xbee API frame
-	struct message_info message; //Incoming message with XBee metadata removed
-	struct transmitDataStructure transmitMessage; //struct to transmit to PC
-	srand(streamDelayCounter);		//Seed rand() to give unique random numbers
-	mainRobotState = IDLE;
+	mainRobotState = IDLE; //start system at IDLE
 	while(1)
 	{
 		switch (mainRobotState)
 		{
-			case TEST:
-				pioLedNumber(1);
-				if(newDataFlag || streamIntervalFlag)//get the new test data
-				{
-					//get the new test data
-					testMode = testManager(message, &transmitMessage, &robotPosition);
-				}
-				if(testMode == STOP_STREAMING)
-					mainRobotState = IDLE;
-				else if(testMode == SINGLE_SAMPLE)
-				{
-					mainRobotState = IDLE;
-					SendXbeeAPITransmitRequest(COORDINATOR_64,UNKNOWN_16, transmitMessage.Data, 
-												transmitMessage.DataSize);  //Send the Message
-				}
-				else if(streamIntervalFlag && testMode == STREAM_DATA)
-				{
-					streamIntervalFlag = 0;
-					SendXbeeAPITransmitRequest(COORDINATOR_64,UNKNOWN_16, transmitMessage.Data,
-												transmitMessage.DataSize);  //Send the Message
-				}
-			break;
+			case TEST: //System Test Mode
+			//Entered when test command received from PC
+				testManager(message, &robotPosition); //Interprets test command and executes it
+				break;
 			
-			case TEST_ALL:
-				pioLedNumber(2);
-				//Not tested
-				testAll(&transmitMessage);
-			break;
+			case MANUAL: //User controlled mode
+			//Entered when manual movement command received from PC
+				if(newDataFlag) //if there is new data
+					manualControl(message, &robotPosition);
+				chargeInfo = chargeDetector(); //check to see if the robot is docked
+				break;
 			
-			case MANUAL:
-				pioLedNumber(3);
-				if(newDataFlag)
-					manualControl(message);
-				chargeInfo = chargeDetector();
-				if (chargeInfo == BATT_CHARGING)
-				{
-					mainRobotStatePrev = mainRobotState;
-					mainRobotState = CHARGING;
-				}
-				else
-					error = chargeInfo;
-			break;
-			
+			case DOCKING:
+			//if battery low or manual docking command sent from PC
 			case DOCKING:
 				pioLedNumber(4);
 				//if battery low or manual command set
 				if(!dfDockRobot(&robotPosition))	//Execute docking procedure state machine
 					mainRobotState = IDLE;			//If finished docking, go IDLE
-			break;
+				break;
 			
 			case LINE_FOLLOW:
-				pioLedNumber(5);
-				if(!dfFollowLine(35, &robotPosition))
+    		pioLedNumber(5);
+			//Entered when line follow command received from PC
+				if(!dfFollowLine(35, &robotPosition))//Line follower will return 0 when complete
 					mainRobotState = IDLE;
-				movingFlag = 1;
 				break;
 					
 			case LIGHT_FOLLOW:
+			//Entered when light follow command received from PC
 				pioLedNumber(6);
 				mfTrackLight(&robotPosition);
-				movingFlag = 1;
 				break;
 				
 			case FORMATION:
 			//placeholder
-			break;
+				break;
 			
 			case CHARGING:
-				if(!fdelay_ms(500))					//Blink LED in charge mode
-					led1Tog;
 				chargeInfo = chargeDetector();
-				if(chargeInfo == BATT_CHARGING)
-					break;
-				else if(chargeInfo == BATT_CHARGED)
-					mainRobotState = mainRobotStatePrev;
-				else
-					mainRobotState = MANUAL;
-			break;
-			
-			case IDLE:
-				//idle				
-				movingFlag = 0;
+				break;
+
+			case IDLE:					
 				stopRobot();
-				if(!fdelay_ms(500))					//Blink LED in Idle mode
-				{
-					led2Tog;
+				if(!fdelay_ms(500))					//Blink LED 3 in Idle mode
 					led3Tog;	
-				}
-			break;
+				break;
 		}
-		
-		//State independent function calls go here. Important regular system tasks like reading from
-		//the communications port or from the navigation sensors.
-		getNewCommunications(&frame, &message);
-		nfRetrieveNavData();
+		getNewCommunications(); //Checks for and interprets new communications
+		nfRetrieveNavData();	//checks if there is new navigation data and updates robotPosition
+		//check to see if obstacle avoidance is enabled AND the robot is moving
 		if(obstacleAvoidanceEnabledFlag && movingFlag)
-			dodgeObstacle(aim, aimSpeed);
+			dodgeObstacle(&robotPosition); //avoid obstacles using proximity sensors
 	}
 }

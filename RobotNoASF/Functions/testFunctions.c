@@ -39,17 +39,17 @@ extern struct Position robotPosition;
 *
 * No Return Values
 *
-* Called in the main loop whenever a new command is received 
+* Called in the main loop whenever a new command is received
 * OR in the case of streaming data it will be called at every streaming interval
 * ***Streaming Interval = 100ms***
 *
 * Implementation:
 * Uses 2 arrays to keep track of interpreted data for
 * (1) receiving and (2) transmitting test data
-* Test Type variable controls the state machine and is the type of test being 
+* Test Type variable controls the state machine and is the type of test being
 * carried out (eg test mouse sensor)
 * There is a case for each test type
-* 
+*
 * TEST TYPES
 * Proximity Sensors
 * Light Sensors
@@ -64,11 +64,11 @@ extern struct Position robotPosition;
 *
 * How each case works will be explained there
 * The test MODE controls how the data is sent back
-* Test Modes 
+* Test Modes
 * DATA RETURN	Data heading to PC (used to stop other robots from getting confused)
 * STREAM DATA	Continuously send data to the PC every [streaming interval]
 * STOP STREAMING Stop streaming data back to the PC
-* ***SINGLE SAMPLE Possibly getting removed(18/7) - AP 
+* ***SINGLE SAMPLE Possibly getting removed(18/7) - AP
 * SINGLE SAMPLE Send one sample of the required test back to the PC
 *
 * Transmit Arrays are framed in each case and are as follows
@@ -76,7 +76,7 @@ extern struct Position robotPosition;
 * [1] - (if applicable) specific peripheral (eg Prox A, B etc)
 *		where there is only 1 peripheral of a given type [1] will be removed and everything
 *		else will move up [2] will become [1] and so on
-* [2] - The test mode, in terms of the robot returning data to the PC or another robot 
+* [2] - The test mode, in terms of the robot returning data to the PC or another robot
 *		(all of the below cases)
 *		This will ALWAYS be DATA_RETURN (0x00)
 *		This is to ensure that a robot receiving the message doesnt mistake the command for a REQUEST
@@ -86,7 +86,7 @@ extern struct Position robotPosition;
 *		The order will be [3] Data1_High, [4] Data1_Low, [5] Data2_High and so on
 * The transmit array sie must also be calculated and sent with the XBee Transmit Request
 */
-uint8_t testManager(struct message_info message, struct transmitDataStructure *transmit, struct Position *robotPosition)
+uint8_t getTestData(struct message_info message, struct transmitDataStructure *transmit, struct Position *robotPosition)
 {
 	static uint8_t receivedTestData[50]; //array for data coming into the robot AFTER Xbee framing has been stripped
 	uint16_t peripheralReturnData; //the test data returned from eh relevant peripheral
@@ -102,7 +102,7 @@ uint8_t testManager(struct message_info message, struct transmitDataStructure *t
 	{
 		case TEST_COMMUNICATIONS:
 		transmit->Data[1] = 0x01;
-		transmit->DataSize = 2;		
+		transmit->DataSize = 2;
 		break;
 		
 		case TEST_PROXIMITY_SENSORS: //0xE4
@@ -128,16 +128,14 @@ uint8_t testManager(struct message_info message, struct transmitDataStructure *t
 		
 		case TEST_MOUSE_SENSOR:
 		//Only 1 mouse sensor just trying to attain dx & dy
-		//getMouseXY will the structure testPosition (using pointers) with dx and dy
-		getMouseXY(robotPosition);
 		transmit->Data[1] = DATA_RETURN; //sending data out
-		transmit->Data[2] = robotPosition->opticalDX >> 8; //upper byte
-		transmit->Data[3] = robotPosition->opticalDX & 0xFF; //lower byte
-		transmit->Data[4] = robotPosition->opticalDX >> 8; //upper byte
-		transmit->Data[5] = robotPosition->opticalDX & 0xFF; //lower byte
+		//transmit->Data[2] = robotPosition->opticalDX >> 8; //upper byte
+		//transmit->Data[3] = robotPosition->opticalDX & 0xFF; //lower byte
+		//transmit->Data[4] = robotPosition->opticalDX >> 8; //upper byte
+		//transmit->Data[5] = robotPosition->opticalDX & 0xFF; //lower byte
 		transmit->DataSize = 6;
 		break;
-				
+		
 		case TEST_IMU:
 		//Pitch, Roll, Yaw all floats
 		transmit->Data[1] = DATA_RETURN; //sending data out
@@ -154,23 +152,9 @@ uint8_t testManager(struct message_info message, struct transmitDataStructure *t
 		data.val = robotPosition -> imuYaw;
 		transmit->Data[10] = data.bytes[3];			//upper byte
 		transmit->Data[11] = data.bytes[2];			//upper middle byte
-		transmit->Data[12] = data.bytes[1];		//lower middle byte
+		transmit->Data[12] = data.bytes[1];			//lower middle byte
 		transmit->Data[13] = data.bytes[0];			//lower byte
 		transmit->DataSize = 14;
-		//transmit->Data[1] = DATA_RETURN; //sending data out
-		//transmit->Data[2] = robotPosition->imuPitch >> 24;		//upper byte
-		//transmit->Data[3] = robotPosition->imuPitch >> 16;		//upper middle byte
-		//transmit->Data[4] = robotPosition->imuPitch >> 8;		//lower middle byte
-		//transmit->Data[5] = robotPosition->imuPitch & 0xFF;		//lower byte		
-		//transmit->Data[6] = robotPosition->imuRoll >> 24;		//upper byte
-		//transmit->Data[7] = robotPosition->imuRoll >> 16;		//upper middle byte
-		//transmit->Data[8] = robotPosition->imuRoll >> 8;		//lower middle byte
-		//transmit->Data[9] = robotPosition->imuRoll & 0xFF;		//lower byte
-		//transmit->Data[10] = robotPosition->imuYaw >> 24;		//upper byte
-		//transmit->Data[11] = robotPosition->imuYaw >> 16;		//upper middle byte
-		//transmit->Data[12] = robotPosition->imuYaw >> 8;		//lower middle byte
-		//transmit->Data[13] = robotPosition->imuYaw & 0xFF;		//lower byte	
-		//transmit->DataSize = 14;
 		break;
 		
 		case TEST_LINE_FOLLOWERS:
@@ -186,14 +170,14 @@ uint8_t testManager(struct message_info message, struct transmitDataStructure *t
 		peripheralReturnData = fcBatteryVoltage();
 		transmit->Data[1] = DATA_RETURN; //sending data out
 		transmit->Data[2] = peripheralReturnData >> 8; //upper byte
-		transmit->Data[3] = peripheralReturnData & 0xFF; //lower byte		
+		transmit->Data[3] = peripheralReturnData & 0xFF; //lower byte
 		transmit->DataSize = 4;
 		break;
 		
 		case TEST_TWI_MULTIPLEXOR:
 		//To test the Mux the channel is changed to one set by the PC
 		//Then the channel is read off the Mux it should match what was instructed
-		//Matching will be checked on the PC side, will appear as an echo if test passes		
+		//Matching will be checked on the PC side, will appear as an echo if test passes
 		twi0MuxSwitch(receivedTestData[1]);//Set the Mux to the specified channel
 		transmit->Data[1] = DATA_RETURN;//sending data out
 		transmit->Data[2] = twi0ReadMuxChannel();//Return the channel the Mux is currently set to
@@ -219,11 +203,35 @@ uint8_t testManager(struct message_info message, struct transmitDataStructure *t
 		//TODO: instead of echo read what motor is on with direction and speed and return it
 		testMode = SINGLE_SAMPLE;
 		transmit->DataSize = 4;
-		//stopRobot();
 		break;
 
 	}
 	return testMode;
+}
+
+void testManager(struct message_info message, struct Position *robotPosition)
+{
+	static struct transmitDataStructure transmitMessage;
+	static uint8_t testMode = 0x00;   
+	if(newDataFlag || streamIntervalFlag)
+	{
+		//get the new test data
+		testMode = getTestData(message, &transmitMessage, robotPosition);
+	}
+	if(testMode == STOP_STREAMING)
+	mainRobotState = IDLE;
+	else if(testMode == SINGLE_SAMPLE)
+	{
+		mainRobotState = IDLE;
+		SendXbeeAPITransmitRequest(COORDINATOR_64,UNKNOWN_16, transmitMessage.Data,
+		transmitMessage.DataSize);  //Send the Message
+	}
+	else if(streamIntervalFlag && testMode == STREAM_DATA)
+	{
+		streamIntervalFlag = 0;
+		SendXbeeAPITransmitRequest(COORDINATOR_64,UNKNOWN_16, transmitMessage.Data,
+		transmitMessage.DataSize);  //Send the Message
+	}
 }
 
 /*
@@ -245,7 +253,7 @@ void testAll(struct transmitDataStructure *transmit)
 	//[WIP] needs consultation with Mansel -AP
 	//Order will be
 	struct Position testPosition;
-	uint16_t doubleByteData; //used as an intermediate 
+	uint16_t doubleByteData; //used as an intermediate
 	transmit->Data[0] = TEST_ALL_RETURN; //0xEF
 	doubleByteData = proxSensRead(MUX_PROXSENS_A);
 	transmit->Data[1] = doubleByteData >> 8;
@@ -272,10 +280,10 @@ void testAll(struct transmitDataStructure *transmit)
 	transmit->Data[15] = doubleByteData >> 8;
 	transmit->Data[16] = doubleByteData & 0xFF;
 	getMouseXY(&testPosition);
-	transmit->Data[17] = testPosition.opticalDX >> 8;	//upper byte
-	transmit->Data[18] = testPosition.opticalDX & 0xFF; //lower byte
-	transmit->Data[19] = testPosition.opticalDX >> 8;	//upper byte
-	transmit->Data[20] = testPosition.opticalDX & 0xFF; //lower byte
+	//transmit->Data[17] = testPosition.opticalDX >> 8;	//upper byte
+	//transmit->Data[18] = testPosition.opticalDX & 0xFF; //lower byte
+	//transmit->Data[19] = testPosition.opticalDX >> 8;	//upper byte
+	//transmit->Data[20] = testPosition.opticalDX & 0xFF; //lower byte
 	//[WIP] Need to check if our comms can handle this before finishing it
 	//If it goes well I might abstract the tests to functions that fill the array also
 	//TODO: Adam Parlane
