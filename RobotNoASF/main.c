@@ -67,11 +67,6 @@ int main(void)
 				if(newDataFlag) //if there is new data
 					manualControl(message, &robotPosition);
 				chargeInfo = chargeDetector();
-				if (chargeInfo == BATT_CHARGING)
-				{
-					mainRobotStatePrev = mainRobotState;
-					mainRobotState = CHARGING;
-				}
 				break;
 			
 			case DOCKING:
@@ -96,15 +91,7 @@ int main(void)
 				break;
 			
 			case CHARGING:
-				if(!fdelay_ms(500))					//Blink LED 1 in charge mode
-					led1Tog;
 				chargeInfo = chargeDetector();
-				if(chargeInfo == BATT_CHARGING)
-					break;
-				else if(chargeInfo == BATT_CHARGED)
-					mainRobotState = mainRobotStatePrev;
-				else
-					mainRobotState = MANUAL;
 				break;
 
 			case IDLE:					

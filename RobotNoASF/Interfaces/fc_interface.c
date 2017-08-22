@@ -54,13 +54,13 @@ void fcInit(void)
 	REG_PIOB_CODR |= PIO_CODR_P2;	//Set PB2 to low
 	
 	
-	uint8_t writeBuffer;	
+	uint8_t writeBuffer;
 	//NOT SHURE IF THIS LINE IS NEEDED BE CAUSE ACCORDING TO DATASHEET CE IS INVERTED, THEREFORE THE
 	//DEFAULT VALUE 0 WOULD MEAN THAT CHARGING IS ENABLED NOT 1. TESTING REQUIRED.
 	//Ensures that CE bit is clear in case safety timer has gone off in previous charge.
 	writeBuffer = FC_CONTROL_INIT;
 	twi0Write(TWI0_FCHARGE_ADDR, FC_CONTROL_REG, 1, &writeBuffer);
-															
+	
 	//Vreg = 3.98v, input current = 2.5A
 	writeBuffer = FC_BATTVOL_INIT;
 	twi0Write(TWI0_FCHARGE_ADDR, FC_BATVOL_REG, 1, &writeBuffer);
@@ -180,10 +180,18 @@ uint8_t chargeDetector(void)
 {
 	Register fcstatus;
 	twi0Read(TWI0_FCHARGE_ADDR, FC_STATUS_REG, 1, &fcstatus.status);
-	if(fcstatus.bit.b5 & fcstatus.bit.b4)
+	if(fcstatus.bit.b5 & fcstatus.bit.b4) //if robot is charging
+	{
+		//on the first time entering charge mode save the previous state for re entry
+		if(mainRobotState != CHARGING) 
+			mainRobotStatePrev = mainRobotState;
+		if(!fdelay_ms(500))					//Blink LED 1 in charge mode
+			led1Tog;
+		mainRobotState = CHARGING;
 		return BATT_CHARGING;
-	else if (fcstatus.bit.b6 & fcstatus.bit.b4)
-		return BATT_CHARGED;
-	else
-		return  fcstatus.status;
+	}
+	else if (fcstatus.bit.b6 & fcstatus.bit.b4)//if robot is charged
+		mainRobotState = mainRobotStatePrev;
+	else //if the robot is not charging (eg fault or no contact)
+		mainRobotState = mainRobotStatePrev;
 }
