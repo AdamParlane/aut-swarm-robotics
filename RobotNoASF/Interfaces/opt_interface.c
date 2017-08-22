@@ -332,3 +332,24 @@ char SPI_Read(char readAddress)
 	data = REG_SPI_RDR;						//Read the correct data
 	return data;
 }
+
+/*
+* Function: void getMouseSQUAL(void)
+*
+* Reads the surface quality form the mouse used for debugging and tuning the mouse
+*
+* Returns a char with the surface quality
+*
+* Implementation:
+* max value is 242 (perfect surface)
+* values approaching 0 indicate no surface below the sensor
+* Optimal results are achieved when lens is 2.4mm from surface
+*
+* Improvements:
+* [Ideas for improvements that are yet to be made](optional)
+*
+*/
+void getMouseSQUAL(void)
+{
+	uint8_t squal = SPI_Read(OPT_SQUAL);
+}

@@ -44,6 +44,7 @@
 #define OPT_DELTA_X_L		0x03
 #define OPT_DELTA_Y_L		0x04
 #define OPT_DELTA_XY_H		0x05
+#define OPT_SQUAL			0x06
 #define OPT_LASER_CTRL0		0x1A
 #define OPT_LSRPWR_CFG0		0x1C
 #define OPT_LSRPWR_CFG1		0x1D
@@ -52,7 +53,6 @@
 #define OPT_PWR_UP_RESET	0x3A
 #define OPT_INVS_REV_ID		0x3E
 #define OPT_INVS_PROD_ID	0x3F
-
 
 
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
@@ -125,5 +125,15 @@ char mouseTestBasic(void);
 */
 void getMouseXY(struct Position *mousePos);
 
+
+/*
+* Function: void getMouseSQUAL(void)
+*
+* Reads the surface quality form the mouse used for debugging and tuning the mouse
+*
+* Returns a char with the surface quality
+*
+*/
+void getMouseSQUAL(void);
 
 #endif /* OPT_INTERFACE_H_ */
