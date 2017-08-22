@@ -1,4 +1,4 @@
-/*
+ /*
 * motion_functions.h
 *
 * Author : Matthew Witt (pxf5695@autuni.ac.nz)
@@ -32,18 +32,40 @@
 
 //////////////[Defines]/////////////////////////////////////////////////////////////////////////////
 //PID constants for mfRotateToHeading
+#if defined ROBOT_TARGET_V2
 #define RTH_KP	4.0
+#endif
+#if defined ROBOT_TARGET_V1
+#define RTH_KP	1.33
+#endif
 
 //PID constants for mfMoveToHeading
+#if defined ROBOT_TARGET_V2
 #define MTH_KP	4.0
+#endif
+#if defined ROBOT_TARGET_V1
+#define MTH_KP	1.33
+#endif
 
 //PID constants for mfTrackLight
+#if defined ROBOT_TARGET_V2
 #define TL_KP	10.0
 #define TL_KI	0.001
+#endif
+#if defined ROBOT_TARGET_V1
+#define TL_KP	3.33
+#define TL_KI	0.00033
+#endif
 
 //PID constants for mfTrackLightprox
+#if defined ROBOT_TARGET_V2
 #define TLP_KP	10.0
 #define TLP_KI	0.001
+#endif
+#if defined ROBOT_TARGET_V1
+#define TLP_KP	3.33
+#define TLP_KI	0.00033
+#endif
 
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*

@@ -107,5 +107,5 @@ void dodgeObstacle(struct Position *robotPosition)
 			else 
 				moveRobot(robotPosition -> targetHeading, robotPosition -> targetSpeed);
 		}	
-	}				
+	}		
 }

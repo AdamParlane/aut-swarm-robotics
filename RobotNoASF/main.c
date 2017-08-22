@@ -110,11 +110,15 @@ int main(void)
 			
 			case DOCKING:
 			//if battery low or manual docking command sent from PC
+			case DOCKING:
+				pioLedNumber(4);
+				//if battery low or manual command set
 				if(!dfDockRobot(&robotPosition))	//Execute docking procedure state machine
 					mainRobotState = IDLE;			//If finished docking, go IDLE
 				break;
 			
 			case LINE_FOLLOW:
+    		pioLedNumber(5);
 			//Entered when line follow command received from PC
 				if(!dfFollowLine(35, &robotPosition))//Line follower will return 0 when complete
 					mainRobotState = IDLE;
@@ -122,6 +126,7 @@ int main(void)
 					
 			case LIGHT_FOLLOW:
 			//Entered when light follow command received from PC
+				pioLedNumber(6);
 				mfTrackLight(&robotPosition);
 				break;
 				
