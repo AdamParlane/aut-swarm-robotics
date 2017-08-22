@@ -144,7 +144,7 @@ void mouseInit(void)
 	while((dummyVar & 0x0F) != 0x0F)			//check if bits 0-3 have been set
 	{
 		dummyVar = SPI_Read(OPT_OBSERVATION);
-		mouseInitDelay();
+		delay_ms(1);
 	}
 	dummyVar = SPI_Read(OPT_MOTION);
 	dummyVar = SPI_Read(OPT_DELTA_X_L);
@@ -161,7 +161,7 @@ void mouseInit(void)
 	SPI_Write(OPT_LSRPWR_CFG1, 0x00);		//complement of set laser current to full
 	SPI_Write(OPT_LASER_CTRL0, 0xC0);		//set laser current range to 4-10mA
 	SPI_Write(OPT_LASER_CTRL1, 0x3F);		//complement of set laser current range to 4-10mA
-	mouseInitDelay();								//allow everything to settle after being initialized
+	delay_ms(10);						//allow everything to settle after being initialized
 }
 
 /*
@@ -202,15 +202,15 @@ void getMouseXY(struct Position *mousePos)
 		topY = data5 & (0x0F);				//only read the 4 LSB of data5
 		Xtemp = data3 | (topX << 8);
 		Ytemp = data4 | (topY << 8);
-		if(Xtemp & (1<<12))					//if MSB of X is set (for 2s complement)
-		{
-			Xtemp -= 4096;
-		}
+		//if(Xtemp & (1<<12))					//if MSB of X is set (for 2s complement)
+		//{
+			//Xtemp -= 4096;
+		//}
 		mousePos->opticalDX = Xtemp * RESOLUTION;
-		if(Ytemp & (1<<12))					//if MSB of Y is set (for 2s complement)
-		{
-			Ytemp -= 4096;
-		}
+		//if(Ytemp & (1<<12))					//if MSB of Y is set (for 2s complement)
+		//{
+			//Ytemp -= 4096;
+		//}
 		mousePos->opticalDY = Ytemp * RESOLUTION;
 		
 		mousePos->opticalX += mousePos->opticalDX;

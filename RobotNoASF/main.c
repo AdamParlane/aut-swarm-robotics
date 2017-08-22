@@ -63,6 +63,7 @@ int main(void)
 	struct transmitDataStructure transmitMessage; //struct to transmit to PC
 	srand(streamDelayCounter);		//Seed rand() to give unique random numbers
 	mainRobotState = IDLE;
+	tMit = 1;
 	while(1)
 	{
 		switch (mainRobotState)
@@ -81,7 +82,7 @@ int main(void)
 					SendXbeeAPITransmitRequest(COORDINATOR_64,UNKNOWN_16, transmitMessage.Data, 
 												transmitMessage.DataSize);  //Send the Message
 				}
-				else if(streamIntervalFlag && testMode == STREAM_DATA)
+				else if(streamIntervalFlag && testMode == STREAM_DATA && tMit)
 				{
 					streamIntervalFlag = 0;
 					SendXbeeAPITransmitRequest(COORDINATOR_64,UNKNOWN_16, transmitMessage.Data,
@@ -144,7 +145,7 @@ int main(void)
 				//idle				
 				movingFlag = 0;
 				//getMouseXY(&robotPosition);
-				delay_ms(100);
+				//delay_ms(100);
 				if(!fdelay_ms(500))					//Blink LED in Idle mode
 				{
 					led2Tog;
