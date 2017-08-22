@@ -202,17 +202,12 @@ void getMouseXY(struct Position *mousePos)
 		topY = data5 & (0x0F);				//only read the 4 LSB of data5
 		Xtemp = data3 | (topX << 8);
 		Ytemp = data4 | (topY << 8);
-		//if(Xtemp & (1<<12))					//if MSB of X is set (for 2s complement)
-		//{
-			//Xtemp -= 4096;
-		//}
+		if(Xtemp & (1<<12))					//if MSB of X is set (for 2s complement)
+			Xtemp ^= 0b1000100000000000;	//Make the 2s complement bit be MSB of short
 		mousePos->opticalDX = Xtemp * RESOLUTION;
-		//if(Ytemp & (1<<12))					//if MSB of Y is set (for 2s complement)
-		//{
-			//Ytemp -= 4096;
-		//}
+		if(Ytemp & (1<<12))					//if MSB of Y is set (for 2s complement)
+			Ytemp ^= 0b1000100000000000;	//Make the 2s complement bit be MSB of short
 		mousePos->opticalDY = Ytemp * RESOLUTION;
-		
 		mousePos->opticalX += mousePos->opticalDX;
 		mousePos->opticalY += mousePos->opticalDY;
 	}

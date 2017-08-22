@@ -128,12 +128,6 @@ uint8_t testManager(struct message_info message, struct transmitDataStructure *t
 		
 		case TEST_MOUSE_SENSOR:
 		//Only 1 mouse sensor just trying to attain dx & dy
-		//getMouseXY will the structure testPosition (using pointers) with dx and dy
-		//getMouseXY(robotPosition);
-		if(transmit->Data[3] == (robotPosition->opticalDX & 0xFF))
-			tMit = 1;
-		else
-			tMit = 1;
 		transmit->Data[1] = DATA_RETURN; //sending data out
 		transmit->Data[2] = robotPosition->opticalDX >> 8; //upper byte
 		transmit->Data[3] = robotPosition->opticalDX & 0xFF; //lower byte

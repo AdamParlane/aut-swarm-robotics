@@ -63,7 +63,6 @@ int main(void)
 	struct transmitDataStructure transmitMessage; //struct to transmit to PC
 	srand(streamDelayCounter);		//Seed rand() to give unique random numbers
 	mainRobotState = IDLE;
-	tMit = 1;
 	while(1)
 	{
 		switch (mainRobotState)
@@ -82,7 +81,7 @@ int main(void)
 					SendXbeeAPITransmitRequest(COORDINATOR_64,UNKNOWN_16, transmitMessage.Data, 
 												transmitMessage.DataSize);  //Send the Message
 				}
-				else if(streamIntervalFlag && testMode == STREAM_DATA && tMit)
+				else if(streamIntervalFlag && testMode == STREAM_DATA)
 				{
 					streamIntervalFlag = 0;
 					SendXbeeAPITransmitRequest(COORDINATOR_64,UNKNOWN_16, transmitMessage.Data,
