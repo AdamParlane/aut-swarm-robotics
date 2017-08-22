@@ -155,8 +155,8 @@ uint8_t lightSensCapture(uint8_t channel, struct ColourSensorData *colours)
 */
 void lightSensRGB2HSV(struct ColourSensorData *colours)
 {
-	uint16_t cMax = 0x0000;		//Holds maximum colour channel value
-	uint16_t cMin = 0xFFFF;		//Holds minimum colour channel value
+	uint16_t cMax = 0x0000;					//Holds maximum colour channel value
+	uint16_t cMin = MAX_LIGHT_CHANNEL_VAL;	//Holds minimum colour channel value
 	
 	//Find maximum colour channel value (cMax)
 	if(colours->red > cMax)
@@ -174,8 +174,7 @@ void lightSensRGB2HSV(struct ColourSensorData *colours)
 	if(colours->blue < cMin)
 		cMin = colours->blue;
 	
-	//Get Hue (0-360)
-	
+	//Get Hue (0-360) (Still an issue here)
 	colours->hue = (atan2(sqrt(3)*(colours->green - colours->blue),
 									2*colours->red - colours->green - colours->blue)*180/M_PI);
 	
