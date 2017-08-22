@@ -107,7 +107,7 @@ int main(void)
 				else
 					mainRobotState = MANUAL;
 				break;
-			
+
 			case IDLE:				
 				stopRobot();
 				if(!fdelay_ms(500))					//Blink LED 3 in Idle mode

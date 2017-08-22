@@ -137,14 +137,14 @@ void mouseInit(void)
 
 	//initialize mouse sensor
 	SPI_Write(OPT_PWR_UP_RESET, 0x5A);		//Power Up Reset
-	mouseInitDelay();
+	delay_ms(1);
 	SPI_Write(OPT_OBSERVATION, 0x00);		//clear observation register
-	mouseInitDelay();								//wait at least 1 frame
+	delay_ms(1);								//wait at least 1 frame
 	dummyVar = SPI_Read(OPT_OBSERVATION);	//read observation register to check bits 0-3 are set	
 	while((dummyVar & 0x0F) != 0x0F)			//check if bits 0-3 have been set
 	{
 		dummyVar = SPI_Read(OPT_OBSERVATION);
-		mouseInitDelay();
+		delay_ms(1);
 	}
 	dummyVar = SPI_Read(OPT_MOTION);
 	dummyVar = SPI_Read(OPT_DELTA_X_L);
@@ -161,7 +161,7 @@ void mouseInit(void)
 	SPI_Write(OPT_LSRPWR_CFG1, 0x00);		//complement of set laser current to full
 	SPI_Write(OPT_LASER_CTRL0, 0xC0);		//set laser current range to 4-10mA
 	SPI_Write(OPT_LASER_CTRL1, 0x3F);		//complement of set laser current range to 4-10mA
-	mouseInitDelay();								//allow everything to settle after being initialized
+	delay_ms(10);						//allow everything to settle after being initialized
 }
 
 /*
@@ -192,7 +192,7 @@ void getMouseXY(struct Position *mousePos)
 {
 	int Xtemp = 0, Ytemp = 0;
 	char topX, topY, data2, data3, data4, data5;	
-	data2 = SPI_Read(OPT_OBSERVATION);
+	data2 = SPI_Read(OPT_MOTION);
 	if(data2 & (1<<7))
 	{
 		data3 = SPI_Read(OPT_DELTA_X_L);	//delta x low
@@ -203,16 +203,11 @@ void getMouseXY(struct Position *mousePos)
 		Xtemp = data3 | (topX << 8);
 		Ytemp = data4 | (topY << 8);
 		if(Xtemp & (1<<12))					//if MSB of X is set (for 2s complement)
-		{
-			Xtemp -= 4096;
-		}
+			Xtemp ^= 0b1000100000000000;	//Make the 2s complement bit be MSB of short
 		mousePos->opticalDX = Xtemp * RESOLUTION;
 		if(Ytemp & (1<<12))					//if MSB of Y is set (for 2s complement)
-		{
-			Ytemp -= 4096;
-		}
+			Ytemp ^= 0b1000100000000000;	//Make the 2s complement bit be MSB of short
 		mousePos->opticalDY = Ytemp * RESOLUTION;
-		
 		mousePos->opticalX += mousePos->opticalDX;
 		mousePos->opticalY += mousePos->opticalDY;
 	}
@@ -347,7 +342,7 @@ char SPI_Read(char readAddress)
 */
 void mouseInitDelay(void)
 {
-	for (volatile uint16_t i=0; i<65535; i++)
+	for (volatile uint16_t i=0; i<6555; i++)
 	{
 		
 	}

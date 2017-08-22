@@ -36,8 +36,8 @@ struct Position
 //combines them. The structure will store the relevant info from both key sensors and fuse them in
 //an additional function (84bytes i think)
 {
-	short opticalDX;		//Rate of change from optical sensor (X axis is left to right)
-	short opticalDY;		//Rate of change from optical sensor (Y axis is fwd/bckwd)
+	signed short opticalDX;		//Rate of change from optical sensor (X axis is left to right)
+	signed short opticalDY;		//Rate of change from optical sensor (Y axis is fwd/bckwd)
 	float opticalX;
 	float opticalY;
 	float opticalHdg;		//Heading calculated from optical sensor
@@ -105,6 +105,7 @@ char newDataFlag; //TODO:used for test function probably temporary ((still tempo
 char mainRobotState, mainRobotStatePrev;	//main function state machine states
 volatile char streamDelayCounter, streamIntervalFlag;	//TODO:What are these?
 char movingFlag;
+char tMit;
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*
 * Function:
