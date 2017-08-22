@@ -15,7 +15,8 @@
 * Functions:
 * void lightSensInit(uint8_t channel)
 * uint16_t lightSensRead(uint8_t channel, uint8_t colour)
-* uint8_t lightSensReadAll(uint8_t channel, uint16_t *r, uint16_t *g, uint16_t *b, uint16_t *w)
+* uint8_t lightSensCapture(uint8_t channel, struct ColourSensorData *colours)
+* void lightSensRGB2HSV(struct ColourSensorData *colours)
 *
 */
 
@@ -100,7 +101,7 @@ uint16_t lightSensRead(uint8_t channel, uint8_t colour);
 
 /*
 * Function:
-* uint8_t lightSensReadAll(uint8_t channel, uint16_t *r, uint16_t *g, uint16_t *b, uint16_t *w)
+* uint8_t lightSensCapture(uint8_t channel, uint16_t *r, uint16_t *g, uint16_t *b, uint16_t *w)
 *
 * Retrieves the (16-bit) light data of all colours from the selected Light Sensor
 *
@@ -121,6 +122,22 @@ uint16_t lightSensRead(uint8_t channel, uint8_t colour);
 * 0 on success, or non-zero when TWI error occurred.
 *
 */
-uint8_t lightSensReadAll(uint8_t channel, uint16_t *r, uint16_t *g, uint16_t *b, uint16_t *w);
+uint8_t lightSensCapture(uint8_t channel, struct ColourSensorData *colours);
+
+/*
+* Function:
+* void lightSensRGB2HSV(struct ColourSensorData *colours)
+*
+* Converts RGB to HSV and stores them in a ColourSensorData structure
+*
+* Inputs:
+* struct ColourSensorData *colours
+*   Pointer to a ColourSensorData structure to store the calculated HSV values
+*
+* Returns:
+* none
+*
+*/
+void lightSensRGB2HSV(struct ColourSensorData *colours);
 
 #endif /* LIGHT_SENS_INTERFACE_H_ */

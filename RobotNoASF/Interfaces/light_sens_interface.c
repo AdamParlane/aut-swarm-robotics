@@ -24,6 +24,8 @@
 * Functions:
 * void lightSensInit(uint8_t channel)
 * uint16_t lightSensRead(uint8_t channel, uint8_t colour)
+* uint8_t lightSensCapture(uint8_t channel, struct ColourSensorData *colours)
+* void lightSensRGB2HSV(struct ColourSensorData *colours)
 *
 */
 
@@ -99,35 +101,25 @@ uint16_t lightSensRead(uint8_t channel, uint8_t colour)
 
 /*
 * Function:
-* uint8_t lightSensReadAll(uint8_t channel, uint16_t *r, uint16_t *g, uint16_t *b, uint16_t *w)
+* uint8_t lightSensCapture(uint8_t channel, uint16_t *r, uint16_t *g, uint16_t *b, uint16_t *w)
 *
-* Retrieves the (16-bit) light data of all colours from the selected Light Sensor
+* Retrieves the (16-bit) light data of all colours from the selected Light Sensor (RGB and HSV)
 *
 * Inputs:
-* uint8_t channel:
-*   The I2C mulitplexer channel of the light sensor to read from.
-*   MUX_LIGHTSENS_R for the right sensor or MUX_LIGHTSENS_L for the left
-* uint16_t *r
-*   Pointer to a 16bit integer to store red channel data
-* uint16_t *g
-*   Pointer to a 16bit integer to store green channel data
-* uint16_t *b
-*   Pointer to a 16bit integer to store blue channel data
-* uint16_t *w
-*   Pointer to a 16bit integer to store white channel data
+* struct ColourSensorData *colours
+*   Pointer to a ColourSensorData structure, which is where the output will be stored
 *
 * Returns:
-* 0 on success, or non-zero when TWI error occurred.
+* Always 0
 *
 * Implementation:
-* First, the multiplexer on TWI0 is set to the channel for the desired light sensor.
-* Next, all colour channel data is read in a single TWI read operation and stored in the data array.
-* After that, the colour data is separated from the data array and stored at the colour pointer
-* locations. TWI0_LIGHTSENS_ADDR is the I2C address of the light sensors, and colour is an internal 
-* register address.
-*
+* Uses lightSensRead() to read the values from each colour channel on the given colour sensor and
+* loads the data into the ColourSensorData structure provided in the parameters.
+* After that, the ColourSensorData structure is passed to lightSensRGB2HSV to find the hue,
+* saturation and value figures for the retrieved RGB values and stores them in ColourSensorData
+* structure.
 */
-uint8_t lightSensReadAll(uint8_t channel, struct ColourSensorData *colours)
+uint8_t lightSensCapture(uint8_t channel, struct ColourSensorData *colours)
 {
 	uint8_t returnVal = 0;
 
@@ -136,23 +128,43 @@ uint8_t lightSensReadAll(uint8_t channel, struct ColourSensorData *colours)
 	colours->blue; = lightSensRead(channel, LS_BLUE_REG);	//Read blue channel
 	colours->white; = lightSensRead(channel, LS_WHITE_REG);	//Read white channel
 	
-	lightSensRGB2HSV(colours);
+	lightSensRGB2HSV(colours);								//Derive HSV figures from RGB
 	
 	return returnVal;	
 }
 
+/*
+* Function:
+* void lightSensRGB2HSV(struct ColourSensorData *colours)
+*
+* Converts RGB to HSV and stores them in a ColourSensorData structure
+*
+* Inputs:
+* struct ColourSensorData *colours
+*   Pointer to a ColourSensorData structure to store the calculated HSV values
+*
+* Returns:
+* none
+*
+* Implementation:
+* See
+* http://www.rapidtables.com/convert/color/rgb-to-hsv.htm
+*
+*/
 void lightSensRGB2HSV(struct ColourSensorData *colours)
 {
-	uint16_t cMax = 0x0000;
-	uint16_t cMin = 0xFFFF;
+	uint16_t cMax = 0x0000;		//Holds maximum colour channel value
+	uint16_t cMin = 0xFFFF;		//Holds minimum colour channel value
 	
+	//Find maximum colour channel value (cMax)
 	if(colours->red > cMax)
 		cMax = colours->red;
 	if(colours->green > cMax)
 		cMax = colours->green;
 	if(colours->blue > cMax)
 		cMax = colours->blue;
-
+	
+	//Find minimum colour channel value (cMin)
 	if(colours->red < cMin)
 		cMax = colours->red;
 	if(colours->green < cMin)
@@ -160,6 +172,7 @@ void lightSensRGB2HSV(struct ColourSensorData *colours)
 	if(colours->blue < cMin)
 		cMax = colours->blue;
 	
+	//Get Hue (0-360)
 	colours->hue = atan2(sqrt(3)*(colours->green - colours->blue),
 									2*colours->red - colours->green - colours->blue);
 	
@@ -169,6 +182,6 @@ void lightSensRGB2HSV(struct ColourSensorData *colours)
 	else
 		colours->saturation = (cMax - cMin)/cMax;
 	
-	//Get Value										
+	//Get Value	(0-65535)							
 	colours->value = cMax;
 }
