@@ -65,7 +65,7 @@ void robotSetup(void)
 	lightSensInit(MUX_LIGHTSENS_L);		//Initialise Left Light/Colour sensor
 	proxSensInit();						//Initialise proximity sensors
 	fcInit();							//Initialise the fast charge chip
-	CommunicationSetup();				//Initialise communication system
+	xbeeInit();							//Initialise communication system
 	imuInit();							//Initialise IMU.
 	extIntInit();						//Initialise external interrupts.
 	imuDmpInit();						//Initialise DMP system

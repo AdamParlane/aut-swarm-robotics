@@ -45,7 +45,7 @@ struct transmitDataStructure
 
 
 /*
-* Function: uint8_t testManager(struct message_info message, struct transmitDataStructure *transmit,
+* Function: uint8_t testManager(struct MessageInfo message, struct transmitDataStructure *transmit,
 *			struct Position *robotPosition)
 *
 * Handles the interpretation of received test commands,
@@ -62,10 +62,10 @@ struct transmitDataStructure
 * ***Streaming Interval = 100ms***
 *
 */
-uint8_t getTestData(struct message_info message, struct transmitDataStructure *transmit, 
+uint8_t getTestData(struct MessageInfo message, struct transmitDataStructure *transmit, 
 struct Position *robotPosition);
 
-void testManager(struct message_info message, struct Position *robotPosition);
+void testManager(struct MessageInfo message, struct Position *robotPosition);
 
 
 

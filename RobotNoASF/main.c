@@ -25,7 +25,7 @@
 //////////////[Global variables]////////////////////////////////////////////////////////////////////
 uint16_t battVoltage;					//Stores battery voltage on start up
 extern struct Position robotPosition;	//Passed to docking functions and test functions
-extern struct message_info message;		//Incoming message structure
+extern struct MessageInfo message;		//Incoming message structure
 
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*
@@ -77,7 +77,7 @@ extern struct message_info message;		//Incoming message structure
 *				Exitied by PC commands
 *
 * After the state machine 3 functions are run every loop to check key peripherals
-* These are:	getNewCommunications()			checks and handles incoming commands
+* These are:	xbeeGetNew()			checks and handles incoming commands
 *				nfRetrieveData()				updates the robot's navigation structure
 *				dodgeObstacle()					executes obstacle avoidance routine
 * Note that doegeObstacle() is guarded by 2 flags: obstacleAvoidance enabled and the robot is moving
@@ -142,7 +142,7 @@ int main(void)
 					led3Tog;	
 				break;
 		}
-		getNewCommunications(); //Checks for and interprets new communications
+		xbeeGetNew(); //Checks for and interprets new communications
 		nfRetrieveNavData();	//checks if there is new navigation data and updates robotPosition
 		//check to see if obstacle avoidance is enabled AND the robot is moving
 		if(obstacleAvoidanceEnabledFlag && movingFlag)
