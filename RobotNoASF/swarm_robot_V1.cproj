@@ -246,12 +246,6 @@
     <Compile Include="Interfaces\adc_interface.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="Interfaces\communication.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="Interfaces\communication.h">
-      <SubType>compile</SubType>
-    </Compile>
     <Compile Include="Interfaces\external_interrupt.c">
       <SubType>compile</SubType>
     </Compile>
@@ -309,10 +303,10 @@
     <Compile Include="Interfaces\spi.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="Interfaces\timer0.c">
+    <Compile Include="Interfaces\timer_interface.c">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="Interfaces\timer0.h">
+    <Compile Include="Interfaces\timer_interface.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="Interfaces\twimux_interface.c">
@@ -325,6 +319,18 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="Device_Startup\system_sam4n.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="Interfaces\uart_interface.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="Interfaces\uart_interface.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="Interfaces\xbee_driver.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="Interfaces\xbee_driver.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="main.c">

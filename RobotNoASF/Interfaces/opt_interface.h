@@ -18,7 +18,6 @@
 * void mouseInit(void);
 * int mouseTestBasic(void);
 * void Get_Mouse_XY(struct Position *mousePos);
-* void mouseInitDelay(void);
 *
 * Functionality of each function is explained before each function
 * In the this file that is a summary of purpose, input and return values
@@ -34,7 +33,7 @@
 #include "../robot_setup.h"
 
 //////////////[Defines]/////////////////////////////////////////////////////////////////////////////
-#define RESOLUTION			1//0.00125
+#define RESOLUTION			0.004
 
 #define SPI_KEY				0x535049 //SPI write protect key for SAM4N8C
 
@@ -45,6 +44,7 @@
 #define OPT_DELTA_X_L		0x03
 #define OPT_DELTA_Y_L		0x04
 #define OPT_DELTA_XY_H		0x05
+#define OPT_SQUAL			0x06
 #define OPT_LASER_CTRL0		0x1A
 #define OPT_LSRPWR_CFG0		0x1C
 #define OPT_LSRPWR_CFG1		0x1D
@@ -53,7 +53,6 @@
 #define OPT_PWR_UP_RESET	0x3A
 #define OPT_INVS_REV_ID		0x3E
 #define OPT_INVS_PROD_ID	0x3F
-
 
 
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
@@ -126,19 +125,15 @@ char mouseTestBasic(void);
 */
 void getMouseXY(struct Position *mousePos);
 
+
 /*
-* Function: void mouseInitDelay(void)
+* Function: void getMouseSQUAL(void)
 *
-* Simple Delay using a for loop called throughout the mouse sensor setup
-* To meet mouseInit timing requirements
-* Delay is 1/CLK(MHz) * 65535
+* Reads the surface quality form the mouse used for debugging and tuning the mouse
 *
-* This program uses a 100MHz Clock making the delay approx 0.66ms
+* Returns a char with the surface quality
 *
-* No return value
 */
-void mouseInitDelay(void);
-
-
+void getMouseSQUAL(void);
 
 #endif /* OPT_INTERFACE_H_ */

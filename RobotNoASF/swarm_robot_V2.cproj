@@ -39,7 +39,7 @@
       </framework-data>
     </AsfFrameworkConfig>
     <avrtool>com.atmel.avrdbg.tool.atmelice</avrtool>
-    <avrtoolserialnumber>J41800047448</avrtoolserialnumber>
+    <avrtoolserialnumber>J41800047224</avrtoolserialnumber>
     <avrdeviceexpectedsignature>0x295B0AE0</avrdeviceexpectedsignature>
     <com_atmel_avrdbg_tool_jtagice3plus>
       <ToolOptions>
@@ -62,7 +62,7 @@
         <InterfaceName>JTAG</InterfaceName>
       </ToolOptions>
       <ToolType>com.atmel.avrdbg.tool.atmelice</ToolType>
-      <ToolNumber>J41800047448</ToolNumber>
+      <ToolNumber>J41800047224</ToolNumber>
       <ToolName>Atmel-ICE</ToolName>
     </com_atmel_avrdbg_tool_atmelice>
     <custom>
@@ -246,10 +246,10 @@
     <Compile Include="Interfaces\adc_interface.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="Interfaces\communication.c">
+    <Compile Include="Interfaces\xbee_driver.c">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="Interfaces\communication.h">
+    <Compile Include="Interfaces\xbee_driver.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="Interfaces\external_interrupt.c">
@@ -309,16 +309,22 @@
     <Compile Include="Interfaces\spi.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="Interfaces\timer0.c">
+    <Compile Include="Interfaces\timer_interface.c">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="Interfaces\timer0.h">
+    <Compile Include="Interfaces\timer_interface.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="Interfaces\twimux_interface.c">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="Interfaces\twimux_interface.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="Interfaces\uart_interface.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="Interfaces\uart_interface.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="robot_setup.c">

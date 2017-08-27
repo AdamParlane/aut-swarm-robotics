@@ -65,7 +65,7 @@ void robotSetup(void)
 	lightSensInit(MUX_LIGHTSENS_L);		//Initialise Left Light/Colour sensor
 	proxSensInit();						//Initialise proximity sensors
 	fcInit();							//Initialise the fast charge chip
-	CommunicationSetup();				//Initialise communication system
+	xbeeInit();							//Initialise communication system
 	imuInit();							//Initialise IMU.
 	extIntInit();						//Initialise external interrupts.
 	imuDmpInit();						//Initialise DMP system
@@ -75,6 +75,8 @@ void robotSetup(void)
 #endif
 	
 	delay_ms(2500);						//Stops robot running away while programming
+	srand(streamDelayCounter);		//Seed rand() to give unique random numbers
+	movingFlag = 0; //On boot robot isnt moving
 	return;
 }
 /*

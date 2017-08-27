@@ -18,7 +18,7 @@
 * void mouseInit(void);
 * int mouseTestBasic(void);
 * void Get_Mouse_XY(struct Position *mousePos);
-* void mouseInitDelay(void);
+* 
 *
 * Functionality of each function is explained before each function
 * This .c file should be paired with optInterface.h
@@ -122,6 +122,7 @@ void SPI_Init(void)
 */
 void mouseInit(void)
 {
+	//default CPI = 800, run rate = 8ms
 	//temporary variables used to read the observation register on mouse startup
 	char dummyVar;
 	
@@ -137,14 +138,14 @@ void mouseInit(void)
 
 	//initialize mouse sensor
 	SPI_Write(OPT_PWR_UP_RESET, 0x5A);		//Power Up Reset
-	mouseInitDelay();
+	delay_ms(1);
 	SPI_Write(OPT_OBSERVATION, 0x00);		//clear observation register
-	mouseInitDelay();								//wait at least 1 frame
+	delay_ms(1);								//wait at least 1 frame
 	dummyVar = SPI_Read(OPT_OBSERVATION);	//read observation register to check bits 0-3 are set	
 	while((dummyVar & 0x0F) != 0x0F)			//check if bits 0-3 have been set
 	{
 		dummyVar = SPI_Read(OPT_OBSERVATION);
-		mouseInitDelay();
+		delay_ms(1);
 	}
 	dummyVar = SPI_Read(OPT_MOTION);
 	dummyVar = SPI_Read(OPT_DELTA_X_L);
@@ -161,7 +162,7 @@ void mouseInit(void)
 	SPI_Write(OPT_LSRPWR_CFG1, 0x00);		//complement of set laser current to full
 	SPI_Write(OPT_LASER_CTRL0, 0xC0);		//set laser current range to 4-10mA
 	SPI_Write(OPT_LASER_CTRL1, 0x3F);		//complement of set laser current range to 4-10mA
-	mouseInitDelay();								//allow everything to settle after being initialized
+	delay_ms(10);						//allow everything to settle after being initialized
 }
 
 /*
@@ -190,9 +191,10 @@ void mouseInit(void)
 */
 void getMouseXY(struct Position *mousePos)
 {
-	int Xtemp = 0, Ytemp = 0;
+	uint16_t Xtemp = 0, Ytemp = 0;
+	int16_t Xx, Yy; 
 	char topX, topY, data2, data3, data4, data5;	
-	data2 = SPI_Read(OPT_OBSERVATION);
+	data2 = SPI_Read(OPT_MOTION);
 	if(data2 & (1<<7))
 	{
 		data3 = SPI_Read(OPT_DELTA_X_L);	//delta x low
@@ -202,19 +204,21 @@ void getMouseXY(struct Position *mousePos)
 		topY = data5 & (0x0F);				//only read the 4 LSB of data5
 		Xtemp = data3 | (topX << 8);
 		Ytemp = data4 | (topY << 8);
-		if(Xtemp & (1<<12))					//if MSB of X is set (for 2s complement)
-		{
-			Xtemp -= 4096;
-		}
-		mousePos->opticalDX = Xtemp * RESOLUTION;
-		if(Ytemp & (1<<12))					//if MSB of Y is set (for 2s complement)
-		{
-			Ytemp -= 4096;
-		}
-		mousePos->opticalDY = Ytemp * RESOLUTION;
-		
+		Xx = Xtemp << 4;
+		Yy = Ytemp << 4;
+		//if(Xtemp & (1<<12))					//if MSB of X is set (for 2s complement)
+			//Xtemp ^= 0b1000100000000000;	//Make the 2s complement bit be MSB of short
+		mousePos->opticalDX = (float)(Xx * RESOLUTION);
+		//if(Ytemp & (1<<12))					//if MSB of Y is set (for 2s complement)
+			//Ytemp ^= 0b1000100000000000;	//Make the 2s complement bit be MSB of short
+		mousePos->opticalDY = (float)(Yy * RESOLUTION);
 		mousePos->opticalX += mousePos->opticalDX;
 		mousePos->opticalY += mousePos->opticalDY;
+	}
+	else
+	{
+		mousePos->opticalDX = 0;
+		mousePos->opticalDY = 0;
 	}
 }
 
@@ -329,26 +333,23 @@ char SPI_Read(char readAddress)
 	return data;
 }
 
-
 /*
-* Function: void mouseInitDelay(void)
+* Function: void getMouseSQUAL(void)
 *
-* Simple Delay using a for loop called throughout the mouse sensor setup
-* To meet mouseInit timing requirements
-* Delay is 1/CLK(MHz) * 65535
-* 
-* This program uses a 100MHz Clock making the delay approx 0.66ms
-* 
-* No return value
+* Reads the surface quality form the mouse used for debugging and tuning the mouse
+*
+* Returns a char with the surface quality
+*
+* Implementation:
+* max value is 242 (perfect surface)
+* values approaching 0 indicate no surface below the sensor
+* Optimal results are achieved when lens is 2.4mm from surface
 *
 * Improvements:
 * [Ideas for improvements that are yet to be made](optional)
 *
 */
-void mouseInitDelay(void)
+void getMouseSQUAL(void)
 {
-	for (volatile uint16_t i=0; i<65535; i++)
-	{
-		
-	}
+	uint8_t squal = SPI_Read(OPT_SQUAL);
 }

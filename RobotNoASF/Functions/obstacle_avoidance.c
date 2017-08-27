@@ -14,7 +14,7 @@
 *
 * Functions:
 * uint8_t scanProximity(void)
-* void dodgeObstacle(signed int aim, char speed)
+* void dodgeObstacle(struct Position *robotPosition)
 *
 */
 
@@ -54,8 +54,7 @@ void scanProximity(void)
 
 /*
 * Function:
-* void dodgeObstacle(signed int aim, char speed)
-*
+* void dodgeObstacle(struct Position *robotPosition)
 * Will make the robot avoid obstacles while (hopefully remain on the current track
 *
 * Inputs:
@@ -72,7 +71,7 @@ void scanProximity(void)
 * [WIP]
 *
 */
-void dodgeObstacle(signed int aim, char speed)
+void dodgeObstacle(struct Position *robotPosition)
 {
 	scanProximity();	//update proximity readings
 	uint16_t proxRange = 0;
@@ -87,24 +86,26 @@ void dodgeObstacle(signed int aim, char speed)
 			indexLeft = 0;
 		if(indexRight > 5)
 			indexRight = 5;
-		if((aim > (proxRange - 30) && (aim < (proxRange + 30))) || ((index == 0) && (aim > 330) && (aim < 30)))
+		if((robotPosition -> targetHeading > (proxRange - 30) && 
+		(robotPosition -> targetHeading < (proxRange + 30))) || ((index == 0) && 
+		(robotPosition -> targetHeading > 330) && (robotPosition -> targetHeading < 30)))
 		{
 			if((proximity[index] > OBSTACLE_THRESHOLD) || (proximity[indexLeft] > 1000) || (proximity[indexRight] > 1000))
 			{
 				if(proximity[indexLeft] > proximity[indexRight])
 				{
-					aim +=90;
-					moveRobot(aim, speed);//moveLeft
+					robotPosition -> targetHeading +=90;
+					moveRobot(robotPosition -> targetHeading, robotPosition -> targetSpeed);//moveLeft
 					
 				}
 				else if (proximity[indexLeft] < proximity[indexRight])
 				{
-					aim -= 90;
-					moveRobot(aim, speed);//move right
+					robotPosition -> targetHeading -= 90;
+					moveRobot(robotPosition -> targetHeading, robotPosition -> targetSpeed);//move right
 				}
 			}
-			else
-				moveRobot(aim, speed);
+			else 
+				moveRobot(robotPosition -> targetHeading, robotPosition -> targetSpeed);
 		}	
 	}		
 }

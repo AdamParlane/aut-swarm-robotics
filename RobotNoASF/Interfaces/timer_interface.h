@@ -1,5 +1,5 @@
 /*
-* timer0.h
+* timer_interface.h
 *
 * Author : Adam Parlane & Matthew Witt
 * Created: 6/08/2017 1:23:27 PM
@@ -20,10 +20,8 @@
 *
 */
  
-
-
-#ifndef TIMER0_H_
-#define TIMER0_H_
+#ifndef TIMER_INTERFACE_H_
+#define TIMER_INTERFACE_H_
 
 //////////////[Includes]////////////////////////////////////////////////////////////////////////////
 #include "../robot_setup.h"
@@ -77,7 +75,6 @@ int get_ms(uint32_t *timestamp);
 int delay_ms(uint32_t period_ms);
 
 /*
-
 * Function:
 * uint8_t fdelay_ms(uint32_t period_ms)
 *
@@ -89,13 +86,6 @@ int delay_ms(uint32_t period_ms);
 *
 * Returns:
 * 0 when time is up, otherwise 1
-*
-* Implementation:
-* [explain key steps of function]
-* [use heavy detail for anything complicated]
-*
-* Improvements:
-* [Ideas for improvements that are yet to be made](optional)
 *
 */
 uint8_t fdelay_ms(uint32_t period_ms);
@@ -115,4 +105,4 @@ uint8_t fdelay_ms(uint32_t period_ms);
 */
 void TC1_Handler();
 
-#endif /* TIMER0_H_ */
+#endif /* TIMER_INTERFACE_H_ */

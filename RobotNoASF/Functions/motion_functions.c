@@ -213,7 +213,7 @@ float mfMoveToHeadingByDistance(float heading, uint8_t speed, uint32_t distance,
 {
 	enum {START, MOVING, STOP};
 	static uint8_t movingState = START;
-	uint16_t distanceTravelled = 0;
+	static float distanceTravelled = 0;
 	
 	switch(movingState)
 	{
@@ -265,6 +265,7 @@ float mfMoveToHeadingByDistance(float heading, uint8_t speed, uint32_t distance,
 */
 float mfTrackLight(struct Position *imuData)
 {
+	movingFlag = 1;	
 	static float pErr;			//Proportional error
 	static float iErr = 0;		//Integral error
 	float dHeading;				//Delta heading to adjust by
@@ -406,8 +407,6 @@ char mfRandomMovementGenerator(void)
 	char speed = rand() % 100;		//get random speed:up to 100%
 	char runTime = rand() % 5;		//get random delay time: up to 5 seconds
 	moveRobot(direction, speed);	//moveRobot at random speed and direction
-	aim = direction;
-	aimSpeed = speed;
 	delay_ms(runTime * 1000);		//Delay for random milliseconds
 	return 0;
 }

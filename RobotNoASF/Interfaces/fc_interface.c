@@ -54,13 +54,13 @@ void fcInit(void)
 	REG_PIOB_CODR |= PIO_CODR_P2;	//Set PB2 to low
 	
 	
-	uint8_t writeBuffer;	
+	uint8_t writeBuffer;
 	//NOT SHURE IF THIS LINE IS NEEDED BE CAUSE ACCORDING TO DATASHEET CE IS INVERTED, THEREFORE THE
 	//DEFAULT VALUE 0 WOULD MEAN THAT CHARGING IS ENABLED NOT 1. TESTING REQUIRED.
 	//Ensures that CE bit is clear in case safety timer has gone off in previous charge.
 	writeBuffer = FC_CONTROL_INIT;
 	twi0Write(TWI0_FCHARGE_ADDR, FC_CONTROL_REG, 1, &writeBuffer);
-															
+	
 	//Vreg = 3.98v, input current = 2.5A
 	writeBuffer = FC_BATTVOL_INIT;
 	twi0Write(TWI0_FCHARGE_ADDR, FC_BATVOL_REG, 1, &writeBuffer);
@@ -175,15 +175,30 @@ uint16_t fcBatteryVoltage(void)
 * reads the status control register on the fast charge chip
 * returns whether CHARGING, CHARGED, or other
 *
+* Improvements:
+*	//TODO: Probably shouldn't be manipulating mainRobotState from here. Should be able to see when
+*	//mainRobotState is being changed from the main function, otherwise it just appears to magically
+*	//change itself if you know what I mean.. Maybe set this up with an appropriate return system
+*
 */
 uint8_t chargeDetector(void)
 {
 	Register fcstatus;
 	twi0Read(TWI0_FCHARGE_ADDR, FC_STATUS_REG, 1, &fcstatus.status);
-	if(fcstatus.bit.b5 & fcstatus.bit.b4)
+	if(fcstatus.bit.b5 & fcstatus.bit.b4) //if robot is charging
+	{
+		//on the first time entering charge mode save the previous state for re entry
+		if(mainRobotState != CHARGING) 
+			mainRobotStatePrev = mainRobotState;
+		if(!fdelay_ms(500))					//Blink LED 1 in charge mode
+			led1Tog;
+		mainRobotState = CHARGING;
 		return BATT_CHARGING;
-	else if (fcstatus.bit.b6 & fcstatus.bit.b4)
-		return BATT_CHARGED;
-	else
-		return  fcstatus.status;
+	}
+	else if (fcstatus.bit.b6 & fcstatus.bit.b4)//if robot is charged
+		mainRobotState = mainRobotStatePrev;
+	else //if the robot is not charging (eg fault or no contact)
+		mainRobotState = mainRobotStatePrev;
+	//TODO: Set this up with the ability to return an error value (Maybe from twi0Read?)
+	return 0;
 }

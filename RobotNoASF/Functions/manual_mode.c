@@ -20,7 +20,7 @@
 
 /*
 * Function:
-* void manualControl(struct message_info message)
+* void manualControl(struct MessageInfo message)
 *
 * Runs the manual movement controls from the GUI
 * These are:
@@ -30,14 +30,14 @@
 * Movements also have an assigned speed
 *
 * Inputs:
-* struct message_info message
+* struct MessageInfo message
 *			XBee message data
 *
 * Returns:
 * none
 *
 * Implementation:
-* uses convertData(message, receivedTestData);
+* uses comConvertData(message, receivedTestData);
 * to fetch the received data information (speed and direction)
 *
 *
@@ -45,18 +45,18 @@
 * TODO: Adam Comment this -AP
 *
 */
-void manualControl(struct message_info tmessage)
+void manualControl(struct MessageInfo tmessage, struct Position *robotPosition)
 {
 	static uint8_t receivedTestData[5];
 	newDataFlag = 0;
 	uint16_t straightDirection;
-	convertData(tmessage, receivedTestData);
+	xbeeConvertData(tmessage, receivedTestData);
 	straightDirection = (receivedTestData[0] << 8) + (receivedTestData[1]);
 	if(tmessage.command == MANUAL_STRAIGHT)
 	{
 		moveRobot(straightDirection, receivedTestData[2]);
-		aim = straightDirection;
-		aimSpeed = receivedTestData[2];
+		robotPosition->targetHeading = straightDirection;
+		robotPosition->targetSpeed = receivedTestData[2];
 		movingFlag = 1;
 	}
 	else if(tmessage.command == MANUAL_STOP)
