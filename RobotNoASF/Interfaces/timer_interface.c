@@ -1,5 +1,5 @@
 /*
-* timer0.h
+* timer_interface.h
 *
 * Author : Adam Parlane & Matthew Witt
 * Created: 6/08/2017 1:23:27 PM
@@ -21,7 +21,7 @@
 */
 
 //////////////[Includes]////////////////////////////////////////////////////////////////////////////
-#include "timer0.h"
+#include "timer_interface.h"
 
 ///////////////Global Vars//////////////////////////////////////////////////////////////////////////
 volatile uint32_t systemTimestamp = 0;	//Number of ms since powerup. Used by delay_ms and get_ms 

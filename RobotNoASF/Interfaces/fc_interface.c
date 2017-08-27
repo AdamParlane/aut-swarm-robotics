@@ -175,6 +175,11 @@ uint16_t fcBatteryVoltage(void)
 * reads the status control register on the fast charge chip
 * returns whether CHARGING, CHARGED, or other
 *
+* Improvements:
+*	//TODO: Probably shouldn't be manipulating mainRobotState from here. Should be able to see when
+*	//mainRobotState is being changed from the main function, otherwise it just appears to magically
+*	//change itself if you know what I mean.. Maybe set this up with an appropriate return system
+*
 */
 uint8_t chargeDetector(void)
 {
@@ -194,4 +199,6 @@ uint8_t chargeDetector(void)
 		mainRobotState = mainRobotStatePrev;
 	else //if the robot is not charging (eg fault or no contact)
 		mainRobotState = mainRobotStatePrev;
+	//TODO: Set this up with the ability to return an error value (Maybe from twi0Read?)
+	return 0;
 }

@@ -24,7 +24,7 @@
 #include <math.h>
 #include "inv_mpu_CUSTOM.h"
 #include "../Interfaces/twimux_interface.h"
-#include "../Interfaces/timer0.h"
+#include "../Interfaces/timer_interface.h"
 
 /* The following functions must be defined for this platform:
  * i2c_write(unsigned char slave_addr, unsigned char reg_addr,
@@ -40,7 +40,7 @@
  */
 ////////////SWARM ROBOT CONFIGURATION///////////////////////////////////////////////////////////////
 
-extern uint32_t systemTimestamp;	//millisecs since power on. Declared in timer0.c
+extern uint32_t systemTimestamp;	//millisecs since power on. Declared in timer_interface.c
 
 static inline int reg_int_cb(struct int_param_s *int_param)
 {

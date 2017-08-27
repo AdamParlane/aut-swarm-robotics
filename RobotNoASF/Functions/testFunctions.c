@@ -10,9 +10,9 @@
 * all robot systems are working correctly
 *
 * Contains the following functions:
-* uint8_t testManager(struct message_info message, struct transmitDataStructure *transmit,
+* uint8_t testManager(struct MessageInfo message, struct transmitDataStructure *transmit,
 * struct Position *robotPosition)
-* void convertData(struct message_info message, uint8_t* data[50])
+* void comConvertData(struct MessageInfo message, uint8_t* data[50])
 *
 * Functionality of each function is explained before each function
 * This .c file should be paired with testFunctions.h
@@ -26,7 +26,7 @@ extern struct Position robotPosition;
 
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*
-* Function: uint8_t testManager(struct message_info message, struct transmitDataStructure *transmit,
+* Function: uint8_t testManager(struct MessageInfo message, struct transmitDataStructure *transmit,
 *			struct Position *robotPosition)
 *
 * Handles the interpretation of received test commands,
@@ -86,14 +86,14 @@ extern struct Position robotPosition;
 *		The order will be [3] Data1_High, [4] Data1_Low, [5] Data2_High and so on
 * The transmit array sie must also be calculated and sent with the XBee Transmit Request
 */
-uint8_t getTestData(struct message_info message, struct transmitDataStructure *transmit, struct Position *robotPosition)
+uint8_t getTestData(struct MessageInfo message, struct transmitDataStructure *transmit, struct Position *robotPosition)
 {
 	static uint8_t receivedTestData[50]; //array for data coming into the robot AFTER Xbee framing has been stripped
 	uint16_t peripheralReturnData; //the test data returned from eh relevant peripheral
 	char testType = message.command;//what peripheral is being tested
 	if (newDataFlag)//only reconvert the data if we are in this function for new data not streaming again
 	{
-		convertData(message, receivedTestData);//converts the Xbee data to the receivedTestData array
+		xbeeConvertData(message, receivedTestData);//converts the Xbee data to the receivedTestData array
 		newDataFlag = 0;
 	}
 	uint8_t testMode = receivedTestData[0];
@@ -209,7 +209,7 @@ uint8_t getTestData(struct message_info message, struct transmitDataStructure *t
 	return testMode;
 }
 
-void testManager(struct message_info message, struct Position *robotPosition)
+void testManager(struct MessageInfo message, struct Position *robotPosition)
 {
 	static struct transmitDataStructure transmitMessage;
 	static uint8_t testMode = 0x00;   
@@ -223,13 +223,13 @@ void testManager(struct message_info message, struct Position *robotPosition)
 	else if(testMode == SINGLE_SAMPLE)
 	{
 		mainRobotState = IDLE;
-		SendXbeeAPITransmitRequest(COORDINATOR_64,UNKNOWN_16, transmitMessage.Data,
+		xbeeSendAPITransmitRequest(COORDINATOR_64,UNKNOWN_16, transmitMessage.Data,
 		transmitMessage.DataSize);  //Send the Message
 	}
 	else if(streamIntervalFlag && testMode == STREAM_DATA)
 	{
 		streamIntervalFlag = 0;
-		SendXbeeAPITransmitRequest(COORDINATOR_64,UNKNOWN_16, transmitMessage.Data,
+		xbeeSendAPITransmitRequest(COORDINATOR_64,UNKNOWN_16, transmitMessage.Data,
 		transmitMessage.DataSize);  //Send the Message
 	}
 }
