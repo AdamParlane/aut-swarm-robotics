@@ -22,6 +22,7 @@
 
 //////////////[Includes]////////////////////////////////////////////////////////////////////////////
 #include "light_colour_functions.h"
+#include <tgmath.h>				//Used for round in RGB2HSV function
 
 //////////////[Global variables]////////////////////////////////////////////////////////////////////
 //Colour sensor data structures. Should be passed as pointer to functions that requires them
@@ -55,7 +56,7 @@ void lcfRetrieveLightData(uint8_t convertToHSV)
 	lcfCapture(MUX_LIGHTSENS_L, &lcfLeftSensor);
 	lcfCapture(MUX_LIGHTSENS_R, &lcfRightSensor);
 	
-	if(convertToHSV == LCF_RGB_AND_HSV)
+	if(convertToHSV)
 	{
 		lcfRGB2HSV(&lcfLeftSensor);						//Derive HSV figures from RGB
 		lcfRGB2HSV(&lcfRightSensor);						//Derive HSV figures from RGB
@@ -115,44 +116,66 @@ uint8_t lcfCapture(uint8_t channel, struct ColourSensorData *colours)
 */
 void lcfRGB2HSV(struct ColourSensorData *colours)
 {
-	float cMax = 0;					//Holds maximum colour channel value (Normalised)
-	float cMin = 1;					//Holds minimum colour channel value (Normalised)
+	//RGB minimum and maximum
+	unsigned short rgbMin = MAX_LIGHT_CHANNEL_VAL;
+	unsigned short rgbMax = 0;
 	
-	//Normalise colour channel values
-	float nRed = colours->red/MAX_LIGHT_CHANNEL_VAL;
-	float nGreen = colours->green/MAX_LIGHT_CHANNEL_VAL;
-	float nBlue = colours->blue/MAX_LIGHT_CHANNEL_VAL;
+	//used for hue angle calculation
+	int rawHue = 0;
 	
-	//Find maximum colour channel value (cMax)
-	if(nBlue > cMax)
-		cMax = nRed;
-	if(nBlue > cMax)
-		cMax = nGreen;
-	if(nBlue > cMax)
-		cMax = nBlue;
+	//Find maximum colour channel value (rgbMax)
+	if(colours->red > rgbMax)
+		rgbMax = colours->red;
+	if(colours->green > rgbMax)
+		rgbMax = colours->green;
+	if(colours->blue > rgbMax)
+		rgbMax = colours->blue;
+
+	//Find minimum colour channel value (rgbMin)
+	if(colours->red < rgbMin)
+		rgbMin = colours->red;
+	if(colours->green < rgbMin)
+		rgbMin = colours->green;
+	if(colours->blue < rgbMin)
+		rgbMin = colours->blue;
 	
-	//Find minimum colour channel value (cMin)
-	if(nRed < cMin)
-		cMin = nRed;
-	if(nGreen < cMin)
-		cMin = nGreen;
-	if(nBlue < cMin)
-		cMin = nBlue;
+	//Set Value figure to maximum rgb channel figure
+	colours->value = rgbMax;
 	
-	//Get Hue (0-360)
-	if(cMax == nRed)
-		colours->hue = (unsigned short)(60*((nGreen - nBlue)/(cMax - cMin)))%6;
-	if(cMax == nGreen)
-		colours->hue = 60*(((nBlue - nRed)/(cMax - cMin)) + 2);
-	if(cMax == nBlue)
-		colours->hue = 60*(((nRed - nGreen)/(cMax - cMin)) + 4);
-	
-	//Get Saturation (0-MAX_LIGHT_CHANNEL_VAL)
-	if(cMax == 0)
+	//If HSV value equals 0 then we are looking at pure black (no hue or saturation)
+	if (colours->value == 0)
+	{
+		colours->hue = 0;
 		colours->saturation = 0;
-	else
-		colours->saturation = (uint16_t)(((cMax - cMin)/(float)cMax)*MAX_LIGHT_CHANNEL_VAL);
+		return;
+	}
 	
-	//Get Value	(0-MAX_LIGHT_CHANNEL_VAL)
-	colours->value = cMax;
+	//Calculate saturation
+	colours->saturation = MAX_LIGHT_CHANNEL_VAL*(short)((rgbMax - rgbMin)/colours->value);
+	
+	//If no saturation then we are looking at a perfectly grey item (no hue)
+	if (colours->saturation == 0)
+	{
+		colours->hue = 0;
+		return;
+	}
+
+	//Calculate Hue angle
+	if (rgbMax == colours->red)
+		rawHue = 0 + LCF_HUE_ANGLE_DIV6*(colours->green - colours->blue)/(rgbMax - rgbMin);
+	else if (rgbMax == colours->green)
+		rawHue = LCF_HUE_ANGLE_DIV3 + LCF_HUE_ANGLE_DIV6
+					*(colours->blue - colours->red)/(rgbMax - rgbMin);
+	else
+		rawHue = 2*LCF_HUE_ANGLE_DIV3 + LCF_HUE_ANGLE_DIV6
+					*(colours->red - colours->green)/(rgbMax - rgbMin);
+
+	//Wrap rawHue to the range 0-360 and store in colours.hue
+	while(rawHue < 0)
+		rawHue += 360;
+	while(rawHue > 360)
+		rawHue -= 360;
+	colours->hue = rawHue;
+
+	return;
 }

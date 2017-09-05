@@ -30,7 +30,10 @@
 #define LCF_RGB_ONLY		0
 #define LCF_RGB_AND_HSV		1
 
-////Hue angle colour ranges
+////Hue angle constants (Should help speed up maths)
+#define LCF_MAX_HUE_ANGLE	360
+#define LCF_HUE_ANGLE_DIV3	120
+#define LCF_HUE_ANGLE_DIV6	60
 
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*
