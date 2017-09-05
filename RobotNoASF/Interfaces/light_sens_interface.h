@@ -15,6 +15,8 @@
 * Functions:
 * void lightSensInit(uint8_t channel)
 * uint16_t lightSensRead(uint8_t channel, uint8_t colour)
+* uint8_t lcfCapture(uint8_t channel, struct ColourSensorData *colours)
+* void lcfRGB2HSV(struct ColourSensorData *colours)
 *
 */
 
@@ -23,6 +25,8 @@
 
 //////////////[Includes]////////////////////////////////////////////////////////////////////////////
 #include "sam.h"
+
+//////////////[Type Definitions]////////////////////////////////////////////////////////////////////
 
 //////////////[Defines]/////////////////////////////////////////////////////////////////////////////
 //Register addresses for reading Colour
@@ -43,6 +47,8 @@
 #define LS_320MS			0x30		//3200ms integration time
 #define LS_640MS			0x40		//640ms integration time
 #define LS_1280MS			0x50		//1280ms integration time, (Low sensitivity)
+////Maximum light sensor value
+#define MAX_LIGHT_CHANNEL_VAL	65535
 
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*

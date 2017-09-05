@@ -1,10 +1,4 @@
 /*
- * navigation_functions.c
- *
- * Created: 18/08/2017 9:20:51 AM
- *  Author: Matthew
- */ 
-/*
 * navigation_functions.h
 *
 * Author : Matthew Witt (pxf5695@autuni.ac.nz)
@@ -29,6 +23,7 @@
 
 //////////////[Includes]////////////////////////////////////////////////////////////////////////////
 #include "navigation_functions.h"
+#include <tgmath.h>				//Required for atan2 in nfGetEulerAngles()
 
 //////////////[Defines]/////////////////////////////////////////////////////////////////////////////
 

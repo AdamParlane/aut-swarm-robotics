@@ -30,6 +30,7 @@
 //////////////[Includes]////////////////////////////////////////////////////////////////////////////
 #include "light_sens_interface.h"
 #include "twimux_interface.h"
+#include <tgmath.h>				//Required for atan2 in lcfRGB2HSV()
 
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*
@@ -91,9 +92,8 @@ void lightSensInit(uint8_t channel)
 */
 uint16_t lightSensRead(uint8_t channel, uint8_t colour)
 {
-	unsigned char data[2];
+	uint8_t data[2];
 	twi0MuxSwitch(channel);	//Set multiplexer address to a light sensor device
-	twi0ReadMuxChannel();
 	twi0Read(TWI0_LIGHTSENS_ADDR, colour, 2, data);
 	return (data[1]<<8)|(data[0]);
 }

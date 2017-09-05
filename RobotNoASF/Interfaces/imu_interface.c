@@ -34,7 +34,6 @@
 
 //////////////[Includes]////////////////////////////////////////////////////////////////////////////
 #include "imu_interface.h"
-#include <tgmath.h>				//Required for atan2 in nfGetEulerAngles()
 #include "twimux_interface.h"	//twi and multiplexer
 #include "../robot_setup.h"
 

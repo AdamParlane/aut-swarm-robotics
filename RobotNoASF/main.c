@@ -92,6 +92,7 @@ int main(void)
 	robotSetup(); //Set up the system and peripherals
 	battVoltage = fcBatteryVoltage();	//Add to your watch to keep an eye on the battery
 	mainRobotState = IDLE; //start system at IDLE
+
 	while(1)
 	{
 		switch (mainRobotState)
@@ -130,6 +131,7 @@ int main(void)
 				
 			case FORMATION:
 			//placeholder
+				lcfCapture(MUX_LIGHTSENS_L, )
 				break;
 			
 			case CHARGING:

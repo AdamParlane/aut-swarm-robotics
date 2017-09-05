@@ -27,7 +27,19 @@
 
 //TODO: change something so that this doesn't have to be first
 //Or maybe all defines should be before includes
-enum ROBOT_STATES{TEST, TEST_ALL, MANUAL, FORMATION, DOCKING, OBSTACLE_AVOIDANCE, IDLE, CHARGING, LINE_FOLLOW, LIGHT_FOLLOW}; //main loop functionality
+enum ROBOT_STATES
+//main loop functionality
+{
+	TEST,
+	TEST_ALL,
+	MANUAL,
+	FORMATION,
+	DOCKING,
+	OBSTACLE_AVOIDANCE,
+	IDLE, CHARGING,
+	LINE_FOLLOW,
+	LIGHT_FOLLOW
+};
 
 ///////////////Type Definitions/////////////////////////////////////////////////////////////////////
 struct Position
@@ -65,7 +77,17 @@ struct Position
 	char targetSpeed;	//For obstacle avoidance, desired speed
 };
 
-
+struct ColourSensorData
+//Stores colour sensor data, both raw and converted, for a single colour sensor
+{
+	unsigned short red;
+	unsigned short green;
+	unsigned short blue;
+	unsigned short white;
+	unsigned short hue;
+	unsigned short saturation;
+	unsigned short value;
+};
 //////////////[Includes]////////////////////////////////////////////////////////////////////////////
 #include "Interfaces/spi.h"
 #include "sam.h"
@@ -89,9 +111,9 @@ struct Position
 #include "Functions/obstacle_avoidance.h"
 #include "Functions/motion_functions.h"
 #include "Functions/navigation_functions.h"
+#include "Functions/light_colour_functions.h"
 
 //////////////[Defines]/////////////////////////////////////////////////////////////////////////////
-	
 //Universal Asynchronous Receiver/Transmitter
 #define TXRDY (REG_UART3_SR & UART_SR_TXRDY)	//UART TX READY flag [SHOULD BE IN COMMUNICATIONS]
 
@@ -107,6 +129,7 @@ char mainRobotState, mainRobotStatePrev;	//main function state machine states
 volatile char streamDelayCounter, streamIntervalFlag;	//TODO:What are these?
 char movingFlag;
 char chargeInfo;
+
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*
 * Function:
