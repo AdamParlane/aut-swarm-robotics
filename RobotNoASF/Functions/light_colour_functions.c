@@ -52,8 +52,8 @@ struct ColourSensorData lcfRightSensor;
 */
 void lcfRetrieveLightData(uint8_t convertToHSV)
 {
-	lcfCapture(MUX_LIGHTSENS_L, lcfLeftSensor);
-	lcfCapture(MUX_LIGHTSENS_R, lcfRightSensor);
+	lcfCapture(MUX_LIGHTSENS_L, &lcfLeftSensor);
+	lcfCapture(MUX_LIGHTSENS_R, &lcfRightSensor);
 	
 	if(convertToHSV == LCF_RGB_AND_HSV)
 	{
@@ -141,7 +141,7 @@ void lcfRGB2HSV(struct ColourSensorData *colours)
 	
 	//Get Hue (0-360)
 	if(cMax == nRed)
-		colours->hue = 60*(((nGreen - nBlue)/(cMax - cMin))%6);
+		colours->hue = (unsigned short)(60*((nGreen - nBlue)/(cMax - cMin)))%6;
 	if(cMax == nGreen)
 		colours->hue = 60*(((nBlue - nRed)/(cMax - cMin)) + 2);
 	if(cMax == nBlue)

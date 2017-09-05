@@ -80,13 +80,13 @@ struct Position
 struct ColourSensorData
 //Stores colour sensor data, both raw and converted, for a single colour sensor
 {
-	uint16_t red;
-	uint16_t green;
-	uint16_t blue;
-	uint16_t white;
-	float hue;
-	uint16_t saturation;
-	uint16_t value;
+	unsigned short red;
+	unsigned short green;
+	unsigned short blue;
+	unsigned short white;
+	unsigned short hue;
+	unsigned short saturation;
+	unsigned short value;
 };
 //////////////[Includes]////////////////////////////////////////////////////////////////////////////
 #include "Interfaces/spi.h"
@@ -111,9 +111,9 @@ struct ColourSensorData
 #include "Functions/obstacle_avoidance.h"
 #include "Functions/motion_functions.h"
 #include "Functions/navigation_functions.h"
+#include "Functions/light_colour_functions.h"
 
 //////////////[Defines]/////////////////////////////////////////////////////////////////////////////
-	
 //Universal Asynchronous Receiver/Transmitter
 #define TXRDY (REG_UART3_SR & UART_SR_TXRDY)	//UART TX READY flag [SHOULD BE IN COMMUNICATIONS]
 
@@ -121,6 +121,14 @@ struct ColourSensorData
 #if !defined ROBOT_TARGET_V1 && !defined ROBOT_TARGET_V2
 #error  Robot version has not been set in compiler symbols. (set ROBOT_TARGET_V1 or ROBOT_TARGET_V2)
 #endif
+
+//////////////[Global variables]////////////////////////////////////////////////////////////////////
+//used for test function calling
+char newDataFlag; //TODO:used for test function probably temporary ((still temporary?)
+char mainRobotState, mainRobotStatePrev;	//main function state machine states
+volatile char streamDelayCounter, streamIntervalFlag;	//TODO:What are these?
+char movingFlag;
+char chargeInfo;
 
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*

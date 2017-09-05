@@ -50,9 +50,6 @@
 ////Maximum light sensor value
 #define MAX_LIGHT_CHANNEL_VAL	65535
 
-////Hue angle colour ranges
-
-
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*
 * Function:

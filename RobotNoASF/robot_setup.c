@@ -24,12 +24,6 @@
 #include "robot_setup.h"
 
 //////////////[Global variables]////////////////////////////////////////////////////////////////////
-//used for test function calling
-char newDataFlag; //TODO:used for test function probably temporary ((still temporary?)
-char mainRobotState, mainRobotStatePrev;	//main function state machine states
-volatile char streamDelayCounter, streamIntervalFlag;	//TODO:What are these?
-char movingFlag;
-char chargeInfo;
 extern uint32_t systemTimestamp;	//Required by waitForFlag()
 //extern signed int aim;
 
