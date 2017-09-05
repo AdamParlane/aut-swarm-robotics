@@ -192,6 +192,12 @@
     <Compile Include="Functions\docking_functions.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="Functions\light_colour_functions.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="Functions\light_colour_functions.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="Functions\manual_mode.c">
       <SubType>compile</SubType>
     </Compile>

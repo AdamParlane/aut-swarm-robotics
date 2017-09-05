@@ -27,7 +27,19 @@
 
 //TODO: change something so that this doesn't have to be first
 //Or maybe all defines should be before includes
-enum ROBOT_STATES{TEST, TEST_ALL, MANUAL, FORMATION, DOCKING, OBSTACLE_AVOIDANCE, IDLE, CHARGING, LINE_FOLLOW, LIGHT_FOLLOW}; //main loop functionality
+enum ROBOT_STATES
+//main loop functionality
+{
+	TEST,
+	TEST_ALL,
+	MANUAL,
+	FORMATION,
+	DOCKING,
+	OBSTACLE_AVOIDANCE,
+	IDLE, CHARGING,
+	LINE_FOLLOW,
+	LIGHT_FOLLOW
+};
 
 ///////////////Type Definitions/////////////////////////////////////////////////////////////////////
 struct Position
@@ -65,7 +77,17 @@ struct Position
 	char targetSpeed;	//For obstacle avoidance, desired speed
 };
 
-
+struct ColourSensorData
+//Stores colour sensor data, both raw and converted, for a single colour sensor
+{
+	uint16_t red;
+	uint16_t green;
+	uint16_t blue;
+	uint16_t white;
+	float hue;
+	uint16_t saturation;
+	uint16_t value;
+};
 //////////////[Includes]////////////////////////////////////////////////////////////////////////////
 #include "Interfaces/spi.h"
 #include "sam.h"
@@ -100,13 +122,6 @@ struct Position
 #error  Robot version has not been set in compiler symbols. (set ROBOT_TARGET_V1 or ROBOT_TARGET_V2)
 #endif
 
-//////////////[Global variables]////////////////////////////////////////////////////////////////////
-//used for test function calling
-char newDataFlag; //TODO:used for test function probably temporary ((still temporary?)
-char mainRobotState, mainRobotStatePrev;	//main function state machine states
-volatile char streamDelayCounter, streamIntervalFlag;	//TODO:What are these?
-char movingFlag;
-char chargeInfo;
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*
 * Function:

@@ -15,8 +15,8 @@
 * Functions:
 * void lightSensInit(uint8_t channel)
 * uint16_t lightSensRead(uint8_t channel, uint8_t colour)
-* uint8_t lightSensCapture(uint8_t channel, struct ColourSensorData *colours)
-* void lightSensRGB2HSV(struct ColourSensorData *colours)
+* uint8_t lcfCapture(uint8_t channel, struct ColourSensorData *colours)
+* void lcfRGB2HSV(struct ColourSensorData *colours)
 *
 */
 
@@ -27,16 +27,6 @@
 #include "sam.h"
 
 //////////////[Type Definitions]////////////////////////////////////////////////////////////////////
-struct ColourSensorData
-{
-	uint16_t red;
-	uint16_t green;
-	uint16_t blue;
-	uint16_t white;
-	float hue;
-	uint16_t saturation;
-	uint16_t value;
-};
 
 //////////////[Defines]/////////////////////////////////////////////////////////////////////////////
 //Register addresses for reading Colour
@@ -103,46 +93,5 @@ void lightSensInit(uint8_t channel);
 *
 */
 uint16_t lightSensRead(uint8_t channel, uint8_t colour);
-
-/*
-* Function:
-* uint8_t lightSensCapture(uint8_t channel, uint16_t *r, uint16_t *g, uint16_t *b, uint16_t *w)
-*
-* Retrieves the (16-bit) light data of all colours from the selected Light Sensor
-*
-* Inputs:
-* uint8_t channel:
-*   The I2C mulitplexer channel of the light sensor to read from.
-*   MUX_LIGHTSENS_R for the right sensor or MUX_LIGHTSENS_L for the left
-* uint16_t *r
-*   Pointer to a 16bit integer to store red channel data
-* uint16_t *g
-*   Pointer to a 16bit integer to store green channel data
-* uint16_t *b
-*   Pointer to a 16bit integer to store blue channel data
-* uint16_t *w
-*   Pointer to a 16bit integer to store white channel data
-*
-* Returns:
-* 0 on success, or non-zero when TWI error occurred.
-*
-*/
-uint8_t lightSensCapture(uint8_t channel, struct ColourSensorData *colours);
-
-/*
-* Function:
-* void lightSensRGB2HSV(struct ColourSensorData *colours)
-*
-* Converts RGB to HSV and stores them in a ColourSensorData structure
-*
-* Inputs:
-* struct ColourSensorData *colours
-*   Pointer to a ColourSensorData structure to store the calculated HSV values
-*
-* Returns:
-* none
-*
-*/
-void lightSensRGB2HSV(struct ColourSensorData *colours);
 
 #endif /* LIGHT_SENS_INTERFACE_H_ */
