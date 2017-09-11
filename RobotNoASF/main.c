@@ -90,7 +90,7 @@ extern struct MessageInfo message;		//Incoming message structure
 int main(void)
 {
 	robotSetup(); //Set up the system and peripherals
-	battVoltage = fcBatteryVoltage();	//Add to your watch to keep an eye on the battery
+	battVoltage = adcBatteryVoltage();	//Add to your watch to keep an eye on the battery
 	mainRobotState = IDLE; //start system at IDLE
 
 	while(1)

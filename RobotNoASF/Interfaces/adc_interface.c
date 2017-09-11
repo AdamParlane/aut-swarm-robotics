@@ -14,6 +14,7 @@
 * Functions:
 * void adcSingleConvInit(void)
 * uint16_t adcRead(uint8_t channel)
+* uint16_t adcBatteryVoltage(void)
 *
 */
 
@@ -87,4 +88,28 @@ uint16_t adcRead(uint8_t channel)
 	while(!adcDataReady);		//Wait for DRDY flag
 	adcDisableChan(channel);	//Disable channel on completion
 	return adcData;				//Read data from last converted data register and return
+}
+
+/*
+* Function:
+* float adcBatteryVoltage(void)
+*
+* Returns current battery voltage
+*
+* Inputs:
+* none
+*
+* Returns:
+* Returns a integer value of the current battery voltage in mV.
+*
+* Implementation:
+* Reads battery voltage ADC channel
+* Converts to millivolts using linear conversion factor set in fc_interface.h and returns
+*
+*/
+uint16_t adcBatteryVoltage(void)
+{
+	uint16_t rawBattReading = 0;
+	rawBattReading = adcRead(FC_BATVOLT_ADC_CH);
+	return rawBattReading*ADC_BATTVOL_CONV;
 }
