@@ -68,13 +68,11 @@ int imuInit(void)
 	int result = 0;		//Return value (when not 0, errors are present)
 	
 	//MICROCONTROLLER HW SETUP
-#if defined ROBOT_TARGET_V2	
 	//Setup PIO for IMU hardware interrupt
 	IMU_INT_PORT->PIO_PER		//Enable the pin
 	|=	IMU_INT_PIN;
 	IMU_INT_PORT->PIO_ODR		//Make input.
 	|= IMU_INT_PIN;
-#endif
 
 	//IMU INITIALISATION
 	//Initialise the IMU's driver	

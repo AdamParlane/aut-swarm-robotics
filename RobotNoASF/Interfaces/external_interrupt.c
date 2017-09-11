@@ -47,7 +47,6 @@ extern uint8_t checkImuFifo;
 void extIntInit(void)
 {
 	NVIC_EnableIRQ(ID_PIOA);	//Enable interrupts on PIOA
-#if defined ROBOT_TARGET_V2
 	//Setup IMU external interrupt pin. Pin and port is defined in imu_interface.h
 	IMU_INT_PORT->PIO_IER		//Enable the interrupt on the IMU int pin
 	|=	IMU_INT_PIN;
@@ -57,7 +56,6 @@ void extIntInit(void)
 	|=	IMU_INT_PIN;
 	IMU_INT_PORT->PIO_REHLSR	//Make pin rising edge sensitive
 	|=	IMU_INT_PIN;
-#endif
 	//Any other external interrupt configurations should follow
 }
 
@@ -82,11 +80,9 @@ void extIntInit(void)
 void PIOA_Handler(void)
 {
 	//If the IMU interrupt has been triggered
-#if defined ROBOT_TARGET_V2
 	if(IMU_INT_PORT->PIO_ISR & IMU_INT_PIN)	//If IMU interrupt detected
 	{
 		checkImuFifo = 1;
 		//led1Tog;
 	}
-#endif	
 }

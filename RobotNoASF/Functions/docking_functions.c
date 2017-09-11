@@ -131,7 +131,6 @@ uint8_t dfDockRobot(struct Position *imuData)
 */
 uint8_t dfUpdateLineSensorStates(void)
 {
-#if defined ROBOT_TARGET_V2
 	uint8_t sensorValue;						//Temporarily stores state of a single sensor
 	uint8_t returnVal = 0;						//Returns non 0 if any sensor has changed state
 	
@@ -159,9 +158,6 @@ uint8_t dfUpdateLineSensorStates(void)
 	if(sensorValue == LINE)
 		returnVal = 1;
 	return returnVal;
-#else
-	return 0; //if robot is not V2, still need to return something	
-#endif
 }
 
 /*
@@ -205,7 +201,6 @@ uint8_t dfUpdateLineSensorStates(void)
 */
 int8_t dfGetLineDirection(void)
 {
-#if defined ROBOT_TARGET_V2
 	//Get updated sensor data
 	dfUpdateLineSensorStates();
 	//Combine sensor states from sensor structure into single byte that can be used by a switch
@@ -241,7 +236,6 @@ int8_t dfGetLineDirection(void)
 		case 0x6:
 			return 0;		//Straight, line
 	}
-#endif
 	return 0;
 }
 

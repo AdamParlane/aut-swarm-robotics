@@ -65,15 +65,12 @@
 #define IMU_ACCEL_CONV_MS2			IMU_ACCEL_AFS_2_CONV_MS2//Convert to ms^2
 
 ////IMU external interrupt pin define
-#if defined ROBOT_TARGET_V2
 //////Port that the IMU interrupt is on
 #define IMU_INT_PORT		(PIOA)
 //////Pin that the IMU interrupt is on
 #define IMU_INT_PIN			(PIO_PA5)
 //////IMU interrupt state (1 means data waiting to be read)
 #define imuIntState			(IMU_INT_PORT->PIO_PSR & IMU_INT_PIN)
-#endif
-
 
 ///////////////Enumerations/////////////////////////////////////////////////////////////////////////
 enum axes
