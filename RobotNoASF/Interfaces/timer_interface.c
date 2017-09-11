@@ -29,13 +29,6 @@ volatile uint32_t systemTimestamp = 0;	//Number of ms since powerup. Used by del
 volatile uint16_t delaymsCounter = 0;
 
 extern uint8_t checkImuFifo;
-#if defined ROBOT_TARGET_V1
-volatile uint32_t imuFifoNextReadTime = 0;
-									//The system time at which the IMU will be read next (ie when
-									//checkImuFifo will next be set to one. Used by the V1 robot
-									//only as the V2 sets checkImuInfo from external interrupt from
-									//The IMU.
-#endif
 
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*
@@ -253,16 +246,6 @@ void TC1_Handler()
 			streamDelayCounter = 0;
 			streamIntervalFlag = 1;
 		}
-		//V1 robot doesn't have the IMU's interrupt pin tied in to the uC, so the FIFO will have to be
-		//polled. V2 does utilize an external interrupt, so this code is not necessary.
-#if defined ROBOT_TARGET_V1
-		//Read IMUs FIFO every 5ms on the V1 platform
-		if(systemTimestamp >= imuFifoNextReadTime)
-		{
-			imuFifoNextReadTime = systemTimestamp + 1;
-			checkImuFifo = 1;
-		}
-#endif		
 	}
 }
 

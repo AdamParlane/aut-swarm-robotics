@@ -74,9 +74,6 @@
 */
 void motorInit(void)
 {
-#if defined ROBOT_TARGET_V1
-	REG_CCFG_SYSIO |= CCFG_SYSIO_SYSIO12; //disable erase pin to give access to PB12 via PIO
-#endif
 	REG_PMC_PCER0 |= PMC_PCER0_PID31;	//Enable clock access for PWM
 	
 	//****Channel 3 (Motor 1)****//
@@ -89,14 +86,9 @@ void motorInit(void)
 		
 	REG_PIOC_PDR |= (1<<21);		//Enable peripheral control of PC21
 	REG_PIOC_ABCDSR = (1<<21);		//Assign PC21 to PWM Peripheral B		
-#if defined ROBOT_TARGET_V1
-	REG_PIOB_PER |= (1<<12);		//Enable PIO control of PB12
-	REG_PIOB_OER |= (1<<12);		//Set PB12 as output
-#endif
-#if defined ROBOT_TARGET_V2
 	REG_PIOC_PER |= (1<<23);		//Enable PIO control of PB12
 	REG_PIOC_OER |= (1<<23);		//Set PB12 as output
-#endif
+
 	rearFwdLo;		
 	REG_PIOC_PER |= (1<<22);		//Enable PIO control of PC22
 	REG_PIOC_OER |= (1<<22);		//Set PC22 as output
@@ -132,14 +124,8 @@ void motorInit(void)
 	REG_PIOA_PER |= (1<<29);		//Enable PIO control of PA30
 	REG_PIOA_OER |= (1<<29);		//Set PA30 as output
 	frontLeftRevLo;		
-#if defined ROBOT_TARGET_V1
-	REG_PIOA_PER |= (1<<30);		//Enable PIO control of PA29
-	REG_PIOA_OER |= (1<<30);		//Set PA29 as output
-#endif
-#if defined ROBOT_TARGET_V2
 	REG_PIOC_PER |= (1<<10);		//Enable PIO control of PC10
 	REG_PIOC_OER |= (1<<10);		//Set PC10 as output
-#endif
 	frontLeftFwdLo;
 	
 	//****Enable PWM Channels as last step of setup****//	
@@ -172,9 +158,6 @@ void motorInit(void)
 char rearMotorDrive(signed char speed)
 {
 	speed = capToRangeInt(speed, -100, 100);	//Make sure speed is in range
-#if defined ROBOT_TARGET_V1
-	speed = speed *0.8; //robot #2 has the read wheel as 30:1 and is too fast 
-#endif
 	rearPwm = abs(speed);
 	if(speed > 0)		//Forwards
 		rearMotorCW;

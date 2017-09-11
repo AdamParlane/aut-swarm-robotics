@@ -53,15 +53,8 @@ static inline int reg_int_cb(struct int_param_s *int_param)
 #define labs			abs
 #define fabs(x)			(((x)>0)?(x):-(x))
 #define min(a,b)		((a<b)?a:b)
-#if defined ROBOT_TARGET_V1			//IMU is on TWI2 on V1 robots
-#define i2c_write		twi2Write
-#define i2c_read		twi2Read
-#endif
-#if defined ROBOT_TARGET_V2			//IMU is on TWI0 on V2 robots
 #define i2c_write		twi0Write
 #define i2c_read		twi0Read
-#endif
-
 
 #if !defined MPU6050 && !defined MPU9150 && !defined MPU6500 && !defined MPU9250
 #error  Which gyro are you using? Define MPUxxxx in your compiler options.

@@ -271,7 +271,6 @@ int8_t dfGetLineDirection(void)
 */
 uint8_t dfFollowLine(uint8_t speed, struct Position *imuData)
 {
-#if defined ROBOT_TARGET_V2
 	movingFlag = 1;
 	enum {START, FIRST_CONTACT, ALIGN, FOLLOW, FINISH};
 	int8_t lineDirection = dfGetLineDirection();
@@ -342,10 +341,6 @@ uint8_t dfFollowLine(uint8_t speed, struct Position *imuData)
 		break;
 	}
 	return lineFollowerState;	
-#endif
-#if defined ROBOT_TARGET_V1
-	return 0;
-#endif
 }
 
 /*

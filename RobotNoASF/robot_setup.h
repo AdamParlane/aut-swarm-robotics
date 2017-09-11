@@ -117,11 +117,6 @@ struct ColourSensorData
 //Universal Asynchronous Receiver/Transmitter
 #define TXRDY (REG_UART3_SR & UART_SR_TXRDY)	//UART TX READY flag [SHOULD BE IN COMMUNICATIONS]
 
-//If robot target compiler symbol is not present, then throw an error.
-#if !defined ROBOT_TARGET_V1 && !defined ROBOT_TARGET_V2
-#error  Robot version has not been set in compiler symbols. (set ROBOT_TARGET_V1 or ROBOT_TARGET_V2)
-#endif
-
 //////////////[Global variables]////////////////////////////////////////////////////////////////////
 //used for test function calling
 char newDataFlag; //TODO:used for test function probably temporary ((still temporary?)

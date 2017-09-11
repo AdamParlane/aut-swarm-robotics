@@ -36,29 +36,6 @@
 //Forward drives the motors in a direction that gets the robot moving in a clockwise direction.
 //Reverse drives the motors in a direction that gets the robot moving in an anti-clockwise direction
 //****Motor Pins***//
-//	Robot Version 1 pin assignment
-#if defined ROBOT_TARGET_V1
-//Rear motor (1)
-#define	rearFwdLo				(REG_PIOB_CODR |= (1<<12))
-#define	rearFwdHi				(REG_PIOB_SODR |= (1<<12))
-#define	rearRevLo				(REG_PIOC_CODR |= (1<<22))
-#define	rearRevHi				(REG_PIOC_SODR |= (1<<22))
-	
-//Front right motor (2)
-#define	frontRightFwdLo			(REG_PIOC_CODR |= (1<<19))
-#define	frontRightFwdHi			(REG_PIOC_SODR |= (1<<19))
-#define	frontRightRevLo			(REG_PIOA_CODR |= (1<<31))
-#define	frontRightRevHi			(REG_PIOA_SODR |= (1<<31))
-	
-//Front left motor (3)
-#define	frontLeftFwdLo			(REG_PIOA_CODR |= (1<<29))
-#define	frontLeftFwdHi			(REG_PIOA_SODR |= (1<<29))
-#define	frontLeftRevLo			(REG_PIOA_CODR |= (1<<30))
-#define	frontLeftRevHi			(REG_PIOA_SODR |= (1<<30))
-#endif
-
-//	Robot Version 2 pin assignment
-#if defined ROBOT_TARGET_V2
 //Rear motor (1)
 #define	rearFwdLo				(REG_PIOC_CODR |= (1<<23))
 #define	rearFwdHi				(REG_PIOC_SODR |= (1<<23))
@@ -76,8 +53,6 @@
 #define	frontLeftFwdHi			(REG_PIOA_SODR |= (1<<29))
 #define	frontLeftRevLo			(REG_PIOC_CODR |= (1<<10))
 #define	frontLeftRevHi			(REG_PIOC_SODR |= (1<<10))
-
-#endif
 
 //Motor control macros
 #define frontLeftMotorCW		{frontLeftFwdHi; frontLeftRevLo;}

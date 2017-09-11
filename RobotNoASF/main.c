@@ -131,7 +131,6 @@ int main(void)
 				
 			case FORMATION:
 			//placeholder
-				lcfCapture(MUX_LIGHTSENS_L, )
 				break;
 			
 			case CHARGING:

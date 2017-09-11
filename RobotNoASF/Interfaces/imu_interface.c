@@ -116,21 +116,6 @@ int imuDmpInit(void)
 	
 	//Orientation correction matrix for the IMU. Allows the output to be corrected, no matter
 	//how the IMU is orientated relative to the robot.
-#if defined ROBOT_TARGET_V1
-	//This is the orientation matrix for the V1 robots with the IMU mounted on the top of the
-	//main board.
-	static signed char gyro_orientation[9] =
-	//  X    Y   Z
-	{  -1,   0,	 0,  //X
-		0,	-1,	 0,  //Y
-		0,	 0,	 1	 //Z
-	};
-	//Both Y and Z axis are inverted because the chip is mounted upside down.
-#endif
-
-#if defined ROBOT_TARGET_V2	
-	//This is the orientation matrix for the V2 robots with the IMU mounted on the underside of the
-	//main board.
 	static signed char gyro_orientation[9] =
 	//  X    Y   Z
 	{	1,	 0,	 0,  //X
@@ -138,7 +123,6 @@ int imuDmpInit(void)
 		0,	 0,	 -1  //Z
 	};
 	//Both Y and Z axis are inverted because the chip is mounted upside down.
-#endif
 	
 	result += dmp_load_motion_driver_firmware();		// Load the DMP firmware
 	//Send the orientation correction matrix
@@ -383,12 +367,7 @@ uint8_t imuCommTest(void)
 	dmpEnabled = imuDmpStop();		//Stop DMP. Returns 1 if DMP was running.
 		
 	//Request test byte
-#if defined ROBOT_TARGET_V1
-	twi2Read(TWI2_IMU_ADDR, IMU_WHOAMI_REG, 1, &returnVal);
-#endif
-#if defined ROBOT_TARGET_V2
 	twi0Read(TWI2_IMU_ADDR, IMU_WHOAMI_REG, 1, &returnVal);
-#endif
 
 	if (dmpEnabled == 1)			//If DMP was running before this function began
 		imuDmpStart();				//Restart the DMP
