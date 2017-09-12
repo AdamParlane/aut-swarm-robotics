@@ -54,11 +54,11 @@ void fcInit(void)
 	REG_PIOB_CODR |= PIO_CODR_P2;	//Set PB2 to low
 	
 	uint8_t writeBuffer;
-	//NOT SHURE IF THIS LINE IS NEEDED BE CAUSE ACCORDING TO DATASHEET CE IS INVERTED, THEREFORE THE
+	//NOT SURE IF THIS LINE IS NEEDED BE CAUSE ACCORDING TO DATASHEET CE IS INVERTED, THEREFORE THE
 	//DEFAULT VALUE 0 WOULD MEAN THAT CHARGING IS ENABLED NOT 1. TESTING REQUIRED.
 	//Ensures that CE bit is clear in case safety timer has gone off in previous charge.
-	writeBuffer = FC_CONTROL_INIT;
-	twi0Write(TWI0_FCHARGE_ADDR, FC_CONTROL_REG, 1, &writeBuffer);
+	//writeBuffer = FC_CONTROL_CHARGE_DISABLE;
+	//twi0Write(TWI0_FCHARGE_ADDR, FC_CONTROL_REG, 1, &writeBuffer);
 	
 	//Vreg = 3.98v, input current = 2.5A
 	writeBuffer = FC_BATTVOL_INIT;
@@ -67,6 +67,8 @@ void fcInit(void)
 	//Charge current set to max Ic=2875mA, termination current Iterm=100mA (default)
 	writeBuffer = FC_CHARGE_INIT;
 	twi0Write(TWI0_FCHARGE_ADDR, FC_CHARGE_REG, 1, &writeBuffer);
+	
+	fcEnableCharging(1);
 }
 
 /*
@@ -131,10 +133,9 @@ uint8_t fcVersionRead(void)
 	return (0x07 & returnVal);
 }
 
-
 /*
 * Function:
-* uint8_t chargeDetector(void)
+* uint8_t fcState(void)
 *
 * Returns battery charging status
 *
@@ -156,33 +157,26 @@ uint8_t fcVersionRead(void)
 *	//change itself if you know what I mean.. Maybe set this up with an appropriate return system
 *
 */
-uint8_t chargeDetector(void)
+uint8_t fcState(void)
 {
-	uint8_t fcStatus;
-	twi0Read(TWI0_FCHARGE_ADDR, FC_STATUS_REG, 1, &fcStatus);
+	uint8_t fcStatusByte = 0;
+	uint8_t twiFault = twi0Read(TWI0_FCHARGE_ADDR, FC_STATUS_REG, 1, &fcStatusByte);
 	
-	switch(fcStatusStat(fcStatus))
-	{
-		case FC_STATUS_BF_STAT_CHRGIN:	//if robot is charging
-			//on the first time entering charge mode save the previous state for re entry
-			if(mainRobotState != CHARGING)
-			mainRobotStatePrev = mainRobotState;
-			if(!fdelay_ms(500))				//Blink LED 1 in charge mode
-			led1Tog;
-			mainRobotState = CHARGING;
-			return BATT_CHARGING;
-			break;
-			
-		case FC_STATUS_BF_STAT_CHRGDONE:	//Charging complete
-			mainRobotState = mainRobotStatePrev;
-			return BATT_CHARGED;
-			break;
-			
-		case default:						//if the robot is not charging (eg fault or no contact)
-			mainRobotState = mainRobotStatePrev;  
-			break;
-	}
+	if(twiFault)
+		return 0x10;
 		
-	//TODO: Set this up with the ability to return an error value (Maybe from twi0Read?)
-	return 0;
+	if(fcStatusStat(fcStatusByte) != FC_STATUS_BF_STAT_FAULT)
+		return fcStatusStat(fcStatusByte);
+	else
+		return (0xF0 & fcStatusFault(fcStatusByte));
+}
+
+uint8_t fcEnableCharging(uint8_t enable)
+{	
+	uint8_t writeBuffer;
+	if(enable)										//Determine command to write to control register
+		writeBuffer = FC_CONTROL_CHARGE_ENABLE;
+	else
+		writeBuffer = FC_CONTROL_CHARGE_DISABLE;
+	return twi0Write(TWI0_FCHARGE_ADDR, FC_STATUS_REG, 1, &writeBuffer);
 }

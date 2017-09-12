@@ -40,8 +40,6 @@
 //PID constants for mfTrackLight
 #define TL_KP	10.0
 #define TL_KI	0.001
-#define TL_KP	3.33
-#define TL_KI	0.00033
 
 //PID constants for mfTrackLightprox
 #define TLP_KP	10.0

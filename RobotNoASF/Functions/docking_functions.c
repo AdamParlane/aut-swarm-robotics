@@ -96,13 +96,16 @@ uint8_t dfDockRobot(struct Position *imuData)
 		case FOLLOW_LINE:
 			//pioLedNumber(4);
 			if(!dfFollowLine(35, imuData))
-				dockingState = FINISHED;
+				dockingState = FINISHED;	//We have followed the line until the forward
+											//obstacle sensor has reached full value. Now we creep
+											//forward to mate with the charging contacts
 		break;
+		
+		
 		
 		case FINISHED:
 			//pioLedNumber(7);
 			dockingState = START;
-			return 0;
 		break;
 	}
 	return dockingState;

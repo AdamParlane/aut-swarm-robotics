@@ -33,7 +33,7 @@
 #define FC_STATUS_REG	0x00	//Status register addr (Contains timer reset bit)
 //////Bit field read macros
 #define fcStatusTmrRst(byte)		((byte & 0x80)>>7)	//Reads TMR_RST
-#define fcStatusStat(byte)			((byte & 0x70)>>6)	//Reads STAT code
+#define fcStatusStat(byte)			((byte & 0x70)>>4)	//Reads STAT code
 #define fcStatusSupplySel(byte)		((byte & 0x04)>>4)	//Reads SUPPLY_SEL bit
 #define fcStatusFault(byte)			((byte & 0x03)>>0)	//Reads FAULT code
 ////////STAT Codes
@@ -80,15 +80,17 @@
 //Register Initialisation States
 #define FC_STATUS_WDRESET 0x80	//Polls the timer reset bit to stop the watchdog from expiring
 								//(FC_STATUS_REG)
-#define FC_CONTROL_INIT	0x04    //Ensures that CE bit is clear in case safety timer has gone off in
-								//previous charge.
+#define FC_CONTROL_CHARGE_ENABLE	0x0C//Enables CE bit, EN_STAT bit (so we can see status of chip)
+								//and enables charge current termination
+#define FC_CONTROL_CHARGE_DISABLE	0x0E//Same as above but disables CE bit
 #define FC_BATTVOL_INIT	0x66	//Vreg = 3.98v, input current = 2.5A (FC_BATVOL_REG)
-#define FC_CHARGE_INIT	0xFA	//charge current set to max Ic=2875mA, termination current
-								//Iterm=100mA (default) (FC_CHARGE_REG)
+//#define FC_CHARGE_INIT	0xFA	//charge current set to max Ic=2875mA, termination current
+#define FC_CHARGE_INIT	0x42								//Iterm=100mA (default) (FC_CHARGE_REG)
 
 //Fast charge status
-#define BATT_CHARGING		0xDA
-#define BATT_CHARGED		0xDB
+#define FC_POWER_CONNECTED		FC_STATUS_BF_STAT_INRDY
+#define FC_BATTERY_CHARGING		FC_STATUS_BF_STAT_CHRGIN
+#define FC_BATTERY_CHARGED		FC_STATUS_BF_STAT_CHRGDONE
 
 //Union used to abstract the bit masking
 //At this stage just for the battery charging status
@@ -167,7 +169,7 @@ uint8_t fcVersionRead(void);
 
 /*
 * Function:
-* uint8_t chargeDetector(void)
+* uint8_t fcState(void)
 *
 * Returns battery charging status
 *
@@ -180,6 +182,8 @@ uint8_t fcVersionRead(void);
 * the value of the status control register if there is an error or no charging
 *
 */
-uint8_t chargeDetector(void);
+uint8_t fcState(void);
+
+uint8_t fcEnableCharging(uint8_t enable);
 
 #endif /* FC_INTERFACE_H_ */
