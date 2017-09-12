@@ -28,15 +28,56 @@
 
 //////////////[Defines]/////////////////////////////////////////////////////////////////////////////
 //Fast charge chip registers
-#define FC_STATUS_REG	0x00	//Status register (Contains timer reset bit)
+
+////Control and Status Register
+#define FC_STATUS_REG	0x00	//Status register addr (Contains timer reset bit)
+//////Bit field read macros
+#define fcStatusTmrRst(byte)		((byte & 0x80)>>7)	//Reads TMR_RST
+#define fcStatusStat(byte)			((byte & 0x70)>>6)	//Reads STAT code
+#define fcStatusSupplySel(byte)		((byte & 0x04)>>4)	//Reads SUPPLY_SEL bit
+#define fcStatusFault(byte)			((byte & 0x03)>>0)	//Reads FAULT code
+////////STAT Codes
+#define FC_STATUS_BF_STAT_NVSD		0x00	//No valid source detected
+#define FC_STATUS_BF_STAT_INRDY		0x01	//IN ready
+#define FC_STATUS_BF_STAT_USBRDY	0x02	//USB ready
+#define FC_STATUS_BF_STAT_CHRGIN	0x03	//Charging from IN
+#define FC_STATUS_BF_STAT_CHRGUSB	0x04	//Charging from USB
+#define FC_STATUS_BF_STAT_CHRGDONE	0x05	//Charge Done
+#define FC_STATUS_BF_STAT_FAULT		0x07	//Fault
+////////FAULT Codes
+#define FC_STATUS_BF_FAULT_NORM		0x00	//Normal
+#define FC_STATUS_BF_FAULT_TS		0x01	//Thermal shutdown
+#define FC_STATUS_BF_FAULT_BTF		0x02	//Battery temp fault
+#define FC_STATUS_BF_FAULT_WDTE		0x03	//Watchdog timer expired
+#define FC_STATUS_BF_FAULT_STE		0x04	//Safety timer expired
+#define FC_STATUS_BF_FAULT_INSF		0x05	//IN supply fault
+#define FC_STATUS_BF_FAULT_USBSF	0x06	//USB supply fault
+#define FC_STATUS_BF_FAULT_BF		0x07	//Battery Fault
+////////Supply select bit
+#define FC_STATUS_BF_SUPPLY_SEL_IN	0x00	//IN has precedence over USB source
+#define FC_STATUS_BF_SUPPLY_SEL_USB	0x01	//USB has precedence over IN source
+
+////Battery/Supply Status Register
 #define FC_SUPPLY_REG	0x01
+
+////Control Register
 #define FC_CONTROL_REG	0x02	//Control register (Contains CE bit)
-#define FC_VERSION_REG	0x04
-#define FC_BATVOL_REG	0x03	//Battery Voltage register
-#define FC_CHARGE_REG	0x05	//Charge Current register
+
+////Control/Battery Voltage Register
+#define FC_BATVOL_REG	0x03	//Address
+
+////Vender/Part/Revision Register
+#define FC_VERSION_REG	0x04	//Address
+
+////Battery Termination/Fast Charge Current Register
+#define FC_CHARGE_REG	0x05	//Address
+
+////Safety Timer/NTC Monitor Register
 #define FC_NTCMON_REG	0x07	//Register for TS fault bits B2 & B1, 00=normal, 01=nil charge, 
 								//10=1/2 current, 11=Vreg reduced.
-//Register states
+
+
+//Register Initialisation States
 #define FC_STATUS_WDRESET 0x80	//Polls the timer reset bit to stop the watchdog from expiring
 								//(FC_STATUS_REG)
 #define FC_CONTROL_INIT	0x04    //Ensures that CE bit is clear in case safety timer has gone off in
@@ -123,7 +164,6 @@ void fcWatchdogReset(void);
 *
 */
 uint8_t fcVersionRead(void);
-
 
 /*
 * Function:

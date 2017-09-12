@@ -147,7 +147,6 @@ uint8_t fcVersionRead(void)
 * the value of the status control register if there is an error or no charging
 *
 * Implementation:
-* Uses the struct union Register to separate the individual bits
 * reads the status control register on the fast charge chip
 * returns whether CHARGING, CHARGED, or other
 *
@@ -159,22 +158,31 @@ uint8_t fcVersionRead(void)
 */
 uint8_t chargeDetector(void)
 {
-	Register fcstatus;
-	twi0Read(TWI0_FCHARGE_ADDR, FC_STATUS_REG, 1, &fcstatus.status);
-	if(fcstatus.bit.b5 & fcstatus.bit.b4) //if robot is charging
+	uint8_t fcStatus;
+	twi0Read(TWI0_FCHARGE_ADDR, FC_STATUS_REG, 1, &fcStatus);
+	
+	switch(fcStatusStat(fcStatus))
 	{
-		//on the first time entering charge mode save the previous state for re entry
-		if(mainRobotState != CHARGING) 
+		case FC_STATUS_BF_STAT_CHRGIN:	//if robot is charging
+			//on the first time entering charge mode save the previous state for re entry
+			if(mainRobotState != CHARGING)
 			mainRobotStatePrev = mainRobotState;
-		if(!fdelay_ms(500))					//Blink LED 1 in charge mode
+			if(!fdelay_ms(500))				//Blink LED 1 in charge mode
 			led1Tog;
-		mainRobotState = CHARGING;
-		return BATT_CHARGING;
+			mainRobotState = CHARGING;
+			return BATT_CHARGING;
+			break;
+			
+		case FC_STATUS_BF_STAT_CHRGDONE:	//Charging complete
+			mainRobotState = mainRobotStatePrev;
+			return BATT_CHARGED;
+			break;
+			
+		case default:						//if the robot is not charging (eg fault or no contact)
+			mainRobotState = mainRobotStatePrev;  
+			break;
 	}
-	else if (fcstatus.bit.b6 & fcstatus.bit.b4)//if robot is charged
-		mainRobotState = mainRobotStatePrev;
-	else //if the robot is not charging (eg fault or no contact)
-		mainRobotState = mainRobotStatePrev;
+		
 	//TODO: Set this up with the ability to return an error value (Maybe from twi0Read?)
 	return 0;
 }

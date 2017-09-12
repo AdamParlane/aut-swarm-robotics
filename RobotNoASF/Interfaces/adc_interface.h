@@ -33,8 +33,6 @@
 #define adcData					(REG_ADC_LCDR)					//Last sampled ADC value
 #define adcDataReady			(REG_ADC_ISR & ADC_ISR_DRDY)	//ADC conversion complete
 //	ADC channel defines
-//	It appears that the line follow sensors aren't connected to ADC channels on the V1, and that the
-//	IR leds are always on.
 //		Line follower ADC channels version 2 robot
 #define LF0_ADC_CH			13	// Far left
 #define LF1_ADC_CH			15	// Center left
