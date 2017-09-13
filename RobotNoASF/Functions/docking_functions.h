@@ -88,13 +88,18 @@ int8_t dfGetLineDirection(void);
 * A basic function to follow a line that seems to work ok
 *
 * Inputs:
-* none
+* uint8_t speed:
+*   Speed that robot will move at while following line (%)
+* float *lineHeading:
+*   Pointer to a float that will store the average heading that the line is believed to be on
+* struct Poistion *imuData
+*   Pointer to the robotPosition data structure
 *
 * Returns:
 * 0 when finished, otherwise current state
 *
 */
-uint8_t dfFollowLine(uint8_t speed, struct Position *imuData);
+uint8_t dfFollowLine(uint8_t speed, float *lineHeading, struct Position *imuData);
 
 /*
 * Function:

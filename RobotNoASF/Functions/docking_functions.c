@@ -53,22 +53,29 @@ struct LineSensorArray lf;
 */
 uint8_t dfDockRobot(struct Position *imuData)
 {
-	static float bHeading = 0;	//Brightest Heading
-	enum {FINISHED, START, FACE_BRIGHTEST, MOVE_FORWARD, RESCAN_BRIGHTEST, FOLLOW_LINE};
+	enum
+	{
+		FINISHED, START, FACE_BRIGHTEST, MOVE_FORWARD, RESCAN_BRIGHTEST, FOLLOW_LINE, CHRG_CONNECT,
+		CHRG_NOT_FOUND
+	};
 	static uint8_t dockingState = START;
-	///////////////[WIP]///////////////
+	static float bHeading = 0;			//Brightest Heading
+	static float lineHeading = 0.0;		//Heading of line
+	static uint8_t sweepPosition = 0;
+	uint8_t fcChipState = 0;
+	
 	switch(dockingState)
 	{
 		case START:
-			//pioLedNumber(0);
+			pioLedNumber(0);
 			if(!dfScanBrightestLightSource(&bHeading, 359, imuData))
 				dockingState = FACE_BRIGHTEST;
-		break;
+			break;
 		
 		case FACE_BRIGHTEST:
 			if(!mfRotateToHeading(bHeading, imuData))
 				dockingState = MOVE_FORWARD;
-		break;
+			break;
 		
 		case MOVE_FORWARD:
 			//pioLedNumber(2);
@@ -84,29 +91,61 @@ uint8_t dfDockRobot(struct Position *imuData)
 				stopRobot();
 				dockingState = FOLLOW_LINE;
 			}
-		break;
+			break;
 		
 		case RESCAN_BRIGHTEST:
 			//pioLedNumber(3);
 			//Only look in front, because we should still be roughly in the right direction
 			if(!dfScanBrightestLightSource(&bHeading, 180, imuData))
 				dockingState = FACE_BRIGHTEST;
-		break;
+			break;
 		
 		case FOLLOW_LINE:
-			//pioLedNumber(4);
-			if(!dfFollowLine(35, imuData))
-				dockingState = FINISHED;	//We have followed the line until the forward
+			pioLedNumber(1);
+			if(!dfFollowLine(35, &lineHeading, imuData))
+				dockingState = CHRG_CONNECT;//We have followed the line until the forward
 											//obstacle sensor has reached full value. Now we creep
 											//forward to mate with the charging contacts
-		break;
+			break;
 		
+		case CHRG_CONNECT:
+			pioLedNumber(2);
+			fcChipState = fcState();
+			if(fcChipState == FC_STATUS_BF_STAT_INRDY || fcChipState == FC_STATUS_BF_STAT_CHRGIN)
+			{
+				dockingState = FINISHED;
+				stopRobot();
+			}
+			else
+			{
+				if(sweepPosition)
+				{
+					mfMoveToHeading(lineHeading + 8, 45, imuData);
+					sweepPosition = 0;
+				} else {
+					mfMoveToHeading(lineHeading - 8, 45, imuData);	
+					sweepPosition = 1;
+				}
+				//if(!fdelay_ms(3000))
+				//{
+					//stopRobot();
+					//dockingState = CHRG_NOT_FOUND;
+				//}			
+			}
+			break;
 		
+		//If charger hasn't been found after time period, we enter this state. The resulting
+		//return value that this state invokes will prompt the caller to avoid an obstacle, or
+		//try docking again.
+		case CHRG_NOT_FOUND:
+			pioLedNumber(3);
+			dockingState = START;
+			break;
 		
 		case FINISHED:
-			//pioLedNumber(7);
+			pioLedNumber(7);
 			dockingState = START;
-		break;
+			break;
 	}
 	return dockingState;
 }
@@ -250,9 +289,11 @@ int8_t dfGetLineDirection(void)
 *
 * Inputs:
 * uint8_t speed:
-*   Speed at which to follow the line (0-100%)
-* struct Position *imuData
-*   Pointer to the global robotPosition data structure
+*   Speed that robot will move at while following line (%)
+* float *lineHeading:
+*   Pointer to a float that will store the average heading that the line is believed to be on
+* struct Poistion *imuData
+*   Pointer to the robotPosition data structure
 *
 * Returns:
 * 0 when finished, otherwise current state
@@ -266,15 +307,15 @@ int8_t dfGetLineDirection(void)
 * Need to find a way to make it smoother.
 *
 */
-uint8_t dfFollowLine(uint8_t speed, struct Position *imuData)
+uint8_t dfFollowLine(uint8_t speed, float *lineHeading, struct Position *imuData)
 {
 	movingFlag = 1;
 	enum {START, FIRST_CONTACT, ALIGN, FOLLOW, FINISH};
-	int8_t lineDirection = dfGetLineDirection();
+	int8_t lineDirection = dfGetLineDirection();			//Get directional data from LF sensors
 	uint16_t forwardProxSens = proxSensRead(MUX_PROXSENS_A);//Will use obstacle data structure once
 															//implemented.
 	static uint8_t lineFollowerState = FIRST_CONTACT;
-	static float lineHeading = 0;
+	static uint8_t lineJustFound = 1;
 	
 	switch(lineFollowerState)
 	{
@@ -288,10 +329,11 @@ uint8_t dfFollowLine(uint8_t speed, struct Position *imuData)
 		//state.
 		case FIRST_CONTACT:
 			//pioLedNumber(1);
+			lineJustFound = 1;
 			if(!lineDirection)
-				lineFollowerState = FOLLOW;
+				lineFollowerState = FOLLOW;	//If sufficiently over line, begin following
 			else 
-				steerRobot(25, 0);
+				steerRobot(25, 0);	//Creep forward some more to straddle line
 		break;
 		
 		//Given the position of the line sensors relative to the wheels on the underside of the 
@@ -311,7 +353,13 @@ uint8_t dfFollowLine(uint8_t speed, struct Position *imuData)
 			}
 			else 
 			{
-				lineHeading = imuData->imuYaw;
+				if(lineJustFound)								//If first time following this line
+				{
+					*lineHeading = imuData->imuYaw;						//Set initial line heading
+					lineJustFound = 0;
+				}
+				else
+					*lineHeading = (*lineHeading + imuData->imuYaw)/2;	//Running average heading
 				lineFollowerState = FOLLOW;
 			}
 		break;
@@ -324,10 +372,12 @@ uint8_t dfFollowLine(uint8_t speed, struct Position *imuData)
 		case FOLLOW:
 			//pioLedNumber(3);
 			if(abs(lineDirection) < 2)
-				mfMoveToHeading(lineHeading, speed - (forwardProxSens*speed/1023) + 5, imuData);
+				//Speed is inversely proportional to the reading from the forward prox sensor
+				mfMoveToHeading(*lineHeading, speed - (forwardProxSens*speed/1023) + 5, imuData);
 			else
 				lineFollowerState = ALIGN;
-			if(forwardProxSens >= PS_CLOSEST)
+			if(forwardProxSens >= PS_CLOSEST)	//If forward prox is at maximum, then we've 
+												//encountered an obstacle, so finish
 				lineFollowerState = FINISH;
 		break;
 		

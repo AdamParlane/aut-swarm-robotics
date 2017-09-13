@@ -116,8 +116,8 @@ int imuDmpInit(void)
 	//how the IMU is orientated relative to the robot.
 	static signed char gyro_orientation[9] =
 	//  X    Y   Z
-	{	1,	 0,	 0,  //X
-		0,	-1,	 0,  //Y
+	{  -1,	 0,	 0,  //X
+		0,	 1,	 0,  //Y
 		0,	 0,	 -1  //Z
 	};
 	//Both Y and Z axis are inverted because the chip is mounted upside down.

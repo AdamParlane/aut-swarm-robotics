@@ -76,7 +76,7 @@ void motorInit(void)
 {
 	REG_PMC_PCER0 |= PMC_PCER0_PID31;	//Enable clock access for PWM
 	
-	//****Channel 3 (Motor 1)****//
+	//****Rear Channel 3 (Motor 1)****//
 	REG_PWM_CMR3 |= (0x4<<0);		//Channel pre scale CLK by 16 = 24.4KHz
 	REG_PWM_CMR3 |= (1<<9);			//output starts at high level
 	REG_PWM_CMR3 &= ~(1<<8);		//Left aligned output
@@ -94,7 +94,7 @@ void motorInit(void)
 	REG_PIOC_OER |= (1<<22);		//Set PC22 as output
 	rearRevLo;
 								
-	//****Channel 2 (Motor 2)****//
+	//****Front right Channel 2 (Motor 2)****//
 	REG_PWM_CMR2 |= (0x4<<0);		//Channel pre scale CLK by 16 = 24.4KHz
 	REG_PWM_CMR2 |= (1<<9);			//output starts at low level
 	REG_PWM_CMR2 &= ~(1<<8);		//Left aligned output
@@ -111,7 +111,7 @@ void motorInit(void)
 	REG_PIOA_OER |= (1<<31);		//Set PA31 as output
 	frontRightFwdLo;		
 
-	//****Channel 1 (Motor 3)****//
+	//****Front left Channel 1 (Motor 3)****//
 	REG_PWM_CMR1 |= (0x4<<0);		//Channel pre scale CLK by 16 = 24.4KHz
 	REG_PWM_CMR1 |= (1<<9);			//output starts at low level
 	REG_PWM_CMR1 &= ~(1<<8);		//Left aligned output

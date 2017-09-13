@@ -72,8 +72,9 @@ struct Position
 	unsigned short imuDeltaTime;//Time between last IMU reading and IMU previous reading
 	float x;				//Absolute X position in arena
 	float y;				//Absolute Y position in arena
-	float h;				//Absolute Z position in arena
-	signed int targetHeading; //For obstacle avoidance, desired heading before an obstacel is detected
+	float heading;			//Direction of travel
+	signed int targetHeading;	//For obstacle avoidance, desired heading before an obstacel is 
+								//detected
 	char targetSpeed;	//For obstacle avoidance, desired speed
 };
 
