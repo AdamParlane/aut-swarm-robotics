@@ -31,18 +31,15 @@
 #define STREAM_DATA				0x02
 #define STOP_STREAMING			0xFF
 
-
 #define REAR_MOTOR				0x01
-#define F_RIGHT_MOTOR					0x02
-#define F_LEFT_MOTOR					0x03
+#define F_RIGHT_MOTOR			0x02
+#define F_LEFT_MOTOR			0x03
 
 struct transmitDataStructure
 {
 	uint8_t Data[50];//array for data to be transmitted to PC BEFORE XBee framing has been added
 	uint8_t DataSize;//size of the transmit array
 };
-
-
 
 /*
 * Function: uint8_t testManager(struct MessageInfo message, struct transmitDataStructure *transmit,

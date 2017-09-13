@@ -92,15 +92,15 @@ int main(void)
 {
 	robotSetup(); //Set up the system and peripherals
 	battVoltage = adcBatteryVoltage();	//Add to your watch to keep an eye on the battery
-	mainRobotState = IDLE; //start system at IDLE
-	mainRobotStatePrev = IDLE;
+	systemStates.mains = IDLE; //start system at IDLE
+	systemStates.mainsPrev = IDLE;
 	uint8_t chargeCycleReturn = 0;
 	uint8_t dockingReturn = 0;
 	float lineHeading = 0;
 
 	while(1)
 	{
-		switch (mainRobotState)
+		switch (systemStates.mains)
 		{
 			case TEST: //System Test Mode
 			//Entered when test command received from PC
@@ -109,7 +109,7 @@ int main(void)
 			
 			case MANUAL: //User controlled mode
 			//Entered when manual movement command received from PC
-				if(newDataFlag) //if there is new data
+				if(systemFlags.xbeeNewData) //if there is new data
 					manualControl(message, &robotPosition);
 				break;
 			
@@ -117,15 +117,15 @@ int main(void)
 			//if battery low or manual docking command sent from PC
 				dockingReturn = dfDockRobot(&robotPosition);
 				if(!dockingReturn)	//Execute docking procedure state machine
-					mainRobotState = CHARGING;		//If finished docking, switch to charging
+					systemStates.mains = CHARGING;		//If finished docking, switch to charging
 				else if(dockingReturn == 7)
-					mainRobotState = IDLE;			//If charger connection failed
+					systemStates.mains = IDLE;			//If charger connection failed
 				break;
 			
 			case LINE_FOLLOW:
 			//Entered when line follow command received from PC
 				if(!dfFollowLine(35, &lineHeading, &robotPosition))//Line follower will return 0 when complete
-					mainRobotState = IDLE;
+					systemStates.mains = IDLE;
 				break;
 					
 			case LIGHT_FOLLOW:
@@ -140,9 +140,9 @@ int main(void)
 			case CHARGING:
 				chargeCycleReturn = cfChargeCycleHandler(&robotPosition);
 				if(chargeCycleReturn > 0xEF)
-					mainRobotState = IDLE;					//Charging fault occurred
+					systemStates.mains = IDLE;					//Charging fault occurred
 				if(!chargeCycleReturn)
-					mainRobotState = mainRobotStatePrev;	//Charge finished successfully
+					systemStates.mains = systemStates.mainsPrev;	//Charge finished successfully
 				break;
 
 			case IDLE:					
@@ -155,7 +155,7 @@ int main(void)
 		xbeeGetNew();			//Checks for and interprets new communications
 		nfRetrieveNavData();	//checks if there is new navigation data and updates robotPosition
 		//check to see if obstacle avoidance is enabled AND the robot is moving
-		if(obstacleAvoidanceEnabledFlag && movingFlag)
+		if(obstacleAvoidanceEnabledFlag && systemFlags.obaMoving)
 			dodgeObstacle(&robotPosition); //avoid obstacles using proximity sensors
 	}
 }

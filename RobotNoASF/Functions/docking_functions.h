@@ -43,7 +43,7 @@
 * none
 *
 */
-uint8_t dfDockRobot(struct Position *imuData);
+uint8_t dfDockRobot(struct SystemStates *state, Position *imuData);
 
 /*
 * Function:
@@ -99,7 +99,8 @@ int8_t dfGetLineDirection(void);
 * 0 when finished, otherwise current state
 *
 */
-uint8_t dfFollowLine(uint8_t speed, float *lineHeading, struct Position *imuData);
+uint8_t dfFollowLine(uint8_t speed, float *lineHeading, struct SystemStates *state, 
+						struct Position *imuData);
 
 /*
 * Function:
@@ -119,7 +120,7 @@ uint8_t dfFollowLine(uint8_t speed, float *lineHeading, struct Position *imuData
 *
 */
 uint8_t dfScanBrightestLightSource(float *brightestHeading, uint16_t sweepAngle,
-								struct Position *imuData);
+								struct SystemStates *state, Position *imuData);
 /*
 * Function:
 * float dfScanBrightestLightSourceProx(void)

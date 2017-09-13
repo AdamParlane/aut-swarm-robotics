@@ -75,7 +75,7 @@ void robotSetup(void)
 	
 	delay_ms(2500);						//Stops robot running away while programming
 	srand(streamDelayCounter);		//Seed rand() to give unique random numbers
-	movingFlag = 0; //On boot robot isnt moving
+	systemFlags.obaMoving = 0; //On boot robot isnt moving
 	return;
 }
 /*

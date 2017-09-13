@@ -178,7 +178,7 @@ float mfMoveToHeading(float heading, uint8_t speed, struct Position *imuData)
 /*
 * Function:
 * float mfMoveToHeadingByDistance(float heading, uint8_t speed, uint32_t distance,
-*                                  struct Position *posData)
+*									struct SystemStates *state, Position *posData);
 *
 * Will allow robot to move along the given heading a given distance.
 *
@@ -189,8 +189,10 @@ float mfMoveToHeading(float heading, uint8_t speed, struct Position *imuData)
 *   Percentage of max speed to move at (0-100%)
 * uint32_t distance:
 *   Distance to travel before stopping.
+* struct SystemStates *state
+*   Pointer to the systemStates data structure
 * struct Position *posData:
-* Pointer to the robotPosition global structure.
+*   Pointer to the robotPosition global structure.
 *
 * Returns:
 * 0 when maneuver is complete, otherwise returns distance remaining before maneuver complete.
@@ -209,17 +211,17 @@ float mfMoveToHeading(float heading, uint8_t speed, struct Position *imuData)
 *
 */
 float mfMoveToHeadingByDistance(float heading, uint8_t speed, uint32_t distance,
-								struct Position *posData)
+								struct SystemStates *state, Position *posData)
 {
-	enum {START, MOVING, STOP};
-	static uint8_t movingState = START;
+
+	static uint8_t state->moveHeadingDistance = START;
 	static float distanceTravelled = 0;
 	
-	switch(movingState)
+	switch(state->moveHeadingDistance)
 	{
 		case START:
 			if(!mfRotateToHeading(heading, posData))//Face the right direction
-				movingState = MOVING;
+				state->moveHeadingDistance = MOVING;
 		break;
 		
 		case MOVING:
@@ -227,13 +229,13 @@ float mfMoveToHeadingByDistance(float heading, uint8_t speed, uint32_t distance,
 			distanceTravelled += posData->opticalDY;//Once we are facing the right direction we can
 													//start keeping track of the distance traveled.
 			if(distanceTravelled > distance)		//If we have gone the distance
-				movingState = STOP;					//Time to stop.
+				state->moveHeadingDistance = STOP;					//Time to stop.
 		break;
 						
 		case STOP:
 			stopRobot();							//Stop robot
 			distanceTravelled = 0;					//Reset static distance variable
-			movingState = START;					//Reset function state.
+			state->moveHeadingDistance = START;					//Reset function state.
 			return 0;								//Indicate that maneuver is complete
 		break;
 	}
@@ -265,7 +267,7 @@ float mfMoveToHeadingByDistance(float heading, uint8_t speed, uint32_t distance,
 */
 float mfTrackLight(struct Position *imuData)
 {
-	movingFlag = 1;	
+	systemFlags.obaMoving = 1;	
 	static float pErr;			//Proportional error
 	static float iErr = 0;		//Integral error
 	float dHeading;				//Delta heading to adjust by

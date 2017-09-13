@@ -89,7 +89,7 @@ float mfMoveToHeading(float heading, uint8_t speed, struct Position *imuData);
 /*
 * Function:
 * float mfMoveToHeadingByDistance(float heading, uint8_t speed, uint32_t distance,
-*                                  struct Position *posData)
+*									struct SystemStates *state, Position *posData);
 *
 * Will allow robot to move along the given heading a given distance.
 *
@@ -100,15 +100,17 @@ float mfMoveToHeading(float heading, uint8_t speed, struct Position *imuData);
 *   Percentage of max speed to move at (0-100%)
 * uint32_t distance:
 *   Distance to travel before stopping.
+* struct SystemStates *state
+*   Pointer to the systemStates data structure
 * struct Position *posData:
-* Pointer to the robotPosition global structure.
+*   Pointer to the robotPosition global structure.
 *
 * Returns:
 * 0 when maneuver is complete, otherwise returns distance remaining before maneuver complete.
 *
 */
 float mfMoveToHeadingByDistance(float heading, uint8_t speed, uint32_t distance, 
-								struct Position *posData);
+								struct SystemStates *state, Position *posData);
 
 /*
 * Function:

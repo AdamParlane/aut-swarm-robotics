@@ -31,14 +31,16 @@
 * State machine that handles the charging cycle of the battery
 *
 * Inputs:
+* struct SystemStates *state
+*   Pointer to the systemStates data structure
 * struct Position *imuData:
-* Pointer to the robotPosition data structure
+*   Pointer to the robotPosition data structure
 *
 * Returns:
 * Returns 0 when finished charging successfully. Returns 0xFF when a fault has occurred, otherwise
 * returns the number of the current state.
 *
 */
-uint8_t cfChargeCycleHandler(struct Position *imuData);
+uint8_t cfChargeCycleHandler(struct SystemStates *state, Position *imuData);
 
 #endif /* CHARGING_FUNCTIONS_H_ */

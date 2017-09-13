@@ -28,8 +28,10 @@
 * State machine that handles the charging cycle of the battery
 *
 * Inputs:
+* struct SystemStates *state
+*   Pointer to the systemStates data structure
 * struct Position *imuData:
-* Pointer to the robotPosition data structure
+*   Pointer to the robotPosition data structure
 *
 * Returns:
 * Returns 0 when finished charging successfully. Returns 0xFF when a fault has occurred, otherwise
@@ -49,20 +51,18 @@
 * TODO: More commenting
 *
 */
-uint8_t cfChargeCycleHandler(struct Position *imuData)
+uint8_t cfChargeCycleHandler(struct SystemStates *state, Position *imuData)
 {
-	enum {FINISHED, CHECK_POWER, CHARGING, FAULT, DISMOUNT, TURN_AWAY};
-	static uint8_t chargingState = CHECK_POWER;
 	static float currentHeading = 0;
 	uint8_t chipState = 0;
 	fcWatchdogReset();							//Reset watchdog timer on fc chip
 	chipState = fcState();
 	
-	switch(chargingState)
+	switch(state->chargeCycle)
 	{
 		case CHECK_POWER:
 			if(chipState == FC_BATTERY_CHARGING || chipState == FC_POWER_CONNECTED)
-				chargingState = CHARGING;
+				state->chargeCycle = CHARGING;
 			break;
 		
 		case CHARGING:
@@ -70,31 +70,31 @@ uint8_t cfChargeCycleHandler(struct Position *imuData)
 				led3Tog;
 			if(chipState == FC_BATTERY_CHARGED)
 			{
-				chargingState = DISMOUNT;
+				state->chargeCycle = DISMOUNT;
 			}
 			if((chipState & 0xF0) == 0xF0)		//If fault (Upper nibble = F)
-				chargingState = FAULT;
+				state->chargeCycle = FAULT;
 			break;
 		
 		case FAULT:
 			fcEnableCharging(0);				//Stop charging
-			chargingState = DISMOUNT;
+			state->chargeCycle = DISMOUNT;
 			return 0xFF;						//Indicate that a fault occurred
 		
 		case DISMOUNT:
 			currentHeading = imuData->imuYaw;
-			chargingState = TURN_AWAY;
+			state->chargeCycle = TURN_AWAY;
 			break;
 		
 		case TURN_AWAY:
 			if(!mfMoveToHeadingByDistance(currentHeading - 180, 35, 10, imuData))
-				chargingState = FINISHED;
+				state->chargeCycle = FINISHED;
 			break;
 		
 		case FINISHED:
-			chargingState = CHECK_POWER;
+			state->chargeCycle = CHECK_POWER;
 			break;
 	}
 	
-	return chargingState;
+	return state->chargeCycle;
 }

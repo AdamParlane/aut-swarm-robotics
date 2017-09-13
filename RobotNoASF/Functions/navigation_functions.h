@@ -41,7 +41,7 @@
 * none
 *
 * Returns:
-* 0 if data was retrieved (checkImuFifo flag was set), otherwise returns 1.
+* 0 if data was retrieved (systemFlags.imuCheckFifo flag was set), otherwise returns 1.
 *
 * Implementation:
 * imuReadFifo() reads the data from the IMU's FIFO buffer and stores the data in robotPosition.

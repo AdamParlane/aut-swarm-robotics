@@ -44,7 +44,7 @@ struct Position robotPosition =
 
 //Read data flag that is set by the external interrupt from the IMU on the V2 or by timer on the V1.
 //Is defined in imu_interface.
-extern uint8_t checkImuFifo;
+extern struct SystemFlags systemFlags;	//imuCheckFifo flag
 
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*
@@ -59,7 +59,7 @@ extern uint8_t checkImuFifo;
 * none
 *
 * Returns:
-* 0 if data was retrieved (checkImuFifo flag was set), otherwise returns 1.
+* 0 if data was retrieved (systemFlags.imuCheckFifo flag was set), otherwise returns 1.
 *
 * Implementation:
 * imuReadFifo() reads the data from the IMU's FIFO buffer and stores the data in robotPosition.
@@ -70,12 +70,12 @@ extern uint8_t checkImuFifo;
 */
 uint8_t nfRetrieveNavData(void)
 {
-	if(checkImuFifo)
+	if(systemFlags.imuCheckFifo)
 	{
 		imuReadFifo(&robotPosition);		//Read IMU's FIFO buffer
 		nfGetEulerAngles(&robotPosition);	//Convert IMU quats to Euler angles
 		getMouseXY(&robotPosition);			//Update mouse sensor data while at it
-		checkImuFifo = 0;					//Reset interrupt flag
+		systemFlags.imuCheckFifo = 0;					//Reset interrupt flag
 		return 0;
 	} else
 		return 1;

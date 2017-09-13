@@ -195,21 +195,21 @@ void xbeeGetNew()
 void xbeeInterpretSwarmMessage(struct MessageInfo message)
 {
 	//handles the incoming commands and sets the appropriate states / flags calls functions
-	newDataFlag = 1;
+	systemFlags.xbeeNewData = 1;
 	if(message.command >= 0xE0) //test command range 0xE0-0xEF
-		mainRobotState = TEST;
+		systemStates.mains = TEST;
 	else if (message.command == 0xD0)
 	{
-		movingFlag = 0;
+		systemFlags.obaMoving = 0;
 		stopRobot();
 	}
 	else if(message.command >= 0xD1 && message.command <= 0xD3) //Manual command range 0xD1-0xD3
-		mainRobotState = MANUAL;
+		systemStates.mains = MANUAL;
 	else if (message.command == 0xD4)
 		//move robot randomly
 		mfRandomMovementGenerator();		
 	else if (message.command == 0xD7)
-		mainRobotState = DOCKING;
+		systemStates.mains = DOCKING;
 		//0xD6 and D5 are also reserved for docking 
 		//at a later date for different methods if required
 	else if (message.command == 0xD8)
@@ -217,9 +217,9 @@ void xbeeInterpretSwarmMessage(struct MessageInfo message)
 	else if (message.command == 0xD9)
 		obstacleAvoidanceEnabledFlag = 1;
 	else if (message.command == 0xDA)
-		mainRobotState = LIGHT_FOLLOW;
+		systemStates.mains = LIGHT_FOLLOW;
 	else if (message.command == 0xDB)
-		mainRobotState = LINE_FOLLOW;
+		systemStates.mains = LINE_FOLLOW;
 }
 
 /*

@@ -27,7 +27,7 @@
 
 //TODO: change something so that this doesn't have to be first
 //Or maybe all defines should be before includes
-enum MAIN_STATES
+enum MainStates
 //main loop functionality
 {
 	TEST,
@@ -39,6 +39,52 @@ enum MAIN_STATES
 	IDLE, CHARGING,
 	LINE_FOLLOW,
 	LIGHT_FOLLOW
+};
+
+enum DockingStates
+{
+	FINISHED, 
+	START, 
+	FACE_BRIGHTEST, 
+	MOVE_FORWARD, 
+	RESCAN_BRIGHTEST, 
+	FOLLOW_LINE, 
+	CHRG_CONNECT,
+	CHRG_NOT_FOUND		
+};
+
+enum FollowLineStates
+{
+	START, 
+	FIRST_CONTACT, 
+	ALIGN, 
+	FOLLOW, 
+	FINISH
+};
+
+enum ScanBrightestLightSourceStates
+{
+	FUNCTION_INIT, 
+	GOTO_START_POSITION, 
+	SWEEP, 
+	END
+};
+
+enum ChargeCycleHandlerStates 
+{
+	FINISHED, 
+	CHECK_POWER, 
+	CHARGING, 
+	FAULT, 
+	DISMOUNT, 
+	TURN_AWAY
+};
+
+enum MoveToHeadingByDistanceStates
+{
+	START, 
+	MOVING, 
+	STOP
 };
 
 ///////////////Type Definitions/////////////////////////////////////////////////////////////////////
@@ -89,6 +135,38 @@ struct ColourSensorData
 	unsigned short saturation;
 	unsigned short value;
 };
+
+struct SystemFlags
+//Structure that will store all system flags for global use
+{
+	char xbeeNewData;	//New data from Xbee interface
+	char imuCheckFifo;	//IMU ext interrupt has been triggered
+	char obaMoving;		//Robot is in motion
+};
+
+struct SystemStates
+//Structure that will store the states of every state machine in the system
+{
+	//Main function state machine state
+	enum MainStates mains;
+	enum MainStates mainsPrev;
+	
+	//dfDockRobot() states
+	enum DockingStates docking;
+	
+	//dfFollowLine() states
+	enum FollowLineStates followLine;
+	
+	//dfScanBrightestLightSource() states
+	enum ScanBrightestLightSourceStates scanBrightest;
+	
+	//cfChargeCycleHandler() states
+	enum ChargeCycleHandlerStates chargeCycle;
+	
+	//mfMoveToHeadingByDistance() states
+	enum MoveToHeadingByDistanceStates moveHeadingDistance;
+};
+
 //////////////[Includes]////////////////////////////////////////////////////////////////////////////
 #include "Interfaces/spi.h"
 #include "sam.h"
@@ -121,10 +199,25 @@ struct ColourSensorData
 
 //////////////[Global variables]////////////////////////////////////////////////////////////////////
 //used for test function calling
-char newDataFlag; //TODO:used for test function probably temporary ((still temporary?)
-char mainRobotState, mainRobotStatePrev;	//main function state machine states
+struct SystemFlags systemFlags =
+{
+	.xbeeNewData = 0;
+	.imuCheckFifo = 0;
+	.obaMoving = 0;
+};
+
+struct SystemStates systemStates =
+{
+	.mains = IDLE;
+	.mainsPrev = IDLE;
+	.docking = START;
+	.chargeCycle = CHECK_POWER;
+	.followLine = FIRST_CONTACT;
+	.scanBrightest = FUNCTION_INIT;
+	.moveHeadingDistance = START;	
+};
+
 volatile char streamDelayCounter, streamIntervalFlag;	//TODO:What are these?
-char movingFlag;
 
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*

@@ -48,7 +48,7 @@
 void manualControl(struct MessageInfo tmessage, struct Position *robotPosition)
 {
 	static uint8_t receivedTestData[5];
-	newDataFlag = 0;
+	systemFlags.xbeeNewData = 0;
 	uint16_t straightDirection;
 	xbeeConvertData(tmessage, receivedTestData);
 	straightDirection = (receivedTestData[0] << 8) + (receivedTestData[1]);
@@ -57,12 +57,12 @@ void manualControl(struct MessageInfo tmessage, struct Position *robotPosition)
 		moveRobot(straightDirection, receivedTestData[2]);
 		robotPosition->targetHeading = straightDirection;
 		robotPosition->targetSpeed = receivedTestData[2];
-		movingFlag = 1;
+		systemFlags.obaMoving = 1;
 	}
 	else if(tmessage.command == MANUAL_STOP)
 	{
 		stopRobot();
-		mainRobotState = IDLE;
+		systemStates.mains = IDLE;
 		
 	}
 	else if(tmessage.command == CCW)
@@ -70,12 +70,12 @@ void manualControl(struct MessageInfo tmessage, struct Position *robotPosition)
 		//CW is reverse so invert speed
 		signed char speed = -1*receivedTestData[0];
 		rotateRobot(speed);
-		movingFlag = 1;
+		systemFlags.obaMoving = 1;
 	}
 	else if(tmessage.command == CW)
 	{
 		//CCW is forward so no need to invert speed
 		rotateRobot(receivedTestData[0]);
-		movingFlag = 1;
+		systemFlags.obaMoving = 1;
 	}
 }
