@@ -15,7 +15,7 @@
 * Functions:
 * void fcInit(void)
 * void fcWatchdogReset(void)
-* uint16_t fcBatteryVoltage(void)
+
 *
 */
 
@@ -53,13 +53,12 @@ void fcInit(void)
 	REG_PIOB_OER |= PIO_OER_P2;		//Set PB2 as an output
 	REG_PIOB_CODR |= PIO_CODR_P2;	//Set PB2 to low
 	
-	
 	uint8_t writeBuffer;
-	//NOT SHURE IF THIS LINE IS NEEDED BE CAUSE ACCORDING TO DATASHEET CE IS INVERTED, THEREFORE THE
+	//NOT SURE IF THIS LINE IS NEEDED BE CAUSE ACCORDING TO DATASHEET CE IS INVERTED, THEREFORE THE
 	//DEFAULT VALUE 0 WOULD MEAN THAT CHARGING IS ENABLED NOT 1. TESTING REQUIRED.
 	//Ensures that CE bit is clear in case safety timer has gone off in previous charge.
-	writeBuffer = FC_CONTROL_INIT;
-	twi0Write(TWI0_FCHARGE_ADDR, FC_CONTROL_REG, 1, &writeBuffer);
+	//writeBuffer = FC_CONTROL_CHARGE_DISABLE;
+	//twi0Write(TWI0_FCHARGE_ADDR, FC_CONTROL_REG, 1, &writeBuffer);
 	
 	//Vreg = 3.98v, input current = 2.5A
 	writeBuffer = FC_BATTVOL_INIT;
@@ -68,6 +67,8 @@ void fcInit(void)
 	//Charge current set to max Ic=2875mA, termination current Iterm=100mA (default)
 	writeBuffer = FC_CHARGE_INIT;
 	twi0Write(TWI0_FCHARGE_ADDR, FC_CHARGE_REG, 1, &writeBuffer);
+	
+	fcEnableCharging(1);
 }
 
 /*
@@ -134,31 +135,7 @@ uint8_t fcVersionRead(void)
 
 /*
 * Function:
-* float fcBatteryVoltage(void)
-*
-* Returns current battery voltage
-*
-* Inputs:
-* none
-*
-* Returns:
-* Returns a integer value of the current battery voltage in mV.
-*
-* Implementation:
-* Reads battery voltage ADC channel
-* Converts to millivolts using linear conversion factor set in fc_interface.h and returns
-*
-*/
-uint16_t fcBatteryVoltage(void)
-{
-	uint16_t rawBattReading = 0;
-	rawBattReading = adcRead(FC_BATVOLT_ADC_CH);
-	return rawBattReading*FC_BATTVOL_CONV;
-}
-
-/*
-* Function:
-* uint8_t chargeDetector(void)
+* uint8_t fcState(void)
 *
 * Returns battery charging status
 *
@@ -171,7 +148,6 @@ uint16_t fcBatteryVoltage(void)
 * the value of the status control register if there is an error or no charging
 *
 * Implementation:
-* Uses the struct union Register to separate the individual bits
 * reads the status control register on the fast charge chip
 * returns whether CHARGING, CHARGED, or other
 *
@@ -181,24 +157,26 @@ uint16_t fcBatteryVoltage(void)
 *	//change itself if you know what I mean.. Maybe set this up with an appropriate return system
 *
 */
-uint8_t chargeDetector(void)
+uint8_t fcState(void)
 {
-	Register fcstatus;
-	twi0Read(TWI0_FCHARGE_ADDR, FC_STATUS_REG, 1, &fcstatus.status);
-	if(fcstatus.bit.b5 & fcstatus.bit.b4) //if robot is charging
-	{
-		//on the first time entering charge mode save the previous state for re entry
-		if(mainRobotState != CHARGING) 
-			mainRobotStatePrev = mainRobotState;
-		if(!fdelay_ms(500))					//Blink LED 1 in charge mode
-			led1Tog;
-		mainRobotState = CHARGING;
-		return BATT_CHARGING;
-	}
-	else if (fcstatus.bit.b6 & fcstatus.bit.b4)//if robot is charged
-		mainRobotState = mainRobotStatePrev;
-	else //if the robot is not charging (eg fault or no contact)
-		mainRobotState = mainRobotStatePrev;
-	//TODO: Set this up with the ability to return an error value (Maybe from twi0Read?)
-	return 0;
+	uint8_t fcStatusByte = 0;
+	uint8_t twiFault = twi0Read(TWI0_FCHARGE_ADDR, FC_STATUS_REG, 1, &fcStatusByte);
+	
+	if(twiFault)
+		return 0x10;
+		
+	if(fcStatusStat(fcStatusByte) != FC_STATUS_BF_STAT_FAULT)
+		return fcStatusStat(fcStatusByte);
+	else
+		return (0xF0 & fcStatusFault(fcStatusByte));
+}
+
+uint8_t fcEnableCharging(uint8_t enable)
+{	
+	uint8_t writeBuffer;
+	if(enable)										//Determine command to write to control register
+		writeBuffer = FC_CONTROL_CHARGE_ENABLE;
+	else
+		writeBuffer = FC_CONTROL_CHARGE_DISABLE;
+	return twi0Write(TWI0_FCHARGE_ADDR, FC_STATUS_REG, 1, &writeBuffer);
 }

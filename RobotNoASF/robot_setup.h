@@ -27,7 +27,7 @@
 
 //TODO: change something so that this doesn't have to be first
 //Or maybe all defines should be before includes
-enum ROBOT_STATES
+enum MAIN_STATES
 //main loop functionality
 {
 	TEST,
@@ -72,8 +72,9 @@ struct Position
 	unsigned short imuDeltaTime;//Time between last IMU reading and IMU previous reading
 	float x;				//Absolute X position in arena
 	float y;				//Absolute Y position in arena
-	float h;				//Absolute Z position in arena
-	signed int targetHeading; //For obstacle avoidance, desired heading before an obstacel is detected
+	float heading;			//Direction of travel
+	signed int targetHeading;	//For obstacle avoidance, desired heading before an obstacel is 
+								//detected
 	char targetSpeed;	//For obstacle avoidance, desired speed
 };
 
@@ -112,15 +113,11 @@ struct ColourSensorData
 #include "Functions/motion_functions.h"
 #include "Functions/navigation_functions.h"
 #include "Functions/light_colour_functions.h"
+#include "Functions/charging_functions.h"
 
 //////////////[Defines]/////////////////////////////////////////////////////////////////////////////
 //Universal Asynchronous Receiver/Transmitter
 #define TXRDY (REG_UART3_SR & UART_SR_TXRDY)	//UART TX READY flag [SHOULD BE IN COMMUNICATIONS]
-
-//If robot target compiler symbol is not present, then throw an error.
-#if !defined ROBOT_TARGET_V1 && !defined ROBOT_TARGET_V2
-#error  Robot version has not been set in compiler symbols. (set ROBOT_TARGET_V1 or ROBOT_TARGET_V2)
-#endif
 
 //////////////[Global variables]////////////////////////////////////////////////////////////////////
 //used for test function calling
@@ -128,7 +125,6 @@ char newDataFlag; //TODO:used for test function probably temporary ((still tempo
 char mainRobotState, mainRobotStatePrev;	//main function state machine states
 volatile char streamDelayCounter, streamIntervalFlag;	//TODO:What are these?
 char movingFlag;
-char chargeInfo;
 
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*

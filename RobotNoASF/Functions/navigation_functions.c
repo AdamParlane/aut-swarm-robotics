@@ -72,28 +72,10 @@ uint8_t nfRetrieveNavData(void)
 {
 	if(checkImuFifo)
 	{
-	//On V1s there is no external interrupt. In order to read data from the FIFO at the right time
-	//we check bit 1 in the DMP interrupt status register. If it is set, then we can read from the 
-	//FIFO.
-#if defined ROBOT_TARGET_V1
-		short interruptStatus = 0;
-		mpu_get_int_status(&interruptStatus);	//Check the interrupt status register
-		if(interruptStatus & 0x02)				//If bit 2 is set
-		{
-			imuReadFifo(&robotPosition);		//Read IMU's FIFO buffer
-			nfGetEulerAngles(&robotPosition);	//Convert IMU quats to Euler angles
-			getMouseXY(&robotPosition);			//Update mouse sensor data while at it
-			checkImuFifo = 0;					//Reset interrupt flag			
-		}
-#endif
-	//No need to read interrupt registers on the V2 as we have the external interrupt to tell us
-	//when to read the FIFO.
-#if defined ROBOT_TARGET_V2
 		imuReadFifo(&robotPosition);		//Read IMU's FIFO buffer
 		nfGetEulerAngles(&robotPosition);	//Convert IMU quats to Euler angles
 		getMouseXY(&robotPosition);			//Update mouse sensor data while at it
 		checkImuFifo = 0;					//Reset interrupt flag
-#endif
 		return 0;
 	} else
 		return 1;

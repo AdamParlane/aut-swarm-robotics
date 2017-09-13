@@ -71,9 +71,7 @@ void robotSetup(void)
 	extIntInit();						//Initialise external interrupts.
 	imuDmpInit();						//Initialise DMP system
 	mouseInit();						//Initialise mouse sensor
-#if defined ROBOT_TARGET_V2
 	lfInit();							//Initialise line follow sensors. Only on V2.
-#endif
 	
 	delay_ms(2500);						//Stops robot running away while programming
 	srand(streamDelayCounter);		//Seed rand() to give unique random numbers

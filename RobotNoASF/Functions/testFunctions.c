@@ -167,7 +167,7 @@ uint8_t getTestData(struct MessageInfo message, struct transmitDataStructure *tr
 		break;
 		
 		case TEST_FAST_CHARGE_CHIP:
-		peripheralReturnData = fcBatteryVoltage();
+		peripheralReturnData = adcBatteryVoltage();
 		transmit->Data[1] = DATA_RETURN; //sending data out
 		transmit->Data[2] = peripheralReturnData >> 8; //upper byte
 		transmit->Data[3] = peripheralReturnData & 0xFF; //lower byte

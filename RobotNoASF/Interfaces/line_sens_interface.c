@@ -42,7 +42,6 @@
 void lfInit(void)
 //Line followers are incorrectly wired on the V1, and are therefore unavailable.
 {
-#if defined ROBOT_TARGET_V2
 	//Initialise PA8 (LFC) for output so LEDs can be turned on and off
 	LFC_PORT->PIO_PER
 	|=	LFC;
@@ -50,7 +49,6 @@ void lfInit(void)
 	|=	LFC;
 	
 	lfLedState(ON);
-#endif
 }
 
 /*
@@ -74,14 +72,11 @@ void lfInit(void)
 *
 */
 void lfLedState(uint8_t ledState)
-//There is no ability to turn the LEDs on or off on the V1 (Hard wired on)
 {
-#if defined ROBOT_TARGET_V2
 	if (ledState == OFF)
 		LFC_PORT->PIO_SODR |= LFC;	//Turn LEDs off
 	if (ledState == ON)
 		LFC_PORT->PIO_CODR |= LFC;	//Turn LEDs on
-#endif
 }
 
 /*
@@ -114,7 +109,6 @@ void lfLedState(uint8_t ledState)
 */
 uint8_t lfLineDetected(uint8_t lfSensor)
 {
-#if defined ROBOT_TARGET_V2
 	uint16_t sensorData = 0;
 	sensorData = adcRead(lfSensor);
 	
@@ -122,6 +116,5 @@ uint8_t lfLineDetected(uint8_t lfSensor)
 		return LINE;						
 	if (sensorData < LF_THRESHOLD_L)	//if below threshold then white floor detected.
 		return NO_LINE;
-#endif
 	return NO_CHANGE;
 }

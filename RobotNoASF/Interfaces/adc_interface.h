@@ -14,6 +14,7 @@
 * Functions:
 * void adcSingleConvInit(void)
 * uint16_t adcRead(uint8_t channel)
+* uint16_t adcBatteryVoltage(void)
 *
 */
 
@@ -32,8 +33,6 @@
 #define adcData					(REG_ADC_LCDR)					//Last sampled ADC value
 #define adcDataReady			(REG_ADC_ISR & ADC_ISR_DRDY)	//ADC conversion complete
 //	ADC channel defines
-//	It appears that the line follow sensors aren't connected to ADC channels on the V1, and that the
-//	IR leds are always on.
 //		Line follower ADC channels version 2 robot
 #define LF0_ADC_CH			13	// Far left
 #define LF1_ADC_CH			15	// Center left
@@ -66,6 +65,15 @@
 #define ADC_VOLTAGE_REF		3300	//Reference voltage (mV) used by ADC. Must be changed if 
 									//reference voltage is changed. Will be used for system wide ADC
 									//voltage conversions.
+
+//Misc
+//	ADC to battery voltage conversion factor. The 1.515 is derived by dividing measured battery
+//	voltage by the voltage measured at BV on the top board. The voltage at BV is scaled down from
+//	the battery voltage by a voltage divider formed by R54 and R55 on the top board to be within
+//	range of the ADVREF (0V - 3.396V). This is giving an accurate battery voltage reading on the
+//	red robot at the time of writing 02/08/17
+#define ADC_BATTVOL_CONV	1.515*ADC_VOLTAGE_REF/1023.0
+
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*
 * Function:
@@ -97,5 +105,20 @@ void adcSingleConvInit(void);
 *
 */
 uint16_t adcRead(uint8_t channel);
+
+/*
+* Function:
+* float adcBatteryVoltage(void)
+*
+* Returns current battery voltage
+*
+* Inputs:
+* none
+*
+* Returns:
+* Returns a integer value of the current battery voltage in mV.
+*
+*/
+uint16_t adcBatteryVoltage(void);
 
 #endif /* ADC_INTERFACE_H_ */

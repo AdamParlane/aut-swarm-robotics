@@ -62,7 +62,8 @@ void uart3Init(void)
 	|=	UART_MR_CHMODE_NORMAL 
 	|	UART_MR_PAR_NO;				//set as no parity, normal mode
 	REG_UART3_BRGR
-	=	651;						//Set Baud rate for 9600 from a 100MHZ clock
+	//=	651;						//Set Baud rate for 9600 from a 100MHZ clock
+	=	27;							//Baud 230400
 	REG_UART3_CR
 	|=	UART_CR_RSTRX
 	|	UART_CR_RSTTX
@@ -156,60 +157,62 @@ void UART3_Handler(void)
 			switch(receiveState)
 			{
 				case START:
-				if(temp == FRAME_DELIMITER)
-				{
-					//reset our book-keeping variables and updates the receive state
-					length = 0;
-					index = 0;
-					check = 0;
-					receiveState = LENGTH_MSB;
-				}
-				break;
+					if(temp == FRAME_DELIMITER)
+					{
+						//reset our book-keeping variables and updates the receive state
+						length = 0;
+						index = 0;
+						check = 0;
+						receiveState = LENGTH_MSB;
+					}
+					break;
 
 				case LENGTH_MSB:
-				//Calculates the length using the first length byte and updates the receive state
-				length = temp*256;
-				receiveState = LENGTH_LSB;
-				break;
+					//Calculates the length using the first length byte and updates the receive 
+					//state
+					length = temp*256;
+					receiveState = LENGTH_LSB;
+					break;
 
 				case LENGTH_LSB:
-				//Calculates the length using the second length byte and updates the receive state
-				length =+ temp;
-				receiveState = FRAME_TYPE;
-				break;
+					//Calculates the length using the second length byte and updates the receive 
+					//state
+					length =+ temp;
+					receiveState = FRAME_TYPE;
+					break;
 
 				case FRAME_TYPE:
-				frame_type = temp;			//Receives and stores the Frame type
-				check += temp;				//Calculates the checksum over the received byte
-				index++;					//Updates the number of received bytes that count
-											//towards the XBee frame length
-				frame_start_index = FrameBufferIn;//Stores the location of the Frame Data in the
-											//FrameBuffer
-				receiveState = DATA;		//Updates the receive state
-				break;
+					frame_type = temp;			//Receives and stores the Frame type
+					check += temp;				//Calculates the checksum over the received byte
+					index++;					//Updates the number of received bytes that count
+												//towards the XBee frame length
+					frame_start_index = FrameBufferIn;//Stores the location of the Frame Data in the
+												//FrameBuffer
+					receiveState = DATA;		//Updates the receive state
+					break;
 
 				case DATA:
-				xbeeFrameBufferPut(temp);	//Stores the Received data into the FrameBuffer
-				check += temp;				//Calculates the checksum over the received byte
-				index++;					//Updates the number of received bytes that count 
-											//towards the XBee frame length
+					xbeeFrameBufferPut(temp);	//Stores the Received data into the FrameBuffer
+					check += temp;				//Calculates the checksum over the received byte
+					index++;					//Updates the number of received bytes that count 
+												//towards the XBee frame length
 
-				if(index == length)			//Checks if we have received all the data and if we have
+					if(index == length)		//Checks if we have received all the data and if we have
 											//updates the receive state
-				{
-					receiveState = CHECKSUM;
-				}
+					{
+						receiveState = CHECKSUM;
+					}
 				
-				break;
+					break;
 				
 				case CHECKSUM:
-				check += temp;				//Calculates the checksum over the received byte
-				check &= 0xFF;				//Final Step of checksum calculation for XBee Frame
-				if(check == 0xFF)			//Verifies the calculated checksum value
-					//Stores Frame info in buffer
-					xbeeFrameBufferInfoPut(frame_start_index, frame_type, index -1); 
-				receiveState = START;		//Resets receive state d
-				break;
+					check += temp;				//Calculates the checksum over the received byte
+					check &= 0xFF;				//Final Step of checksum calculation for XBee Frame
+					if(check == 0xFF)			//Verifies the calculated checksum value
+						//Stores Frame info in buffer
+						xbeeFrameBufferInfoPut(frame_start_index, frame_type, index -1); 
+					receiveState = START;		//Resets receive state d
+					break;
 			}
 		}
 	}
