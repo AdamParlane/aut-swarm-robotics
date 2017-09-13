@@ -28,7 +28,6 @@ extern struct Position robotPosition;	//Passed to docking functions and test fun
 extern struct MessageInfo message;		//Incoming message structure
 
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
-uint8_t cfChargeCycleHandler(void);
 
 /*
 * Function:
@@ -93,8 +92,11 @@ int main(void)
 {
 	robotSetup(); //Set up the system and peripherals
 	battVoltage = adcBatteryVoltage();	//Add to your watch to keep an eye on the battery
-	mainRobotState = CHARGING; //start system at IDLE
+	mainRobotState = IDLE; //start system at IDLE
+	mainRobotStatePrev = IDLE;
 	uint8_t chargeCycleReturn = 0;
+	uint8_t dockingReturn = 0;
+	float lineHeading = 0;
 
 	while(1)
 	{
@@ -113,21 +115,21 @@ int main(void)
 			
 			case DOCKING:
 			//if battery low or manual docking command sent from PC
-				pioLedNumber(4);
-				if(!dfDockRobot(&robotPosition))	//Execute docking procedure state machine
+				dockingReturn = dfDockRobot(&robotPosition);
+				if(!dockingReturn)	//Execute docking procedure state machine
 					mainRobotState = CHARGING;		//If finished docking, switch to charging
+				else if(dockingReturn == 7)
+					mainRobotState = IDLE;			//If charger connection failed
 				break;
 			
 			case LINE_FOLLOW:
-    		pioLedNumber(5);
 			//Entered when line follow command received from PC
-				if(!dfFollowLine(35, &robotPosition))//Line follower will return 0 when complete
+				if(!dfFollowLine(35, &lineHeading, &robotPosition))//Line follower will return 0 when complete
 					mainRobotState = IDLE;
 				break;
 					
 			case LIGHT_FOLLOW:
 			//Entered when light follow command received from PC
-				pioLedNumber(6);
 				mfTrackLight(&robotPosition);
 				break;
 				
@@ -136,9 +138,9 @@ int main(void)
 				break;
 			
 			case CHARGING:
-				chargeCycleReturn = cfChargeCycleHandler();
+				chargeCycleReturn = cfChargeCycleHandler(&robotPosition);
 				if(chargeCycleReturn > 0xEF)
-					mainRobotState = IDLE;	//Charging fault occurred
+					mainRobotState = IDLE;					//Charging fault occurred
 				if(!chargeCycleReturn)
 					mainRobotState = mainRobotStatePrev;	//Charge finished successfully
 				break;
@@ -150,51 +152,10 @@ int main(void)
 				break;
 		}
 		
-		//Test condition
-		//if(fcState() == FC_POWER_CONNECTED && mainRobotState != CHARGING)
-		//	mainRobotState = CHARGING;
-		
-		xbeeGetNew(); //Checks for and interprets new communications
+		xbeeGetNew();			//Checks for and interprets new communications
 		nfRetrieveNavData();	//checks if there is new navigation data and updates robotPosition
 		//check to see if obstacle avoidance is enabled AND the robot is moving
 		if(obstacleAvoidanceEnabledFlag && movingFlag)
 			dodgeObstacle(&robotPosition); //avoid obstacles using proximity sensors
 	}
-}
-
-uint8_t cfChargeCycleHandler(void)
-{
-	enum {FINISHED, CHECK_POWER, CHARGING, FAULT};
-	static uint8_t chargingState = CHECK_POWER;
-	fcWatchdogReset();					//Reset watchdog timer on fc chip
-	uint8_t chipState = 0;
-	chipState = fcState();
-	
-	switch(chargingState)
-	{
-		case CHECK_POWER:
-			if(chipState == FC_BATTERY_CHARGING)
-				chargingState = CHARGING;
-			break;
-			
-		case CHARGING:
-			if(chipState == FC_BATTERY_CHARGED)
-			{
-				chargingState = FINISHED;
-			}
-			if((chipState & 0xF0) == 0xF0)		//If fault (Upper nibble = F)
-				chargingState = FAULT;
-			break;
-			
-		case FAULT:
-			fcEnableCharging(0);				//Stop charging
-			chargingState = FINISHED;
-			return 0xFF;						//Indicate that a fault occurred
-			
-		case FINISHED:
-			chargingState = CHECK_POWER;
-			break;
-	}
-	
-	return chargingState;
 }

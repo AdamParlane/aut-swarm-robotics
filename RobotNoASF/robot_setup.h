@@ -27,7 +27,7 @@
 
 //TODO: change something so that this doesn't have to be first
 //Or maybe all defines should be before includes
-enum ROBOT_STATES
+enum MAIN_STATES
 //main loop functionality
 {
 	TEST,
@@ -113,6 +113,7 @@ struct ColourSensorData
 #include "Functions/motion_functions.h"
 #include "Functions/navigation_functions.h"
 #include "Functions/light_colour_functions.h"
+#include "Functions/charging_functions.h"
 
 //////////////[Defines]/////////////////////////////////////////////////////////////////////////////
 //Universal Asynchronous Receiver/Transmitter

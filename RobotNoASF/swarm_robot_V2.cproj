@@ -186,6 +186,12 @@
     </ToolchainSettings>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="Functions\charging_functions.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="Functions\charging_functions.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="Functions\docking_functions.c">
       <SubType>compile</SubType>
     </Compile>

@@ -58,27 +58,27 @@ uint8_t dfDockRobot(struct Position *imuData)
 		FINISHED, START, FACE_BRIGHTEST, MOVE_FORWARD, RESCAN_BRIGHTEST, FOLLOW_LINE, CHRG_CONNECT,
 		CHRG_NOT_FOUND
 	};
-	static uint8_t dockingState = START;
+	static uint8_t dockingState = START;//State machine state
 	static float bHeading = 0;			//Brightest Heading
 	static float lineHeading = 0.0;		//Heading of line
-	static uint8_t sweepPosition = 0;
-	uint8_t fcChipState = 0;
+	uint8_t fcChipState = 0;			//Status of the fast charge chip
 	
 	switch(dockingState)
 	{
+		//Begin by scanning for the brightest light source
 		case START:
-			pioLedNumber(0);
 			if(!dfScanBrightestLightSource(&bHeading, 359, imuData))
 				dockingState = FACE_BRIGHTEST;
 			break;
 		
+		//Turn to face brightest light source seen
 		case FACE_BRIGHTEST:
 			if(!mfRotateToHeading(bHeading, imuData))
 				dockingState = MOVE_FORWARD;
 			break;
 		
+		//Move towards brightestes light source
 		case MOVE_FORWARD:
-			//pioLedNumber(2);
 			//mfMoveToHeading(bHeading, 40, imuData);
 			mfTrackLight(imuData);
 			if(!fdelay_ms(3700))			//After 3.7 seconds, look for LEDs again
@@ -93,44 +93,34 @@ uint8_t dfDockRobot(struct Position *imuData)
 			}
 			break;
 		
+		//Check again for brightest light source by scanning a 180 degree arc left to right to see
+		//if we are still on track to find brightest light source
 		case RESCAN_BRIGHTEST:
-			//pioLedNumber(3);
 			//Only look in front, because we should still be roughly in the right direction
 			if(!dfScanBrightestLightSource(&bHeading, 180, imuData))
 				dockingState = FACE_BRIGHTEST;
 			break;
 		
+		//Follow the line until an obstacle is encountered
 		case FOLLOW_LINE:
-			pioLedNumber(1);
 			if(!dfFollowLine(35, &lineHeading, imuData))
 				dockingState = CHRG_CONNECT;//We have followed the line until the forward
-											//obstacle sensor has reached full value. Now we creep
+											//obstacle sensor has reached full value. Now we charge
 											//forward to mate with the charging contacts
 			break;
 		
+		//Drive straight ahead until a connection with the charger is connected. When connection
+		//is established, exit with a FINISH state. Still need to include a timeout, incase the
+		//in front of the robot isn't the charger
 		case CHRG_CONNECT:
-			pioLedNumber(2);
-			fcChipState = fcState();
+			fcChipState = fcState();	//Get status of fast charge chip
+			//If power connected to fc chip
 			if(fcChipState == FC_STATUS_BF_STAT_INRDY || fcChipState == FC_STATUS_BF_STAT_CHRGIN)
 			{
-				dockingState = FINISHED;
-				stopRobot();
-			}
-			else
-			{
-				if(sweepPosition)
-				{
-					mfMoveToHeading(lineHeading + 8, 45, imuData);
-					sweepPosition = 0;
-				} else {
-					mfMoveToHeading(lineHeading - 8, 45, imuData);	
-					sweepPosition = 1;
-				}
-				//if(!fdelay_ms(3000))
-				//{
-					//stopRobot();
-					//dockingState = CHRG_NOT_FOUND;
-				//}			
+				dockingState = FINISHED;	//Docking is complete
+				stopRobot();				//Stop moving
+			} else {
+				mfMoveToHeading(lineHeading, 45, imuData);
 			}
 			break;
 		
@@ -138,12 +128,10 @@ uint8_t dfDockRobot(struct Position *imuData)
 		//return value that this state invokes will prompt the caller to avoid an obstacle, or
 		//try docking again.
 		case CHRG_NOT_FOUND:
-			pioLedNumber(3);
 			dockingState = START;
 			break;
 		
 		case FINISHED:
-			pioLedNumber(7);
 			dockingState = START;
 			break;
 	}
@@ -328,7 +316,6 @@ uint8_t dfFollowLine(uint8_t speed, float *lineHeading, struct Position *imuData
 		//Once that is the case, then we must be over the line properly, so move to the FOLLOW
 		//state.
 		case FIRST_CONTACT:
-			//pioLedNumber(1);
 			lineJustFound = 1;
 			if(!lineDirection)
 				lineFollowerState = FOLLOW;	//If sufficiently over line, begin following
@@ -343,7 +330,6 @@ uint8_t dfFollowLine(uint8_t speed, float *lineHeading, struct Position *imuData
 		//detected as being directly underneath the robot, then that heading is recorded and the
 		//function switches to the FOLLOW state.
 		case ALIGN:
-			//pioLedNumber(2);
 			if(lineDirection)
 			{
 				if(lineDirection < 0)
@@ -355,7 +341,7 @@ uint8_t dfFollowLine(uint8_t speed, float *lineHeading, struct Position *imuData
 			{
 				if(lineJustFound)								//If first time following this line
 				{
-					*lineHeading = imuData->imuYaw;						//Set initial line heading
+					*lineHeading = imuData->imuYaw;				//Set initial line heading
 					lineJustFound = 0;
 				}
 				else
@@ -370,10 +356,9 @@ uint8_t dfFollowLine(uint8_t speed, float *lineHeading, struct Position *imuData
 		//sensor has been triggered, then slow the robot down proportional to the value of the
 		//sensor, and if maximum value is reached on the proximity sensor, then stop line following.
 		case FOLLOW:
-			//pioLedNumber(3);
 			if(abs(lineDirection) < 2)
 				//Speed is inversely proportional to the reading from the forward prox sensor
-				mfMoveToHeading(*lineHeading, speed - (forwardProxSens*speed/1023) + 5, imuData);
+				mfMoveToHeading(*lineHeading, speed - (forwardProxSens*speed/1023) + 10, imuData);
 			else
 				lineFollowerState = ALIGN;
 			if(forwardProxSens >= PS_CLOSEST)	//If forward prox is at maximum, then we've 
@@ -383,7 +368,6 @@ uint8_t dfFollowLine(uint8_t speed, float *lineHeading, struct Position *imuData
 		
 		//If finished, reset the state machine for next time and return a 0.
 		case FINISH:
-			//pioLedNumber(7);
 			lineFollowerState = START;
 		break;
 	}
