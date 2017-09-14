@@ -43,6 +43,7 @@ union float_bytes {
 	unsigned char bytes[sizeof(float)];
 }data;
 
+struct MessageInfo;
 
 /*
 * Function: uint8_t testManager(struct MessageInfo message, struct transmitDataStructure *transmit,
@@ -62,9 +63,9 @@ union float_bytes {
 * ***Streaming Interval = 100ms***
 *
 */
-uint8_t getTestData(struct MessageInfo message, struct transmitDataStructure *transmit, RobotGlobalStructure *sys);
+uint8_t getTestData(struct MessageInfo xbMessage, struct transmitDataStructure *transmit, RobotGlobalStructure *sys);
 
-void testManager(struct MessageInfo message, RobotGlobalStructure *sys);
+void testManager(struct MessageInfo xbMessage, RobotGlobalStructure *sys);
 
 
 

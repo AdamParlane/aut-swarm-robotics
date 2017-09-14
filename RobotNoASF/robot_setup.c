@@ -43,7 +43,51 @@
 extern uint32_t systemTimestamp;	//Required by waitForFlag()
 
 //////////////[Global variables]////////////////////////////////////////////////////////////////////
-//Global Data Structure Initialisation
+/*Global Data Structure Initialisation
+Current Layout Tree:
+--------------------
++sys
+	+flags
+		+xbeeNewData
+		+imuCheckFifo
+		+obaMoving
+		+obaEnabled
+	+states
+		+mainf
+		+mainfPrev
+		+docking
+		+chargeCycle
+		+followLine
+		+scanBrightest
+		+moveHeadingDistance
+	+pos
+		+Optical
+			+dx
+			+dy
+			+heading
+			+speed
+		+IMU
+			+qw
+			+qx
+			+qy
+			+qz
+			+accelX
+			+accelY
+			+gyroX
+			+gyroY
+			+gyroZ
+			+pitch
+			+roll
+			+yaw
+			+yawOffset
+			+timeStamp		//Might move these up to pos
+			+deltaTime		//
+		+x
+		+y
+		+heading
+		+targetHeading
+		+targetSpeed
+*/
 RobotGlobalStructure sys =
 {
 	//System flags

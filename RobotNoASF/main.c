@@ -157,7 +157,15 @@ int main(void)
 				if(!chargeCycleReturn)
 					sys.states.mainf = sys.states.mainfPrev;	//Charge finished successfully
 				break;
-
+				
+			case M_TEST_ALL:
+			//Something
+				break;
+				
+			case M_OBSTACLE_AVOIDANCE:
+			//OA stuff
+				break;
+				
 			case M_IDLE:					
 				mfStopRobot(&sys);
 				if(!fdelay_ms(1000))					//Blink LED 3 in Idle mode

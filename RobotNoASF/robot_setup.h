@@ -26,8 +26,8 @@
 #define ROBOTDEFINES_H_
 
 //////////////[Includes]////////////////////////////////////////////////////////////////////////////
-#include "Interfaces/spi.h"
-#include "sam.h"
+#include "Interfaces/spi.h"		//Fixes SPI issue
+#include "sam.h"				//Microcontroller specific defines
 #include <stdint.h>				//Gives standard integer type definitions (ie uint8_t)
 #include <stdbool.h>			//Gives boolean variable types
 
@@ -98,7 +98,7 @@ typedef enum MTHByDistanceStates
 	MHD_STOP
 } MTHByDistanceStates;
 
-////////////////[Structure Definitions]/////////////////////////////////////////////////////////////
+////////////////[Type Definitions]//////////////////////////////////////////////////////////////////
 //Stores optical sensor raw and derived data
 typedef struct OpticalSensor
 {
