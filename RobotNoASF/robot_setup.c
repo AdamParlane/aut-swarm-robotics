@@ -25,6 +25,45 @@
 
 //////////////[Global variables]////////////////////////////////////////////////////////////////////
 extern uint32_t systemTimestamp;	//Required by waitForFlag()
+//////////////[Global variables]////////////////////////////////////////////////////////////////////
+//used for test function calling
+RobotGlobalStructure sys =
+{
+	.flags =
+	{
+		.xbeeNewData = 0,
+		.imuCheckFifo = 0,
+		.obaMoving = 0
+	},
+	
+	.states =
+	{
+		.mainf = M_IDLE,
+		.mainfPrev = M_IDLE,
+		.docking = DS_START,
+		.chargeCycle = CCS_CHECK_POWER,
+		.followLine = FLS_FIRST_CONTACT,
+		.scanBrightest = SBS_FUNCTION_INIT,
+		.moveHeadingDistance = MHD_START
+	},
+	
+	.pos =
+	{
+		.x = 0,					//Resets robot position
+		.y = 0,					//Resets robot position
+		
+		.IMU =
+		{
+			.yawOffset = 180	//Ensures that whatever way the robot is facing when powered
+		},
+		
+		//on is 0 degrees heading.
+		.targetHeading = 0,		//Default heading is 0 degrees
+		.targetSpeed = 50		//Default speed is 50%
+	}
+};
+
+volatile char streamDelayCounter, streamIntervalFlag;	//TODO:What are these?
 //extern signed int aim;
 
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
@@ -75,7 +114,6 @@ void robotSetup(void)
 	
 	delay_ms(2500);						//Stops robot running away while programming
 	srand(streamDelayCounter);		//Seed rand() to give unique random numbers
-	systemFlags.obaMoving = 0; //On boot robot isnt moving
 	return;
 }
 /*

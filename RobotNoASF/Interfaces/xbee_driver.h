@@ -16,7 +16,7 @@
 * void xbeeInit(void)
 * void xbeeConvertData(struct MessageInfo message, uint8_t *data)
 * void xbeeGetNew()
-* void xbeeInterpretSwarmMessage(struct MessageInfo message)
+* void xbeeInterpretSwarmMessage(struct MessageInfo message, RobotGlobalStructure *sys)
 * void xbeeInterpretAPIFrame(struct FrameInfo frame)
 * void xbeeSendAPITransmitRequest(uint64_t destination_64, uint16_t destination_16,
 *                                 uint8_t *data, uint8_t  bytes)
@@ -171,7 +171,7 @@ void xbeeGetNew();
 
 /*
 * Function:
-* void xbeeInterpretSwarmMessage(struct MessageInfo message)
+* void xbeeInterpretSwarmMessage(struct MessageInfo message, RobotGlobalStructure *sys)
 *
 * Interprets and acts on a received swarm messages
 *
@@ -186,7 +186,7 @@ void xbeeGetNew();
 * TODO: Mansel implementation description
 *
 */
-void xbeeInterpretSwarmMessage(struct MessageInfo message);
+void xbeeInterpretSwarmMessage(struct MessageInfo message, RobotGlobalStructure *sys);
 
 /*
 * Function:

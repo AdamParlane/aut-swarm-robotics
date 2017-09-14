@@ -16,7 +16,7 @@
 * void xbeeInit(void)
 * void xbeeConvertData(struct MessageInfo message, uint8_t *data)
 * void xbeeGetNew()
-* void xbeeInterpretSwarmMessage(struct MessageInfo message)
+* void xbeeInterpretSwarmMessage(struct MessageInfo message, RobotGlobalStructure *sys)
 * void xbeeInterpretAPIFrame(struct FrameInfo frame)
 * void xbeeSendAPITransmitRequest(uint64_t destination_64, uint16_t destination_16,
 *                                 uint8_t *data, uint8_t  bytes)
@@ -161,19 +161,19 @@ void xbeeConvertData(struct MessageInfo message, uint8_t *data)
 * I think that this should be in a higher level function file.
 *
 */
-void xbeeGetNew()
+void xbeeGetNew(RobotGlobalStructure *sys)
 {
 	if(xbeeFrameBufferInfoGetFull(&frame) == 0)	//Check for a received XBee Message
 	{
 		xbeeInterpretAPIFrame(frame); //Interpret the received XBee Message
 		if(xbeeMessageBufferInfoGetFull(&message) == 0) //Check for a message from the swarm
-		xbeeInterpretSwarmMessage(message);//Interpret the message
+			xbeeInterpretSwarmMessage(message, sys);//Interpret the message
 	}
 }
 
 /*
 * Function:
-* void xbeeInterpretSwarmMessage(struct MessageInfo message)
+* void xbeeInterpretSwarmMessage(struct MessageInfo message, RobotGlobalStructure *sys)
 *
 * Interprets and acts on a received swarm messages
 *
@@ -192,24 +192,24 @@ void xbeeGetNew()
 * numbers.
 *
 */
-void xbeeInterpretSwarmMessage(struct MessageInfo message)
+void xbeeInterpretSwarmMessage(struct MessageInfo message, RobotGlobalStructure *sys)
 {
 	//handles the incoming commands and sets the appropriate states / flags calls functions
-	systemFlags.xbeeNewData = 1;
+	sys->flags.xbeeNewData = 1;
 	if(message.command >= 0xE0) //test command range 0xE0-0xEF
-		systemStates.mains = TEST;
+		sys->states.mainf = M_TEST;
 	else if (message.command == 0xD0)
 	{
-		systemFlags.obaMoving = 0;
+		sys->flags.obaMoving = 0;
 		stopRobot();
 	}
 	else if(message.command >= 0xD1 && message.command <= 0xD3) //Manual command range 0xD1-0xD3
-		systemStates.mains = MANUAL;
+		sys->states.mainf = M_MANUAL;
 	else if (message.command == 0xD4)
 		//move robot randomly
 		mfRandomMovementGenerator();		
 	else if (message.command == 0xD7)
-		systemStates.mains = DOCKING;
+		sys->states.mainf = M_DOCKING;
 		//0xD6 and D5 are also reserved for docking 
 		//at a later date for different methods if required
 	else if (message.command == 0xD8)
@@ -217,9 +217,9 @@ void xbeeInterpretSwarmMessage(struct MessageInfo message)
 	else if (message.command == 0xD9)
 		obstacleAvoidanceEnabledFlag = 1;
 	else if (message.command == 0xDA)
-		systemStates.mains = LIGHT_FOLLOW;
+		sys->states.mainf = M_LIGHT_FOLLOW;
 	else if (message.command == 0xDB)
-		systemStates.mains = LINE_FOLLOW;
+		sys->states.mainf = M_LINE_FOLLOW;
 }
 
 /*

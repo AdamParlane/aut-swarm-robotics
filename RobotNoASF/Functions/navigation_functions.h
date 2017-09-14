@@ -13,8 +13,8 @@
 * Relevant reference materials or datasheets if applicable
 *
 * Functions:
-* uint8_t nfRetrieveNavData(void)
-* void nfGetEulerAngles(struct Position *imuData)
+* uint8_t nfRetrieveNavData(RobotGlobalStructure *sys)
+* void nfGetEulerAngles(RobotGlobalStructure *sys)
 * float nfWrapAngle(float angleDeg)
 *
 */
@@ -31,7 +31,7 @@
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*
 * Function:
-* uint8_t nfRetrieveNavData(void)
+* uint8_t nfRetrieveNavData(RobotGlobalStructure *sys)
 *
 * Checks if the IMU's FIFO interrupt flag has been set, and if so, will read data from the IMU's
 * FIFO buffer, convert the retrieved quaternions to Euler angles and store them and retrieve data
@@ -41,19 +41,19 @@
 * none
 *
 * Returns:
-* 0 if data was retrieved (systemFlags.imuCheckFifo flag was set), otherwise returns 1.
+* 0 if data was retrieved (sys.flags.imuCheckFifo flag was set), otherwise returns 1.
 *
 * Implementation:
-* imuReadFifo() reads the data from the IMU's FIFO buffer and stores the data in robotPosition.
-* nfGetEulerAngles() takes the quaternion data stored in robotPosition and converts it to useful
-* Euler angles (yaw, pitch and roll) and stores it back in robotPosition.
-* getMouseXY() retrieves latest data from the mouse sensor and stored it in robotPosition.
+* imuReadFifo() reads the data from the IMU's FIFO buffer and stores the data in sys->pos..
+* nfGetEulerAngles() takes the quaternion data stored in sys->pos. and converts it to useful
+* Euler angles (yaw, pitch and roll) and stores it back in sys->pos..
+* getMouseXY() retrieves latest data from the mouse sensor and stored it in sys->pos..
 *
 */
-uint8_t nfRetrieveNavData(void);
+uint8_t nfRetrieveNavData(RobotGlobalStructure *sys);
 
 /*
-* Function: void nfGetEulerAngles(struct Position *imuData)
+* Function: void nfGetEulerAngles(RobotGlobalStructure *sys)
 *
 * Convert Quaternion numbers from the IMU to Euler rotational angles
 *
@@ -67,7 +67,7 @@ uint8_t nfRetrieveNavData(void);
 * roll.
 *
 */
-void nfGetEulerAngles(struct Position *imuData);
+void nfGetEulerAngles(RobotGlobalStructure *sys);
 
 /*
 * Function:

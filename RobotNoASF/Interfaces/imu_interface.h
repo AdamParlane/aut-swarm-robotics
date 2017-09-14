@@ -26,9 +26,9 @@
 * unsigned char imuDmpStart(void)
 * unsigned short invOrientationMatrixToScalar(const signed char *mtx)
 * unsigned short invRow2Scale(const signed char *row)
-* uint8_t imuReadFifo(struct Position *imuData)
+* uint8_t imuReadFifo(RobotGlobalStructure *sys)
 * uint8_t imuCommTest(void)
-* void imuApplyYawCorrection(float correctHeading, struct Position *imuData)
+* void imuApplyYawCorrection(float correctHeading, RobotGlobalStructure *sys)
 *
 */
 
@@ -179,14 +179,14 @@ unsigned short invRow2Scale(const signed char *row);
 * Will read data from the IMU's FIFO buffer and store data in the given Position structure
 *
 * Inputs:
-* struct Position *imuData:
-*   Pointer to the global robotPosition structure. This is where the read data will be stored
+* RobotGlobalStructure *sys:
+*   Pointer to the global sys->pos. structure. This is where the read data will be stored
 *
 * Returns:
 * 0 on success; non-zero otherwise
 *
 */
-uint8_t imuReadFifo(struct Position *imuData);
+uint8_t imuReadFifo(RobotGlobalStructure *sys);
 
 /*
 * Function:
@@ -205,20 +205,20 @@ uint8_t imuCommTest(void);
 
 /*
 * Function:
-* void imuApplyYawCorrection(float correctHeading, struct Position *imuData)
+* void imuApplyYawCorrection(float correctHeading, RobotGlobalStructure *sys)
 *
 * Takes a 'correct' heading and uses it to modify the onboard heading to match.
 *
 * Inputs:
 * float correctHeading
 *   Correct heading of the robot (from webcam) (between -180 and 180)
-* struct Position *imuData
-*   Pointer to the robotPosition structure
+* RobotGlobalStructure *sys
+*   Pointer to the sys->pos. structure
 *
 * Returns:
 * none
 *
 */
-void imuApplyYawCorrection(float correctHeading, struct Position *imuData);
+void imuApplyYawCorrection(float correctHeading, RobotGlobalStructure *sys);
 
 #endif /* IMU_INTERFACE_H_ */

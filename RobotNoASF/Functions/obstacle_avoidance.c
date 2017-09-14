@@ -14,7 +14,7 @@
 *
 * Functions:
 * uint8_t scanProximity(void)
-* void dodgeObstacle(struct Position *robotPosition)
+* void dodgeObstacle(RobotGlobalStructure *sys)
 *
 */
 
@@ -54,7 +54,7 @@ void scanProximity(void)
 
 /*
 * Function:
-* void dodgeObstacle(struct Position *robotPosition)
+* void dodgeObstacle(RobotGlobalStructure *sys)
 * Will make the robot avoid obstacles while (hopefully remain on the current track
 *
 * Inputs:
@@ -71,7 +71,7 @@ void scanProximity(void)
 * [WIP]
 *
 */
-void dodgeObstacle(struct Position *robotPosition)
+void dodgeObstacle(RobotGlobalStructure *sys)
 {
 	scanProximity();	//update proximity readings
 	uint16_t proxRange = 0;
@@ -86,26 +86,26 @@ void dodgeObstacle(struct Position *robotPosition)
 			indexLeft = 0;
 		if(indexRight > 5)
 			indexRight = 5;
-		if((robotPosition -> targetHeading > (proxRange - 30) && 
-		(robotPosition -> targetHeading < (proxRange + 30))) || ((index == 0) && 
-		(robotPosition -> targetHeading > 330) && (robotPosition -> targetHeading < 30)))
+		if((sys->pos.targetHeading > (proxRange - 30) && 
+		(sys->pos.targetHeading < (proxRange + 30))) || ((index == 0) && 
+		(sys->pos.targetHeading > 330) && (sys->pos.targetHeading < 30)))
 		{
 			if((proximity[index] > OBSTACLE_THRESHOLD) || (proximity[indexLeft] > 1000) || (proximity[indexRight] > 1000))
 			{
 				if(proximity[indexLeft] > proximity[indexRight])
 				{
-					robotPosition -> targetHeading +=90;
-					moveRobot(robotPosition -> targetHeading, robotPosition -> targetSpeed);//moveLeft
+					sys->pos.targetHeading +=90;
+					moveRobot(sys->pos.targetHeading, sys->pos.targetSpeed);//moveLeft
 					
 				}
 				else if (proximity[indexLeft] < proximity[indexRight])
 				{
-					robotPosition -> targetHeading -= 90;
-					moveRobot(robotPosition -> targetHeading, robotPosition -> targetSpeed);//move right
+					sys->pos.targetHeading -= 90;
+					moveRobot(sys->pos.targetHeading, sys->pos.targetSpeed);//move right
 				}
 			}
 			else 
-				moveRobot(robotPosition -> targetHeading, robotPosition -> targetSpeed);
+				moveRobot(sys->pos.targetHeading, sys->pos.targetSpeed);
 		}	
 	}		
 }

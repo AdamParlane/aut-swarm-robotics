@@ -27,104 +27,116 @@
 
 //TODO: change something so that this doesn't have to be first
 //Or maybe all defines should be before includes
-enum MainStates
+typedef enum MainStates
 //main loop functionality
 {
-	TEST,
-	TEST_ALL,
-	MANUAL,
-	FORMATION,
-	DOCKING,
-	OBSTACLE_AVOIDANCE,
-	IDLE, CHARGING,
-	LINE_FOLLOW,
-	LIGHT_FOLLOW
-};
+	M_TEST,
+	M_TEST_ALL,
+	M_MANUAL,
+	M_FORMATION,
+	M_DOCKING,
+	M_OBSTACLE_AVOIDANCE,
+	M_IDLE, 
+	M_CHARGING,
+	M_LINE_FOLLOW,
+	M_LIGHT_FOLLOW
+} MainStates;
 
-enum DockingStates
+typedef enum DockingStates
 {
-	FINISHED, 
-	START, 
-	FACE_BRIGHTEST, 
-	MOVE_FORWARD, 
-	RESCAN_BRIGHTEST, 
-	FOLLOW_LINE, 
-	CHRG_CONNECT,
-	CHRG_NOT_FOUND		
-};
+	DS_FINISHED,
+	DS_START,
+	DS_FACE_BRIGHTEST,
+	DS_MOVE_FORWARD,
+	DS_RESCAN_BRIGHTEST,
+	DS_FOLLOW_LINE,
+	DS_CHRG_CONNECT,
+	DS_CHRG_NOT_FOUND
+} DockingStates;
 
-enum FollowLineStates
+typedef enum FollowLineStates
 {
-	START, 
-	FIRST_CONTACT, 
-	ALIGN, 
-	FOLLOW, 
-	FINISH
-};
+	FLS_START,
+	FLS_FIRST_CONTACT,
+	FLS_ALIGN,
+	FLS_FOLLOW,
+	FLS_FINISH
+} FollowLineStates;
 
-enum ScanBrightestLightSourceStates
+typedef enum ScanBrightestStates
 {
-	FUNCTION_INIT, 
-	GOTO_START_POSITION, 
-	SWEEP, 
-	END
-};
+	SBS_FUNCTION_INIT,
+	SBS_GOTO_START_POSITION,
+	SBS_SWEEP,
+	SBS_END
+} ScanBrightestStates;
 
-enum ChargeCycleHandlerStates 
+typedef enum ChargeCycleStates
 {
-	FINISHED, 
-	CHECK_POWER, 
-	CHARGING, 
-	FAULT, 
-	DISMOUNT, 
-	TURN_AWAY
-};
+	CCS_FINISHED,
+	CCS_CHECK_POWER,
+	CCS_CHARGING,
+	CCS_FAULT,
+	CCS_DISMOUNT,
+	CCS_TURN_AWAY
+} ChargeCycleStates;
 
-enum MoveToHeadingByDistanceStates
+typedef enum MTHByDistanceStates
 {
-	START, 
-	MOVING, 
-	STOP
-};
+	MHD_START,
+	MHD_MOVING,
+	MHD_STOP
+} MTHByDistanceStates;
 
-///////////////Type Definitions/////////////////////////////////////////////////////////////////////
-struct Position
+/////////////////Type Definitions/////////////////////////////////////////////////////////////////////
+typedef struct OpticalSensor
+{
+	float dx;		//Rate of change from optical sensor (X axis is left to right)
+	float dy;		//Rate of change from optical sensor (Y axis is fwd/bckwd)
+	float heading;		//Heading calculated from optical sensor
+	float speed;		//Magnitude calculated from optical sensor
+} OpticalSensor;
+
+typedef struct IMUSensor
+{
+	long qw;				//W component of the quaternion complex number returned by DMP
+	long qx;				//X component of the quaternion complex number returned by DMP
+	long qy;				//Y component of the quaternion complex number returned by DMP
+	long qz;				//Z component of the quaternion complex number returned by DMP
+	float accelX;		//Delta X Acceleration in ms^2
+	float accelY;		//Delta Y Acceleration in ms^2
+	float accelZ;		//Delta Z Acceleration in ms^2
+	float gyroX;			//Delta pitch in deg/s
+	float gyroY;			//Delta roll in	deg/s
+	float gyroZ;			//Delta yaw in deg/s (Delta heading)
+	float pitch;			//Absolute pitch from DMP (degrees)
+	float roll;			//Absolute roll from DMP (degrees)
+	float yaw;			//Absolute yaw (heading) from DMP (degrees)
+	float yawOffset;		//Used to offset heading value (when corrected by PC)
+	unsigned long timeStamp;//Time at which last IMU reading took place (ms)
+	unsigned short deltaTime;//Time between last IMU reading and IMU previous reading
+} IMUSensor;
+
+typedef struct Position
 //structure to store all the robot side navigation / positioning data
 //this will be written to by getMouseXY, nfGetEulerAngles, and another navigation function which
 //combines them. The structure will store the relevant info from both key sensors and fuse them in
 //an additional function (84bytes i think)
 {
-	float opticalDX;		//Rate of change from optical sensor (X axis is left to right)
-	float opticalDY;		//Rate of change from optical sensor (Y axis is fwd/bckwd)
-	float opticalX;
-	float opticalY;
-	float opticalHdg;		//Heading calculated from optical sensor
-	float opticalSpeed;		//Magnitude calculated from optical sensor
-	long imuQW;				//W component of the quaternion complex number returned by DMP
-	long imuQX;				//X component of the quaternion complex number returned by DMP
-	long imuQY;				//Y component of the quaternion complex number returned by DMP
-	long imuQZ;				//Z component of the quaternion complex number returned by DMP
-	float imuAccelX;		//Delta X Acceleration in ms^2
-	float imuAccelY;		//Delta Y Acceleration in ms^2
-	float imuAccelZ;		//Delta Z Acceleration in ms^2
-	float imuGyroX;			//Delta pitch in deg/s
-	float imuGyroY;			//Delta roll in	deg/s
-	float imuGyroZ;			//Delta yaw in deg/s (Delta heading)
-	float imuPitch;			//Absolute pitch from DMP (degrees)
-	float imuRoll;			//Absolute roll from DMP (degrees)
-	float imuYaw;			//Absolute yaw (heading) from DMP (degrees)
-	float imuYawOffset;		//Used to offset heading value (when corrected by PC)
-	unsigned long imuTimeStamp;//Time at which last IMU reading took place (ms)
-	unsigned short imuDeltaTime;//Time between last IMU reading and IMU previous reading
+
+	OpticalSensor Optical;
+	
+	IMUSensor IMU;
+	
 	float x;				//Absolute X position in arena
 	float y;				//Absolute Y position in arena
 	float heading;			//Direction of travel
 	signed int targetHeading;	//For obstacle avoidance, desired heading before an obstacel is 
 								//detected
 	char targetSpeed;	//For obstacle avoidance, desired speed
-};
+} Position;
 
-struct ColourSensorData
+typedef struct ColourSensorData
 //Stores colour sensor data, both raw and converted, for a single colour sensor
 {
 	unsigned short red;
@@ -134,38 +146,46 @@ struct ColourSensorData
 	unsigned short hue;
 	unsigned short saturation;
 	unsigned short value;
-};
+} ColourSensorData;
 
-struct SystemFlags
+typedef struct SystemFlags
 //Structure that will store all system flags for global use
 {
 	char xbeeNewData;	//New data from Xbee interface
 	char imuCheckFifo;	//IMU ext interrupt has been triggered
 	char obaMoving;		//Robot is in motion
-};
+} SystemFlags;
 
-struct SystemStates
-//Structure that will store the states of every state machine in the system
+typedef struct SystemStates
+//Structure that will store the state of every state machine in the system
 {
 	//Main function state machine state
-	enum MainStates mains;
-	enum MainStates mainsPrev;
+	MainStates mainf;
+	MainStates mainfPrev;
 	
 	//dfDockRobot() states
-	enum DockingStates docking;
+	DockingStates docking;
 	
 	//dfFollowLine() states
-	enum FollowLineStates followLine;
+	FollowLineStates followLine;
 	
 	//dfScanBrightestLightSource() states
-	enum ScanBrightestLightSourceStates scanBrightest;
+	ScanBrightestStates scanBrightest;
 	
 	//cfChargeCycleHandler() states
-	enum ChargeCycleHandlerStates chargeCycle;
+	ChargeCycleStates chargeCycle;
 	
 	//mfMoveToHeadingByDistance() states
-	enum MoveToHeadingByDistanceStates moveHeadingDistance;
-};
+	MTHByDistanceStates moveHeadingDistance;
+} SystemStates;
+
+typedef struct RobotGlobalStructure
+//Structure to combine all system globals
+{
+	SystemStates states;
+	SystemFlags flags;
+	Position pos;
+} RobotGlobalStructure;
 
 //////////////[Includes]////////////////////////////////////////////////////////////////////////////
 #include "Interfaces/spi.h"
@@ -198,26 +218,11 @@ struct SystemStates
 #define TXRDY (REG_UART3_SR & UART_SR_TXRDY)	//UART TX READY flag [SHOULD BE IN COMMUNICATIONS]
 
 //////////////[Global variables]////////////////////////////////////////////////////////////////////
-//used for test function calling
-struct SystemFlags systemFlags =
-{
-	.xbeeNewData = 0;
-	.imuCheckFifo = 0;
-	.obaMoving = 0;
-};
+//Global variables should be initialised in robot_setup.c, then an extern to them should be placed
+//here, otherwise we end up with mulitple definition errors.
 
-struct SystemStates systemStates =
-{
-	.mains = IDLE;
-	.mainsPrev = IDLE;
-	.docking = START;
-	.chargeCycle = CHECK_POWER;
-	.followLine = FIRST_CONTACT;
-	.scanBrightest = FUNCTION_INIT;
-	.moveHeadingDistance = START;	
-};
-
-volatile char streamDelayCounter, streamIntervalFlag;	//TODO:What are these?
+extern RobotGlobalStructure sys;
+extern volatile char streamDelayCounter, streamIntervalFlag;	//TODO:What are these?
 
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*

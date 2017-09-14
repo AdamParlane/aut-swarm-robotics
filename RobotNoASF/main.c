@@ -24,7 +24,7 @@
 
 //////////////[Global variables]////////////////////////////////////////////////////////////////////
 uint16_t battVoltage;					//Stores battery voltage on start up
-extern struct Position robotPosition;	//Passed to docking functions and test functions
+extern RobotGlobalStructure sys;						//System data structure
 extern struct MessageInfo message;		//Incoming message structure
 
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
@@ -92,60 +92,60 @@ int main(void)
 {
 	robotSetup(); //Set up the system and peripherals
 	battVoltage = adcBatteryVoltage();	//Add to your watch to keep an eye on the battery
-	systemStates.mains = IDLE; //start system at IDLE
-	systemStates.mainsPrev = IDLE;
+	sys.states.mainf = M_IDLE; //start system at IDLE
+	sys.states.mainfPrev = M_IDLE;
 	uint8_t chargeCycleReturn = 0;
 	uint8_t dockingReturn = 0;
 	float lineHeading = 0;
 
 	while(1)
 	{
-		switch (systemStates.mains)
+		switch (sys.states.mainf)
 		{
-			case TEST: //System Test Mode
+			case M_TEST: //System Test Mode
 			//Entered when test command received from PC
-				testManager(message, &robotPosition); //Interprets test command and executes it
+				testManager(message, &sys); //Interprets test command and executes it
 				break;
 			
-			case MANUAL: //User controlled mode
+			case M_MANUAL: //User controlled mode
 			//Entered when manual movement command received from PC
-				if(systemFlags.xbeeNewData) //if there is new data
-					manualControl(message, &robotPosition);
+				if(sys.flags.xbeeNewData) //if there is new data
+					manualControl(message, &sys);
 				break;
 			
-			case DOCKING:
+			case M_DOCKING:
 			//if battery low or manual docking command sent from PC
-				dockingReturn = dfDockRobot(&robotPosition);
+				dockingReturn = dfDockRobot(&sys);
 				if(!dockingReturn)	//Execute docking procedure state machine
-					systemStates.mains = CHARGING;		//If finished docking, switch to charging
+					sys.states.mainf = M_CHARGING;		//If finished docking, switch to charging
 				else if(dockingReturn == 7)
-					systemStates.mains = IDLE;			//If charger connection failed
+					sys.states.mainf = M_IDLE;			//If charger connection failed
 				break;
 			
-			case LINE_FOLLOW:
+			case M_LINE_FOLLOW:
 			//Entered when line follow command received from PC
-				if(!dfFollowLine(35, &lineHeading, &robotPosition))//Line follower will return 0 when complete
-					systemStates.mains = IDLE;
+				if(!dfFollowLine(35, &lineHeading, &sys))//Line follower will return 0 when complete
+					sys.states.mainf = M_IDLE;
 				break;
 					
-			case LIGHT_FOLLOW:
+			case M_LIGHT_FOLLOW:
 			//Entered when light follow command received from PC
-				mfTrackLight(&robotPosition);
+				mfTrackLight(&sys);
 				break;
 				
-			case FORMATION:
+			case M_FORMATION:
 			//placeholder
 				break;
 			
-			case CHARGING:
-				chargeCycleReturn = cfChargeCycleHandler(&robotPosition);
+			case M_CHARGING:
+				chargeCycleReturn = cfChargeCycleHandler(&sys);
 				if(chargeCycleReturn > 0xEF)
-					systemStates.mains = IDLE;					//Charging fault occurred
+					sys.states.mainf = M_IDLE;			//Charging fault occurred
 				if(!chargeCycleReturn)
-					systemStates.mains = systemStates.mainsPrev;	//Charge finished successfully
+					sys.states.mainf = sys.states.mainfPrev;	//Charge finished successfully
 				break;
 
-			case IDLE:					
+			case M_IDLE:					
 				stopRobot();
 				if(!fdelay_ms(1000))					//Blink LED 3 in Idle mode
 					led3Tog;	
@@ -153,9 +153,9 @@ int main(void)
 		}
 		
 		xbeeGetNew();			//Checks for and interprets new communications
-		nfRetrieveNavData();	//checks if there is new navigation data and updates robotPosition
+		nfRetrieveNavData(&sys);	//checks if there is new navigation data and updates sys->pos.
 		//check to see if obstacle avoidance is enabled AND the robot is moving
-		if(obstacleAvoidanceEnabledFlag && systemFlags.obaMoving)
-			dodgeObstacle(&robotPosition); //avoid obstacles using proximity sensors
+		if(obstacleAvoidanceEnabledFlag && sys.flags.obaMoving)
+			dodgeObstacle(&sys); //avoid obstacles using proximity sensors
 	}
 }

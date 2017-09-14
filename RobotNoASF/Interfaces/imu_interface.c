@@ -3,7 +3,7 @@
 *
 * Author : Matthew Witt (pxf5695@autuni.ac.nz)
 * Created: 28/04/2017
-*void nfGetEulerAngles(struct Position *imuData)
+*void nfGetEulerAngles(RobotGlobalStructure *sys)
 * Project Repository: https://github.com/AdamParlane/aut-swarm-robotics
 *
 * Description:
@@ -26,9 +26,9 @@
 * void imuDmpStart(void)
 * unsigned short invOrientationMatrixToScalar(const signed char *mtx)
 * unsigned short invRow2Scale(const signed char *row)
-* uint8_t imuReadFifo(struct Position *imuData)
+* uint8_t imuReadFifo(RobotGlobalStructure *sys)
 * uint8_t imuCommTest(void)
-* void imuApplyYawCorrection(float correctHeading, struct Position *imuData)
+* void imuApplyYawCorrection(float correctHeading, RobotGlobalStructure *sys)
 *
 */
 
@@ -280,8 +280,8 @@ unsigned short invRow2Scale(const signed char *row)
 * Will read data from the IMU's FIFO buffer and store data in the given Position structure
 *
 * Inputs:
-* struct Position *imuData:
-*   Pointer to the global robotPosition structure. This is where the read data will be stored
+* RobotGlobalStructure *sys:
+*   Pointer to the global sys->pos. structure. This is where the read data will be stored
 *
 * Returns:
 * 0 on success, non zero otherwise
@@ -297,7 +297,7 @@ unsigned short invRow2Scale(const signed char *row)
 * read and this one is calculated and stored and the timestamp of the current read is stored.
 *
 */
-uint8_t imuReadFifo(struct Position *imuData)
+uint8_t imuReadFifo(RobotGlobalStructure *sys)
 {
 	short gyroData[3];					//Stores raw gyro data from IMU (PRY)->(XYZ)
 	short accelData[3];					//Stores raw accelerometer data from IMU (XYZ)
@@ -312,28 +312,28 @@ uint8_t imuReadFifo(struct Position *imuData)
 										//occurred, so exit this function with non zero->
 		if(sensors & INV_WXYZ_QUAT)		//If quaternion data was in the FIFO
 		{
-			imuData->imuQX = quatData[X];
-			imuData->imuQY = quatData[Y];
-			imuData->imuQZ = quatData[Z];
-			imuData->imuQW = quatData[W];
+			sys->pos.IMU.qx = quatData[X];
+			sys->pos.IMU.qy = quatData[Y];
+			sys->pos.IMU.qz = quatData[Z];
+			sys->pos.IMU.qw = quatData[W];
 
 		}
 		if(sensors & INV_XYZ_ACCEL)		//If accelerometer data was in the FIFO
 		{
-			imuData->imuAccelX = accelData[X]*IMU_ACCEL_CONV_MS2;
-			imuData->imuAccelY = accelData[Y]*IMU_ACCEL_CONV_MS2;
-			imuData->imuAccelZ = accelData[Z]*IMU_ACCEL_CONV_MS2;
+			sys->pos.IMU.accelX = accelData[X]*IMU_ACCEL_CONV_MS2;
+			sys->pos.IMU.accelY = accelData[Y]*IMU_ACCEL_CONV_MS2;
+			sys->pos.IMU.accelZ = accelData[Z]*IMU_ACCEL_CONV_MS2;
 		}
 		if(sensors & INV_XYZ_GYRO)		//If gyro data was in the FIFO
 		{
-			imuData->imuGyroX = gyroData[X]*IMU_GYRO_CONV;
-			imuData->imuGyroY = gyroData[Y]*IMU_GYRO_CONV;
-			imuData->imuGyroZ = gyroData[Z]*IMU_GYRO_CONV;
+			sys->pos.IMU.gyroX = gyroData[X]*IMU_GYRO_CONV;
+			sys->pos.IMU.gyroY = gyroData[Y]*IMU_GYRO_CONV;
+			sys->pos.IMU.gyroZ = gyroData[Z]*IMU_GYRO_CONV;
 		}
 
 	} while(more);						//If there is still more in the FIFO then do it again->
-	imuData->imuDeltaTime = sensorTimeStamp - imuData->imuTimeStamp;
-	imuData->imuTimeStamp = sensorTimeStamp;
+	sys->pos.IMU.deltaTime = sensorTimeStamp - sys->pos.IMU.timeStamp;
+	sys->pos.IMU.timeStamp = sensorTimeStamp;
 	return 0;
 }
 
@@ -374,15 +374,15 @@ uint8_t imuCommTest(void)
 
 /*
 * Function:
-* void imuApplyYawCorrection(float correctHeading, struct Position *imuData)
+* void imuApplyYawCorrection(float correctHeading, RobotGlobalStructure *sys)
 *
 * Takes a 'correct' heading and uses it to modify the onboard heading to match.
 *
 * Inputs:
 * float correctHeading
 *   Correct heading of the robot (from webcam) (between -180 and 180)
-* struct Position *imuData
-*   Pointer to the robotPosition structure
+* RobotGlobalStructure *sys
+*   Pointer to the sys->pos. structure
 *
 * Returns:
 * none
@@ -390,19 +390,19 @@ uint8_t imuCommTest(void)
 * Implementation:
 * First the function checks that correctHeading is between -180 and 180 and corrects it if
 * necessary. Then it looks at the difference between the heading provided and the heading reported
-* by the IMU and adds the difference to imuYawOffset to correct it. Finally, it makes sure that
-* imuYawOffset is between -180 and 180 and corrects it if necessary.
+* by the IMU and adds the difference to IMU.yawOffset to correct it. Finally, it makes sure that
+* IMU.yawOffset is between -180 and 180 and corrects it if necessary.
 * 
 * Improvements:
 * Will most likely move this from imu_interface to the Navigation module when its created.
 *
 */
-void imuApplyYawCorrection(float correctHeading, struct Position *imuData)
+void imuApplyYawCorrection(float correctHeading, RobotGlobalStructure *sys)
 {
 	//Make sure correctHeading is in range
 	correctHeading = nfWrapAngle(correctHeading);
-	//Take difference and apply it to imuYawOffset.
-	imuData->imuYawOffset += correctHeading - imuData->imuYaw;
-	//Wrap imuYawOffset so its always between -180 and 180 degrees
-	imuData->imuYawOffset = nfWrapAngle(imuData->imuYawOffset);
+	//Take difference and apply it to IMU.yawOffset.
+	sys->pos.IMU.yawOffset += correctHeading - sys->pos.IMU.yaw;
+	//Wrap IMU.yawOffset so its always between -180 and 180 degrees
+	sys->pos.IMU.yawOffset = nfWrapAngle(sys->pos.IMU.yawOffset);
 }

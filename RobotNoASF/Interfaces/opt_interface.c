@@ -17,7 +17,7 @@
 * void SPI_Init(void);
 * void mouseInit(void);
 * int mouseTestBasic(void);
-* void Get_Mouse_XY(struct Position *mousePos);
+* void Get_Mouse_XY(Position *sys);
 * 
 *
 * Functionality of each function is explained before each function
@@ -148,7 +148,7 @@ void mouseInit(void)
 }
 
 /*
-* Function: void getMouseXY(struct Position*)
+* Function: void getMouseXY(RobotGlobalStructure *sys)
 *
 * Reads the deltaX and deltaY from the mouse sensor
 * Writes the received deltaX and deltaY into the position structure using pointers
@@ -171,7 +171,7 @@ void mouseInit(void)
 * Needs more descriptive var names
 *
 */
-void getMouseXY(struct Position *mousePos)
+void getMouseXY(RobotGlobalStructure *sys)
 {
 	uint16_t Xtemp = 0, Ytemp = 0;
 	int16_t Xx, Yy; 
@@ -190,17 +190,23 @@ void getMouseXY(struct Position *mousePos)
 		Yy = Ytemp << 4;
 		//if(Xtemp & (1<<12))					//if MSB of X is set (for 2s complement)
 			//Xtemp ^= 0b1000100000000000;	//Make the 2s complement bit be MSB of short
-		mousePos->opticalDX = (float)(Xx * RESOLUTION);
+		/*
+		I think that the data stored in sys->pos.Optical should be the raw data from the optical sensor
+		(without resoloutio conversion) Then the converted data can be stored in sys->pos.x, y, etc
+		where the real world units go
+		*/
+		
+		sys->pos.Optical.dx = (float)(Xx * RESOLUTION);
 		//if(Ytemp & (1<<12))					//if MSB of Y is set (for 2s complement)
 			//Ytemp ^= 0b1000100000000000;	//Make the 2s complement bit be MSB of short
-		mousePos->opticalDY = (float)(Yy * RESOLUTION);
-		mousePos->opticalX += mousePos->opticalDX;
-		mousePos->opticalY += mousePos->opticalDY;
+		sys->pos.Optical.dy = (float)(Yy * RESOLUTION);
+		//sys->opticalX += sys->Optical.dx;
+		//sys->opticalY += sys->Optical.dy;
 	}
 	else
 	{
-		mousePos->opticalDX = 0;
-		mousePos->opticalDY = 0;
+		sys->pos.Optical.dx = 0;
+		sys->pos.Optical.dy = 0;
 	}
 }
 

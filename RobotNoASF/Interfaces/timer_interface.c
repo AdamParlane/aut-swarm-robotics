@@ -28,7 +28,7 @@ volatile uint32_t systemTimestamp = 0;	//Number of ms since powerup. Used by del
 										//functions which in turn are used by the IMU drivers/DMP
 volatile uint16_t delaymsCounter = 0;
 
-extern struct SystemFlags systemFlags;
+extern RobotGlobalStructure sys;
 
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*

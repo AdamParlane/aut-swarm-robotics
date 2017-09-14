@@ -13,12 +13,12 @@
 * Relevant reference materials or datasheets if applicable
 *
 * Functions:
-* float mfRotateToHeading(float heading, struct Position *imuData)
-* float mfMoveToHeading(float heading, uint8_t speed, struct Position *imuData)
+* float mfRotateToHeading(float heading, RobotGlobalStructure *sys)
+* float mfMoveToHeading(float heading, uint8_t speed, RobotGlobalStructure *sys)
 * float mfMoveToHeadingByDistance(float heading, uint8_t speed, uint32_t distance,
-*                                  struct Position *posData)
-* float mfTrackLight(struct Position *imuData)
-* float mfTrackLightProx(struct Position *imuData)
+*                                  RobotGlobalStructure *sys)
+* float mfTrackLight(RobotGlobalStructure *sys)
+* float mfTrackLightProx(RobotGlobalStructure *sys)
 * char mfRandomMovementGenerator(void)
 *
 */
@@ -28,15 +28,15 @@
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*
 * Function:
-* float mfRotateToHeading(float heading, struct Position *imuData)
+* float mfRotateToHeading(float heading, RobotGlobalStructure *sys)
 *
 * Will rotate the robot to face the given heading
 *
 * Inputs:
 * float heading:
 *   The heading in degrees that we wish the robot to face (-180 < heading < 180)
-* struct Position *imuData:
-*   A pointer to the robotPosition structure so we can get imuYaw
+* RobotGlobalStructure *sys:
+*   A pointer to the sys->pos. structure so we can get IMU.yaw
 *
 * Returns:
 * Will return 0 if the robot has settled at the desired heading, otherwise will return the signed
@@ -65,7 +65,7 @@
 * static vars between calls they could crosstalk.
 *
 */
-float mfRotateToHeading(float heading, struct Position *imuData)
+float mfRotateToHeading(float heading, RobotGlobalStructure *sys)
 {
 	static float pErr;				//Proportional (signed) error
 	int32_t motorSpeed;				//Stores motorSpeed calculated by PID sum
@@ -74,7 +74,7 @@ float mfRotateToHeading(float heading, struct Position *imuData)
 	heading = nfWrapAngle(heading);
 		
 	//Calculate proportional error values
-	pErr = heading - imuData->imuYaw;				//Signed Error
+	pErr = heading - sys->pos.IMU.yaw;				//Signed Error
 	
 	//Force the P controller to always take the shortest path to the destination.
 	//For example if the robot was currently facing at -120 degrees and the target was 130 degrees,
@@ -90,7 +90,7 @@ float mfRotateToHeading(float heading, struct Position *imuData)
 
 	//If error is less than 0.5 deg and delta yaw is less than 0.5 degrees per second then we can
 	//stop
-	if((abs(pErr) < 0.5) && (abs(imuData->imuGyroZ) < 0.5))	
+	if((abs(pErr) < 0.5) && (abs(sys->pos.IMU.gyroZ) < 0.5))	
 	{
 		stopRobot();
 		pErr = 0;			//Clear the static vars so they don't interfere next time we call this
@@ -104,7 +104,7 @@ float mfRotateToHeading(float heading, struct Position *imuData)
 
 /*
 * Function:
-* float mfMoveToHeading(float heading, uint8_t speed, struct Position *imuData)
+* float mfMoveToHeading(float heading, uint8_t speed, RobotGlobalStructure *sys)
 *
 * Will rotate and then move the robot along the given heading at the given speed.
 *
@@ -113,8 +113,8 @@ float mfRotateToHeading(float heading, struct Position *imuData)
 *   The heading in degrees that we wish the robot to face (-180 < heading < 180)
 * uint8_t speed:
 *   Absolute speed as a percentage of maximum speed (0-100)
-* struct Position *imuData:
-*   A pointer to the robotPosition structure so we can get imuYaw
+* RobotGlobalStructure *sys:
+*   A pointer to the sys->pos. structure so we can get IMU.yaw
 *
 * Returns:
 * Will return 0 if the robot moving along the desired heading, otherwise will return the signed
@@ -139,7 +139,7 @@ float mfRotateToHeading(float heading, struct Position *imuData)
 * rotateRobot function in order to correct the error.
 *
 */
-float mfMoveToHeading(float heading, uint8_t speed, struct Position *imuData)
+float mfMoveToHeading(float heading, uint8_t speed, RobotGlobalStructure *sys)
 {
 	static float pErr;				//Proportional (signed) error
 	int32_t rotationSpeed = 0;		//Stores turn ratio calculated by PID sum
@@ -151,7 +151,7 @@ float mfMoveToHeading(float heading, uint8_t speed, struct Position *imuData)
 	speed = capToRangeUint(speed, 0, 100);
 		
 	//Calculate proportional error values
-	pErr = heading - imuData->imuYaw;				//Signed Error
+	pErr = heading - sys->pos.IMU.yaw;				//Signed Error
 	
 	//Force the P controller to always take the shortest path to the destination.
 	//For example if the robot was currently facing at -120 degrees and the target was 130 degrees,
@@ -169,7 +169,7 @@ float mfMoveToHeading(float heading, uint8_t speed, struct Position *imuData)
 	
 	//If error is less than 0.5 deg and delta yaw is less than 0.5 degrees per second then we can
 	//return 0 (ie robot is more or less on correct heading)
-	if((abs(pErr) < 0.5) && (abs(imuData->imuGyroZ) < 0.5))
+	if((abs(pErr) < 0.5) && (abs(sys->pos.IMU.gyroZ) < 0.5))
 		return 0;
 	else
 		return pErr;	//If not, return pErr	
@@ -178,7 +178,7 @@ float mfMoveToHeading(float heading, uint8_t speed, struct Position *imuData)
 /*
 * Function:
 * float mfMoveToHeadingByDistance(float heading, uint8_t speed, uint32_t distance,
-*									struct SystemStates *state, Position *posData);
+*									 RobotGlobalStructure *sys);
 *
 * Will allow robot to move along the given heading a given distance.
 *
@@ -190,9 +190,9 @@ float mfMoveToHeading(float heading, uint8_t speed, struct Position *imuData)
 * uint32_t distance:
 *   Distance to travel before stopping.
 * struct SystemStates *state
-*   Pointer to the systemStates data structure
-* struct Position *posData:
-*   Pointer to the robotPosition global structure.
+*   Pointer to the sys.states data structure
+* RobotGlobalStructure *sys:
+*   Pointer to the sys->pos. global structure.
 *
 * Returns:
 * 0 when maneuver is complete, otherwise returns distance remaining before maneuver complete.
@@ -210,32 +210,29 @@ float mfMoveToHeading(float heading, uint8_t speed, struct Position *imuData)
 * desired distance then the function returns the distance remaining to be traveled.
 *
 */
-float mfMoveToHeadingByDistance(float heading, uint8_t speed, uint32_t distance,
-								struct SystemStates *state, Position *posData)
+float mfMoveToHeadingByDistance(float heading, uint8_t speed, uint32_t distance, RobotGlobalStructure *sys)
 {
-
-	static uint8_t state->moveHeadingDistance = START;
 	static float distanceTravelled = 0;
 	
-	switch(state->moveHeadingDistance)
+	switch(sys->states.moveHeadingDistance)
 	{
-		case START:
-			if(!mfRotateToHeading(heading, posData))//Face the right direction
-				state->moveHeadingDistance = MOVING;
+		case MHD_START:
+			if(!mfRotateToHeading(heading, sys))//Face the right direction
+				sys->states.moveHeadingDistance = MHD_MOVING;
 		break;
 		
-		case MOVING:
-			mfMoveToHeading(heading, speed, posData);
-			distanceTravelled += posData->opticalDY;//Once we are facing the right direction we can
+		case MHD_MOVING:
+			mfMoveToHeading(heading, speed, sys);
+			distanceTravelled += sys->pos.Optical.dy;//Once we are facing the right direction we can
 													//start keeping track of the distance traveled.
 			if(distanceTravelled > distance)		//If we have gone the distance
-				state->moveHeadingDistance = STOP;					//Time to stop.
+				sys->states.moveHeadingDistance = MHD_STOP;//Time to stop.
 		break;
 						
-		case STOP:
+		case MHD_STOP:
 			stopRobot();							//Stop robot
 			distanceTravelled = 0;					//Reset static distance variable
-			state->moveHeadingDistance = START;					//Reset function state.
+			sys->states.moveHeadingDistance = MHD_START;	//Reset function state.
 			return 0;								//Indicate that maneuver is complete
 		break;
 	}
@@ -244,13 +241,13 @@ float mfMoveToHeadingByDistance(float heading, uint8_t speed, uint32_t distance,
 
 /*
 * Function:
-* float mfTrackLight(struct Position *imuData)
+* float mfTrackLight(RobotGlobalStructure *sys)
 *
 * Robot will attempt to aim itself at a light source using colour sensors
 *
 * Inputs:
-* struct Position *imuData:
-*   A pointer to the robotPosition structure
+* RobotGlobalStructure *sys:
+*   A pointer to the sys->pos. structure
 *
 * Returns:
 * 0 if equilibrium is reached, otherwise will return the proportional error value
@@ -265,9 +262,9 @@ float mfMoveToHeadingByDistance(float heading, uint8_t speed, uint32_t distance,
 * Add speed parameter
 *
 */
-float mfTrackLight(struct Position *imuData)
+float mfTrackLight(RobotGlobalStructure *sys)
 {
-	systemFlags.obaMoving = 1;	
+	sys->flags.obaMoving = 1;	
 	static float pErr;			//Proportional error
 	static float iErr = 0;		//Integral error
 	float dHeading;				//Delta heading to adjust by
@@ -286,7 +283,7 @@ float mfTrackLight(struct Position *imuData)
 	
 	//If error is less than 0.5 deg and delta yaw is less than 0.5 degrees per second then we can
 	//stop
-	if((abs(dHeading) < 0.5) && (abs(imuData->imuGyroZ) < 0.5))
+	if((abs(dHeading) < 0.5) && (abs(sys->pos.IMU.gyroZ) < 0.5))
 	{
 		stopRobot();
 		pErr = 0;			//Clear the static vars so they don't interfere next time we call this
@@ -294,20 +291,20 @@ float mfTrackLight(struct Position *imuData)
 		iErr = 0;
 		return 0;
 	} else {
-		mfMoveToHeading(imuData->imuYaw + dHeading, 40, imuData);
+		mfMoveToHeading(sys->pos.IMU.yaw + dHeading, 40, sys);
 		return pErr;	//If not, return pErr
 	}
 }
 
 /*
 * Function:
-* float mfTrackLightProx(struct Position *imuData)
+* float mfTrackLightProx(RobotGlobalStructure *sys)
 *
 * Function to track a light source using the proximity sensors. [WIP]
 *
 * Inputs:
-* struct Position *imuData:
-*   Pointer to the global robotPosition data structure.
+* RobotGlobalStructure *sys:
+*   Pointer to the global sys->pos. data structure.
 *
 * Returns:
 * 0 if facing light source, otherwise will return heading error value
@@ -321,7 +318,7 @@ float mfTrackLight(struct Position *imuData)
 * TODO:Switching the prox sensors to ambient mode makes the IMU bug out. No solution yet.
 *
 */
-float mfTrackLightProx(struct Position *imuData)
+float mfTrackLightProx(RobotGlobalStructure *sys)
 {
 	static float pErr;			//Proportional error
 	static float iErr = 0;		//Integral error
@@ -352,7 +349,7 @@ float mfTrackLightProx(struct Position *imuData)
 	
 	//If error is less than 0.5 deg and delta yaw is less than 0.5 degrees per second then we can
 	//stop
-	if((abs(dHeading) < 0.5) && (abs(imuData->imuGyroZ) < 0.5))
+	if((abs(dHeading) < 0.5) && (abs(sys->pos.IMU.gyroZ) < 0.5))
 	{
 		stopRobot();
 		pErr = 0;			//Clear the static vars so they don't interfere next time we call this
@@ -360,7 +357,7 @@ float mfTrackLightProx(struct Position *imuData)
 		iErr = 0;
 		return 0;
 	} else {
-		mfRotateToHeading(imuData->imuYaw + dHeading, imuData);
+		mfRotateToHeading(sys->pos.IMU.yaw + dHeading, sys);
 		return dHeading;	//If not, return pErr
 	}
 	return 1;

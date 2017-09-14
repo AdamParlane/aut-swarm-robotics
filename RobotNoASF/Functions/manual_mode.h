@@ -30,7 +30,7 @@
 #define CCW 0xD3
 
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
-void manualControl(struct MessageInfo tmessage, struct Position *robotPosition);
+void manualControl(struct MessageInfo tmessage, RobotGlobalStructure *sys);
 
 
 #endif /* MANUAL_MODE_H_ */

@@ -45,24 +45,24 @@
 * TODO: Adam Comment this -AP
 *
 */
-void manualControl(struct MessageInfo tmessage, struct Position *robotPosition)
+void manualControl(struct MessageInfo tmessage, RobotGlobalStructure *sys)
 {
 	static uint8_t receivedTestData[5];
-	systemFlags.xbeeNewData = 0;
+	sys->flags.xbeeNewData = 0;
 	uint16_t straightDirection;
 	xbeeConvertData(tmessage, receivedTestData);
 	straightDirection = (receivedTestData[0] << 8) + (receivedTestData[1]);
 	if(tmessage.command == MANUAL_STRAIGHT)
 	{
 		moveRobot(straightDirection, receivedTestData[2]);
-		robotPosition->targetHeading = straightDirection;
-		robotPosition->targetSpeed = receivedTestData[2];
-		systemFlags.obaMoving = 1;
+		sys->pos.targetHeading = straightDirection;
+		sys->pos.targetSpeed = receivedTestData[2];
+		sys->flags.obaMoving = 1;
 	}
 	else if(tmessage.command == MANUAL_STOP)
 	{
 		stopRobot();
-		systemStates.mains = IDLE;
+		sys->states.mainf = M_IDLE;
 		
 	}
 	else if(tmessage.command == CCW)
@@ -70,12 +70,12 @@ void manualControl(struct MessageInfo tmessage, struct Position *robotPosition)
 		//CW is reverse so invert speed
 		signed char speed = -1*receivedTestData[0];
 		rotateRobot(speed);
-		systemFlags.obaMoving = 1;
+		sys->flags.obaMoving = 1;
 	}
 	else if(tmessage.command == CW)
 	{
 		//CCW is forward so no need to invert speed
 		rotateRobot(receivedTestData[0]);
-		systemFlags.obaMoving = 1;
+		sys->flags.obaMoving = 1;
 	}
 }

@@ -22,7 +22,7 @@
 #include "../IMU-DMP/inv_mpu_dmp_motion_driver_CUSTOM.h"
 
 //////////////[Global variables]////////////////////////////////////////////////////////////////////
-extern struct SystemFlags systemFlags;	//imuCheckFifo flag
+extern RobotGlobalStructure sys;	//imuCheckFifo flag
 
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*
@@ -82,7 +82,7 @@ void PIOA_Handler(void)
 	//If the IMU interrupt has been triggered
 	if(IMU_INT_PORT->PIO_ISR & IMU_INT_PIN)	//If IMU interrupt detected
 	{
-		systemFlags.imuCheckFifo = 1;
+		sys.flags.imuCheckFifo = 1;
 		//led1Tog;
 	}
 }

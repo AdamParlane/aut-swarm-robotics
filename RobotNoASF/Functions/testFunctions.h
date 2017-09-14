@@ -43,7 +43,7 @@ struct transmitDataStructure
 
 /*
 * Function: uint8_t testManager(struct MessageInfo message, struct transmitDataStructure *transmit,
-*			struct Position *robotPosition)
+*			RobotGlobalStructure *sys)
 *
 * Handles the interpretation of received test commands,
 * calling the appropriate test functions / performing tests
@@ -59,15 +59,14 @@ struct transmitDataStructure
 * ***Streaming Interval = 100ms***
 *
 */
-uint8_t getTestData(struct MessageInfo message, struct transmitDataStructure *transmit, 
-struct Position *robotPosition);
+uint8_t getTestData(struct MessageInfo message, struct transmitDataStructure *transmit, RobotGlobalStructure *sys);
 
-void testManager(struct MessageInfo message, struct Position *robotPosition);
+void testManager(struct MessageInfo message, RobotGlobalStructure *sys);
 
 
 
 /*
-* Function: void testAll(struct transmitDataStructure *transmit)
+* Function: void testAll(struct transmitDataStructure *transmit, RobotGlobalStructure *sys)
 *
 * tests all the peripherals in a set order and returns them all back to the GUI in one packet
 * calling the appropriate test functions / performing tests
@@ -78,7 +77,7 @@ void testManager(struct MessageInfo message, struct Position *robotPosition);
 * No Return Values
 *
 */
-void testAll(struct transmitDataStructure *transmit);
+void testAll(struct transmitDataStructure *transmit, RobotGlobalStructure *sys);
 
 
 

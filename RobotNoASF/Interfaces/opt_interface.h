@@ -17,7 +17,7 @@
 * void SPI_Init(void);
 * void mouseInit(void);
 * int mouseTestBasic(void);
-* void Get_Mouse_XY(struct Position *mousePos);
+* void Get_Mouse_XY(Position *sys);
 *
 * Functionality of each function is explained before each function
 * In the this file that is a summary of purpose, input and return values
@@ -113,7 +113,7 @@ void mouseInit(void);
 char mouseTestBasic(void);
 
 /*
-* Function: void getMouseXY(struct Position*)
+* Function: void getMouseXY(RobotGlobalStructure *sys)
 *
 * Reads the deltaX and deltaY from the mouse sensor
 * Writes the received deltaX and deltaY into the position structure using pointers
@@ -123,7 +123,7 @@ char mouseTestBasic(void);
 * No return value
 *
 */
-void getMouseXY(struct Position *mousePos);
+void getMouseXY(RobotGlobalStructure *sys);
 
 
 /*

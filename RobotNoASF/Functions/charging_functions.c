@@ -13,7 +13,7 @@
 * Relevant reference materials or datasheets if applicable
 *
 * Functions:
-* uint8_t cfChargeCycleHandler(struct Position *imuData)
+* uint8_t cfChargeCycleHandler(RobotGlobalStructure *sys)
 *
 */
 
@@ -23,15 +23,15 @@
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*
 * Function:
-* uint8_t cfChargeCycleHandler(struct Position *imuData)
+* uint8_t cfChargeCycleHandler(RobotGlobalStructure *sys)
 *
 * State machine that handles the charging cycle of the battery
 *
 * Inputs:
 * struct SystemStates *state
-*   Pointer to the systemStates data structure
-* struct Position *imuData:
-*   Pointer to the robotPosition data structure
+*   Pointer to the sys.states data structure
+* RobotGlobalStructure *sys:
+*   Pointer to the sys->pos. data structure
 *
 * Returns:
 * Returns 0 when finished charging successfully. Returns 0xFF when a fault has occurred, otherwise
@@ -51,50 +51,50 @@
 * TODO: More commenting
 *
 */
-uint8_t cfChargeCycleHandler(struct SystemStates *state, Position *imuData)
+uint8_t cfChargeCycleHandler(RobotGlobalStructure *sys)
 {
 	static float currentHeading = 0;
 	uint8_t chipState = 0;
 	fcWatchdogReset();							//Reset watchdog timer on fc chip
 	chipState = fcState();
 	
-	switch(state->chargeCycle)
+	switch(sys->states.chargeCycle)
 	{
-		case CHECK_POWER:
+		case CCS_CHECK_POWER:
 			if(chipState == FC_BATTERY_CHARGING || chipState == FC_POWER_CONNECTED)
-				state->chargeCycle = CHARGING;
+				sys->states.chargeCycle = CCS_CHARGING;
 			break;
 		
-		case CHARGING:
+		case CCS_CHARGING:
 			if(!fdelay_ms(250))
 				led3Tog;
 			if(chipState == FC_BATTERY_CHARGED)
 			{
-				state->chargeCycle = DISMOUNT;
+				sys->states.chargeCycle = CCS_DISMOUNT;
 			}
 			if((chipState & 0xF0) == 0xF0)		//If fault (Upper nibble = F)
-				state->chargeCycle = FAULT;
+				sys->states.chargeCycle = CCS_FAULT;
 			break;
 		
-		case FAULT:
+		case CCS_FAULT:
 			fcEnableCharging(0);				//Stop charging
-			state->chargeCycle = DISMOUNT;
+			sys->states.chargeCycle = CCS_DISMOUNT;
 			return 0xFF;						//Indicate that a fault occurred
 		
-		case DISMOUNT:
-			currentHeading = imuData->imuYaw;
-			state->chargeCycle = TURN_AWAY;
+		case CCS_DISMOUNT:
+			currentHeading = sys->pos.IMU.yaw;
+			sys->states.chargeCycle = CCS_TURN_AWAY;
 			break;
 		
-		case TURN_AWAY:
-			if(!mfMoveToHeadingByDistance(currentHeading - 180, 35, 10, imuData))
-				state->chargeCycle = FINISHED;
+		case CCS_TURN_AWAY:
+			if(!mfMoveToHeadingByDistance(currentHeading - 180, 35, 10, sys))
+				sys->states.chargeCycle = CCS_FINISHED;
 			break;
 		
-		case FINISHED:
-			state->chargeCycle = CHECK_POWER;
+		case CCS_FINISHED:
+			sys->states.chargeCycle = CCS_CHECK_POWER;
 			break;
 	}
 	
-	return state->chargeCycle;
+	return sys->states.chargeCycle;
 }

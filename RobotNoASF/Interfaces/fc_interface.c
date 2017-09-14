@@ -152,8 +152,8 @@ uint8_t fcVersionRead(void)
 * returns whether CHARGING, CHARGED, or other
 *
 * Improvements:
-*	//TODO: Probably shouldn't be manipulating systemStates.mains from here. Should be able to see when
-*	//systemStates.mains is being changed from the main function, otherwise it just appears to magically
+*	//TODO: Probably shouldn't be manipulating sys.states.mainf from here. Should be able to see when
+*	//sys.states.mainf is being changed from the main function, otherwise it just appears to magically
 *	//change itself if you know what I mean.. Maybe set this up with an appropriate return system
 *
 */
