@@ -228,10 +228,10 @@
     <Compile Include="Functions\obstacle_avoidance.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="Functions\testFunctions.c">
+    <Compile Include="Functions\test_functions.c">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="Functions\testFunctions.h">
+    <Compile Include="Functions\test_functions.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="IMU-DMP\dmpKey_CUSTOM.h">

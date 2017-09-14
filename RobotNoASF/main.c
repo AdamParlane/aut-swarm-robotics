@@ -31,7 +31,7 @@
 #include "Functions/motion_functions.h"
 #include "Functions/navigation_functions.h"
 #include "Functions/obstacle_avoidance.h"
-#include "Functions/testFunctions.h"
+#include "Functions/test_functions.h"
 
 //////////////[Defines]/////////////////////////////////////////////////////////////////////////////
 

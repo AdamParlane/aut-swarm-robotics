@@ -1,5 +1,5 @@
 /*
- * testFunctions.h
+ * test_functions.h
  *
  * Created: 13/07/2017 4:55:41 PM
  *  Author: TODO:COMMECNTING AND HEADERSadams

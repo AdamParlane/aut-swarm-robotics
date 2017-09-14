@@ -34,7 +34,7 @@
 //////////////[Includes]////////////////////////////////////////////////////////////////////////////
 #include "../robot_setup.h"
 #include "motor_driver.h"
-#include "../Functions/testFunctions.h"
+#include "../Functions/test_functions.h"
 #include "timer_interface.h"				//delay_ms()
 #include <stdlib.h>							//abs()
 #include <tgmath.h>							//Trigonometry

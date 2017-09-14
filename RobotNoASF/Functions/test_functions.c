@@ -15,7 +15,7 @@
 * void comConvertData(struct MessageInfo xbMessage, uint8_t* data[50])
 *
 * Functionality of each function is explained before each function
-* This .c file should be paired with testFunctions.h
+* This .c file should be paired with test_functions.h
 *
 */
 //////////////[Includes]////////////////////////////////////////////////////////////////////////////
@@ -27,7 +27,7 @@
 #include "../Interfaces/twimux_interface.h"
 #include "../Interfaces/motor_driver.h"
 #include "../Interfaces/opt_interface.h"
-#include "testFunctions.h"
+#include "test_functions.h"
 
 //////////////[Global variables]////////////////////////////////////////////////////////////////////
 
