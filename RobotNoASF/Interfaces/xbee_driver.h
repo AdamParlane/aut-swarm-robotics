@@ -30,26 +30,6 @@
 #ifndef XBEE_DRIVER_H_
 #define XBEE_DRIVER_H_
 
-//////////////[Type Definitions]////////////////////////////////////////////////////////////////////
-//TODO: Mansel description of structure
-struct MessageInfo
-{
-	int index;
-	char command;
-	int length;
-};
-
-//TODO:Mansel description of structure
-struct FrameInfo
-{
-	int index;
-	char type;
-	int length;
-};
-
-//////////////[Includes]////////////////////////////////////////////////////////////////////////////
-#include "../robot_setup.h"
-
 //////////////[Defines]/////////////////////////////////////////////////////////////////////////////
 // XBee flow control bytes
 #define FRAME_DELIMITER							0x7E
@@ -118,9 +98,25 @@ struct FrameInfo
 #define NAV_OPT_VEL								0x17
 #define NAV_OPT_HDG								0x18
 
+//////////////[Type Definitions]////////////////////////////////////////////////////////////////////
+//TODO: Mansel description of structure
+struct MessageInfo
+{
+	int index;
+	char command;
+	int length;
+};
+
+//TODO:Mansel description of structure
+struct FrameInfo
+{
+	int index;
+	char type;
+	int length;
+};
+
 //////////////[Global variables]////////////////////////////////////////////////////////////////////
-extern char obstacleAvoidanceEnabledFlag;
-int MessageBufferIn, MessageBufferOut, MessageBufferUse;
+extern struct MessageInfo message;		//Incoming message with XBee metadata removed
 
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*

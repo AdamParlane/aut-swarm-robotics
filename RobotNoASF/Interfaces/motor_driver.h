@@ -18,7 +18,7 @@
 * char frontRightMotorDrive(signed char speed)
 * char frontLeftMotorDrive(signed char speed)
 * void moveRobot(float direction, unsigned char speed);
-* void stopRobot(void);
+* void mdStopMotors(void);
 * void rotateRobot(signed char speed);
 * void setTestMotors(uint8_t motorData[]);
 *
@@ -26,10 +26,6 @@
 
 #ifndef MOTOR_DRIVER_H_
 #define MOTOR_DRIVER_H_
-
-//////////////[Includes]////////////////////////////////////////////////////////////////////////////
-#include <fastmath.h>
-#include "../robot_setup.h"
 
 //////////////[Defines]/////////////////////////////////////////////////////////////////////////////
 //[[[IMPORTANT]]]
@@ -182,7 +178,7 @@ void rotateRobot(signed char speed);
 
 /*
 * Function:
-* void stopRobot(void)
+* void mdStopMotors(void)
 *
 * Stop all motors
 *
@@ -193,7 +189,7 @@ void rotateRobot(signed char speed);
 * none
 *
 */
-void stopRobot(void);
+void mdStopMotors(void);
 
 /*
 *

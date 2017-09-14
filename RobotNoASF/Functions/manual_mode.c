@@ -16,7 +16,12 @@
 *
 */
 
+#include "../robot_setup.h"
+#include "../Interfaces/xbee_driver.h"
 #include "manual_mode.h"
+#include "motion_functions.h"
+#include "../Interfaces/motor_driver.h"
+
 
 /*
 * Function:
@@ -61,7 +66,7 @@ void manualControl(struct MessageInfo tmessage, RobotGlobalStructure *sys)
 	}
 	else if(tmessage.command == MANUAL_STOP)
 	{
-		stopRobot();
+		mfStopRobot(sys);
 		sys->states.mainf = M_IDLE;
 		
 	}

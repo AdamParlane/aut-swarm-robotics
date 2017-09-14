@@ -20,10 +20,18 @@
 * float mfTrackLight(RobotGlobalStructure *sys)
 * float mfTrackLightProx(RobotGlobalStructure *sys)
 * char mfRandomMovementGenerator(void)
+* void mfStopRobot(RobotGlobalStructure *sys)
 *
 */
 //////////////[Includes]////////////////////////////////////////////////////////////////////////////
+#include "../robot_setup.h"
 #include "motion_functions.h"
+#include "navigation_functions.h"
+#include "../Interfaces/motor_driver.h"
+#include "../Interfaces/light_sens_interface.h"
+#include "../Interfaces/prox_sens_interface.h"
+#include "../Interfaces/twimux_interface.h"
+#include "../Interfaces/timer_interface.h"
 
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*
@@ -92,7 +100,7 @@ float mfRotateToHeading(float heading, RobotGlobalStructure *sys)
 	//stop
 	if((abs(pErr) < 0.5) && (abs(sys->pos.IMU.gyroZ) < 0.5))	
 	{
-		stopRobot();
+		mfStopRobot(sys);
 		pErr = 0;			//Clear the static vars so they don't interfere next time we call this
 							//function
 		return 0;
@@ -230,7 +238,7 @@ float mfMoveToHeadingByDistance(float heading, uint8_t speed, uint32_t distance,
 		break;
 						
 		case MHD_STOP:
-			stopRobot();							//Stop robot
+			mfStopRobot(sys);							//Stop robot
 			distanceTravelled = 0;					//Reset static distance variable
 			sys->states.moveHeadingDistance = MHD_START;	//Reset function state.
 			return 0;								//Indicate that maneuver is complete
@@ -285,7 +293,7 @@ float mfTrackLight(RobotGlobalStructure *sys)
 	//stop
 	if((abs(dHeading) < 0.5) && (abs(sys->pos.IMU.gyroZ) < 0.5))
 	{
-		stopRobot();
+		mfStopRobot(sys);
 		pErr = 0;			//Clear the static vars so they don't interfere next time we call this
 							//function
 		iErr = 0;
@@ -351,7 +359,7 @@ float mfTrackLightProx(RobotGlobalStructure *sys)
 	//stop
 	if((abs(dHeading) < 0.5) && (abs(sys->pos.IMU.gyroZ) < 0.5))
 	{
-		stopRobot();
+		mfStopRobot(sys);
 		pErr = 0;			//Clear the static vars so they don't interfere next time we call this
 		//function
 		iErr = 0;
@@ -408,4 +416,10 @@ char mfRandomMovementGenerator(void)
 	moveRobot(direction, speed);	//moveRobot at random speed and direction
 	delay_ms(runTime * 1000);		//Delay for random milliseconds
 	return 0;
+}
+
+void mfStopRobot(RobotGlobalStructure *sys)
+{
+	mdStopMotors();
+	sys->flags.obaMoving = 0;
 }

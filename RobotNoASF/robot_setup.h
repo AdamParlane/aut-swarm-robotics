@@ -25,10 +25,15 @@
 #ifndef ROBOTDEFINES_H_
 #define ROBOTDEFINES_H_
 
-//TODO: change something so that this doesn't have to be first
-//Or maybe all defines should be before includes
+//////////////[Includes]////////////////////////////////////////////////////////////////////////////
+#include "Interfaces/spi.h"
+#include "sam.h"
+#include <stdint.h>				//Gives standard integer type definitions (ie uint8_t)
+#include <stdbool.h>			//Gives boolean variable types
+
+//////////////[Enumerations]////////////////////////////////////////////////////////////////////////
 typedef enum MainStates
-//main loop functionality
+//main() function states
 {
 	M_TEST,
 	M_TEST_ALL,
@@ -43,6 +48,7 @@ typedef enum MainStates
 } MainStates;
 
 typedef enum DockingStates
+//dfDockRobot() function states
 {
 	DS_FINISHED,
 	DS_START,
@@ -55,6 +61,7 @@ typedef enum DockingStates
 } DockingStates;
 
 typedef enum FollowLineStates
+//dfFollowLine() function states
 {
 	FLS_START,
 	FLS_FIRST_CONTACT,
@@ -64,6 +71,7 @@ typedef enum FollowLineStates
 } FollowLineStates;
 
 typedef enum ScanBrightestStates
+//mfScanBrightestLightSource() function states
 {
 	SBS_FUNCTION_INIT,
 	SBS_GOTO_START_POSITION,
@@ -72,6 +80,7 @@ typedef enum ScanBrightestStates
 } ScanBrightestStates;
 
 typedef enum ChargeCycleStates
+//cfChargeCycleHandler() function states
 {
 	CCS_FINISHED,
 	CCS_CHECK_POWER,
@@ -82,13 +91,15 @@ typedef enum ChargeCycleStates
 } ChargeCycleStates;
 
 typedef enum MTHByDistanceStates
+//mfMoveToHeadingByDistance() function states
 {
 	MHD_START,
 	MHD_MOVING,
 	MHD_STOP
 } MTHByDistanceStates;
 
-/////////////////Type Definitions/////////////////////////////////////////////////////////////////////
+////////////////[Structure Definitions]/////////////////////////////////////////////////////////////
+//Stores optical sensor raw and derived data
 typedef struct OpticalSensor
 {
 	float dx;		//Rate of change from optical sensor (X axis is left to right)
@@ -97,6 +108,7 @@ typedef struct OpticalSensor
 	float speed;		//Magnitude calculated from optical sensor
 } OpticalSensor;
 
+//Stores IMU sensor raw and converted data
 typedef struct IMUSensor
 {
 	long qw;				//W component of the quaternion complex number returned by DMP
@@ -117,17 +129,14 @@ typedef struct IMUSensor
 	unsigned short deltaTime;//Time between last IMU reading and IMU previous reading
 } IMUSensor;
 
-typedef struct Position
 //structure to store all the robot side navigation / positioning data
 //this will be written to by getMouseXY, nfGetEulerAngles, and another navigation function which
 //combines them. The structure will store the relevant info from both key sensors and fuse them in
 //an additional function (84bytes i think)
+typedef struct Position
 {
-
 	OpticalSensor Optical;
-	
 	IMUSensor IMU;
-	
 	float x;				//Absolute X position in arena
 	float y;				//Absolute Y position in arena
 	float heading;			//Direction of travel
@@ -136,8 +145,8 @@ typedef struct Position
 	char targetSpeed;	//For obstacle avoidance, desired speed
 } Position;
 
-typedef struct ColourSensorData
 //Stores colour sensor data, both raw and converted, for a single colour sensor
+typedef struct ColourSensorData
 {
 	unsigned short red;
 	unsigned short green;
@@ -148,16 +157,17 @@ typedef struct ColourSensorData
 	unsigned short value;
 } ColourSensorData;
 
-typedef struct SystemFlags
 //Structure that will store all system flags for global use
+typedef struct SystemFlags
 {
 	char xbeeNewData;	//New data from Xbee interface
 	char imuCheckFifo;	//IMU ext interrupt has been triggered
 	char obaMoving;		//Robot is in motion
+	char obaEnabled;	//Obstable avoidance enabled
 } SystemFlags;
 
-typedef struct SystemStates
 //Structure that will store the state of every state machine in the system
+typedef struct SystemStates
 {
 	//Main function state machine state
 	MainStates mainf;
@@ -179,48 +189,19 @@ typedef struct SystemStates
 	MTHByDistanceStates moveHeadingDistance;
 } SystemStates;
 
-typedef struct RobotGlobalStructure
 //Structure to combine all system globals
+typedef struct RobotGlobalStructure
 {
 	SystemStates states;
 	SystemFlags flags;
 	Position pos;
 } RobotGlobalStructure;
 
-//////////////[Includes]////////////////////////////////////////////////////////////////////////////
-#include "Interfaces/spi.h"
-#include "sam.h"
-#include "Interfaces/pio_interface.h"
-#include "Interfaces/imu_interface.h"
-#include "Interfaces/timer_interface.h"
-#include "Interfaces/external_interrupt.h"
-#include "Interfaces/uart_interface.h"
-#include "Interfaces/xbee_driver.h"
-#include "Interfaces/adc_interface.h"
-#include "Interfaces/opt_interface.h"
-#include "Interfaces/motor_driver.h"
-#include "Interfaces/twimux_interface.h"
-#include "Interfaces/fc_interface.h"
-#include "Interfaces/prox_sens_interface.h"
-#include "Interfaces/light_sens_interface.h"
-#include "Interfaces/line_sens_interface.h"
-#include "Functions/testFunctions.h"
-#include "Functions/docking_functions.h"
-#include "Functions/manual_mode.h"
-#include "Functions/obstacle_avoidance.h"
-#include "Functions/motion_functions.h"
-#include "Functions/navigation_functions.h"
-#include "Functions/light_colour_functions.h"
-#include "Functions/charging_functions.h"
-
 //////////////[Defines]/////////////////////////////////////////////////////////////////////////////
-//Universal Asynchronous Receiver/Transmitter
-#define TXRDY (REG_UART3_SR & UART_SR_TXRDY)	//UART TX READY flag [SHOULD BE IN COMMUNICATIONS]
 
 //////////////[Global variables]////////////////////////////////////////////////////////////////////
 //Global variables should be initialised in robot_setup.c, then an extern to them should be placed
-//here, otherwise we end up with mulitple definition errors.
-
+//here, otherwise we end up with multiple definition errors.
 extern RobotGlobalStructure sys;
 extern volatile char streamDelayCounter, streamIntervalFlag;	//TODO:What are these?
 

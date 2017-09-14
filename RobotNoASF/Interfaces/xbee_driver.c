@@ -37,8 +37,11 @@
 */
 
 //////////////[Includes]////////////////////////////////////////////////////////////////////////////
-#include <string.h>
+#include "../robot_setup.h"
 #include "xbee_driver.h"
+#include "uart_interface.h"
+#include "../Functions/motion_functions.h"	//For interpretswarmmsg.. will be moved
+#include <string.h>
 
 //////////////[Global Variables]////////////////////////////////////////////////////////////////////
 //TODO: Mansel, Are all of these necessary?
@@ -52,12 +55,11 @@ struct FrameInfo FrameBufferInfo[FRAME_BUFFER_INFO_SIZE];
 int FrameBufferInfoIn, FrameBufferInfoOut, FrameBufferInfoUse;
 
 uint8_t MessageBuffer[MESSAGE_BUFFER_SIZE];
-//int MessageBufferIn, MessageBufferOut, MessageBufferUse;
+int MessageBufferIn, MessageBufferOut, MessageBufferUse;
 
 struct MessageInfo MessageBufferInfo[MESSAGE_BUFFER_INFO_SIZE];
 int MessageBufferInfoIn, MessageBufferInfoOut, MessageBufferInfoUse;
 
-char obstacleAvoidanceEnabledFlag = 0;
 struct FrameInfo frame; //Xbee API frame
 struct MessageInfo message; //Incoming message with XBee metadata removed
 
@@ -200,8 +202,7 @@ void xbeeInterpretSwarmMessage(struct MessageInfo message, RobotGlobalStructure 
 		sys->states.mainf = M_TEST;
 	else if (message.command == 0xD0)
 	{
-		sys->flags.obaMoving = 0;
-		stopRobot();
+		mfStopRobot(sys);
 	}
 	else if(message.command >= 0xD1 && message.command <= 0xD3) //Manual command range 0xD1-0xD3
 		sys->states.mainf = M_MANUAL;
@@ -213,9 +214,9 @@ void xbeeInterpretSwarmMessage(struct MessageInfo message, RobotGlobalStructure 
 		//0xD6 and D5 are also reserved for docking 
 		//at a later date for different methods if required
 	else if (message.command == 0xD8)
-		obstacleAvoidanceEnabledFlag = 0;
+		sys->flags.obaEnabled = 0;
 	else if (message.command == 0xD9)
-		obstacleAvoidanceEnabledFlag = 1;
+		sys->flags.obaEnabled = 1;
 	else if (message.command == 0xDA)
 		sys->states.mainf = M_LIGHT_FOLLOW;
 	else if (message.command == 0xDB)

@@ -19,6 +19,14 @@
 *
 */
 //////////////[Includes]////////////////////////////////////////////////////////////////////////////
+#include "../robot_setup.h"
+#include "../Interfaces/xbee_driver.h"
+#include "../Interfaces/prox_sens_interface.h"
+#include "../Interfaces/light_sens_interface.h"
+#include "../Interfaces/adc_interface.h"
+#include "../Interfaces/twimux_interface.h"
+#include "../Interfaces/motor_driver.h"
+#include "../Interfaces/opt_interface.h"
 #include "testFunctions.h"
 
 //////////////[Global variables]////////////////////////////////////////////////////////////////////

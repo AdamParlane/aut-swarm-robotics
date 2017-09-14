@@ -18,7 +18,12 @@
 */
 
 //////////////[Includes]////////////////////////////////////////////////////////////////////////////
+#include "../robot_setup.h"
 #include "charging_functions.h"
+#include "motion_functions.h"
+#include "../Interfaces/pio_interface.h"
+#include "../Interfaces/fc_interface.h"
+#include "../Interfaces/timer_interface.h"
 
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*

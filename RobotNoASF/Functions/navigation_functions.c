@@ -22,7 +22,11 @@
 */
 
 //////////////[Includes]////////////////////////////////////////////////////////////////////////////
+#include "../robot_setup.h"
+#include "../IMU-DMP/inv_mpu_CUSTOM.h"
 #include "navigation_functions.h"
+#include "../Interfaces/imu_interface.h"
+#include "../Interfaces/opt_interface.h"
 #include <tgmath.h>				//Required for atan2 in nfGetEulerAngles()
 
 //////////////[Defines]/////////////////////////////////////////////////////////////////////////////

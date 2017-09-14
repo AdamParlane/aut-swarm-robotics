@@ -20,6 +20,7 @@
 */
 
 //////////////[Includes]////////////////////////////////////////////////////////////////////////////
+#include "../robot_setup.h"
 #include "fc_interface.h"
 #include "twimux_interface.h"	//Needed for TWI0 read and write functions
 

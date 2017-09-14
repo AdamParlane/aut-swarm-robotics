@@ -27,7 +27,6 @@
 #define MOTION_FUNCTIONS_H_
 
 //////////////[Includes]////////////////////////////////////////////////////////////////////////////
-#include "../robot_setup.h"
 #include <stdlib.h>
 
 //////////////[Defines]/////////////////////////////////////////////////////////////////////////////
@@ -158,5 +157,7 @@ float mfTrackLightProx(RobotGlobalStructure *sys);
 *
 */
 char mfRandomMovementGenerator(void);
+
+void mfStopRobot(RobotGlobalStructure *sys);
 
 #endif /* MOTION_FUNCTIONS_H_ */

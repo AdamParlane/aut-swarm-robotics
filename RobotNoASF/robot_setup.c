@@ -22,31 +22,52 @@
 
 //////////////[Includes]////////////////////////////////////////////////////////////////////////////
 #include "robot_setup.h"
+#include "Interfaces/adc_interface.h"
+#include "Interfaces/external_interrupt.h"
+#include "Interfaces/fc_interface.h"
+#include "Interfaces/imu_interface.h"
+#include "Interfaces/light_sens_interface.h"
+#include "Interfaces/line_sens_interface.h"
+#include "Interfaces/motor_driver.h"
+#include "Interfaces/opt_interface.h"
+#include "Interfaces/pio_interface.h"
+#include "Interfaces/prox_sens_interface.h"
+#include "Interfaces/timer_interface.h"
+#include "Interfaces/twimux_interface.h"
+#include "Interfaces/uart_interface.h"
+#include "Interfaces/xbee_driver.h"
+
+#include <stdlib.h>				//srand()
 
 //////////////[Global variables]////////////////////////////////////////////////////////////////////
 extern uint32_t systemTimestamp;	//Required by waitForFlag()
+
 //////////////[Global variables]////////////////////////////////////////////////////////////////////
-//used for test function calling
+//Global Data Structure Initialisation
 RobotGlobalStructure sys =
 {
+	//System flags
 	.flags =
 	{
-		.xbeeNewData = 0,
-		.imuCheckFifo = 0,
-		.obaMoving = 0
+		.xbeeNewData		= 0,
+		.imuCheckFifo		= 0,
+		.obaMoving			= 0,
+		.obaEnabled			= 0
 	},
 	
+	//System States
 	.states =
 	{
-		.mainf = M_IDLE,
-		.mainfPrev = M_IDLE,
-		.docking = DS_START,
-		.chargeCycle = CCS_CHECK_POWER,
-		.followLine = FLS_FIRST_CONTACT,
-		.scanBrightest = SBS_FUNCTION_INIT,
+		.mainf				= M_IDLE,
+		.mainfPrev			= M_IDLE,
+		.docking			= DS_START,
+		.chargeCycle		= CCS_CHECK_POWER,
+		.followLine			= FLS_FIRST_CONTACT,
+		.scanBrightest		= SBS_FUNCTION_INIT,
 		.moveHeadingDistance = MHD_START
 	},
 	
+	//Robot Position
 	.pos =
 	{
 		.x = 0,					//Resets robot position
@@ -113,7 +134,7 @@ void robotSetup(void)
 	lfInit();							//Initialise line follow sensors. Only on V2.
 	
 	delay_ms(2500);						//Stops robot running away while programming
-	srand(streamDelayCounter);		//Seed rand() to give unique random numbers
+	srand(streamDelayCounter);			//Seed rand() to give unique random numbers
 	return;
 }
 /*

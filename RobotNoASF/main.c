@@ -20,11 +20,24 @@
 //////////////[Includes]////////////////////////////////////////////////////////////////////////////
 #include "robot_setup.h"
 
+#include "Interfaces/xbee_driver.h"
+#include "Interfaces/adc_interface.h"
+#include "Interfaces/pio_interface.h"
+#include "Interfaces/timer_interface.h"
+
+#include "Functions/charging_functions.h"
+#include "Functions/docking_functions.h"
+#include "Functions/manual_mode.h"
+#include "Functions/motion_functions.h"
+#include "Functions/navigation_functions.h"
+#include "Functions/obstacle_avoidance.h"
+#include "Functions/testFunctions.h"
+
 //////////////[Defines]/////////////////////////////////////////////////////////////////////////////
 
 //////////////[Global variables]////////////////////////////////////////////////////////////////////
 uint16_t battVoltage;					//Stores battery voltage on start up
-extern RobotGlobalStructure sys;						//System data structure
+extern RobotGlobalStructure sys;		//System data structure
 extern struct MessageInfo message;		//Incoming message structure
 
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
@@ -72,7 +85,7 @@ extern struct MessageInfo message;		//Incoming message structure
 *				Entered when the robot is docked
 *				Charge_info also contains the charging status should other functions require it
 * IDLE:			***module: N/A
-*				Stops the robot motion by calling stopRobot()
+*				Stops the robot motion by calling mfStopRobot()
 *				Blinks LED 3 every 500ms to show externally that robot is in IDLE
 *				Entered when other majour blocking functions or states are finished
 *				Exitied by PC commands
@@ -146,7 +159,7 @@ int main(void)
 				break;
 
 			case M_IDLE:					
-				stopRobot();
+				mfStopRobot(&sys);
 				if(!fdelay_ms(1000))					//Blink LED 3 in Idle mode
 					led3Tog;	
 				break;
@@ -155,7 +168,7 @@ int main(void)
 		xbeeGetNew();			//Checks for and interprets new communications
 		nfRetrieveNavData(&sys);	//checks if there is new navigation data and updates sys->pos.
 		//check to see if obstacle avoidance is enabled AND the robot is moving
-		if(obstacleAvoidanceEnabledFlag && sys.flags.obaMoving)
+		if(sys.flags.obaEnabled && sys.flags.obaMoving)
 			dodgeObstacle(&sys); //avoid obstacles using proximity sensors
 	}
 }

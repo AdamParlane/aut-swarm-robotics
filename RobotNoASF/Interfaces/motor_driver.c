@@ -25,16 +25,21 @@
 * char frontRightMotorDrive(signed char speed)
 * char frontLeftMotorDrive(signed char speed)
 * void moveRobot(float direction, unsigned char speed);
-* void stopRobot(void);
+* void mdStopMotors(void);
 * void rotateRobot(signed char speed);
 * void setTestMotors(uint8_t motorData[]);
 *
 */
  
 //////////////[Includes]////////////////////////////////////////////////////////////////////////////
+#include "../robot_setup.h"
 #include "motor_driver.h"
+#include "../Functions/testFunctions.h"
+#include "timer_interface.h"				//delay_ms()
+#include <stdlib.h>							//abs()
+#include <tgmath.h>							//Trigonometry
 
-//////////////[Includes]////////////////////////////////////////////////////////////////////////////
+//////////////[Global Variables]////////////////////////////////////////////////////////////////////
 extern RobotGlobalStructure sys;
 
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
@@ -335,7 +340,7 @@ void rotateRobot(signed char speed)
 /*
 
 * Function:
-* void stopRobot(void)
+* void mdStopMotors(void)
 *
 * Stop all motors
 *
@@ -349,7 +354,7 @@ void rotateRobot(signed char speed)
 * Sets all direction pins on the motor drivers low.
 *
 */
-void stopRobot(void)
+void mdStopMotors(void)
 {
 	//Stops the robot from moving
 	sys.flags.obaMoving = 0;
@@ -466,7 +471,7 @@ void PWMSpeedTest(void)
 	delay_ms(5000);
 	frontRightPwm = 100;
 	delay_ms(5000);
-	stopRobot();
+	mdStopMotors();
 }
 
 /*

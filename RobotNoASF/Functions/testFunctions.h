@@ -2,14 +2,11 @@
  * testFunctions.h
  *
  * Created: 13/07/2017 4:55:41 PM
- *  Author: adams
+ *  Author: TODO:COMMECNTING AND HEADERSadams
  */ 
-
 
 #ifndef TESTFUNCTIONS_H_
 #define TESTFUNCTIONS_H_
-
-#include "../robot_setup.h"
 
 #define TEST_COMMUNICATIONS		0xE1
 #define TEST_PROXIMITY_SENSORS	0xE4
@@ -40,6 +37,12 @@ struct transmitDataStructure
 	uint8_t Data[50];//array for data to be transmitted to PC BEFORE XBee framing has been added
 	uint8_t DataSize;//size of the transmit array
 };
+
+union float_bytes {
+	float val;
+	unsigned char bytes[sizeof(float)];
+}data;
+
 
 /*
 * Function: uint8_t testManager(struct MessageInfo message, struct transmitDataStructure *transmit,
@@ -82,10 +85,7 @@ void testAll(struct transmitDataStructure *transmit, RobotGlobalStructure *sys);
 
 
 
-union float_bytes {
-	float val;
-	unsigned char bytes[sizeof(float)];
-}data;
+
 
 
 

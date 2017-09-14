@@ -33,9 +33,10 @@
 */
 
 //////////////[Includes]////////////////////////////////////////////////////////////////////////////
-#include "imu_interface.h"
-#include "twimux_interface.h"	//twi and multiplexer
 #include "../robot_setup.h"
+#include "twimux_interface.h"	//twi and multiplexer
+#include "../Functions/navigation_functions.h"
+#include "imu_interface.h"
 
 //Invensense Direct Motion Processing Driver Files
 #include "../IMU-DMP/inv_mpu_dmp_motion_driver_CUSTOM.h"//Direct Motion Processing setup functions

@@ -13,23 +13,25 @@
 * See page 446 for information on PIO interrupts (Section 27)
 *
 * Functions:
-* void funcName(void)
+* void extIntInit(void)
 *
 */
 
 //////////////[Includes]////////////////////////////////////////////////////////////////////////////
+#include "../robot_setup.h"
 #include "external_interrupt.h"
+#include "../Interfaces/imu_interface.h"
 #include "../IMU-DMP/inv_mpu_dmp_motion_driver_CUSTOM.h"
 
 //////////////[Global variables]////////////////////////////////////////////////////////////////////
-extern RobotGlobalStructure sys;	//imuCheckFifo flag
+extern RobotGlobalStructure sys;	//imuCheckFifo flag needed by external interrupt
 
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*
 * Function:
 * void extIntInit(void)
 *
-* Initialisation for external interrupts goes here
+* Initialisation for external interrupts goes in here
 *
 * Inputs:
 * none

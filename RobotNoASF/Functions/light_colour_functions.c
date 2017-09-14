@@ -21,7 +21,11 @@
 */
 
 //////////////[Includes]////////////////////////////////////////////////////////////////////////////
+#include "../robot_setup.h"
 #include "light_colour_functions.h"
+#include "../Interfaces/twimux_interface.h"
+#include "../Interfaces/light_sens_interface.h"
+
 #include <tgmath.h>				//Used for round in RGB2HSV function
 
 //////////////[Global variables]////////////////////////////////////////////////////////////////////

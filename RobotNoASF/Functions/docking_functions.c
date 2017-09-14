@@ -22,7 +22,18 @@
 */
 
 //////////////[Includes]////////////////////////////////////////////////////////////////////////////
+#include "../robot_setup.h"
 #include "docking_functions.h"
+#include "motion_functions.h"
+#include "navigation_functions.h"
+#include "../Interfaces/line_sens_interface.h"
+#include "../Interfaces/adc_interface.h"
+#include "../Interfaces/light_sens_interface.h"
+#include "../Interfaces/twimux_interface.h"
+#include "../Interfaces/prox_sens_interface.h"
+#include "../Interfaces/fc_interface.h"
+#include "../Interfaces/timer_interface.h"
+#include "../Interfaces/motor_driver.h"
 #include <stdlib.h>				//abs() function in dfFollowLine()
 
 //////////////[Global variables]////////////////////////////////////////////////////////////////////
@@ -77,12 +88,12 @@ uint8_t dfDockRobot( RobotGlobalStructure *sys)
 			mfTrackLight(sys);
 			if(!fdelay_ms(3700))			//After 3.7 seconds, look for LEDs again
 			{
-				stopRobot();
+				mfStopRobot(sys);
 				sys->states.docking = DS_RESCAN_BRIGHTEST;
 			}
 			if(dfUpdateLineSensorStates())	//If line found then follow it
 			{
-				stopRobot();
+				mfStopRobot(sys);
 				sys->states.docking = DS_FOLLOW_LINE;
 			}
 			break;
@@ -112,7 +123,7 @@ uint8_t dfDockRobot( RobotGlobalStructure *sys)
 			if(fcChipState == FC_STATUS_BF_STAT_INRDY || fcChipState == FC_STATUS_BF_STAT_CHRGIN)
 			{
 				sys->states.docking = DS_FINISHED;	//Docking is complete
-				stopRobot();				//Stop moving
+				mfStopRobot(sys);				//Stop moving
 			} else {
 				mfMoveToHeading(lineHeading, 45, sys);
 			}
