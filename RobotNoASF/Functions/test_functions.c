@@ -221,7 +221,7 @@ void testManager(struct MessageInfo xbMessage, RobotGlobalStructure *sys)
 {
 	static struct transmitDataStructure transmitMessage;
 	static uint8_t testMode = 0x00;   
-	if(sys->flags.xbeeNewData || streamIntervalFlag)
+	if(sys->flags.xbeeNewData || sys->flags.tfStream)
 	{
 		//get the new test data
 		testMode = getTestData(xbMessage, &transmitMessage, sys);
@@ -234,9 +234,9 @@ void testManager(struct MessageInfo xbMessage, RobotGlobalStructure *sys)
 		xbeeSendAPITransmitRequest(COORDINATOR_64,UNKNOWN_16, transmitMessage.Data,
 		transmitMessage.DataSize);  //Send the Message
 	}
-	else if(streamIntervalFlag && testMode == STREAM_DATA)
+	else if(sys->flags.tfStream && testMode == STREAM_DATA)
 	{
-		streamIntervalFlag = 0;
+		sys->flags.tfStream = 0;
 		xbeeSendAPITransmitRequest(COORDINATOR_64,UNKNOWN_16, transmitMessage.Data,
 		transmitMessage.DataSize);  //Send the Message
 	}

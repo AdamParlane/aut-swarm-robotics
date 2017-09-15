@@ -43,7 +43,6 @@
 #include "../IMU-DMP/inv_mpu_CUSTOM.h"//IMU basic setup and initialisation functions
 
 ///////////////Global Vars//////////////////////////////////////////////////////////////////////////
-extern uint32_t systemTimestamp;
 
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*
@@ -333,8 +332,8 @@ uint8_t imuReadFifo(RobotGlobalStructure *sys)
 		}
 
 	} while(more);						//If there is still more in the FIFO then do it again->
-	sys->pos.IMU.deltaTime = sensorTimeStamp - sys->pos.IMU.timeStamp;
-	sys->pos.IMU.timeStamp = sensorTimeStamp;
+	sys->pos.deltaTime = sensorTimeStamp - sys->pos.timeStamp;
+	sys->pos.timeStamp = sensorTimeStamp;
 	return 0;
 }
 
@@ -391,8 +390,8 @@ uint8_t imuCommTest(void)
 * Implementation:
 * First the function checks that correctHeading is between -180 and 180 and corrects it if
 * necessary. Then it looks at the difference between the heading provided and the heading reported
-* by the IMU and adds the difference to IMU.yawOffset to correct it. Finally, it makes sure that
-* IMU.yawOffset is between -180 and 180 and corrects it if necessary.
+* by the IMU and adds the difference to pos.facingOffset to correct it. Finally, it makes sure that
+* pos.facingOffset is between -180 and 180 and corrects it if necessary.
 * 
 * Improvements:
 * Will most likely move this from imu_interface to the Navigation module when its created.
@@ -402,8 +401,8 @@ void imuApplyYawCorrection(float correctHeading, RobotGlobalStructure *sys)
 {
 	//Make sure correctHeading is in range
 	correctHeading = nfWrapAngle(correctHeading);
-	//Take difference and apply it to IMU.yawOffset.
-	sys->pos.IMU.yawOffset += correctHeading - sys->pos.IMU.yaw;
-	//Wrap IMU.yawOffset so its always between -180 and 180 degrees
-	sys->pos.IMU.yawOffset = nfWrapAngle(sys->pos.IMU.yawOffset);
+	//Take difference and apply it to pos.facingOffset.
+	sys->pos.facingOffset += correctHeading - sys->pos.IMU.yaw;
+	//Wrap pos.facingOffset so its always between -180 and 180 degrees
+	sys->pos.facingOffset = nfWrapAngle(sys->pos.facingOffset);
 }

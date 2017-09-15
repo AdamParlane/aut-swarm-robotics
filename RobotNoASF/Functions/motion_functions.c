@@ -82,7 +82,7 @@ float mfRotateToHeading(float heading, RobotGlobalStructure *sys)
 	heading = nfWrapAngle(heading);
 		
 	//Calculate proportional error values
-	pErr = heading - sys->pos.IMU.yaw;				//Signed Error
+	pErr = heading - sys->pos.facing;				//Signed Error
 	
 	//Force the P controller to always take the shortest path to the destination.
 	//For example if the robot was currently facing at -120 degrees and the target was 130 degrees,
@@ -159,7 +159,7 @@ float mfMoveToHeading(float heading, uint8_t speed, RobotGlobalStructure *sys)
 	speed = capToRangeUint(speed, 0, 100);
 		
 	//Calculate proportional error values
-	pErr = heading - sys->pos.IMU.yaw;				//Signed Error
+	pErr = heading - sys->pos.facing;				//Signed Error
 	
 	//Force the P controller to always take the shortest path to the destination.
 	//For example if the robot was currently facing at -120 degrees and the target was 130 degrees,
@@ -299,7 +299,7 @@ float mfTrackLight(RobotGlobalStructure *sys)
 		iErr = 0;
 		return 0;
 	} else {
-		mfMoveToHeading(sys->pos.IMU.yaw + dHeading, 40, sys);
+		mfMoveToHeading(sys->pos.facing + dHeading, 40, sys);
 		return pErr;	//If not, return pErr
 	}
 }
@@ -365,7 +365,7 @@ float mfTrackLightProx(RobotGlobalStructure *sys)
 		iErr = 0;
 		return 0;
 	} else {
-		mfRotateToHeading(sys->pos.IMU.yaw + dHeading, sys);
+		mfRotateToHeading(sys->pos.facing + dHeading, sys);
 		return dHeading;	//If not, return pErr
 	}
 	return 1;
@@ -384,8 +384,8 @@ float mfTrackLightProx(RobotGlobalStructure *sys)
 * No return values
 *
 * Implementation:
-* rand is seeded using srand and the streamIntervalFlag
-* streamIntervalFlag is used becaue it has a high chance of being unique each time this is called
+* rand is seeded using srand and the sys->flags.tfStream
+* sys->flags.tfStream is used becaue it has a high chance of being unique each time this is called
 * This is important because rand is puesdo-random and the same seed will produce the same set
 * of 'random' numbers therefore must be seeded with a unique value
 * PC applications use the time but this is not available

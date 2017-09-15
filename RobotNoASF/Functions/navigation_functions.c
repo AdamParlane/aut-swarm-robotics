@@ -67,10 +67,10 @@ uint8_t nfRetrieveNavData(RobotGlobalStructure *sys)
 {
 	if(sys->flags.imuCheckFifo)
 	{
-		imuReadFifo(sys);		//Read IMU's FIFO buffer
-		nfGetEulerAngles(sys);	//Convert IMU quats to Euler angles
-		getMouseXY(sys);			//Update mouse sensor data while at it
-		sys->flags.imuCheckFifo = 0;					//Reset interrupt flag
+		getMouseXY(sys);							//Update mouse sensor data
+		imuReadFifo(sys);							//Read IMU's FIFO buffer
+		nfGetEulerAngles(sys);						//Convert IMU quaternions to Euler angles
+		sys->flags.imuCheckFifo = 0;				//Reset interrupt flag
 		return 0;
 	} else
 		return 1;
@@ -123,10 +123,10 @@ void nfGetEulerAngles(RobotGlobalStructure *sys)
 	sys->pos.IMU.roll = (atan2(2*y*w-2*x*z , sqx - sqy - sqz + sqw))*180/M_PI;
 	sys->pos.IMU.pitch = (asin(2*test/unit))*180/M_PI;
 	sys->pos.IMU.yaw = (atan2(2*x*w-2*y*z , -sqx + sqy - sqz + sqw))*180/M_PI;
-	//Factor in the Yaw offset (Heading correction from the PC)
-	sys->pos.IMU.yaw += sys->pos.IMU.yawOffset;
-	//Wrap IMU.yaw so its always between -180 and 180 degrees
-	sys->pos.IMU.yaw = nfWrapAngle(sys->pos.IMU.yaw);
+	//Factor in the Yaw offset (Heading correction from the PC) and store in pos.facing
+	sys->pos.facing = sys->pos.IMU.yaw + sys->pos.facingOffset;
+	//Wrap facing so its always between -180 and 180 degrees
+	sys->pos.facing = nfWrapAngle(sys->pos.IMU.yaw);
 }
 
 /*

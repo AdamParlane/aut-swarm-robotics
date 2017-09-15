@@ -24,11 +24,11 @@
 #include "timer_interface.h"
 
 ///////////////Global Vars//////////////////////////////////////////////////////////////////////////
-volatile uint32_t systemTimestamp = 0;	//Number of ms since powerup. Used by delay_ms and get_ms 
-										//functions which in turn are used by the IMU drivers/DMP
+
 volatile uint16_t delaymsCounter = 0;
 
-extern RobotGlobalStructure sys;
+extern RobotGlobalStructure sys;	//gives access TC interrupt handler and delay_ms(), get_ms(),
+									//and fdelay_ms() access to sys.timeStamp
 
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*
@@ -72,35 +72,37 @@ void timer0Init(void)
 	////TIMER0////
 	//Timer0 is used for delay_ms and get_ms functions required by the imu driver
 	REG_PMC_PCER0
-	|=	(1<<ID_TC0)
-	|	(1<<ID_TC1);						//Enable TC clock (ID_TC0 is the peripheral identifier
-	//for timer counter 0)
-	REG_PIOA_PDR |= (1<<0);					// enable TCO control of XCLK for Camera (PA0)
-	NVIC_EnableIRQ(ID_TC1);
-	REG_TC0_CMR0							//TC Channel Mode Register (Pg877)
-	|=	TC_CMR_TCCLKS_TIMER_CLOCK1			//Prescaler MCK/2 (100MHz/2 = 50MHz)
-	|	TC_CMR_WAVE							//Waveform mode
-	|	TC_CMR_WAVSEL_UP_RC					//Clear on RC compare
-	|	TC_CMR_ACPA_SET						// Set pulse on RA compare
-	|	TC_CMR_ACPC_CLEAR;					// Clear pulse on RC compare
-	REG_TC0_CMR1							//TC Channel Mode Register (Pg877)
-	|=	TC_CMR_TCCLKS_TIMER_CLOCK3			//Prescaler MCK/32 (100MHz/32 = MHz)
-	|	TC_CMR_WAVE							//Waveform mode
-	|	TC_CMR_WAVSEL_UP_RC					//Clear on RC compare
-	|	TC_CMR_ACPA_SET						//Set pulse on RA compare
-	|	TC_CMR_ACPC_CLEAR;					//Clear pulse on RC compare
-	REG_TC0_IER1							//TC interrupt enable register
-	|=	TC_IER_CPCS;						//Enable Register C compare interrupt
-	REG_TC0_RC1	|= (TC_RC_RC(3125));		//Set Register C (the timer counter value at which the
-	//interrupt will be triggered) Trigger once every ms (100MHz/2/1M)
-	REG_TC0_RA0 |= (TC_RA_RA(2));			//RA set to 2 counts
-	REG_TC0_RC0 |= (TC_RC_RC(4));			//RC set to 4 counts (total square wave of 80ns period, 12.5MHZ)
-	REG_TC0_CCR0							//Clock control register
-	|=	TC_CCR_CLKEN						//Enable the timer clk.
-	|	TC_CCR_SWTRG;						//Start timer register counter
-	REG_TC0_CCR1							//Clock control register
-	|=	TC_CCR_CLKEN						//Enable the timer clk.
-	|	TC_CCR_SWTRG;						//Start timer register counter	
+	|=	(1<<ID_TC0)						//Enable TC clock (ID_TC0 is the peripheral identifier
+	|	(1<<ID_TC1);					//for timer counter 0)	
+	REG_PIOA_PDR |= (1<<0);				// enable TCO control of XCLK for Camera (PA0)
+	NVIC_EnableIRQ(ID_TC1);				//Enable interrupts
+	REG_TC0_CMR0						//TC Channel Mode Register (Pg877)
+	|=	TC_CMR_TCCLKS_TIMER_CLOCK1		//Prescaler MCK/2 (100MHz/2 = 50MHz)
+	|	TC_CMR_WAVE						//Waveform mode
+	|	TC_CMR_WAVSEL_UP_RC				//Clear on RC compare
+	|	TC_CMR_ACPA_SET					// Set pulse on RA compare
+	|	TC_CMR_ACPC_CLEAR;				// Clear pulse on RC compare
+	REG_TC0_CMR1						//TC Channel Mode Register (Pg877)
+	|=	TC_CMR_TCCLKS_TIMER_CLOCK3		//Prescaler MCK/32 (100MHz/32 = MHz)
+	|	TC_CMR_WAVE						//Waveform mode
+	|	TC_CMR_WAVSEL_UP_RC				//Clear on RC compare
+	|	TC_CMR_ACPA_SET					//Set pulse on RA compare
+	|	TC_CMR_ACPC_CLEAR;				//Clear pulse on RC compare
+	REG_TC0_IER1						//TC interrupt enable register
+	|=	TC_IER_CPCS;					//Enable Register C compare interrupt
+	REG_TC0_RC1							//Set Register C (the timer counter value at which the
+	|=	(TC_RC_RC(3125));				//interrupt will be triggered) Trigger once every ms 
+										//(100MHz/2/1M)
+	REG_TC0_RA0							//RA set to 2 counts
+	|=	(TC_RA_RA(2));
+	REG_TC0_RC0							//RC set to 4 counts (total square wave of 80ns period,
+	|=	(TC_RC_RC(4));					//12.5MHZ)
+	REG_TC0_CCR0						//Clock control register
+	|=	TC_CCR_CLKEN					//Enable the timer clk.
+	|	TC_CCR_SWTRG;					//Start timer register counter
+	REG_TC0_CCR1						//Clock control register
+	|=	TC_CCR_CLKEN					//Enable the timer clk.
+	|	TC_CCR_SWTRG;					//Start timer register counter	
 }
 
 
@@ -117,7 +119,7 @@ void timer0Init(void)
 * function will return 1 if invalid pointer is passed, otherwise a 0 on success
 *
 * Implementation:
-* Retrieves the value stored in systemTimestamp (stores the number of millisecs that have elapsed
+* Retrieves the value stored in sys.timeStamp (stores the number of millisecs that have elapsed
 * since power on) and drops it at the address given by *timestamp. if *timestamp is an invalid
 * address then returns a 1.
 *
@@ -126,7 +128,7 @@ int get_ms(uint32_t *timestamp)
 {
 	if(!timestamp)
 	return 1;
-	*timestamp = systemTimestamp;
+	*timestamp = sys.timeStamp;
 	return 0;
 }
 
@@ -226,7 +228,7 @@ uint8_t fdelay_ms(uint32_t period_ms)
 * Interrupt handler for Timer Counter 1 
 * Triggered every 1ms using register C compare match
 * Used to help implement get_ms() and delay_ms() functions required by the IMU driver. 
-* Every ms it increments the systemTimestamp, streamDelayCounter and delaymsCounter
+* Every ms it increments the sys.timeStamp, streamDelayCounter and delaymsCounter
 * streamDelayCounter is used to send test data to the PC every 100ms so this counts to 100ms
 * and then sets a flag letting main() know its time to send the next set of data
 * Also includes some IMU manual stuff for V1
@@ -236,15 +238,15 @@ void TC1_Handler()
 {
 	//The interrupt handler for timer counter 1
 	//Triggers every 1ms
-	if(REG_TC0_SR1 & TC_SR_CPCS)	//If RC compare flag
+	if(REG_TC0_SR1 & TC_SR_CPCS)	//If RC compare flag (once every ms)
 	{
-		systemTimestamp++;//used for get ms
+		sys.timeStamp++;//used for get ms
 		delaymsCounter++;//used for delay ms
 		streamDelayCounter++;//used for streaming data to pc every 100ms
 		if(streamDelayCounter == 100) //used for streaming data every 100ms
 		{
 			streamDelayCounter = 0;
-			streamIntervalFlag = 1;
+			sys.flags.tfStream = 1;
 		}
 	}
 }

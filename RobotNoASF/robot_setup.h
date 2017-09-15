@@ -80,7 +80,7 @@ typedef enum ScanBrightestStates
 } ScanBrightestStates;
 
 typedef enum ChargeCycleStates
-//cfChargeCycleHandler() function states
+//pfChargeCycleHandler() function states
 {
 	CCS_FINISHED,
 	CCS_CHECK_POWER,
@@ -111,22 +111,19 @@ typedef struct OpticalSensor
 //Stores IMU sensor raw and converted data
 typedef struct IMUSensor
 {
-	long qw;				//W component of the quaternion complex number returned by DMP
-	long qx;				//X component of the quaternion complex number returned by DMP
-	long qy;				//Y component of the quaternion complex number returned by DMP
-	long qz;				//Z component of the quaternion complex number returned by DMP
+	long qw;			//W component of the quaternion complex number returned by DMP
+	long qx;			//X component of the quaternion complex number returned by DMP
+	long qy;			//Y component of the quaternion complex number returned by DMP
+	long qz;			//Z component of the quaternion complex number returned by DMP
 	float accelX;		//Delta X Acceleration in ms^2
 	float accelY;		//Delta Y Acceleration in ms^2
 	float accelZ;		//Delta Z Acceleration in ms^2
-	float gyroX;			//Delta pitch in deg/s
-	float gyroY;			//Delta roll in	deg/s
-	float gyroZ;			//Delta yaw in deg/s (Delta heading)
-	float pitch;			//Absolute pitch from DMP (degrees)
+	float gyroX;		//Delta pitch in deg/s
+	float gyroY;		//Delta roll in	deg/s
+	float gyroZ;		//Delta yaw in deg/s (Delta heading)
+	float pitch;		//Absolute pitch from DMP (degrees)
 	float roll;			//Absolute roll from DMP (degrees)
 	float yaw;			//Absolute yaw (heading) from DMP (degrees)
-	float yawOffset;		//Used to offset heading value (when corrected by PC)
-	unsigned long timeStamp;//Time at which last IMU reading took place (ms)
-	unsigned short deltaTime;//Time between last IMU reading and IMU previous reading
 } IMUSensor;
 
 //structure to store all the robot side navigation / positioning data
@@ -135,15 +132,39 @@ typedef struct IMUSensor
 //an additional function (84bytes i think)
 typedef struct Position
 {
-	OpticalSensor Optical;
-	IMUSensor IMU;
-	float x;				//Absolute X position in arena
-	float y;				//Absolute Y position in arena
-	float heading;			//Direction of travel
+	OpticalSensor Optical;		//Optical sensor raw data
+	IMUSensor IMU;				//IMU raw and converted data
+	float x;					//Absolute X position in arena (mm)
+	float y;					//Absolute Y position in arena (mm)
+	float heading;				//Absolute direction of travel (deg)
+	float facing;				//Absolute direction robot is facing (deg)
 	signed int targetHeading;	//For obstacle avoidance, desired heading before an obstacel is 
 								//detected
-	char targetSpeed;	//For obstacle avoidance, desired speed
+	char targetSpeed;			//For obstacle avoidance, desired speed
+	unsigned long timeStamp;	//Time at which last IMU reading took place (ms). Can be used as a
+								//time marker for all Nav data, as it all get polled at the same
+								//time as the IMU
+	unsigned short deltaTime;	//Time between last IMU reading and IMU previous reading
+	float facingOffset;			//Used to offset facing value (when corrected by PC)
 } Position;
+
+//Stores information about the battery and charging
+typedef struct BatteryChargeData
+{
+	uint16_t batteryVoltage;			//Battery voltage in mV
+	uint8_t batteryTemp;				//Battery temperature in degrees
+	uint16_t batteryMaxVoltage;			//Fully charged voltage of battery (will calibrate onthefly)
+	uint16_t batteryDockingVoltage;		//Voltage below which the robot should seek dock
+	uint16_t batteryMinVoltage;			//Voltage at which robot is considered completely dead
+	uint8_t fcChipStatus;				//Status or fault code reported by Charge chip
+	uint8_t fcChipFaultFlag;			//Fault detected by charge chip, see Status for code
+	uint8_t pollBatteryEnabled;			//Enable battery voltage polling
+	uint16_t pollBatteryInterval;		//Interval in ms to poll battery voltage/temp
+	uint8_t pollChargingStateEnabled;	//Enable charge chip status polling
+	uint16_t pollChargingStateInterval;	//Interval in ms to poll charge chip
+	uint8_t chargeWatchDogEnabled;		//Enable the FC chip watchdog system (for when charging)
+	uint16_t chargeWatchDogInterval;	//Watchdog routine interval (ms)
+} BatteryChargeData;
 
 //Stores colour sensor data, both raw and converted, for a single colour sensor
 typedef struct ColourSensorData
@@ -164,6 +185,7 @@ typedef struct SystemFlags
 	char imuCheckFifo;	//IMU ext interrupt has been triggered
 	char obaMoving;		//Robot is in motion
 	char obaEnabled;	//Obstable avoidance enabled
+	char tfStream;		//Test function stream time flag
 } SystemFlags;
 
 //Structure that will store the state of every state machine in the system
@@ -182,7 +204,7 @@ typedef struct SystemStates
 	//dfScanBrightestLightSource() states
 	ScanBrightestStates scanBrightest;
 	
-	//cfChargeCycleHandler() states
+	//pfChargeCycleHandler() states
 	ChargeCycleStates chargeCycle;
 	
 	//mfMoveToHeadingByDistance() states
@@ -195,6 +217,8 @@ typedef struct RobotGlobalStructure
 	SystemStates states;
 	SystemFlags flags;
 	Position pos;
+	BatteryChargeData power;
+	uint32_t timeStamp;
 } RobotGlobalStructure;
 
 //////////////[Defines]/////////////////////////////////////////////////////////////////////////////
@@ -203,7 +227,8 @@ typedef struct RobotGlobalStructure
 //Global variables should be initialised in robot_setup.c, then an extern to them should be placed
 //here, otherwise we end up with multiple definition errors.
 extern RobotGlobalStructure sys;
-extern volatile char streamDelayCounter, streamIntervalFlag;	//TODO:What are these?
+//TODO: add these to the sys structure
+extern volatile char streamDelayCounter;
 
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*

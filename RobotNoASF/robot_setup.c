@@ -40,7 +40,7 @@
 #include <stdlib.h>				//srand()
 
 //////////////[Global variables]////////////////////////////////////////////////////////////////////
-extern uint32_t systemTimestamp;	//Required by waitForFlag()
+
 
 //////////////[Global variables]////////////////////////////////////////////////////////////////////
 /*Global Data Structure Initialisation
@@ -79,56 +79,70 @@ Current Layout Tree:
 			+pitch
 			+roll
 			+yaw
-			+yawOffset
-			+timeStamp		//Might move these up to pos
-			+deltaTime		//
 		+x
 		+y
 		+heading
+		+facing
+		+facingOffset
+		+timeStamp	
+		+deltaTime
+		+systemTimeStamp
 		+targetHeading
 		+targetSpeed
+	+timeStamp
 */
 RobotGlobalStructure sys =
 {
 	//System flags
 	.flags =
 	{
-		.xbeeNewData		= 0,
-		.imuCheckFifo		= 0,
-		.obaMoving			= 0,
-		.obaEnabled			= 0
+		.xbeeNewData				= 0,
+		.imuCheckFifo				= 0,
+		.obaMoving					= 0,
+		.obaEnabled					= 0,
+		.tfStream					= 0
 	},
 	
 	//System States
 	.states =
 	{
-		.mainf				= M_IDLE,
-		.mainfPrev			= M_IDLE,
-		.docking			= DS_START,
-		.chargeCycle		= CCS_CHECK_POWER,
-		.followLine			= FLS_FIRST_CONTACT,
-		.scanBrightest		= SBS_FUNCTION_INIT,
-		.moveHeadingDistance = MHD_START
+		.mainf						= M_IDLE,
+		.mainfPrev					= M_IDLE,
+		.docking					= DS_START,
+		.chargeCycle				= CCS_CHECK_POWER,
+		.followLine					= FLS_FIRST_CONTACT,
+		.scanBrightest				= SBS_FUNCTION_INIT,
+		.moveHeadingDistance		= MHD_START
 	},
 	
 	//Robot Position
 	.pos =
 	{
-		.x = 0,					//Resets robot position
-		.y = 0,					//Resets robot position
-		
-		.IMU =
-		{
-			.yawOffset = 180	//Ensures that whatever way the robot is facing when powered
-		},
-		
-		//on is 0 degrees heading.
-		.targetHeading = 0,		//Default heading is 0 degrees
-		.targetSpeed = 50		//Default speed is 50%
-	}
+		.x							= 0,		//Resets robot position
+		.y							= 0,		//Resets robot position
+		.facingOffset				= 180		//Ensures that whatever way the robot is facing when powered on is 
+												//0 degrees heading.
+		.targetHeading				= 0,		//Default heading is 0 degrees
+		.targetSpeed				= 50		//Default speed is 50%
+	},
+	
+	//Power/Battery/Charge
+	.power =
+	{
+		.batteryDockingVoltage		= 3500,
+		.batteryMaxVoltage			= 3800,
+		.batteryMinVoltage			= 3300,
+		.fcChipFaultFlag			= 0,
+		.pollBatteryEnabled			= 1,
+		.pollChargingStateEnabled	= 0,
+		.pollChargingStateInterval	= 0,
+		.pollBatteryInterval		= 30000
+	},
+	
+	.timeStamp = 0;
 };
 
-volatile char streamDelayCounter, streamIntervalFlag;	//TODO:What are these?
+volatile char streamDelayCounter, sys->flags.tfStream;	//TODO:What are these?
 //extern signed int aim;
 
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
@@ -275,8 +289,8 @@ void masterClockInit(void)
 */
 uint8_t waitForFlag(const volatile uint32_t *regAddr, uint32_t regMask, uint16_t timeOutMs)
 {
-	uint32_t startTime = systemTimestamp;
-	while(!((*regAddr) & regMask) && (systemTimestamp < (startTime + timeOutMs)));
+	uint32_t startTime = sys.timeStamp;
+	while(!((*regAddr) & regMask) && (sys.timeStamp < (startTime + timeOutMs)));
 	if((*regAddr) & regMask)
 		return 0;
 	else

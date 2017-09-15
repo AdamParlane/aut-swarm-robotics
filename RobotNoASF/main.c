@@ -25,7 +25,7 @@
 #include "Interfaces/pio_interface.h"
 #include "Interfaces/timer_interface.h"
 
-#include "Functions/charging_functions.h"
+#include "Functions/power_functions.h"
 #include "Functions/docking_functions.h"
 #include "Functions/manual_mode.h"
 #include "Functions/motion_functions.h"
@@ -36,7 +36,6 @@
 //////////////[Defines]/////////////////////////////////////////////////////////////////////////////
 
 //////////////[Global variables]////////////////////////////////////////////////////////////////////
-uint16_t battVoltage;					//Stores battery voltage on start up
 extern RobotGlobalStructure sys;		//System data structure
 extern struct MessageInfo message;		//Incoming message structure
 
@@ -104,9 +103,7 @@ extern struct MessageInfo message;		//Incoming message structure
 int main(void)
 {
 	robotSetup(); //Set up the system and peripherals
-	battVoltage = adcBatteryVoltage();	//Add to your watch to keep an eye on the battery
-	sys.states.mainf = M_IDLE; //start system at IDLE
-	sys.states.mainfPrev = M_IDLE;
+	//Battery voltage stored in sys.power.batteryVoltage
 	uint8_t chargeCycleReturn = 0;
 	uint8_t dockingReturn = 0;
 	float lineHeading = 0;
@@ -151,7 +148,7 @@ int main(void)
 				break;
 			
 			case M_CHARGING:
-				chargeCycleReturn = cfChargeCycleHandler(&sys);
+				chargeCycleReturn = pfChargeCycleHandler(&sys);
 				if(chargeCycleReturn > 0xEF)
 					sys.states.mainf = M_IDLE;			//Charging fault occurred
 				if(!chargeCycleReturn)
@@ -173,8 +170,12 @@ int main(void)
 				break;
 		}
 		
-		xbeeGetNew();			//Checks for and interprets new communications
+		xbeeGetNew();				//Checks for and interprets new communications
+		
 		nfRetrieveNavData(&sys);	//checks if there is new navigation data and updates sys->pos.
+		
+		pfPollPower(&sys);			//Poll battery and charging status
+		
 		//check to see if obstacle avoidance is enabled AND the robot is moving
 		if(sys.flags.obaEnabled && sys.flags.obaMoving)
 			dodgeObstacle(&sys); //avoid obstacles using proximity sensors

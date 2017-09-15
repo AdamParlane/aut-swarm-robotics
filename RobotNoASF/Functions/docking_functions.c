@@ -346,11 +346,11 @@ uint8_t dfFollowLine(uint8_t speed, float *lineHeading,
 			{
 				if(lineJustFound)								//If first time following this line
 				{
-					*lineHeading = sys->pos.IMU.yaw;				//Set initial line heading
+					*lineHeading = sys->pos.facing;				//Set initial line heading
 					lineJustFound = 0;
 				}
 				else
-					*lineHeading = (*lineHeading + sys->pos.IMU.yaw)/2;	//Running average heading
+					*lineHeading = (*lineHeading + sys->pos.facing)/2;	//Running average heading
 				sys->states.followLine = FLS_FOLLOW;
 			}
 			break;
@@ -428,7 +428,7 @@ uint8_t dfScanBrightestLightSource(float *brightestHeading, uint16_t sweepAngle,
 		case SBS_FUNCTION_INIT:
 			//Calculate where to start sweep from
 			brightestVal = 0;								//Reset brightestValue
-			startHeading = sys->pos.IMU.yaw - (sweepAngle/2);//Calculate start heading
+			startHeading = sys->pos.facing - (sweepAngle/2);//Calculate start heading
 			endHeading = startHeading + sweepAngle;
 			sHeading = startHeading + sweepAngle/3;
 			sys->states.scanBrightest = SBS_GOTO_START_POSITION;	//Angles set up, lets start
@@ -460,7 +460,7 @@ uint8_t dfScanBrightestLightSource(float *brightestHeading, uint16_t sweepAngle,
 				if(avgBrightness > brightestVal)
 				{
 					brightestVal = avgBrightness;
-					*brightestHeading = sys->pos.IMU.yaw;
+					*brightestHeading = sys->pos.facing;
 				}
 			}
 			return 1;

@@ -43,7 +43,7 @@ union float_bytes {
 	unsigned char bytes[sizeof(float)];
 }data;
 
-struct MessageInfo;
+struct MessageInfo;	//Defined in xbee_driver.h
 
 /*
 * Function: uint8_t testManager(struct MessageInfo message, struct transmitDataStructure *transmit,
