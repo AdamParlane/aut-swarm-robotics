@@ -1,5 +1,5 @@
 /*
-* testFunctions.c
+* test_functions.c
 *
 * Author : Adam Parlane (adam.parlane@outlook.com) Github: AdamParlane
 * Created: 15/07/2017 3:31:20 PM
@@ -101,7 +101,7 @@ uint8_t getTestData(struct MessageInfo xbMessage, struct transmitDataStructure *
 	char testType = xbMessage.command;//what peripheral is being tested
 	if (sys->flags.xbeeNewData)//only reconvert the data if we are in this function for new data not streaming again
 	{
-		xbeeConvertData(xbMessage, receivedTestData);//converts the Xbee data to the receivedTestData array
+		xbeeCopyData(xbMessage, receivedTestData);//converts the Xbee data to the receivedTestData array
 		sys->flags.xbeeNewData = 0;
 	}
 	uint8_t testMode = receivedTestData[0];

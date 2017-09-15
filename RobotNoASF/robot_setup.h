@@ -27,11 +27,12 @@
 
 //////////////[Includes]////////////////////////////////////////////////////////////////////////////
 #include "Interfaces/spi.h"		//Fixes SPI issue
-#include "sam.h"				//Microcontroller specific defines
+#include "sam.h"				//Micro controller specific defines
 #include <stdint.h>				//Gives standard integer type definitions (ie uint8_t)
 #include <stdbool.h>			//Gives boolean variable types
 
 //////////////[Enumerations]////////////////////////////////////////////////////////////////////////
+//The following enumerations represent states in each state machine in the system
 typedef enum MainStates
 //main() function states
 {
@@ -138,7 +139,7 @@ typedef struct Position
 	float y;					//Absolute Y position in arena (mm)
 	float heading;				//Absolute direction of travel (deg)
 	float facing;				//Absolute direction robot is facing (deg)
-	signed int targetHeading;	//For obstacle avoidance, desired heading before an obstacel is 
+	signed int targetHeading;	//For obstacle avoidance, desired heading before an obstacle is 
 								//detected
 	char targetSpeed;			//For obstacle avoidance, desired speed
 	unsigned long timeStamp;	//Time at which last IMU reading took place (ms). Can be used as a
@@ -214,11 +215,11 @@ typedef struct SystemStates
 //Structure to combine all system globals
 typedef struct RobotGlobalStructure
 {
-	SystemStates states;
-	SystemFlags flags;
-	Position pos;
-	BatteryChargeData power;
-	uint32_t timeStamp;
+	SystemStates states;			//System states
+	SystemFlags flags;				//System global flags
+	Position pos;					//Position information
+	BatteryChargeData power;		//Battery/Charging info and control
+	uint32_t timeStamp;				//System timestamp (millisecs since power on)
 } RobotGlobalStructure;
 
 //////////////[Defines]/////////////////////////////////////////////////////////////////////////////

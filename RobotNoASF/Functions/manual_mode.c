@@ -55,7 +55,7 @@ void manualControl(struct MessageInfo tmessage, RobotGlobalStructure *sys)
 	static uint8_t receivedTestData[5];
 	sys->flags.xbeeNewData = 0;
 	uint16_t straightDirection;
-	xbeeConvertData(tmessage, receivedTestData);
+	xbeeCopyData(tmessage, receivedTestData);
 	straightDirection = (receivedTestData[0] << 8) + (receivedTestData[1]);
 	if(tmessage.command == MANUAL_STRAIGHT)
 	{

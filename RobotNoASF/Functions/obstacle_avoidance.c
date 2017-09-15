@@ -20,10 +20,12 @@
 
 //////////////[Includes]////////////////////////////////////////////////////////////////////////////
 #include "../robot_setup.h"
-#include "obstacle_avoidance.h"
+
 #include "../Interfaces/twimux_interface.h"
 #include "../Interfaces/motor_driver.h"
 #include "../Interfaces/prox_sens_interface.h"
+
+#include "obstacle_avoidance.h"
 
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
 

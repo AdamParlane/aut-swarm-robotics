@@ -186,6 +186,12 @@
     </ToolchainSettings>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="Functions\comm_functions.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="Functions\comm_functions.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="Functions\power_functions.c">
       <SubType>compile</SubType>
     </Compile>

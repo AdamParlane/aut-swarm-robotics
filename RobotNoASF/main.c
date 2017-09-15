@@ -90,7 +90,7 @@ extern struct MessageInfo message;		//Incoming message structure
 *				Exitied by PC commands
 *
 * After the state machine 3 functions are run every loop to check key peripherals
-* These are:	xbeeGetNew()			checks and handles incoming commands
+* These are:	commGetNew()			checks and handles incoming commands
 *				nfRetrieveData()				updates the robot's navigation structure
 *				dodgeObstacle()					executes obstacle avoidance routine
 * Note that doegeObstacle() is guarded by 2 flags: obstacleAvoidance enabled and the robot is moving
@@ -128,7 +128,7 @@ int main(void)
 				dockingReturn = dfDockRobot(&sys);
 				if(!dockingReturn)	//Execute docking procedure state machine
 					sys.states.mainf = M_CHARGING;		//If finished docking, switch to charging
-				else if(dockingReturn == 7)
+				else if(dockingReturn == DS_CHRG_NOT_FOUND)
 					sys.states.mainf = M_IDLE;			//If charger connection failed
 				break;
 			
@@ -170,7 +170,7 @@ int main(void)
 				break;
 		}
 		
-		xbeeGetNew();				//Checks for and interprets new communications
+		commGetNew();				//Checks for and interprets new communications
 		
 		nfRetrieveNavData(&sys);	//checks if there is new navigation data and updates sys->pos.
 		

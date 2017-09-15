@@ -14,9 +14,7 @@
 *
 * Functions:
 * void xbeeInit(void)
-* void xbeeConvertData(struct MessageInfo message, uint8_t *data)
-* void xbeeGetNew()
-* void xbeeInterpretSwarmMessage(struct MessageInfo message, RobotGlobalStructure *sys)
+* void xbeeCopyData(struct MessageInfo message, uint8_t *data)
 * void xbeeInterpretAPIFrame(struct FrameInfo frame)
 * void xbeeSendAPITransmitRequest(uint64_t destination_64, uint16_t destination_16,
 *                                 uint8_t *data, uint8_t  bytes)
@@ -136,9 +134,9 @@ void xbeeInit(void);
 
 /*
 * Function:
-* void xbeeConvertData(struct MessageInfo message, uint8_t* data[50])
+* void xbeeCopyData(struct MessageInfo message, uint8_t* data[50])
 *
-* Converts the received message structure and pointer to an array with the required test command
+* Copies the received message structure and pointer to an array with the required test command
 * data
 *
 * Input is the message structure from the received data
@@ -148,41 +146,7 @@ void xbeeInit(void);
 * No Return Values
 *
 */
-void xbeeConvertData(struct MessageInfo message, uint8_t *data);
-
-/*
-* Function:
-* void xbeeGetNew(struct FrameInfo *frame, struct MessageInfo *message)
-*
-* Checks for new communications and handlles the interpretation of them
-*
-* Inputs:
-* pointer to frame_info struct and pointer to message_info struct
-*
-* Returns:
-* none
-*
-*/
-void xbeeGetNew();
-
-/*
-* Function:
-* void xbeeInterpretSwarmMessage(struct MessageInfo message, RobotGlobalStructure *sys)
-*
-* Interprets and acts on a received swarm messages
-*
-* Inputs:
-* struct MessageInfo message:
-*   TODO: Mansel input description
-*
-* Returns:
-* none
-*
-* Implementation:
-* TODO: Mansel implementation description
-*
-*/
-void xbeeInterpretSwarmMessage(struct MessageInfo message, RobotGlobalStructure *sys);
+void xbeeCopyData(struct MessageInfo message, uint8_t *data);
 
 /*
 * Function:
