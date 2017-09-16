@@ -68,6 +68,24 @@ void nfGetEulerAngles(RobotGlobalStructure *sys);
 
 /*
 * Function:
+* void nfProcessOpticalData(RobotGlobalStructure *sys)
+*
+* Performs processing on optical mouse data to retrieve real absolute x and y and heading
+* information
+*
+* Inputs:
+* RobotGlobalStructure *sys
+*   Pointer to the global robot data structure which is where the mouse data and calculated data is
+*   is retrieved and stored
+*
+* Returns:
+* none
+*
+*/
+void nfProcessOpticalData(RobotGlobalStructure *sys);
+
+/*
+* Function:
 * float nfWrapAngle(float angleDeg)
 *
 * Will take any angle in degrees and convert it to its equivalent value between -180 and 180 degrees

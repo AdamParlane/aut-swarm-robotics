@@ -104,11 +104,11 @@ typedef enum MTHByDistanceStates
 //Stores optical sensor raw and derived data
 typedef struct OpticalSensor
 {
-	float dx;		//Rate of change from optical sensor (X axis is left to right)
-	float dy;		//Rate of change from optical sensor (Y axis is fwd/bckwd)
-	float heading;		//Heading calculated from optical sensor
-	float speed;		//Magnitude calculated from optical sensor
+	int dx;				//Rate of change from optical sensor (X axis is left to right)
+	int dy;				//Rate of change from optical sensor (Y axis is fwd/bckwd)
 	char pollEnabled;	//Enable polling the optical sensor
+	char overflowFlag;	//1 if data has overflowed on optical sensor
+	uint8_t surfaceQuality;	//A value signifying quality of the surface (242 = max quality)
 } OpticalSensor;
 
 //Stores IMU sensor raw and converted data
@@ -141,7 +141,11 @@ typedef struct Position
 	IMUSensor IMU;				//IMU raw and converted data
 	float x;					//Absolute X position in arena (mm)
 	float y;					//Absolute Y position in arena (mm)
+	float dx;					//delta x in mm
+	float dy;					//delta y in mm
+	float speed;				//Speed in mm per second
 	float heading;				//Absolute direction of travel (deg)
+	float relHeading;			//Relative heading of travel (to front of robot)
 	float facing;				//Absolute direction robot is facing (deg)
 	signed int targetHeading;	//For obstacle avoidance, desired heading before an obstacle is 
 								//detected

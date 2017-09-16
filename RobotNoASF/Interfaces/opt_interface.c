@@ -145,7 +145,9 @@ void mouseInit(void)
 	SPI_Write(OPT_LSRPWR_CFG1, 0x00);		//complement of set laser current to full
 	SPI_Write(OPT_LASER_CTRL0, 0xC0);		//set laser current range to 4-10mA
 	SPI_Write(OPT_LASER_CTRL1, 0x3F);		//complement of set laser current range to 4-10mA
-	delay_ms(10);						//allow everything to settle after being initialized
+	delay_ms(10);							//allow everything to settle after being initialized
+	
+	SPI_Write(OPT_CONFIG2, 0x2E);			//Resolution = 800cpi, Force Awake (pg28 in DS)
 }
 
 /*
@@ -178,6 +180,9 @@ void getMouseXY(RobotGlobalStructure *sys)
 	int16_t Xx, Yy; 
 	char topX, topY, data2, data3, data4, data5;	
 	data2 = SPI_Read(OPT_MOTION);
+	
+	sys->pos.Optical.overflowFlag = ((data2 & 0x10) >> 4);
+	
 	if(data2 & (1<<7))
 	{
 		data3 = SPI_Read(OPT_DELTA_X_L);	//delta x low
@@ -191,18 +196,13 @@ void getMouseXY(RobotGlobalStructure *sys)
 		Yy = Ytemp << 4;
 		//if(Xtemp & (1<<12))					//if MSB of X is set (for 2s complement)
 			//Xtemp ^= 0b1000100000000000;	//Make the 2s complement bit be MSB of short
-		/*
-		I think that the data stored in sys->pos.Optical should be the raw data from the optical sensor
-		(without resoloutio conversion) Then the converted data can be stored in sys->pos.x, y, etc
-		where the real world units go
-		*/
 		
-		sys->pos.Optical.dx = (float)(Xx * RESOLUTION);
+		sys->pos.Optical.dx = Xx;
 		//if(Ytemp & (1<<12))					//if MSB of Y is set (for 2s complement)
 			//Ytemp ^= 0b1000100000000000;	//Make the 2s complement bit be MSB of short
-		sys->pos.Optical.dy = (float)(Yy * RESOLUTION);
-		//sys->opticalX += sys->Optical.dx;
-		//sys->opticalY += sys->Optical.dy;
+		sys->pos.Optical.dy = Yy;
+		
+		sys->pos.Optical.surfaceQuality = getMouseSQUAL();
 	}
 	else
 	{
@@ -338,7 +338,8 @@ char SPI_Read(char readAddress)
 * [Ideas for improvements that are yet to be made](optional)
 *
 */
-void getMouseSQUAL(void)
+uint8_t getMouseSQUAL(void)
 {
 	uint8_t squal = SPI_Read(OPT_SQUAL);
+	return squal;
 }

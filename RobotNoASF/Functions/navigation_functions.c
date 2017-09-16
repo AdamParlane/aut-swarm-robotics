@@ -73,7 +73,10 @@ uint8_t nfRetrieveNavData(RobotGlobalStructure *sys)
 	if(sys->flags.imuCheckFifo)
 	{
 		if(sys->pos.Optical.pollEnabled)
+		{
 			getMouseXY(sys);						//Update mouse sensor data
+			nfProcessOpticalData(sys);
+		}
 			
 		if(sys->pos.IMU.pollEnabled)				//If polling enabled for IMU
 		{
@@ -141,7 +144,55 @@ void nfGetEulerAngles(RobotGlobalStructure *sys)
 	//Factor in the Yaw offset (Heading correction from the PC) and store in pos.facing
 	sys->pos.facing = sys->pos.IMU.yaw + sys->pos.facingOffset;
 	//Wrap facing so its always between -180 and 180 degrees
-	sys->pos.facing = nfWrapAngle(sys->pos.IMU.yaw);
+	sys->pos.facing = nfWrapAngle(sys->pos.facing);
+}
+
+/*
+* Function:
+* void nfProcessOpticalData(RobotGlobalStructure *sys)
+*
+* Performs processing on optical mouse data to retrieve real absolute x and y and heading 
+* information
+*
+* Inputs:
+* RobotGlobalStructure *sys
+*   Pointer to the global robot data structure which is where the mouse data and calculated data is
+*   is retrieved and stored
+*
+* Returns:
+* none
+*
+* Implementation:
+* TODO:implementation
+*
+* Improvements:
+* [Ideas for improvements that are yet to be made](optional)
+*
+*/
+void nfProcessOpticalData(RobotGlobalStructure *sys)
+{
+	//Calculate headings (deg) if there is fresh data from the optical sensor
+	if(sys->pos.Optical.dx || sys->pos.Optical.dy)
+	{
+		//Relative heading
+		sys->pos.relHeading = atan2(sys->pos.Optical.dx, sys->pos.Optical.dy)*180/M_PI;
+		//Absolute heading
+		sys->pos.heading = sys->pos.facing + sys->pos.relHeading;
+		//Wrap to within -180 to 180 deg
+		sys->pos.heading = nfWrapAngle(sys->pos.heading);
+	}
+	
+	//Calculate dx and dy in mm
+	sys->pos.dx = sys->pos.Optical.dx*OPT_CONV_FACTOR;
+	sys->pos.dy = sys->pos.Optical.dy*OPT_CONV_FACTOR;
+	
+	//Integrate absolute x and y in mm
+	sys->pos.x += sys->pos.dx;
+	sys->pos.y += sys->pos.dy;
+	
+	//Calculate speed from optical sensor (mm/s)
+	sys->pos.speed = sqrt((sys->pos.dx*sys->pos.dx + sys->pos.dy*sys->pos.dy))
+						/sys->pos.deltaTime*1000;
 }
 
 /*
