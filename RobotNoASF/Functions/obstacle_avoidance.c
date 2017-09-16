@@ -101,17 +101,17 @@ void dodgeObstacle(RobotGlobalStructure *sys)
 				if(proximity[indexLeft] > proximity[indexRight])
 				{
 					sys->pos.targetHeading +=90;
-					moveRobot(sys->pos.targetHeading, sys->pos.targetSpeed);//moveLeft
+					moveRobot(sys->pos.targetHeading, sys->pos.targetSpeed, 0);//moveLeft
 					
 				}
 				else if (proximity[indexLeft] < proximity[indexRight])
 				{
 					sys->pos.targetHeading -= 90;
-					moveRobot(sys->pos.targetHeading, sys->pos.targetSpeed);//move right
+					moveRobot(sys->pos.targetHeading, sys->pos.targetSpeed, 0);//move right
 				}
 			}
 			else 
-				moveRobot(sys->pos.targetHeading, sys->pos.targetSpeed);
+				moveRobot(sys->pos.targetHeading, sys->pos.targetSpeed, 0);
 		}	
 	}		
 }

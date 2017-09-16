@@ -17,10 +17,9 @@
 * char rearMotorDrive(signed char speed)
 * char frontRightMotorDrive(signed char speed)
 * char frontLeftMotorDrive(signed char speed)
-* void moveRobot(float direction, unsigned char speed);
 * void mdStopMotors(void);
-* void rotateRobot(signed char speed);
 * void setTestMotors(uint8_t motorData[]);
+* void moveRobot(float heading, float speed, float turnRatio);
 *
 */
 
@@ -68,6 +67,11 @@
 #define frontLeftPwm			REG_PWM_CUPD1
 #define frontRightPwm			REG_PWM_CUPD2
 #define rearPwm					REG_PWM_CUPD3
+
+//Pre-calculated wheel specific angles in Radians:
+#define RM_ANGLE_RAD			4.712388980		//270*PI/180
+#define FRM_ANGLE_RAD			0.523598775		//30*PI/180
+#define FLM_ANGLE_RAD			2.617993877		//150*PI/180
 
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*
@@ -141,43 +145,6 @@ char frontLeftMotorDrive(signed char speed);
 
 /*
 * Function:
-* void moveRobot(float direction, unsigned char speed)
-*
-* Will start the robot moving in the desired heading at the desired speed
-*
-* Inputs:
-* float direction:
-*	heading in degrees in which the robot should move. Irrelevant if speed = 0
-* unsigned char speed
-*	Speed at which robot should move. Is a percentage of maximum speed (0-100)
-*
-* Returns:
-*	none
-*
-*/
-void moveRobot(signed int direction, unsigned char speed);
-
-/*
-* Function:
-* void rotateRobot(signed char speed)
-*
-* Will rotate the robot on the spot in the given direcion and relative speed.
-* Sign of speed sets direction (negative is CW, positive is CCW)
-*
-* Inputs:
-* char direction
-*	The direction the robot should rotate (CW or CCW)
-* unsigned char speed
-*	Speed at which robot should move. Is a percentage of maximum speed (0-100)
-*
-* Returns:
-* none
-*
-*/
-void rotateRobot(signed char speed);
-
-/*
-* Function:
 * void mdStopMotors(void)
 *
 * Stop all motors
@@ -230,22 +197,34 @@ void setTestMotors(uint8_t motorData[]);
 
 /*
 * Function:
-* uint8_t steerRobot(uint8_t speed, int8_t turnRatio)
+* uint8_t moveRobot(float heading, float speed, float turnRatio)
 *
-* Allows robot to turn while moving forward.
+* Provides total control of the motion of the robot. This function replaces the old moveRobot(),
+* rotateRobot() and steerRobot() functions as it is a combination of all three. It should allow us
+* to achieve our aim to get the robot to rotate as it moves to a target heading.
+*
+* How to achieve old moveRobot() behaviour:
+*   moveRobot(90, 50, 0) <-- turnRatio set to 0
+*
+* How to achieve old rotateRobot() behaviour:
+*   moveRobot(0, 60, 100) <-- turnRatio is 100 and heading is ignored
 *
 * Inputs:
-* uint8_t speed:
-*   A percentage of maximum speed (0-100%)
-* int8_t turnRatio:
-*   The ratio of rotation to be applied to the motion (+-%). if turnRatio is 0%, then robot just
-*   drives straight at 'speed'. -100% will have robot rotating on the spot anti-clockwise at
-*   'speed'. 50% would be half and half driving forward with a clockwise rotational element applied.
+* float heading:
+*   The heading the the robot will move in (degrees). If turnRatio is 100 then heading has no effect
+* float speed:
+*   A percentage of maximum speed (-100% to 100%) and direction of rotation (<0 is CCW and >0 is CW)
+*   If turnRatio is 0 then signedness of speed has no effect.
+* float turnRatio:
+*   The ratio of rotation to be applied to the motion (-100% to 100%). if turnRatio is 0%, then
+*   robot just drives straight at 'speed'. -100% will have robot rotating CCW on the spot at
+*   'speed'. 50% would be half and half driving forward with a CW rotational element applied. If
+*   both speed and turnRatio are negative, then robot will rotate in CW (-1*-1) = 1
 *
 * Returns:
 * 0 on success
 *
 */
-uint8_t steerRobot(uint8_t speed, int8_t turnRatio);
+uint8_t moveRobot(float heading, float speed, float turnRatio);
 
 #endif /* MOTOR_DRIVER_H_ */

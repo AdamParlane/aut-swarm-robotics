@@ -53,7 +53,7 @@
 * Implementation:
 * pErr stores the proportional error value. It is declared as static as they need to retain their 
 * values between function calls. motorSpeed stores the duty cycle (%) that will be sent to the 
-* rotateRobot() function. First, the function checks that heading is within the required range 
+* moveRobot() function. First, the function checks that heading is within the required range 
 * (between -180 and 180 degrees). If it is out of range, the number is scaled down by nfWrapAngle.
 * Next, the proportional (or signed) error value is calculated. It is simply the difference between 
 * the desired heading and the current actual heading. The resulting error value is multiplied by a
@@ -64,7 +64,7 @@
 * and delta yaw is less than 0.5dps, then this is deemed close enough to end seeking the desired
 * heading. The static error variable is cleared, the robot is stopped and the function exits with a
 * 0 value. If the prior conditions are not met, then the motorSpeed value is passed to the
-* rotateRobot function in order to correct the error.
+* moveRobot function in order to correct the error.
 *
 * Improvements:
 * the PID controller functionality might be able to be moved to its own function to be used by
@@ -105,7 +105,7 @@ float mfRotateToHeading(float heading, RobotGlobalStructure *sys)
 							//function
 		return 0;
 	} else {
-		rotateRobot(motorSpeed);
+		moveRobot(0, motorSpeed, 100);
 		return pErr;	//If not, return pErr
 	}
 }
@@ -133,7 +133,7 @@ float mfRotateToHeading(float heading, RobotGlobalStructure *sys)
 * specified in the parameters. Direction of travel is controlled by closed loop system with the IMU.
 * pErr stores the proportional error value. It is declared as static as they need to retain their
 * values between function calls. motorSpeed stores the duty cycle (%) that will be sent to the
-* rotateRobot() function. First, the function checks that heading is within the required range
+* moveRobot() function. First, the function checks that heading is within the required range
 * (between -180 and 180 degrees). If it is out of range, the number is scaled down by nfWrapAngle.
 * Next, the proportional (or signed) error value is calculated. It is simply the difference between
 * the desired heading and the current actual heading. The resulting error value is multiplied by a
@@ -144,7 +144,7 @@ float mfRotateToHeading(float heading, RobotGlobalStructure *sys)
 * and delta yaw is less than 0.5dps, then this is deemed close enough to end seeking the desired
 * heading. The static error variable is cleared, the robot is stopped and the function exits with a
 * 0 value. If the prior conditions are not met, then the motorSpeed value is passed to the
-* rotateRobot function in order to correct the error.
+* moveRobot function in order to correct the error.
 *
 */
 float mfMoveToHeading(float heading, uint8_t speed, RobotGlobalStructure *sys)
@@ -173,7 +173,7 @@ float mfMoveToHeading(float heading, uint8_t speed, RobotGlobalStructure *sys)
 	rotationSpeed = MTH_KP*pErr;
 	rotationSpeed = capToRangeInt(rotationSpeed, -100, 100);
 	
-	steerRobot(speed, rotationSpeed);
+	moveRobot(0, speed, rotationSpeed);
 	
 	//If error is less than 0.5 deg and delta yaw is less than 0.5 degrees per second then we can
 	//return 0 (ie robot is more or less on correct heading)
@@ -413,7 +413,7 @@ char mfRandomMovementGenerator(void)
 	int direction = rand() % 360;	//get random direction range: 0 - 360 degrees
 	char speed = rand() % 100;		//get random speed:up to 100%
 	char runTime = rand() % 5;		//get random delay time: up to 5 seconds
-	moveRobot(direction, speed);	//moveRobot at random speed and direction
+	moveRobot(direction, speed, 0);	//moveRobot at random speed and direction
 	delay_ms(runTime * 1000);		//Delay for random milliseconds
 	return 0;
 }

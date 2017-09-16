@@ -65,7 +65,7 @@ void manualControl(RobotGlobalStructure *sys)
 	switch(sys->comms.messageData.command)
 	{
 		case MC_STRAIGHT:
-			moveRobot(straightDirection, receivedTestData[2]);
+			moveRobot(straightDirection, receivedTestData[2], 0);
 			sys->pos.targetHeading = straightDirection;
 			sys->pos.targetSpeed = receivedTestData[2];
 			sys->flags.obaMoving = 1;
@@ -78,13 +78,13 @@ void manualControl(RobotGlobalStructure *sys)
 		
 		case MC_CCW:
 			//MC_CW is reverse so invert speed
-			rotateRobot(-(int8_t)receivedTestData[0]);
+			moveRobot(0, -(int8_t)receivedTestData[0], 100);
 			sys->flags.obaMoving = 1;
 			break;
 		
 		case MC_CW:
 			//CCW is forward so no need to invert speed
-			rotateRobot(receivedTestData[0]);
+			moveRobot(0, receivedTestData[0], 100);
 			sys->flags.obaMoving = 1;
 			break;
 	}

@@ -20,14 +20,14 @@
 //////////////[Includes]////////////////////////////////////////////////////////////////////////////
 #include "robot_setup.h"
 
-#include "Interfaces/xbee_driver.h"
-#include "Interfaces/adc_interface.h"
 #include "Interfaces/pio_interface.h"
 #include "Interfaces/timer_interface.h"
+#include "Interfaces/motor_driver.h"
 
 #include "Functions/power_functions.h"
 #include "Functions/comm_functions.h"
 #include "Functions/docking_functions.h"
+#include "Functions/light_colour_functions.h"
 #include "Functions/manual_mode.h"
 #include "Functions/motion_functions.h"
 #include "Functions/navigation_functions.h"
@@ -169,7 +169,7 @@ int main(void)
 			case M_IDLE:					
 				mfStopRobot(&sys);
 				if(!fdelay_ms(1000))					//Blink LED 3 in Idle mode
-					led3Tog;	
+					led3Tog;
 				break;
 		}
 		

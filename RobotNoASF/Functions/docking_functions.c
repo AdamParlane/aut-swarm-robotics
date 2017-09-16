@@ -325,7 +325,7 @@ uint8_t dfFollowLine(uint8_t speed, float *lineHeading,
 			if(!lineDirection)
 				sys->states.followLine = FLS_FOLLOW;	//If sufficiently over line, begin following
 			else 
-				steerRobot(25, 0);	//Creep forward some more to straddle line
+				moveRobot(0, 25, 0);	//Creep forward some more to straddle line
 			break;
 		
 		//Given the position of the line sensors relative to the wheels on the underside of the 
@@ -338,9 +338,9 @@ uint8_t dfFollowLine(uint8_t speed, float *lineHeading,
 			if(lineDirection)
 			{
 				if(lineDirection < 0)
-					rotateRobot(-10 + lineDirection*2);
+					moveRobot(0, -10 + lineDirection*2, 100);
 				if(lineDirection > 0)
-					rotateRobot(10 + lineDirection*2);
+					moveRobot(0, 10 + lineDirection*2, 100);
 			}
 			else 
 			{
