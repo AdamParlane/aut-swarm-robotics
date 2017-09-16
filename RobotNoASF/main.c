@@ -97,7 +97,12 @@ int main(void)
 	uint8_t chargeCycleReturn = 0;
 	uint8_t dockingReturn = 0;
 	float lineHeading = 0;
-
+	obstacleAvoidanceEnabledFlag = 1;
+	movingFlag = 1;
+	signed int aim = 0;
+	robotPosition.targetHeading = 0;
+	robotPosition.targetSpeed = 50;
+	
 	while(1)
 	{
 		switch (mainRobotState)
@@ -146,7 +151,7 @@ int main(void)
 				break;
 
 			case IDLE:					
-				stopRobot();
+				//stopRobot();
 				if(!fdelay_ms(1000))					//Blink LED 3 in Idle mode
 					led3Tog;	
 				break;
@@ -156,6 +161,6 @@ int main(void)
 		nfRetrieveNavData();	//checks if there is new navigation data and updates robotPosition
 		//check to see if obstacle avoidance is enabled AND the robot is moving
 		if(obstacleAvoidanceEnabledFlag && movingFlag)
-			dodgeObstacle(&robotPosition); //avoid obstacles using proximity sensors
+			aim = dodgeObstacle(aim, 50); //avoid obstacles using proximity sensors
 	}
 }
