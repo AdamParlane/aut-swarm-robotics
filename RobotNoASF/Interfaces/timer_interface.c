@@ -242,12 +242,6 @@ void TC1_Handler()
 	{
 		sys.timeStamp++;//used for get ms
 		delaymsCounter++;//used for delay ms
-		streamDelayCounter++;//used for streaming data to pc every 100ms
-		if(streamDelayCounter == 100) //used for streaming data every 100ms
-		{
-			streamDelayCounter = 0;
-			sys.flags.tfStream = 1;
-		}
 	}
 }
 

@@ -46,8 +46,7 @@ union float_bytes {
 struct MessageInfo;	//Defined in xbee_driver.h
 
 /*
-* Function: uint8_t testManager(struct MessageInfo message, struct transmitDataStructure *transmit,
-*			RobotGlobalStructure *sys)
+* Function: uint8_t testManager(struct transmitDataStructure *transmit,	RobotGlobalStructure *sys)
 *
 * Handles the interpretation of received test commands,
 * calling the appropriate test functions / performing tests
@@ -63,9 +62,9 @@ struct MessageInfo;	//Defined in xbee_driver.h
 * ***Streaming Interval = 100ms***
 *
 */
-uint8_t getTestData(struct MessageInfo xbMessage, struct transmitDataStructure *transmit, RobotGlobalStructure *sys);
+uint8_t getTestData(struct transmitDataStructure *transmit, RobotGlobalStructure *sys);
 
-void testManager(struct MessageInfo xbMessage, RobotGlobalStructure *sys);
+void testManager(RobotGlobalStructure *sys);
 
 
 

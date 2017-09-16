@@ -68,9 +68,6 @@ int MessageBufferInfoIn;
 int MessageBufferInfoOut;
 int MessageBufferInfoUse;
 
-struct FrameInfo frame;			//Xbee API frame
-struct MessageInfo message;		//Incoming message with XBee metadata removed
-
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
 //Private function prototypes. See below for function descriptions
 static void xbeeSendAPIFrame(uint8_t * frame_data, int len);

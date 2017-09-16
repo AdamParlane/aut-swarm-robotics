@@ -43,7 +43,7 @@
 
 
 //////////////[Global variables]////////////////////////////////////////////////////////////////////
-/*Global Data Structure Initialisation
+/*Global Data Structure Initialisation. These are the initial settings for the robot
 Current Layout Tree:
 --------------------
 +sys
@@ -99,8 +99,7 @@ RobotGlobalStructure sys =
 		.xbeeNewData				= 0,
 		.imuCheckFifo				= 0,
 		.obaMoving					= 0,
-		.obaEnabled					= 0,
-		.tfStream					= 0
+		.obaEnabled					= 0
 	},
 	
 	//System States
@@ -115,35 +114,48 @@ RobotGlobalStructure sys =
 		.moveHeadingDistance		= MHD_START
 	},
 	
+	//Communications
+	.comms =
+	{
+		.pollEnabled				= 1,
+		.pollInterval				= 0,
+		.testModeStreamInterval		= 100
+	},
+	
 	//Robot Position
 	.pos =
 	{
-		.x							= 0,		//Resets robot position
-		.y							= 0,		//Resets robot position
-		.facingOffset				= 180		//Ensures that whatever way the robot is facing when powered on is 
-												//0 degrees heading.
+		.x							= 0.0,		//Resets robot position
+		.y							= 0.0,		//Resets robot position
+		.facingOffset				= 180,		//Ensures that whatever way the robot is facing when
+												//powered on is 0 degrees heading.
 		.targetHeading				= 0,		//Default heading is 0 degrees
-		.targetSpeed				= 50		//Default speed is 50%
+		.targetSpeed				= 50,		//Default speed is 50%
+		.IMU =
+		{
+			.pollEnabled			= 1			//Enable IMU polling
+		},
+		.Optical =
+		{
+			.pollEnabled			= 1			//Enable Optical Polling
+		}
 	},
 	
 	//Power/Battery/Charge
 	.power =
 	{
-		.batteryDockingVoltage		= 3500,
-		.batteryMaxVoltage			= 3800,
-		.batteryMinVoltage			= 3300,
-		.fcChipFaultFlag			= 0,
-		.pollBatteryEnabled			= 1,
-		.pollChargingStateEnabled	= 0,
-		.pollChargingStateInterval	= 0,
-		.pollBatteryInterval		= 30000
+		.batteryDockingVoltage		= 3500,		//Battery voltage at which its time to find charger
+		.batteryMaxVoltage			= 3800,		//Maximum battery voltage (full charge)
+		.batteryMinVoltage			= 3300,		//Dead flat battery voltage
+		.fcChipFaultFlag			= 0,		//Fast charge fault flag
+		.pollBatteryEnabled			= 1,		//Battery polling enabled
+		.pollChargingStateEnabled	= 0,		//Charge status polling disabled
+		.pollChargingStateInterval	= 0,		//Poll charging status as fast as possible
+		.pollBatteryInterval		= 30000		//Poll battery every thirty seconds
 	},
 	
-	.timeStamp = 0;
+	.timeStamp = 0								//millisecs since power on
 };
-
-volatile char streamDelayCounter, sys->flags.tfStream;	//TODO:What are these?
-//extern signed int aim;
 
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*
@@ -192,7 +204,7 @@ void robotSetup(void)
 	lfInit();							//Initialise line follow sensors. Only on V2.
 	
 	delay_ms(2500);						//Stops robot running away while programming
-	srand(streamDelayCounter);			//Seed rand() to give unique random numbers
+	srand(sys.timeStamp);				//Seed rand() to give unique random numbers
 	return;
 }
 /*

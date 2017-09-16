@@ -29,9 +29,6 @@
 #include "../Interfaces/opt_interface.h"
 #include "test_functions.h"
 
-//////////////[Global variables]////////////////////////////////////////////////////////////////////
-
-
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*
 * Function: uint8_t testManager(struct MessageInfo xbMessage, struct transmitDataStructure *transmit,
@@ -94,14 +91,14 @@
 *		The order will be [3] Data1_High, [4] Data1_Low, [5] Data2_High and so on
 * The transmit array sie must also be calculated and sent with the XBee Transmit Request
 */
-uint8_t getTestData(struct MessageInfo xbMessage, struct transmitDataStructure *transmit, RobotGlobalStructure *sys)
+uint8_t getTestData(struct transmitDataStructure *transmit, RobotGlobalStructure *sys)
 {
 	static uint8_t receivedTestData[50]; //array for data coming into the robot AFTER Xbee framing has been stripped
 	uint16_t peripheralReturnData; //the test data returned from eh relevant peripheral
-	char testType = xbMessage.command;//what peripheral is being tested
+	char testType = sys->comms.messageData.command;//what peripheral is being tested
 	if (sys->flags.xbeeNewData)//only reconvert the data if we are in this function for new data not streaming again
 	{
-		xbeeCopyData(xbMessage, receivedTestData);//converts the Xbee data to the receivedTestData array
+		xbeeCopyData(sys->comms.messageData, receivedTestData);//converts the Xbee data to the receivedTestData array
 		sys->flags.xbeeNewData = 0;
 	}
 	uint8_t testMode = receivedTestData[0];
@@ -217,28 +214,40 @@ uint8_t getTestData(struct MessageInfo xbMessage, struct transmitDataStructure *
 	return testMode;
 }
 
-void testManager(struct MessageInfo xbMessage, RobotGlobalStructure *sys)
+void testManager(RobotGlobalStructure *sys)
 {
 	static struct transmitDataStructure transmitMessage;
-	static uint8_t testMode = 0x00;   
-	if(sys->flags.xbeeNewData || sys->flags.tfStream)
+	static uint8_t testMode = 0x00;
+	static uint32_t nextSendTime = 0;	//Time at which next packet will be streamed
+	
+	if(sys->flags.xbeeNewData)
 	{
 		//get the new test data
-		testMode = getTestData(xbMessage, &transmitMessage, sys);
-	}
-	if(testMode == STOP_STREAMING)
-	sys->states.mainf = M_IDLE;
-	else if(testMode == SINGLE_SAMPLE)
-	{
-		sys->states.mainf = M_IDLE;
-		xbeeSendAPITransmitRequest(COORDINATOR_64,UNKNOWN_16, transmitMessage.Data,
-		transmitMessage.DataSize);  //Send the Message
-	}
-	else if(sys->flags.tfStream && testMode == STREAM_DATA)
-	{
-		sys->flags.tfStream = 0;
-		xbeeSendAPITransmitRequest(COORDINATOR_64,UNKNOWN_16, transmitMessage.Data,
-		transmitMessage.DataSize);  //Send the Message
+		testMode = getTestData(&transmitMessage, sys);
+
+		switch(testMode)
+		{
+			case STOP_STREAMING:
+				sys->states.mainf = M_IDLE;
+				break;
+				
+			case SINGLE_SAMPLE:
+				sys->states.mainf = M_IDLE;
+				xbeeSendAPITransmitRequest(COORDINATOR_64,UNKNOWN_16, transmitMessage.Data,
+				transmitMessage.DataSize);  //Send the Message
+				break;
+
+			case STREAM_DATA:
+				if(sys->timeStamp >= nextSendTime)	//If the minimum time interval has elapsed
+				{
+					//Set the next time to stream a packet
+					nextSendTime = sys->timeStamp + sys->comms.testModeStreamInterval;
+					//Send the Message
+					xbeeSendAPITransmitRequest(COORDINATOR_64,UNKNOWN_16, transmitMessage.Data,
+												transmitMessage.DataSize);
+				}
+				break;
+		}		
 	}
 }
 

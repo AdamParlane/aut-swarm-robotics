@@ -28,7 +28,7 @@
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*
 * Function:
-* void commGetNew(struct FrameInfo *frame, struct MessageInfo *message)
+* void commGetNew(RobotGlobalStructure *sys)
 *
 * Checks for new communications and handlles the interpretation of them
 *
@@ -39,11 +39,11 @@
 * none
 *
 */
-void commGetNew();
+void commGetNew(RobotGlobalStructure *sys);
 
 /*
 * Function:
-* void commInterpretSwarmMessage(struct MessageInfo message, RobotGlobalStructure *sys)
+* void commInterpretSwarmMessage(RobotGlobalStructure *sys)
 *
 * Interprets and acts on a received swarm messages
 *
@@ -58,6 +58,6 @@ void commGetNew();
 * TODO: Adam implementation description
 *
 */
-void commInterpretSwarmMessage(struct MessageInfo message, RobotGlobalStructure *sys);
+void commInterpretSwarmMessage(RobotGlobalStructure *sys);
 
 #endif /* COMM_FUNCTIONS_H_ */

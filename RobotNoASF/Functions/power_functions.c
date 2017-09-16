@@ -60,51 +60,45 @@ void pfPollPower(RobotGlobalStructure *sys)
 	static uint32_t chargerWatchDogTime = 0;	//Time at which watchdog message will next be sent
 												//to fast charge chip
 	
-	//If battery polling is enabled
-	if(sys->power.pollBatteryEnabled)
+	//If battery polling is enabled and pollBatteryEnabled flag has just been set, or 
+	//pollBatteryTime has elapsed then poll
+	if(sys->power.pollBatteryEnabled && pollBatteryTime <= sys->timeStamp)
 	{
-		//and pollBatteryEnabled flag has just been set, or pollBatteryTime has elapsed then poll
-		if(pollBatteryTime <= sys->timeStamp)
-		{
-			//Store the time at which the battery will next be polled
-			pollBatteryTime = sys->timeStamp + sys->power.pollBatteryInterval;
-			//Read battery voltage
-			sys->power.batteryVoltage = adcBatteryVoltage();
-			//Read battery temp
-			//TODO: Read battery temp
-		}
+		//Store the time at which the battery will next be polled
+		pollBatteryTime = sys->timeStamp + sys->power.pollBatteryInterval;
+		//Read battery voltage
+		sys->power.batteryVoltage = adcBatteryVoltage();
+		//If actual battery voltage is greater than the maximum battery voltage, then update the
+		//maximum battery voltage value.
+		if(sys->power.batteryVoltage > sys->power.batteryMaxVoltage)
+			sys->power.batteryMaxVoltage = sys->power.batteryVoltage;
+		//Read battery temp
+		//TODO: Read battery temp
 	}
 	
 	//If fast charge chip polling is enabled
-	if(sys->power.pollChargingStateEnabled)
+	if(sys->power.pollChargingStateEnabled && pollChargerTime <= sys->timeStamp)
 	{
-		if(pollChargerTime <= sys->timeStamp)
+		//Store the time at which the charger status will next be polled
+		pollChargerTime = sys->timeStamp + sys->power.pollChargingStateInterval;
+		sys->power.fcChipStatus = fcState();
+		if((sys->power.fcChipStatus & 0xF0) == 0xF0)//If fault (Upper nibble = F)
 		{
-			//Store the time at which the charger status will next be polled
-			pollChargerTime = sys->timeStamp + sys->power.pollChargingStateInterval;
-			sys->power.fcChipStatus = fcState();
-			if((sys->power.fcChipStatus & 0xF0) == 0xF0)//If fault (Upper nibble = F)
-			{
-				sys->power.fcChipStatus &= 0x0F;		//Remove upper nibble from status, (fault
-														//code resides in lower nibble)
-				sys->power.fcChipFaultFlag = 1;			//Set the fault flag. Must be reset by the
-														//function that reads it, otherwise charging
-														//can't resume.
-			} 
+			sys->power.fcChipStatus &= 0x0F;		//Remove upper nibble from status, (fault
+													//code resides in lower nibble)
+			sys->power.fcChipFaultFlag = 1;			//Set the fault flag. Must be reset by the
+													//function that reads it, otherwise charging
+													//can't resume.
 		}
 	}
 	
-	//If Charger Watchdog is enabled
-	if(sys->power.pollChargingStateEnabled)
+	//If Charger Watchdog is enabled and chargeWatchDogEnabled flag has just been set, or 
+	//chargeWatchDagTime has elapsed then poll
+	if(sys->power.pollChargingStateEnabled && chargerWatchDogTime <= sys->timeStamp)
 	{
-		//and chargeWatchDogEnabled flag has just been set, or chargeWatchDagTime has elapsed then 
-		//poll
-		if(chargerWatchDogTime <= sys->timeStamp)
-		{
-			//Set time at which watchdog will next be triggered
-			chargerWatchDogTime = sys->timeStamp + sys->power.chargeWatchDogInterval;
-			fcWatchdogReset();
-		}
+		//Set time at which watchdog will next be triggered
+		chargerWatchDogTime = sys->timeStamp + sys->power.chargeWatchDogInterval;
+		fcWatchdogReset();
 	}
 }
 
@@ -153,12 +147,12 @@ uint8_t pfChargeCycleHandler(RobotGlobalStructure *sys)
 			break;
 		
 		case CCS_CHARGING:
+			//Blink LED
 			if(!fdelay_ms(250))
 				led3Tog;
-			if(chipState == FC_BATTERY_CHARGED)
-			{
+			if(chipState == FC_BATTERY_CHARGED)	//If finished charging
 				sys->states.chargeCycle = CCS_DISMOUNT;
-			}
+
 			if((chipState & 0xF0) == 0xF0)		//If fault (Upper nibble = F)
 				sys->states.chargeCycle = CCS_FAULT;
 			break;
@@ -168,11 +162,13 @@ uint8_t pfChargeCycleHandler(RobotGlobalStructure *sys)
 			sys->states.chargeCycle = CCS_DISMOUNT;
 			return 0xFF;						//Indicate that a fault occurred
 		
+		//See which direction we are facing right now, then switch to CCS_TURN_AWAY
 		case CCS_DISMOUNT:
 			currentHeading = sys->pos.facing;
 			sys->states.chargeCycle = CCS_TURN_AWAY;
 			break;
 		
+		//Rotate 180 degrees, then switch to CCS_FINISHED STATE
 		case CCS_TURN_AWAY:
 			if(!mfMoveToHeadingByDistance(currentHeading - 180, 35, 10, sys))
 				sys->states.chargeCycle = CCS_FINISHED;

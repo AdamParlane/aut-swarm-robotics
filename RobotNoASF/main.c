@@ -26,6 +26,7 @@
 #include "Interfaces/timer_interface.h"
 
 #include "Functions/power_functions.h"
+#include "Functions/comm_functions.h"
 #include "Functions/docking_functions.h"
 #include "Functions/manual_mode.h"
 #include "Functions/motion_functions.h"
@@ -104,6 +105,8 @@ int main(void)
 {
 	robotSetup(); //Set up the system and peripherals
 	//Battery voltage stored in sys.power.batteryVoltage
+	//Initial main function state is set in robot_setup.c
+	//Return variables. Not ideal, but not sure what else to do right now.
 	uint8_t chargeCycleReturn = 0;
 	uint8_t dockingReturn = 0;
 	float lineHeading = 0;
@@ -114,13 +117,13 @@ int main(void)
 		{
 			case M_TEST: //System Test Mode
 			//Entered when test command received from PC
-				testManager(message, &sys); //Interprets test command and executes it
+				testManager(&sys); //Interprets test command and executes it
 				break;
 			
 			case M_MANUAL: //User controlled mode
 			//Entered when manual movement command received from PC
 				if(sys.flags.xbeeNewData) //if there is new data
-					manualControl(message, &sys);
+					manualControl(&sys);
 				break;
 			
 			case M_DOCKING:
@@ -170,7 +173,7 @@ int main(void)
 				break;
 		}
 		
-		commGetNew();				//Checks for and interprets new communications
+		commGetNew(&sys);				//Checks for and interprets new communications
 		
 		nfRetrieveNavData(&sys);	//checks if there is new navigation data and updates sys->pos.
 		

@@ -30,6 +30,7 @@
 #include "sam.h"				//Micro controller specific defines
 #include <stdint.h>				//Gives standard integer type definitions (ie uint8_t)
 #include <stdbool.h>			//Gives boolean variable types
+#include "Interfaces/xbee_driver.h"//Gives access to MessageInfo structure definition
 
 //////////////[Enumerations]////////////////////////////////////////////////////////////////////////
 //The following enumerations represent states in each state machine in the system
@@ -107,6 +108,7 @@ typedef struct OpticalSensor
 	float dy;		//Rate of change from optical sensor (Y axis is fwd/bckwd)
 	float heading;		//Heading calculated from optical sensor
 	float speed;		//Magnitude calculated from optical sensor
+	char pollEnabled;	//Enable polling the optical sensor
 } OpticalSensor;
 
 //Stores IMU sensor raw and converted data
@@ -125,6 +127,8 @@ typedef struct IMUSensor
 	float pitch;		//Absolute pitch from DMP (degrees)
 	float roll;			//Absolute roll from DMP (degrees)
 	float yaw;			//Absolute yaw (heading) from DMP (degrees)
+	char dmpEnabled;	//A flag that states whether or not the DMP is enabled
+	char pollEnabled;	//Enable polling the IMU
 } IMUSensor;
 
 //structure to store all the robot side navigation / positioning data
@@ -179,13 +183,21 @@ typedef struct ColourSensorData
 	unsigned short value;
 } ColourSensorData;
 
+typedef struct CommunicationData
+{
+	uint8_t pollEnabled;				//Whether or not to poll for new messages in main()
+	uint16_t pollInterval;				//Interval at which to poll at (ms)
+	struct MessageInfo messageData;		//Next message data
+	uint16_t testModeStreamInterval;	//Interval between sending test data packets (ms)
+} CommunicationData;
+
 //Structure that will store all system flags for global use
 typedef struct SystemFlags
 {
 	char xbeeNewData;	//New data from Xbee interface
 	char imuCheckFifo;	//IMU ext interrupt has been triggered
 	char obaMoving;		//Robot is in motion
-	char obaEnabled;	//Obstable avoidance enabled
+	char obaEnabled;	//Obstacle avoidance enabled
 	char tfStream;		//Test function stream time flag
 } SystemFlags;
 
@@ -217,6 +229,7 @@ typedef struct RobotGlobalStructure
 {
 	SystemStates states;			//System states
 	SystemFlags flags;				//System global flags
+	CommunicationData comms;		//Communication system control and data
 	Position pos;					//Position information
 	BatteryChargeData power;		//Battery/Charging info and control
 	uint32_t timeStamp;				//System timestamp (millisecs since power on)

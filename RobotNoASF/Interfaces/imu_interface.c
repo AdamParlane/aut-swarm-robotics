@@ -214,7 +214,6 @@ unsigned char imuDmpStart(void)
 * gyro_orientation) to a scalar representation for use by the DMP.
 * NOTE: These functions are borrowed from Invensense's MPL.
 *
-*
 */
 unsigned short invOrientationMatrixToScalar(const signed char *mtx)
 {
@@ -312,7 +311,7 @@ uint8_t imuReadFifo(RobotGlobalStructure *sys)
 										//occurred, so exit this function with non zero->
 		if(sensors & INV_WXYZ_QUAT)		//If quaternion data was in the FIFO
 		{
-			sys->pos.IMU.qx = quatData[X];
+			sys->pos.IMU.qx = quatData[X];	//Store quats in global data structure
 			sys->pos.IMU.qy = quatData[Y];
 			sys->pos.IMU.qz = quatData[Z];
 			sys->pos.IMU.qw = quatData[W];

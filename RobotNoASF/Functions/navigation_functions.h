@@ -16,6 +16,7 @@
 * uint8_t nfRetrieveNavData(RobotGlobalStructure *sys)
 * void nfGetEulerAngles(RobotGlobalStructure *sys)
 * float nfWrapAngle(float angleDeg)
+* void nfDMPEnable(char enable RobotGlobalStructure *sys)
 *
 */
 
@@ -80,5 +81,24 @@ void nfGetEulerAngles(RobotGlobalStructure *sys);
 *
 */
 float nfWrapAngle(float angleDeg);
+
+/*
+* Function:
+* void nfDMPEnable(char enable, RobotGlobalStructure *sys)
+*
+* Enables the DMP on the IMU and resets the sys.pos.IMU.dmpEnabled flag. Provides a wrapper to
+* enable the DMP
+*
+* Inputs:
+* char enable:
+*   1 to enable DMP and 0 to disable;
+* RobotGlobalStructure *sys:
+*   Pointer to the global robot data structure
+*
+* Returns:
+* None
+*
+*/
+void nfDMPEnable(char enable, RobotGlobalStructure *sys);
 
 #endif /* NAVIGATION_FUNCTIONS_H_ */

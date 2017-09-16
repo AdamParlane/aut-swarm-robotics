@@ -18,15 +18,20 @@
 * uint8_t nfRetrieveNavData(RobotGlobalStructure *sys)
 * void nfGetEulerAngles(RobotGlobalStructure *sys)
 * float nfWrapAngle(float angleDeg)
+* void nfDMPEnable(char enable RobotGlobalStructure *sys)
 *
 */
 
 //////////////[Includes]////////////////////////////////////////////////////////////////////////////
 #include "../robot_setup.h"
+
 #include "../IMU-DMP/inv_mpu_CUSTOM.h"
-#include "navigation_functions.h"
+
 #include "../Interfaces/imu_interface.h"
 #include "../Interfaces/opt_interface.h"
+
+#include "navigation_functions.h"
+
 #include <tgmath.h>				//Required for atan2 in nfGetEulerAngles()
 
 //////////////[Defines]/////////////////////////////////////////////////////////////////////////////
@@ -67,9 +72,19 @@ uint8_t nfRetrieveNavData(RobotGlobalStructure *sys)
 {
 	if(sys->flags.imuCheckFifo)
 	{
-		getMouseXY(sys);							//Update mouse sensor data
-		imuReadFifo(sys);							//Read IMU's FIFO buffer
-		nfGetEulerAngles(sys);						//Convert IMU quaternions to Euler angles
+		if(sys->pos.Optical.pollEnabled)
+			getMouseXY(sys);						//Update mouse sensor data
+			
+		if(sys->pos.IMU.pollEnabled)				//If polling enabled for IMU
+		{
+			if(!sys->pos.IMU.dmpEnabled)			//If DMP was disabled then enable it
+				nfDMPEnable(1, sys);
+			imuReadFifo(sys);						//Read IMU's FIFO buffer
+			nfGetEulerAngles(sys);					//Convert IMU quaternions to Euler angles
+		} else {
+			if(sys->pos.IMU.dmpEnabled)				//If polling IMU disabled, then Disable DMP
+				nfDMPEnable(0, sys);
+		}
 		sys->flags.imuCheckFifo = 0;				//Reset interrupt flag
 		return 0;
 	} else
@@ -157,4 +172,33 @@ float nfWrapAngle(float angleDeg)
 	while(angleDeg < -179.99)
 		angleDeg += 360.0;
 	return angleDeg;
+}
+
+/*
+* Function:
+* void nfDMPEnable(RobotGlobalStructure *sys)
+*
+* Enables the DMP on the IMU and resets the sys.pos.IMU.dmpEnabled flag. Provides a wrapper to
+* enable the DMP
+*
+* Inputs:
+* char enable:
+*   1 to enable DMP and 0 to disable;
+* RobotGlobalStructure *sys:
+*   Pointer to the global robot data structure
+*
+* Returns:
+* None
+*
+* Implementation:
+* Calls the DMP enable function in the IMU driver, and sets dmpEnabled high
+*
+*/
+void nfDMPEnable(char enable, RobotGlobalStructure *sys)
+{
+	if(enable)
+		imuDmpStart();
+	else
+		imuDmpStop();
+	sys->pos.IMU.dmpEnabled = enable;
 }

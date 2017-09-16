@@ -31,7 +31,7 @@
 * Function:
 * void commGetNew(struct FrameInfo *frame, struct MessageInfo *message)
 *
-* Checks for new communications and handlles the interpretation of them
+* Checks for new communications and handles the interpretation of them
 *
 * Inputs:
 * pointer to frame_info struct and pointer to message_info struct
@@ -40,21 +40,28 @@
 * none
 *
 * Implementation:
-* Checks if the XBee frame buffer is full indicating new data is ready to be read
+* First, checks if communication polling is enabled, and if the polling interval has elapsed.
+* If so, checks if the XBee frame buffer is full indicating new data is ready to be read
 * If so, interpret the new XBee API frame and use to fill the message buffer
 * Then is the message buffer is full interpret the swarm message
-*
-* Improvement:
-* I think that this should be in a higher level function file.
 *
 */
 void commGetNew(RobotGlobalStructure *sys)
 {
-	if(xbeeFrameBufferInfoGetFull(&frame) == 0)			//Check for a received XBee Message
+	static uint32_t nextPollTime = 0;
+	struct FrameInfo commFrame;
+	
+	//If polling is enabled and the poll interval has elapsed
+	if(sys->comms.pollEnabled && sys->timeStamp >= nextPollTime)
 	{
-		xbeeInterpretAPIFrame(frame);					//Interpret the received XBee Message
-		if(!xbeeMessageBufferInfoGetFull(&message))		//Check for a message from the swarm
-			commInterpretSwarmMessage(message, sys);	//Interpret the message
+		//Set the time at which comms will next be polled
+		nextPollTime = sys->timeStamp + sys->comms.pollInterval;
+		if(!xbeeFrameBufferInfoGetFull(&commFrame))			//Check for a received XBee Message
+		{
+			xbeeInterpretAPIFrame(commFrame);					//Interpret the received XBee Message
+			if(!xbeeMessageBufferInfoGetFull(&sys->comms.messageData))//Check for a message from the swarm
+				commInterpretSwarmMessage(sys);					//Interpret the message
+		}
 	}
 }
 
@@ -65,8 +72,8 @@ void commGetNew(RobotGlobalStructure *sys)
 * Interprets and acts on a received swarm messages
 *
 * Inputs:
-* struct MessageInfo message:
-*   TODO: Adam: input description
+* RobotGlobalStructure *sys:
+*   Pointer to the global system data structure
 *
 * Returns:
 * none
@@ -79,31 +86,32 @@ void commGetNew(RobotGlobalStructure *sys)
 * numbers.
 *
 */
-void commInterpretSwarmMessage(struct MessageInfo message, RobotGlobalStructure *sys)
+void commInterpretSwarmMessage(RobotGlobalStructure *sys)
 {
 	//handles the incoming commands and sets the appropriate states / flags calls functions
 	sys->flags.xbeeNewData = 1;
-	if(message.command >= 0xE0) //test command range 0xE0-0xEF
+	if(sys->comms.messageData.command >= 0xE0) //test command range 0xE0-0xEF
 		sys->states.mainf = M_TEST;
-	else if (message.command == 0xD0)
+	else if (sys->comms.messageData.command == 0xD0)
 	{
 		mfStopRobot(sys);
 	}
-	else if(message.command >= 0xD1 && message.command <= 0xD3) //Manual command range 0xD1-0xD3
+	//Manual command range 0xD1-0xD3
+	else if(sys->comms.messageData.command >= 0xD1 && sys->comms.messageData.command <= 0xD3) 
 		sys->states.mainf = M_MANUAL;
-	else if (message.command == 0xD4)
+	else if (sys->comms.messageData.command == 0xD4)
 		//move robot randomly
 		mfRandomMovementGenerator();
-	else if (message.command == 0xD7)
+	else if (sys->comms.messageData.command == 0xD7)
 		sys->states.mainf = M_DOCKING;
 	//0xD6 and D5 are also reserved for docking
 	//at a later date for different methods if required
-	else if (message.command == 0xD8)
+	else if (sys->comms.messageData.command == 0xD8)
 		sys->flags.obaEnabled = 0;
-	else if (message.command == 0xD9)
+	else if (sys->comms.messageData.command == 0xD9)
 		sys->flags.obaEnabled = 1;
-	else if (message.command == 0xDA)
+	else if (sys->comms.messageData.command == 0xDA)
 		sys->states.mainf = M_LIGHT_FOLLOW;
-	else if (message.command == 0xDB)
+	else if (sys->comms.messageData.command == 0xDB)
 		sys->states.mainf = M_LINE_FOLLOW;
 }
