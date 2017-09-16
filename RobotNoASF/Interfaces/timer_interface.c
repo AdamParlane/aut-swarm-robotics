@@ -127,7 +127,7 @@ void timer0Init(void)
 int get_ms(uint32_t *timestamp)
 {
 	if(!timestamp)
-	return 1;
+		return 1;
 	*timestamp = sys.timeStamp;
 	return 0;
 }

@@ -151,6 +151,7 @@ int main(void)
 				break;
 			
 			case M_CHARGING:
+				mfStopRobot(&sys);
 				chargeCycleReturn = pfChargeCycleHandler(&sys);
 				if(chargeCycleReturn > 0xEF)
 					sys.states.mainf = M_IDLE;			//Charging fault occurred
@@ -169,7 +170,8 @@ int main(void)
 			case M_IDLE:					
 				mfStopRobot(&sys);
 				if(!fdelay_ms(1000))					//Blink LED 3 in Idle mode
-					led3Tog;
+					led3Tog;				
+
 				break;
 		}
 		

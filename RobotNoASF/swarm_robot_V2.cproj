@@ -144,6 +144,7 @@
       <Value>EMPL</Value>
       <Value>USE_DMP</Value>
       <Value>MPU9250</Value>
+      <Value>FIFO_CORRUPTION_CHECK</Value>
     </ListValues>
   </armgcc.compiler.symbols.DefSymbols>
   <armgcc.compiler.directories.IncludePaths>
