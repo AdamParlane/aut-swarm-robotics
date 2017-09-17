@@ -107,7 +107,7 @@ int imuInit(void)
 * the IMU.
 *
 */
-int imuDmpInit(RobotGlobalStructure *sys)
+int imuDmpInit(char calibrateGyro)
 {
 	int result = 0;			//If > 0 then error has occurred
 	
@@ -135,10 +135,8 @@ int imuDmpInit(RobotGlobalStructure *sys)
 														//gesture based (pg10 in DMP manual)
 	result += mpu_set_dmp_state(1);						//Start DMP (also starts IMU interrupt)
 	
-	if(sys->pos.IMU.gyroCalEnabled)
-	{
+	if(calibrateGyro)
 		result += dmp_enable_gyro_cal(1);					//Enable gyro calibration
-	}
 	
 	return result;
 }

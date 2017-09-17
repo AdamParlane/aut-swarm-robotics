@@ -198,9 +198,11 @@ void getMouseXY(RobotGlobalStructure *sys)
 			//Xtemp ^= 0b1000100000000000;	//Make the 2s complement bit be MSB of short
 		
 		sys->pos.Optical.dx = Xx;
+		sys->pos.Optical.x += sys->pos.Optical.dx;
 		//if(Ytemp & (1<<12))					//if MSB of Y is set (for 2s complement)
 			//Ytemp ^= 0b1000100000000000;	//Make the 2s complement bit be MSB of short
 		sys->pos.Optical.dy = Yy;
+		sys->pos.Optical.y += sys->pos.Optical.dy;
 		
 		sys->pos.Optical.surfaceQuality = getMouseSQUAL();
 	}

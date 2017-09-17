@@ -44,6 +44,10 @@
 #define TLP_KP	10.0
 #define TLP_KI	0.001
 
+//PID constants for mfAdvancedMove
+#define AMH_KP	0.5		//Heading
+#define AMF_KP	3.0		//Facing
+
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*
 * Function:
@@ -159,5 +163,8 @@ float mfTrackLightProx(RobotGlobalStructure *sys);
 char mfRandomMovementGenerator(void);
 
 void mfStopRobot(RobotGlobalStructure *sys);
+
+char mfAdvancedMove(float heading, float facing, uint8_t speed, 
+						uint8_t maxTurnRatio, RobotGlobalStructure *sys);
 
 #endif /* MOTION_FUNCTIONS_H_ */

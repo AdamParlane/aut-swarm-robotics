@@ -25,13 +25,15 @@
 */
 //////////////[Includes]////////////////////////////////////////////////////////////////////////////
 #include "../robot_setup.h"
-#include "motion_functions.h"
-#include "navigation_functions.h"
+
 #include "../Interfaces/motor_driver.h"
 #include "../Interfaces/light_sens_interface.h"
 #include "../Interfaces/prox_sens_interface.h"
 #include "../Interfaces/twimux_interface.h"
 #include "../Interfaces/timer_interface.h"
+
+#include "navigation_functions.h"
+#include "motion_functions.h"
 
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*
@@ -287,7 +289,7 @@ float mfTrackLight(RobotGlobalStructure *sys)
 			
 	//If dHeading ends up being out of range, then dial it back
 	dHeading = TL_KP*pErr + TL_KI*iErr;
-	dHeading = capToRangeInt(dHeading, -90, 90);
+	dHeading = capToRangeInt(dHeading, -45, 45);
 	
 	//If error is less than 0.5 deg and delta yaw is less than 0.5 degrees per second then we can
 	//stop
@@ -299,8 +301,8 @@ float mfTrackLight(RobotGlobalStructure *sys)
 		iErr = 0;
 		return 0;
 	} else {
-		mfMoveToHeading(sys->pos.facing + dHeading, 40, sys);
-		return pErr;	//If not, return pErr
+		mfMoveToHeading(sys->pos.facing + dHeading, 60, sys);
+		return pErr;		//If not, return pErr
 	}
 }
 
@@ -361,7 +363,7 @@ float mfTrackLightProx(RobotGlobalStructure *sys)
 	{
 		mfStopRobot(sys);
 		pErr = 0;			//Clear the static vars so they don't interfere next time we call this
-		//function
+							//function
 		iErr = 0;
 		return 0;
 	} else {
@@ -418,8 +420,60 @@ char mfRandomMovementGenerator(void)
 	return 0;
 }
 
+
 void mfStopRobot(RobotGlobalStructure *sys)
 {
 	mdStopMotors();
 	sys->flags.obaMoving = 0;
+}
+
+char mfAdvancedMove(float heading, float facing, uint8_t speed,
+						uint8_t maxTurnRatio, RobotGlobalStructure *sys)
+{	
+	static float pErrH;				//Proportional (signed) heading error
+	static float pErrF;				//Proportional (signed) facing error
+	float facingCorrection = 0;		//Stores turn ratio calculated by PID sum
+	float headingCorrection = 0;	//Stores heading correction calculated by PID sum
+	
+	//Make sure heading and facing is in range (-180 to 180)
+	heading = nfWrapAngle(heading);
+	facing = nfWrapAngle(facing);
+	
+	//Make sure speed and maxTurnRatio is in range
+	speed = capToRangeUint(speed, 0, 100);
+	maxTurnRatio = capToRangeUint(maxTurnRatio, 0, 100);
+	
+	//Calculate proportional error values
+	pErrH = heading - sys->pos.heading;				//Signed Error (heading)
+	pErrF = facing - sys->pos.facing;				//Signed Error (facing)
+	
+	//Force the P controller to always take the shortest path to the destination.
+	//For example if the robot was currently facing at -120 degrees and the target was 130 degrees,
+	//instead of going right around from -120 to 130, it will go to -180 and down to 130.
+	if(pErrH > 180)
+		pErrH -= 360;
+	if(pErrH < -180)
+		pErrH += 360;
+
+	if(pErrF > 180)
+		pErrF -= 360;
+	if(pErrF < -180)
+		pErrF += 360;
+
+	//Calculate the correction figures
+	headingCorrection = AMH_KP*pErrH;
+	facingCorrection = AMF_KP*pErrF;
+	//If the correction values end up being out of range, then dial them back
+	facingCorrection = capToRangeFlt(facingCorrection, -maxTurnRatio, maxTurnRatio);
+	headingCorrection = capToRangeFlt(headingCorrection, -180, 180);
+	
+	//Get the robot moving to correct the errors
+	moveRobot(heading - sys->pos.facing + headingCorrection , speed, facingCorrection);
+	
+	//If error is less than 0.5 deg and delta yaw is less than 0.5 degrees per second then we can
+	//return 0 (ie robot is more or less on correct heading)
+	if((abs(sys->pos.IMU.gyroZ) < 0.5) && (abs(pErrF) < 0.5))
+		return 0;
+	else
+		return pErrF;	//If not, return pErrF
 }

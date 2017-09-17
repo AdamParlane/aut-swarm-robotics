@@ -106,6 +106,8 @@ typedef struct OpticalSensor
 {
 	int dx;				//Rate of change from optical sensor (X axis is left to right)
 	int dy;				//Rate of change from optical sensor (Y axis is fwd/bckwd)
+	int x;				//Count sum on x axis
+	int y;				//Count sum on y axis
 	char pollEnabled;	//Enable polling the optical sensor
 	char overflowFlag;	//1 if data has overflowed on optical sensor
 	uint8_t surfaceQuality;	//A value signifying quality of the surface (242 = max quality)

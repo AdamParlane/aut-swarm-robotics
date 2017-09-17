@@ -105,7 +105,7 @@ int imuInit(void);
 * zero if no problems encountered)
 *
 */
-int imuDmpInit(RobotGlobalStructure *sys);
+int imuDmpInit(char calibrateGyro);
 
 /*
 * Function:

@@ -201,11 +201,9 @@ void robotSetup(void)
 	xbeeInit();							//Initialise communication system
 	imuInit();							//Initialise IMU.
 	extIntInit();						//Initialise external interrupts.
-	imuDmpInit(&sys);					//Initialise DMP system
+	imuDmpInit(sys.pos.IMU.gyroCalEnabled);	//Initialise DMP system
 	mouseInit();						//Initialise mouse sensor
 	lfInit();							//Initialise line follow sensors. Only on V2.
-	
-	
 	
 	delay_ms(2500);						//Stops robot running away while programming
 	srand(sys.timeStamp);				//Seed rand() to give unique random numbers

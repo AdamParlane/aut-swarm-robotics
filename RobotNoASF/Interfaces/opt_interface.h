@@ -59,7 +59,7 @@
 #define OPT_CONV_1600CPI2MM	0.015875000
 #define OPT_CONV_2000CPI2MM	0.012700000
 
-#define OPT_CONV_FACTOR		OPT_CONV_800CPI2MM	//Using 800CPI resolution
+#define OPT_CONV_FACTOR		OPT_CONV_1600CPI2MM	//Using 800CPI resolution
 
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*
