@@ -147,7 +147,7 @@ void mouseInit(void)
 	SPI_Write(OPT_LASER_CTRL1, 0x3F);		//complement of set laser current range to 4-10mA
 	delay_ms(10);							//allow everything to settle after being initialized
 	
-	SPI_Write(OPT_CONFIG2, 0x2E);			//Resolution = 800cpi, Force Awake (pg28 in DS)
+	SPI_Write(OPT_CONFIG2, 0x6E);			//Resolution = 1600cpi, Force Awake (pg28 in DS)
 }
 
 /*

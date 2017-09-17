@@ -171,7 +171,16 @@ int main(void)
 				mfStopRobot(&sys);
 				if(!fdelay_ms(1000))					//Blink LED 3 in Idle mode
 					led3Tog;				
-
+				if(sys.pos.y > 32000)
+					led1On;
+				else
+					led1Off;
+				if(sys.pos.y < 0)
+					led2On;
+				else
+					led2Off;
+				
+				
 				break;
 		}
 		

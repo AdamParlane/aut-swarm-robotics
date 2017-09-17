@@ -21,7 +21,7 @@
 * 
 * Functions:
 * int imuInit(void)
-* int imuDmpInit(void)
+* int imuDmpInit(RobotGlobalStructure *sys)
 * void imuDmpStop(void)
 * void imuDmpStart(void)
 * unsigned short invOrientationMatrixToScalar(const signed char *mtx)
@@ -107,7 +107,7 @@ int imuInit(void)
 * the IMU.
 *
 */
-int imuDmpInit(void)
+int imuDmpInit(RobotGlobalStructure *sys)
 {
 	int result = 0;			//If > 0 then error has occurred
 	
@@ -127,11 +127,19 @@ int imuDmpInit(void)
 	result += dmp_enable_feature(DMP_FEATURE_6X_LP_QUAT | DMP_FEATURE_SEND_RAW_ACCEL |
 									DMP_FEATURE_SEND_CAL_GYRO);
 	
+	result += dmp_enable_6x_lp_quat(1);
+	
 	result += dmp_set_fifo_rate(200);			//200Hz update rate from the FIFO as per
 												//datasheet (improves accuracy)
 	result += dmp_set_interrupt_mode(DMP_INT_CONTINUOUS);//Use continuous interrupts rather than
 														//gesture based (pg10 in DMP manual)
 	result += mpu_set_dmp_state(1);						//Start DMP (also starts IMU interrupt)
+	
+	if(sys->pos.IMU.gyroCalEnabled)
+	{
+		result += dmp_enable_gyro_cal(1);					//Enable gyro calibration
+	}
+	
 	return result;
 }
 

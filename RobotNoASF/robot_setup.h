@@ -129,6 +129,7 @@ typedef struct IMUSensor
 	float yaw;			//Absolute yaw (heading) from DMP (degrees)
 	char dmpEnabled;	//A flag that states whether or not the DMP is enabled
 	char pollEnabled;	//Enable polling the IMU
+	char gyroCalEnabled;	//Enable gyro calibration on startup.
 } IMUSensor;
 
 //structure to store all the robot side navigation / positioning data

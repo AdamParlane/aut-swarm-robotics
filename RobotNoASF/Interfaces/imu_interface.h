@@ -21,7 +21,7 @@
 *
 * Functions:
 * int imuInit(void)
-* int imuDmpInit(void)
+* int imuDmpInit(RobotGlobalStructure *sys)
 * unsigned char imuDmpStop(void)
 * unsigned char imuDmpStart(void)
 * unsigned short invOrientationMatrixToScalar(const signed char *mtx)
@@ -105,7 +105,7 @@ int imuInit(void);
 * zero if no problems encountered)
 *
 */
-int imuDmpInit(void);
+int imuDmpInit(RobotGlobalStructure *sys);
 
 /*
 * Function:
