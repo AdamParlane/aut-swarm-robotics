@@ -161,6 +161,6 @@ int main(void)
 		nfRetrieveNavData();	//checks if there is new navigation data and updates robotPosition
 		//check to see if obstacle avoidance is enabled AND the robot is moving
 		if(obstacleAvoidanceEnabledFlag && movingFlag)
-			aim = dodgeObstacle(aim, 50); //avoid obstacles using proximity sensors
+			dodgeObstacle(&robotPosition); //avoid obstacles using proximity sensors
 	}
 }

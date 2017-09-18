@@ -24,7 +24,7 @@
 #include "../robot_setup.h"
 
 //////////////[Defines]/////////////////////////////////////////////////////////////////////////////
-#define OBSTACLE_THRESHOLD 0x0200 //Subject to change on testing but seems reasonable
+#define OBSTACLE_THRESHOLD 0x0100 //Subject to change on testing but seems reasonable
 
 //////////////[Global Variables]///////////////////////////////////////////////////////////////////////////
 uint16_t proximity[6];
@@ -61,8 +61,8 @@ void scanProximity(void);
 *
 *
 */
-//void dodgeObstacle(struct Position *robotPosition);
-signed int dodgeObstacle(signed int aim, char speed);
+void dodgeObstacle(struct Position *robotPosition);
+//signed int dodgeObstacle(signed int aim, char speed);
 
 
 
