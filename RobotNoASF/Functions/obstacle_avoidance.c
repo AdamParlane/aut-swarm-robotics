@@ -109,7 +109,7 @@ uint8_t dodgeObstacle(RobotGlobalStructure *sys)
 					if((proximity[indexLeft] > proximity[indexRight]))
 					{
 						sys->pos.targetHeading +=90;
-						moveRobot(sys->pos.targetHeading, sys->pos.targetSpeed);//move right
+						moveRobot(sys->pos.targetHeading, sys->pos.targetSpeed, 0);//move right
 						direction = RIGHT;
 						firstLoop = 0;
 						obs = 1;
@@ -117,7 +117,7 @@ uint8_t dodgeObstacle(RobotGlobalStructure *sys)
 					else if ((proximity[indexLeft] < proximity[indexRight]))
 					{
 						sys->pos.targetHeading -= 90;
-						moveRobot(sys->pos.targetHeading, sys->pos.targetSpeed);//move left
+						moveRobot(sys->pos.targetHeading, sys->pos.targetSpeed, 0);//move left
 						direction = LEFT;
 						firstLoop = 0;
 						obs = 1;
@@ -129,7 +129,7 @@ uint8_t dodgeObstacle(RobotGlobalStructure *sys)
 					sys->pos.targetHeading += 90;
 					if(sys->pos.targetHeading == 0)
 						sys->pos.targetHeading += 90;
-					moveRobot(sys->pos.targetHeading, sys->pos.targetSpeed);
+					moveRobot(sys->pos.targetHeading, sys->pos.targetSpeed, 0);
 					direction = RIGHT;
 					obs = 0;
 				}
@@ -139,7 +139,7 @@ uint8_t dodgeObstacle(RobotGlobalStructure *sys)
 					sys->pos.targetHeading -= 90;
 					if(sys->pos.targetHeading == 0)
 						sys->pos.targetHeading -= 90;
-					moveRobot(sys->pos.targetHeading, sys->pos.targetSpeed);
+					moveRobot(sys->pos.targetHeading, sys->pos.targetSpeed, 0);
 					direction = LEFT;
 					obs = 0;
 				}
@@ -147,12 +147,12 @@ uint8_t dodgeObstacle(RobotGlobalStructure *sys)
 				else if((proximity[index] > OBSTACLE_THRESHOLD) && (proximity[indexLeft] > 800) && (proximity[indexRight] > 800))
 				{
 					sys->pos.targetHeading -= 120;
-					moveRobot(sys->pos.targetHeading, sys->pos.targetSpeed);
+					moveRobot(sys->pos.targetHeading, sys->pos.targetSpeed, 0);
 				}
 			}
 			else if (proximity[original] < OBSTACLE_THRESHOLD) //obstacle has been avoided
 			{
-				moveRobot(sys->pos.targetHeading, sys->pos.targetSpeed);
+				moveRobot(sys->pos.targetHeading, sys->pos.targetSpeed, 0);
 				firstLoop = 1;
 				obs = 0;
 				return 0;
@@ -188,8 +188,8 @@ void checkForObstacles(RobotGlobalStructure *sys)
 			if((proximity[index] > OBSTACLE_THRESHOLD) || (proximity[indexLeft] > 1000) || (proximity[indexRight] > 1000))
 			{
 				//if there is obstacles
-				mainRobotStatePrev = mainRobotState;
-				mainRobotState = OBSTACLE_AVOIDANCE;
+				sys->states.mainfPrev = sys->states.mainf;
+				sys->states.mainf = M_OBSTACLE_AVOIDANCE;
 			}
 		}
 	}

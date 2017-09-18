@@ -110,11 +110,7 @@ int main(void)
 	uint8_t chargeCycleReturn = 0;
 	uint8_t dockingReturn = 0;
 	float lineHeading = 0;
-	uint8_t obstacleFlag;
-	obstacleAvoidanceEnabledFlag = 1;
-	robotPosition.targetHeading = 0;
-	robotPosition.targetSpeed = 50;
-	
+	uint8_t obstacleFlag;	
 	while(1)
 	{
 		switch (sys.states.mainf)
@@ -152,16 +148,14 @@ int main(void)
 				
 			case M_FORMATION:
 			//placeholder
-				moveRobot(0, robotPosition.targetSpeed);
-				robotPosition.targetHeading = 0;
 				break;
 						
-      case M_OBSTACLE_AVOIDANCE:
+			case M_OBSTACLE_AVOIDANCE:
 				obstacleFlag = dodgeObstacle(&sys);
 				if(!obstacleFlag)//avoid obstacles using proximity sensors
 				{
 					//returning 1 means obstacles have been avoided
-					mainRobotState = mainRobotStatePrev; //reset the state to what it was
+					sys.states.mainf = sys.states.mainfPrev; //reset the state to what it was
 				}
 				break;
 
@@ -176,10 +170,6 @@ int main(void)
 				
 			case M_TEST_ALL:
 			//Something
-				break;
-				
-			case M_OBSTACLE_AVOIDANCE:
-			//OA stuff
 				break;
 				
 			case M_IDLE:					
