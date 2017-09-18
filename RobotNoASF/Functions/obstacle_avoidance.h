@@ -59,7 +59,13 @@ void scanProximity(void);
 *
 *
 */
-void dodgeObstacle(RobotGlobalStructure *sys);
+uint8_t dodgeObstacle(RobotGlobalStructure *sys);
+
+void checkForObstacles(RobotGlobalStructure *sys);
+
+#define LEFT	0
+#define RIGHT	1
+
 
 
 

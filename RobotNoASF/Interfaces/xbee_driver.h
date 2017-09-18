@@ -81,10 +81,8 @@
 #define UNKNOWN_16								0xFFFE
 #define ALL_DEVICES_16							0xFFFF
 
-//TODO: Message codes (Are these still used?)
+//TODO: Message codes
 //System Messages 0x0*
-#define COMMUNICATION_TEST						0x00
-#define BATTERY_DATA							0x01
 //Navigation system Messages 0x1*
 #define NAV_IMU_QW								0x10
 #define NAV_IMU_QX								0x11
@@ -95,6 +93,8 @@
 #define NAV_OPT_DY								0x16
 #define NAV_OPT_VEL								0x17
 #define NAV_OPT_HDG								0x18
+//Robot Control Messages 
+//Test Messages
 
 //////////////[Type Definitions]////////////////////////////////////////////////////////////////////
 //TODO: Mansel description of structure
@@ -150,13 +150,13 @@ void xbeeCopyData(struct MessageInfo message, uint8_t *data);
 
 /*
 * Function:
-* void xbeeInterpretAPIFrame(struct FrameInfo Xbeeframe)
+* void xbeeInterpretAPIFrame(struct FrameInfo frame)
 *
-* Interprets and acts on a received xbee message
+* Interprets and acts on a received Xbee frame
 *
 * Inputs:
-* struct FrameInfo Xbeeframe:
-*   TODO: Mansel input description
+* struct FrameInfo frame:
+*	Structure containing information on the xbee frame to interpret. The frame type, index of the message in the frame buffer and message length
 *
 * Returns:
 * none
@@ -173,13 +173,13 @@ void xbeeInterpretAPIFrame(struct FrameInfo frame);
 *
 * Inputs:
 * uint64_t destination_64:
-*   TODO: Mansel input description
+*   MSB first, the Zigbee 64bit address of the destination device. Reserved addresses include: the coordinator = 0x0000000000000000, broadcast = 0x000000000000FFFF
 * uint16_t destination_16:
-*   TODO: Mansel input description
+*   MSB, first, the Zigbee 16bit address of the destination device.Reserved addresses include: unknown or broadcast = 0xFFFE,  broadcast to routers = 0xFFFC, broadcast to all non-sleeping devices = 0xFFFD, broadcast to all devices including sleeping end devices = 0xFFFE.
 * uint8_t *data:
-*   TODO: Mansel input description
+*   pointer to an array of data to be sent to the destination device
 * uint8_t  bytes:
-*   TODO: Mansel input description
+*   The number of bytes to send
 *
 * Returns:
 * none
@@ -192,14 +192,15 @@ void xbeeSendAPITransmitRequest(uint64_t destination_64, uint16_t destination_16
 * Function:
 * int xbeeFrameBufferInfoGetFull(struct FrameInfo * info)
 *
-* Gets the information about the oldest frame from the buffer
+* Gets the information about the oldest Xbee frame from the buffer and updates the FrameInfo pointer
 *
 * Inputs:
-* struct FrameInfo * info:
-*   TODO: Mansel input desc
+* struct FrameInfo *info
+*	Pointer to the structure to store the information on the Xbee Frame retrieved from the buffer.
 *
 * Returns:
-* TODO: Mansel return desc
+*	0: No errors
+*	-1: Buffer empty
 *
 */
 int xbeeFrameBufferInfoGetFull(struct FrameInfo * info);
@@ -208,14 +209,15 @@ int xbeeFrameBufferInfoGetFull(struct FrameInfo * info);
 * Function:
 * int xbeeMessageBufferInfoGetFull(struct MessageInfo * info)
 *
-* Gets the information about the oldest message from the buffer
+* Gets the information about the oldest Swarm message from the buffer and updates the MessageInfo pointer
 *
 * Inputs:
 * struct MessageInfo * info:
-*   TODO: Mansel input desc
+*	Pointer to the structure to store the information on the swarm message retrieved from the buffer.
 *
 * Returns:
-* TODO: Mansel return desc
+*	0: No errors
+*	-1: Buffer empty
 *
 */
 int xbeeMessageBufferInfoGetFull(struct MessageInfo * info);
@@ -228,10 +230,11 @@ int xbeeMessageBufferInfoGetFull(struct MessageInfo * info);
 *
 * Inputs:
 * uint8_t new:
-*   TODO: Mansel input desc
+*  the new data to add to the end of the array
 *
 * Returns:
-* TODO: Mansel return desc
+*	0: No errors
+*	-1: Buffer full
 *
 */
 int xbeeFrameBufferPut(uint8_t new);
@@ -240,18 +243,19 @@ int xbeeFrameBufferPut(uint8_t new);
 * Function:
 * int xbeeFrameBufferInfoPut(int ind, uint8_t typ, int len)
 *
-* Adds a element to the end of the array
+* Adds an element to the end of the buffer, essentially adding a new xbee frame to the queue of frames to be interpreted
 *
 * Inputs:
 * int ind:
-*   TODO: Mansel input desc
+*  The index of where the frame is stored in the Xbee frame buffer
 * uint8_t typ:
-*   TODO: Mansel input desc
+*   The type of Xbee frame
 * int len:
-*   TODO: Mansel input desc
+*   The length of the Xbee frame
 *
 * Returns:
-* TODO: Mansel return desc
+*	0: No errors
+*	-1: Buffer full
 *
 */
 int xbeeFrameBufferInfoPut(int ind, uint8_t typ, int len);

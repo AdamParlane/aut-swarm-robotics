@@ -110,7 +110,11 @@ int main(void)
 	uint8_t chargeCycleReturn = 0;
 	uint8_t dockingReturn = 0;
 	float lineHeading = 0;
-
+	uint8_t obstacleFlag;
+	obstacleAvoidanceEnabledFlag = 1;
+	robotPosition.targetHeading = 0;
+	robotPosition.targetSpeed = 50;
+	
 	while(1)
 	{
 		switch (sys.states.mainf)
@@ -148,8 +152,19 @@ int main(void)
 				
 			case M_FORMATION:
 			//placeholder
+				moveRobot(0, robotPosition.targetSpeed);
+				robotPosition.targetHeading = 0;
 				break;
-			
+						
+      case M_OBSTACLE_AVOIDANCE:
+				obstacleFlag = dodgeObstacle(&sys);
+				if(!obstacleFlag)//avoid obstacles using proximity sensors
+				{
+					//returning 1 means obstacles have been avoided
+					mainRobotState = mainRobotStatePrev; //reset the state to what it was
+				}
+				break;
+
 			case M_CHARGING:
 				mfStopRobot(&sys);
 				chargeCycleReturn = pfChargeCycleHandler(&sys);
@@ -183,7 +198,6 @@ int main(void)
 				
 				break;
 		}
-		
 		commGetNew(&sys);				//Checks for and interprets new communications
 		
 		nfRetrieveNavData(&sys);	//checks if there is new navigation data and updates sys->pos.
@@ -191,7 +205,7 @@ int main(void)
 		pfPollPower(&sys);			//Poll battery and charging status
 		
 		//check to see if obstacle avoidance is enabled AND the robot is moving
-		if(sys.flags.obaEnabled && sys.flags.obaMoving)
-			dodgeObstacle(&sys); //avoid obstacles using proximity sensors
+		if(sys.flags.obaEnabled && sys.flags.obaMoving && sys.states.mainf != M_OBSTACLE_AVOIDANCE)
+			checkForObstacles(&sys); //avoid obstacles using proximity sensors
 	}
 }

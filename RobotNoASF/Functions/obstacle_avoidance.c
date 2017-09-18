@@ -54,7 +54,7 @@ void scanProximity(void)
 	{
 		proximity[index] = proxSensRead(i);
 		index++;
-	}		
+	}
 }
 
 
@@ -77,14 +77,105 @@ void scanProximity(void)
 * [WIP]
 *
 */
-void dodgeObstacle(RobotGlobalStructure *sys)
+uint8_t dodgeObstacle(RobotGlobalStructure *sys)
 {
-	scanProximity();	//update proximity readings
-	uint16_t proxRange = 0;
-	uint8_t indexLeft, indexRight;
-	for(uint8_t index = 0; index < 6 ; index++)
+	scanProximity();// updates proximity sensors
+	signed int proxRange = 0, proxRangeHigh, proxRangeLow;// value assigned by index, can be 0, 60, 120, 180, 240, 300
+	static char direction;
+	static char firstLoop = 1;
+	static char obs = 0;
+	static char original;
+	if(firstLoop)
+		original = sys->pos.targetHeading % 60;
+	uint8_t indexLeft, indexRight;//follows and leads index for the sake of checking proximity of nearby sensors
+	for(uint8_t index = 0; index <= 5 ; index++)//0, 1, 2, 3, 4, 5
 	{
 		proxRange = index * 60; //convert angle to degrees
+		proxRangeHigh = proxRange + 30;
+		proxRangeLow = proxRange - 30;
+		indexLeft = index + 1;
+		indexRight = index - 1;
+		//keep left and right indexes in range
+		if(indexLeft > 5)
+		indexLeft = 0;
+		if(indexRight > 5)
+		indexRight = 5;
+		if(sys->pos.targetHeading > proxRangeLow && sys->pos.targetHeading <= proxRangeHigh) // if the prox is on the FACE we care about
+		{
+			if((proximity[index] > OBSTACLE_THRESHOLD) || (proximity[indexLeft] > 1000) || (proximity[indexRight] > 1000))
+			{
+				if(firstLoop) //choose a direction to dodge on first attempt
+				{
+					if((proximity[indexLeft] > proximity[indexRight]))
+					{
+						sys->pos.targetHeading +=90;
+						moveRobot(sys->pos.targetHeading, sys->pos.targetSpeed);//move right
+						direction = RIGHT;
+						firstLoop = 0;
+						obs = 1;
+					}
+					else if ((proximity[indexLeft] < proximity[indexRight]))
+					{
+						sys->pos.targetHeading -= 90;
+						moveRobot(sys->pos.targetHeading, sys->pos.targetSpeed);//move left
+						direction = LEFT;
+						firstLoop = 0;
+						obs = 1;
+					}
+				}
+				//moving left but its getting worse
+				else if ((direction == LEFT) && (proximity[indexLeft] > (proximity[indexRight] + 100)) && (proximity[indexLeft] > 600 || obs))
+				{
+					sys->pos.targetHeading += 90;
+					if(sys->pos.targetHeading == 0)
+						sys->pos.targetHeading += 90;
+					moveRobot(sys->pos.targetHeading, sys->pos.targetSpeed);
+					direction = RIGHT;
+					obs = 0;
+				}
+				//moving right but its getting worse
+				else if ((direction == RIGHT) && (proximity[indexRight] > (proximity[indexLeft] + 100)) && (proximity[indexRight] > 600 || obs))
+				{
+					sys->pos.targetHeading -= 90;
+					if(sys->pos.targetHeading == 0)
+						sys->pos.targetHeading -= 90;
+					moveRobot(sys->pos.targetHeading, sys->pos.targetSpeed);
+					direction = LEFT;
+					obs = 0;
+				}
+				//stuck in a corner
+				else if((proximity[index] > OBSTACLE_THRESHOLD) && (proximity[indexLeft] > 800) && (proximity[indexRight] > 800))
+				{
+					sys->pos.targetHeading -= 120;
+					moveRobot(sys->pos.targetHeading, sys->pos.targetSpeed);
+				}
+			}
+			else if (proximity[original] < OBSTACLE_THRESHOLD) //obstacle has been avoided
+			{
+				moveRobot(sys->pos.targetHeading, sys->pos.targetSpeed);
+				firstLoop = 1;
+				obs = 0;
+				return 0;
+			}
+		}
+	}
+	if(sys->pos.targetHeading > 360)
+		sys->pos.targetHeading -= 360;
+	if(sys->pos.targetHeading < 0)
+		sys->pos.targetHeading +=360;
+	return 1;
+}
+
+void checkForObstacles(RobotGlobalStructure *sys)
+{
+	scanProximity();// updates proximity sensors
+	signed int proxRange = 0, proxRangeHigh, proxRangeLow;// value assigned by index, can be 0, 60, 120, 180, 240, 300
+	uint8_t indexLeft, indexRight;//follows and leads index for the sake of checking proximity of nearby sensors
+	for(uint8_t index = 0; index <= 5 ; index++)//0, 1, 2, 3, 4, 5
+	{
+		proxRange = index * 60; //convert angle to degrees
+		proxRangeHigh = proxRange + 30;
+		proxRangeLow = proxRange - 30;
 		indexLeft = index + 1;
 		indexRight = index - 1;
 		//keep left and right indexes in range
@@ -92,26 +183,14 @@ void dodgeObstacle(RobotGlobalStructure *sys)
 			indexLeft = 0;
 		if(indexRight > 5)
 			indexRight = 5;
-		if((sys->pos.targetHeading > (proxRange - 30) && 
-		(sys->pos.targetHeading < (proxRange + 30))) || ((index == 0) && 
-		(sys->pos.targetHeading > 330) && (sys->pos.targetHeading < 30)))
+		if(sys->pos.targetHeading > proxRangeLow && sys->pos.targetHeading <= proxRangeHigh) // if the prox is on the FACE we care about
 		{
 			if((proximity[index] > OBSTACLE_THRESHOLD) || (proximity[indexLeft] > 1000) || (proximity[indexRight] > 1000))
 			{
-				if(proximity[indexLeft] > proximity[indexRight])
-				{
-					sys->pos.targetHeading +=90;
-					moveRobot(sys->pos.targetHeading, sys->pos.targetSpeed, 0);//moveLeft
-					
-				}
-				else if (proximity[indexLeft] < proximity[indexRight])
-				{
-					sys->pos.targetHeading -= 90;
-					moveRobot(sys->pos.targetHeading, sys->pos.targetSpeed, 0);//move right
-				}
+				//if there is obstacles
+				mainRobotStatePrev = mainRobotState;
+				mainRobotState = OBSTACLE_AVOIDANCE;
 			}
-			else 
-				moveRobot(sys->pos.targetHeading, sys->pos.targetSpeed, 0);
-		}	
-	}		
+		}
+	}
 }
