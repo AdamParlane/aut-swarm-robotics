@@ -22,10 +22,142 @@
 
 //////////////[Includes]////////////////////////////////////////////////////////////////////////////
 #include "robot_setup.h"
+#include "Interfaces/adc_interface.h"
+#include "Interfaces/external_interrupt.h"
+#include "Interfaces/fc_interface.h"
+#include "Interfaces/imu_interface.h"
+#include "Interfaces/light_sens_interface.h"
+#include "Interfaces/line_sens_interface.h"
+#include "Interfaces/motor_driver.h"
+#include "Interfaces/opt_interface.h"
+#include "Interfaces/pio_interface.h"
+#include "Interfaces/prox_sens_interface.h"
+#include "Interfaces/timer_interface.h"
+#include "Interfaces/twimux_interface.h"
+#include "Interfaces/uart_interface.h"
+#include "Interfaces/xbee_driver.h"
+
+#include <stdlib.h>				//srand()
 
 //////////////[Global variables]////////////////////////////////////////////////////////////////////
-extern uint32_t systemTimestamp;	//Required by waitForFlag()
-//extern signed int aim;
+
+
+//////////////[Global variables]////////////////////////////////////////////////////////////////////
+/*Global Data Structure Initialisation. These are the initial settings for the robot
+Current Layout Tree:
+--------------------
++sys
+	+flags
+		+xbeeNewData
+		+imuCheckFifo
+		+obaMoving
+		+obaEnabled
+	+states
+		+mainf
+		+mainfPrev
+		+docking
+		+chargeCycle
+		+followLine
+		+scanBrightest
+		+moveHeadingDistance
+	+pos
+		+Optical
+			+dx
+			+dy
+			+heading
+			+speed
+		+IMU
+			+qw
+			+qx
+			+qy
+			+qz
+			+accelX
+			+accelY
+			+gyroX
+			+gyroY
+			+gyroZ
+			+pitch
+			+roll
+			+yaw
+		+x
+		+y
+		+heading
+		+facing
+		+facingOffset
+		+timeStamp	
+		+deltaTime
+		+systemTimeStamp
+		+targetHeading
+		+targetSpeed
+	+timeStamp
+*/
+RobotGlobalStructure sys =
+{
+	//System flags
+	.flags =
+	{
+		.xbeeNewData				= 0,
+		.imuCheckFifo				= 0,
+		.obaMoving					= 0,
+		.obaEnabled					= 0
+	},
+	
+	//System States
+	.states =
+	{
+		.mainf						= M_IDLE,
+		.mainfPrev					= M_IDLE,
+		.docking					= DS_START,
+		.chargeCycle				= CCS_CHECK_POWER,
+		.followLine					= FLS_FIRST_CONTACT,
+		.scanBrightest				= SBS_FUNCTION_INIT,
+		.moveHeadingDistance		= MHD_START
+	},
+	
+	//Communications
+	.comms =
+	{
+		.pollEnabled				= 1,
+		.pollInterval				= 0,
+		.testModeStreamInterval		= 100
+	},
+	
+	//Robot Position
+	.pos =
+	{
+		.x							= 0.0,		//Resets robot position
+		.y							= 0.0,		//Resets robot position
+		.facingOffset				= 180,		//Ensures that whatever way the robot is facing when
+												//powered on is 0 degrees heading.
+		.targetHeading				= 0,		//Default heading is 0 degrees
+		.targetSpeed				= 50,		//Default speed is 50%
+		.IMU =
+		{
+			.pollEnabled			= 1,		//Enable IMU polling
+			.gyroCalEnabled			= 1			//Enables gyro calibration at start up. Takes 8sec,
+												//so best to disable while debugging
+		},
+		.Optical =
+		{
+			.pollEnabled			= 1			//Enable Optical Polling
+		}
+	},
+	
+	//Power/Battery/Charge
+	.power =
+	{
+		.batteryDockingVoltage		= 3500,		//Battery voltage at which its time to find charger
+		.batteryMaxVoltage			= 3800,		//Maximum battery voltage (full charge)
+		.batteryMinVoltage			= 3300,		//Dead flat battery voltage
+		.fcChipFaultFlag			= 0,		//Fast charge fault flag
+		.pollBatteryEnabled			= 1,		//Battery polling enabled
+		.pollChargingStateEnabled	= 0,		//Charge status polling disabled
+		.pollChargingStateInterval	= 0,		//Poll charging status as fast as possible
+		.pollBatteryInterval		= 30000		//Poll battery every thirty seconds
+	},
+	
+	.timeStamp = 0								//millisecs since power on
+};
 
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*
@@ -69,13 +201,12 @@ void robotSetup(void)
 	xbeeInit();							//Initialise communication system
 	imuInit();							//Initialise IMU.
 	extIntInit();						//Initialise external interrupts.
-	imuDmpInit();						//Initialise DMP system
+	imuDmpInit(sys.pos.IMU.gyroCalEnabled);	//Initialise DMP system
 	mouseInit();						//Initialise mouse sensor
 	lfInit();							//Initialise line follow sensors. Only on V2.
 	
 	delay_ms(2500);						//Stops robot running away while programming
-	srand(streamDelayCounter);		//Seed rand() to give unique random numbers
-	movingFlag = 0; //On boot robot isnt moving
+	srand(sys.timeStamp);				//Seed rand() to give unique random numbers
 	return;
 }
 /*
@@ -172,8 +303,8 @@ void masterClockInit(void)
 */
 uint8_t waitForFlag(const volatile uint32_t *regAddr, uint32_t regMask, uint16_t timeOutMs)
 {
-	uint32_t startTime = systemTimestamp;
-	while(!((*regAddr) & regMask) && (systemTimestamp < (startTime + timeOutMs)));
+	uint32_t startTime = sys.timeStamp;
+	while(!((*regAddr) & regMask) && (sys.timeStamp < (startTime + timeOutMs)));
 	if((*regAddr) & regMask)
 		return 0;
 	else

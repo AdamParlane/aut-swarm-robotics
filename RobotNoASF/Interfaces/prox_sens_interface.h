@@ -38,9 +38,6 @@
 #ifndef PROX_SENS_INTERFACE_H_
 #define PROX_SENS_INTERFACE_H_
 
-//////////////[Includes]////////////////////////////////////////////////////////////////////////////
-#include "sam.h"
-
 //////////////[Defines]/////////////////////////////////////////////////////////////////////////////
 //Register addresses for reading data. (NOTE: Ch0 and Ch1 are two 16-bit registers)
 #define PS_CH0DATAL_REG	0x14	//Ch0 photodiode ADC low data register (Visible+IR light) AMB

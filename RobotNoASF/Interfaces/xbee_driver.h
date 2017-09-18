@@ -14,9 +14,7 @@
 *
 * Functions:
 * void xbeeInit(void)
-* void xbeeConvertData(struct MessageInfo message, uint8_t *data)
-* void xbeeGetNew()
-* void xbeeInterpretSwarmMessage(struct MessageInfo message)
+* void xbeeCopyData(struct MessageInfo message, uint8_t *data)
 * void xbeeInterpretAPIFrame(struct FrameInfo frame)
 * void xbeeSendAPITransmitRequest(uint64_t destination_64, uint16_t destination_16,
 *                                 uint8_t *data, uint8_t  bytes)
@@ -29,27 +27,6 @@
 
 #ifndef XBEE_DRIVER_H_
 #define XBEE_DRIVER_H_
-
-//////////////[Type Definitions]////////////////////////////////////////////////////////////////////
-//Structure containing information on a swarm robotics message
-//Used within the communication system as an "instance" of each message
-struct MessageInfo
-{
-	int index;		//Index within the message buffer where the message data is stored
-	char command;	//The message command
-	int length;		
-};
-
-//Structure containing information on a Xbee Frame
-//Used within the communication system as an "instance" of each frame
-struct FrameInfo
-{
-	int index;		//Index within the message buffer where the message data is stored
-	char type;		//The Xbee frame type
-	int length;		//The length of the frame data
-
-//////////////[Includes]////////////////////////////////////////////////////////////////////////////
-#include "../robot_setup.h"
 
 //////////////[Defines]/////////////////////////////////////////////////////////////////////////////
 // XBee flow control bytes
@@ -119,9 +96,25 @@ struct FrameInfo
 //Robot Control Messages 
 //Test Messages
 
-//////////////[Public Global variables]////////////////////////////////////////////////////////////////////
-extern char obstacleAvoidanceEnabledFlag;
-extern int MessageBufferIn, MessageBufferOut, MessageBufferUse;
+//////////////[Type Definitions]////////////////////////////////////////////////////////////////////
+//TODO: Mansel description of structure
+struct MessageInfo
+{
+	int index;
+	char command;
+	int length;
+};
+
+//TODO:Mansel description of structure
+struct FrameInfo
+{
+	int index;
+	char type;
+	int length;
+};
+
+//////////////[Global variables]////////////////////////////////////////////////////////////////////
+extern struct MessageInfo message;		//Incoming message with XBee metadata removed
 
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*
@@ -141,9 +134,9 @@ void xbeeInit(void);
 
 /*
 * Function:
-* void xbeeConvertData(struct MessageInfo message, uint8_t* data[50])
+* void xbeeCopyData(struct MessageInfo message, uint8_t* data[50])
 *
-* Converts the received message structure and pointer to an array with the required test command
+* Copies the received message structure and pointer to an array with the required test command
 * data
 *
 * Input is the message structure from the received data
@@ -153,38 +146,7 @@ void xbeeInit(void);
 * No Return Values
 *
 */
-void xbeeConvertData(struct MessageInfo message, uint8_t *data);
-
-/*
-* Function:
-* void xbeeGetNew(struct FrameInfo *frame, struct MessageInfo *message)
-*
-* Checks for new communications and handlles the interpretation of them
-*
-* Inputs:
-* pointer to frame_info struct and pointer to message_info struct
-*
-* Returns:
-* none
-*
-*/
-void xbeeGetNew();
-
-/*
-* Function:
-* void xbeeInterpretSwarmMessage(struct MessageInfo message)
-*
-* Interprets and acts on a received swarm messages
-*
-* Inputs:
-* struct MessageInfo message:
-*	Structure containing information on the message to interpret. The command, index of the message in the Message Buffer and message length
-*
-* Returns:
-* none
-*
-*/
-void xbeeInterpretSwarmMessage(struct MessageInfo message);
+void xbeeCopyData(struct MessageInfo message, uint8_t *data);
 
 /*
 * Function:

@@ -17,7 +17,7 @@
 * void SPI_Init(void);
 * void mouseInit(void);
 * int mouseTestBasic(void);
-* void Get_Mouse_XY(struct Position *mousePos);
+* void Get_Mouse_XY(Position *sys);
 *
 * Functionality of each function is explained before each function
 * In the this file that is a summary of purpose, input and return values
@@ -28,9 +28,6 @@
 
 #ifndef OPT_INTERFACE_H_
 #define OPT_INTERFACE_H_
-
-//////////////[Includes]////////////////////////////////////////////////////////////////////////////
-#include "../robot_setup.h"
 
 //////////////[Defines]/////////////////////////////////////////////////////////////////////////////
 #define RESOLUTION			0.004
@@ -45,6 +42,7 @@
 #define OPT_DELTA_Y_L		0x04
 #define OPT_DELTA_XY_H		0x05
 #define OPT_SQUAL			0x06
+#define OPT_CONFIG2			0x12
 #define OPT_LASER_CTRL0		0x1A
 #define OPT_LSRPWR_CFG0		0x1C
 #define OPT_LSRPWR_CFG1		0x1D
@@ -54,6 +52,14 @@
 #define OPT_INVS_REV_ID		0x3E
 #define OPT_INVS_PROD_ID	0x3F
 
+//Mouse conversion factors (1in = 25.4mm; Conversion factor = 25.4mm/CPI_val)
+#define OPT_CONV_400CPI2MM	0.063500000
+#define OPT_CONV_800CPI2MM	0.031750000
+#define OPT_CONV_1200CPI2MM	0.021166667
+#define OPT_CONV_1600CPI2MM	0.015875000
+#define OPT_CONV_2000CPI2MM	0.012700000
+
+#define OPT_CONV_FACTOR		OPT_CONV_1600CPI2MM	//Using 800CPI resolution
 
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*
@@ -113,7 +119,7 @@ void mouseInit(void);
 char mouseTestBasic(void);
 
 /*
-* Function: void getMouseXY(struct Position*)
+* Function: void getMouseXY(RobotGlobalStructure *sys)
 *
 * Reads the deltaX and deltaY from the mouse sensor
 * Writes the received deltaX and deltaY into the position structure using pointers
@@ -123,7 +129,7 @@ char mouseTestBasic(void);
 * No return value
 *
 */
-void getMouseXY(struct Position *mousePos);
+void getMouseXY(RobotGlobalStructure *sys);
 
 
 /*
@@ -134,6 +140,6 @@ void getMouseXY(struct Position *mousePos);
 * Returns a char with the surface quality
 *
 */
-void getMouseSQUAL(void);
+uint8_t getMouseSQUAL(void);
 
 #endif /* OPT_INTERFACE_H_ */

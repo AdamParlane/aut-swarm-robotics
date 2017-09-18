@@ -20,6 +20,7 @@
 */
 
 //////////////[Includes]////////////////////////////////////////////////////////////////////////////
+#include "../robot_setup.h"
 #include "fc_interface.h"
 #include "twimux_interface.h"	//Needed for TWI0 read and write functions
 
@@ -152,8 +153,8 @@ uint8_t fcVersionRead(void)
 * returns whether CHARGING, CHARGED, or other
 *
 * Improvements:
-*	//TODO: Probably shouldn't be manipulating mainRobotState from here. Should be able to see when
-*	//mainRobotState is being changed from the main function, otherwise it just appears to magically
+*	//TODO: Probably shouldn't be manipulating sys.states.mainf from here. Should be able to see when
+*	//sys.states.mainf is being changed from the main function, otherwise it just appears to magically
 *	//change itself if you know what I mean.. Maybe set this up with an appropriate return system
 *
 */

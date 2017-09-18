@@ -21,9 +21,6 @@
 #ifndef LINE_SENS_INTERFACE_H_
 #define LINE_SENS_INTERFACE_H_
 
-//////////////[Includes]////////////////////////////////////////////////////////////////////////////
-#include "../robot_setup.h"
-
 //////////////[Defines]/////////////////////////////////////////////////////////////////////////////
 #define ON				1
 #define OFF				0
@@ -44,7 +41,7 @@
 #define LFC_PORT		(PIOA)			//PIO Port def for the line follower LED control
 #define LFC				(PIO_PA8)		//PIO pin def for the line follower LED control
 
-///////////////Type Definitions/////////////////////////////////////////////////////////////////////
+//////////////[Structure Definitions]///////////////////////////////////////////////////////////////
 struct LineSensorArray
 //Will store states of the line sensors for use by functions in this modules. This is necessary
 //because there is a gray area when the sensor is half on and half off the line, so by establishing
