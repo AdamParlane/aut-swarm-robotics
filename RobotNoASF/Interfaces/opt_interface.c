@@ -247,7 +247,7 @@ char mouseTestBasic(void)
 	invsProdID = SPI_Read(OPT_INVS_PROD_ID);//should be 0xCE
 	revID = SPI_Read(OPT_REVISION_ID);		//should be 0x03
 	invsRevID = SPI_Read(OPT_INVS_REV_ID);	//should be 0xFC
-	if(prodID == 0x31 && invsProdID == 0xCE && revID == 0x03 && invsRevID == 0xFE)
+	if(prodID == 0x31 && invsProdID == 0xCE && revID == 0x03 && invsRevID == 0xFC)
 		return 1;
 	else
 		return 0;
