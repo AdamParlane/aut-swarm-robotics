@@ -52,7 +52,7 @@ struct FrameInfo FrameBufferInfo[FRAME_BUFFER_INFO_SIZE];
 int FrameBufferInfoIn, FrameBufferInfoOut, FrameBufferInfoUse;
 
 uint8_t MessageBuffer[MESSAGE_BUFFER_SIZE];
-//int MessageBufferIn, MessageBufferOut, MessageBufferUse;
+int MessageBufferIn, MessageBufferOut, MessageBufferUse;
 
 struct MessageInfo MessageBufferInfo[MESSAGE_BUFFER_INFO_SIZE];
 int MessageBufferInfoIn, MessageBufferInfoOut, MessageBufferInfoUse;
@@ -86,14 +86,16 @@ static int xbeeMessageBufferInfoPut(int ind, uint8_t cmd, int len);
 * none
 *
 * Implementation:
-* TODO: Mansel implementation description
+*	Calls UART 3 initialisation function to correctly setup the UART for Xbee communications
+*	Initializes our various buffers using the appropriate functions
 *
 */
 void xbeeInit(void)
 {
+	//Sets up the uart3 for communication to the Xbee
 	uart3Init();
 
-	//Initializes buffers to beginning of arrays
+	//Initializes buffers
 	xbeeFrameBufferInit();
 	xbeeFrameBufferInfoInit();
 	xbeeMessageBufferInit();
@@ -179,7 +181,7 @@ void xbeeGetNew()
 *
 * Inputs:
 * struct MessageInfo message:
-*   TODO: Mansel input description
+*	Structure containing information on the message to interpret. The command, index of the message in the Message Buffer and message length
 *
 * Returns:
 * none
@@ -230,13 +232,16 @@ void xbeeInterpretSwarmMessage(struct MessageInfo message)
 *
 * Inputs:
 * struct FrameInfo Xbeeframe:
-*   TODO: Mansel input description
+*	Structure containing information on the xbee frame to interpret. The frame type, index of the message in the frame buffer and message length
 *
 * Returns:
 * none
 *
 * Implementation:
-* TODO: Mansel implementation description
+* Uses a switch statement to switch between various behaviours to interpret the various different Xbee frames that we can receive
+* Currently this is limited to interpret only Xbee receive frames which are messages that we receive
+* The data from these messages are copied to the message frame buffer
+* As a minimum this should be expanded to include the TRANSMIT STATUS
 *
 */
 void xbeeInterpretAPIFrame(struct FrameInfo Xbeeframe)
@@ -349,13 +354,13 @@ void xbeeInterpretAPIFrame(struct FrameInfo Xbeeframe)
 *
 * Inputs:
 * uint64_t destination_64:
-*   TODO: Mansel input description
+*   MSB first, the Zigbee 64bit address of the destination device. Reserved addresses include: the coordinator = 0x0000000000000000, broadcast = 0x000000000000FFFF
 * uint16_t destination_16:
-*   TODO: Mansel input description
+*   MSB, first, the Zigbee 16bit address of the destination device.Reserved addresses include: unknown or broadcast = 0xFFFE,  broadcast to routers = 0xFFFC, broadcast to all non-sleeping devices = 0xFFFD, broadcast to all devices including sleeping end devices = 0xFFFE.
 * uint8_t *data:
-*   TODO: Mansel input description
+*   pointer to an array of data to be sent to the destination device
 * uint8_t  bytes:
-*   TODO: Mansel input description
+*   The number of bytes to send
 *
 * Returns:
 * none
@@ -839,3 +844,4 @@ static int xbeeMessageBufferInfoPut(int ind, uint8_t cmd, int len)
 	MessageBufferInfoUse++;
 	return 0; // No errors
 }
+
