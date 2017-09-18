@@ -55,19 +55,19 @@
 #define FC_STATUS_BF_SUPPLY_SEL_USB	0x01	//USB has precedence over IN source
 
 ////Battery/Supply Status Register
-#define FC_SUPPLY_REG	0x01
+#define FC_SUPPLY_REG				0x01
 
 ////Control Register
-#define FC_CONTROL_REG	0x02	//Control register (Contains CE bit)
+#define FC_CONTROL_REG				0x02	//Control register (Contains CE bit)
 
 ////Control/Battery Voltage Register
-#define FC_BATVOL_REG	0x03	//Address
+#define FC_BATVOL_REG				0x03	//Address
 
 ////Vender/Part/Revision Register
-#define FC_VERSION_REG	0x04	//Address
+#define FC_VERSION_REG				0x04	//Address
 
 ////Battery Termination/Fast Charge Current Register
-#define FC_CHARGE_REG	0x05	//Address
+#define FC_CHARGE_REG				0x05	//Address
 
 ////Safety Timer/NTC Monitor Register
 #define FC_NTCMON_REG	0x07	//Register for TS fault bits B2 & B1, 00=normal, 01=nil charge, 
@@ -80,9 +80,9 @@
 #define FC_CONTROL_CHARGE_ENABLE	0x0C//Enables CE bit, EN_STAT bit (so we can see status of chip)
 								//and enables charge current termination
 #define FC_CONTROL_CHARGE_DISABLE	0x0E//Same as above but disables CE bit
-#define FC_BATTVOL_INIT	0x66	//Vreg = 3.98v, input current = 2.5A (FC_BATVOL_REG)
+#define FC_BATTVOL_INIT	0x8E	//Vreg = 4.2v, input current = 2.5A (FC_BATVOL_REG)
 //#define FC_CHARGE_INIT	0xFA	//charge current set to max Ic=2875mA, termination current
-#define FC_CHARGE_INIT	0x42								//Iterm=100mA (default) (FC_CHARGE_REG)
+#define FC_CHARGE_INIT	0xD7								//Iterm=450mA (default) (FC_CHARGE_REG)
 
 //Fast charge status
 #define FC_POWER_CONNECTED		FC_STATUS_BF_STAT_INRDY
