@@ -101,14 +101,15 @@ uint8_t dodgeObstacle(struct Position *robotPosition)
 						robotPosition->targetHeading +=90;
 						moveRobot(robotPosition->targetHeading, robotPosition->targetSpeed);//move right
 						direction = RIGHT;
+						firstLoop = 0;
 					}
 					else if ((proximity[indexLeft] < proximity[indexRight]))
 					{
 						robotPosition->targetHeading -= 90;
 						moveRobot(robotPosition->targetHeading, robotPosition->targetSpeed);//move left
 						direction = LEFT;
+						firstLoop = 0;
 					}
-					firstLoop = 0;
 				}
 				//moving left but its getting worse
 				else if ((direction == LEFT) && (proximity[indexLeft] > (proximity[indexRight] + 100)) && proximity[indexLeft] > 600)
@@ -131,7 +132,7 @@ uint8_t dodgeObstacle(struct Position *robotPosition)
 					moveRobot(robotPosition->targetHeading, robotPosition->targetSpeed);
 				}
 			}
-			else
+			else //obstacle has been avoided
 			{
 				moveRobot(robotPosition->targetHeading, robotPosition->targetSpeed);
 				firstLoop = 1;
