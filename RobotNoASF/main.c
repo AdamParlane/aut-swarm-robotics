@@ -160,7 +160,8 @@ int main(void)
 		xbeeGetNew();			//Checks for and interprets new communications
 		nfRetrieveNavData();	//checks if there is new navigation data and updates robotPosition
 		//check to see if obstacle avoidance is enabled AND the robot is moving
-		if(obstacleAvoidanceEnabledFlag && movingFlag)
-			dodgeObstacle(&robotPosition); //avoid obstacles using proximity sensors
+		//if(obstacleAvoidanceEnabledFlag && movingFlag)
+		//	dodgeObstacle(&robotPosition); //avoid obstacles using proximity sensors
+		obstacleAvoidance(aim);	
 	}
 }
