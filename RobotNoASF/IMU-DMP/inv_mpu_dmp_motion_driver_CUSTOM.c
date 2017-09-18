@@ -23,7 +23,8 @@
 #include "inv_mpu_dmp_motion_driver_CUSTOM.h"
 #include "dmpKey_CUSTOM.h"
 #include "dmpmap_CUSTOM.h"
-#include "../imu_interface.h"
+#include "../Interfaces/imu_interface.h"
+#include "../Interfaces/timer_interface.h"
 
 /* The following functions must be defined for this platform:
  * i2c_write(unsigned char slave_addr, unsigned char reg_addr,
@@ -66,7 +67,6 @@
 #else
 #define __no_operation()	__asm__ __volatile__ ("nop")
 //SWARM ROBOT CONFIGURATION/////////////////////////////////////////////
-
 #define delay_ms    delay_ms
 #define get_ms      get_ms
 #define log_i(...)     do {} while (0)

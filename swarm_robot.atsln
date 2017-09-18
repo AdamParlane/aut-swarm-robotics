@@ -1,0 +1,22 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Atmel Studio Solution File, Format Version 11.00
+VisualStudioVersion = 14.0.23107.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{54F91283-7BC4-4236-8FF9-10F437C3AD48}") = "swarm_robot_V2", "RobotNoASF\swarm_robot_V2.cproj", "{FA30A013-C17A-4723-AF8F-D4A09608B29A}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|ARM = Debug|ARM
+		Release|ARM = Release|ARM
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{FA30A013-C17A-4723-AF8F-D4A09608B29A}.Debug|ARM.ActiveCfg = Debug|ARM
+		{FA30A013-C17A-4723-AF8F-D4A09608B29A}.Debug|ARM.Build.0 = Debug|ARM
+		{FA30A013-C17A-4723-AF8F-D4A09608B29A}.Release|ARM.ActiveCfg = Release|ARM
+		{FA30A013-C17A-4723-AF8F-D4A09608B29A}.Release|ARM.Build.0 = Release|ARM
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
