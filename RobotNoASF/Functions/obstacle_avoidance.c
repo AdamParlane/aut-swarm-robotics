@@ -84,7 +84,7 @@ uint8_t dodgeObstacle(RobotGlobalStructure *sys)
 	static char direction;
 	static char firstLoop = 1;
 	static char obs = 0;
-	static char original;
+	static uint8_t original;
 	if(firstLoop)
 		original = sys->pos.targetHeading % 60;
 	uint8_t indexLeft, indexRight;//follows and leads index for the sake of checking proximity of nearby sensors
