@@ -22,7 +22,18 @@
 */
 
 //////////////[Includes]////////////////////////////////////////////////////////////////////////////
+#include "../robot_setup.h"
 #include "docking_functions.h"
+#include "motion_functions.h"
+#include "navigation_functions.h"
+#include "../Interfaces/line_sens_interface.h"
+#include "../Interfaces/adc_interface.h"
+#include "../Interfaces/light_sens_interface.h"
+#include "../Interfaces/twimux_interface.h"
+#include "../Interfaces/prox_sens_interface.h"
+#include "../Interfaces/fc_interface.h"
+#include "../Interfaces/timer_interface.h"
+#include "../Interfaces/motor_driver.h"
 #include <stdlib.h>				//abs() function in dfFollowLine()
 
 //////////////[Global variables]////////////////////////////////////////////////////////////////////
@@ -37,8 +48,8 @@ struct LineSensorArray lf;
 * Function to guide the robot to the dock.
 *
 * Inputs:
-* struct Position *imuData
-*   Pointer to the robotPosition structure
+* RobotGlobalStructure *sys
+*   Pointer to the sys->pos. structure
 *
 * Returns:
 * 0 when docking complete, otherwise non-zero
@@ -51,91 +62,85 @@ struct LineSensorArray lf;
 * [Ideas for improvements that are yet to be made](optional)
 *
 */
-uint8_t dfDockRobot(struct Position *imuData)
+uint8_t dfDockRobot( RobotGlobalStructure *sys)
 {
-	enum
-	{
-		FINISHED, START, FACE_BRIGHTEST, MOVE_FORWARD, RESCAN_BRIGHTEST, FOLLOW_LINE, CHRG_CONNECT,
-		CHRG_NOT_FOUND
-	};
-	static uint8_t dockingState = START;//State machine state
 	static float bHeading = 0;			//Brightest Heading
 	static float lineHeading = 0.0;		//Heading of line
 	uint8_t fcChipState = 0;			//Status of the fast charge chip
 	
-	switch(dockingState)
+	switch(sys->states.docking)
 	{
 		//Begin by scanning for the brightest light source
-		case START:
-			if(!dfScanBrightestLightSource(&bHeading, 359, imuData))
-				dockingState = FACE_BRIGHTEST;
+		case DS_START:
+			if(!dfScanBrightestLightSource(&bHeading, 359, sys))
+				sys->states.docking = DS_FACE_BRIGHTEST;
 			break;
 		
 		//Turn to face brightest light source seen
-		case FACE_BRIGHTEST:
-			if(!mfRotateToHeading(bHeading, imuData))
-				dockingState = MOVE_FORWARD;
+		case DS_FACE_BRIGHTEST:
+			if(!mfRotateToHeading(bHeading, sys))
+				sys->states.docking = DS_MOVE_FORWARD;
 			break;
 		
 		//Move towards brightestes light source
-		case MOVE_FORWARD:
-			//mfMoveToHeading(bHeading, 40, imuData);
-			mfTrackLight(imuData);
+		case DS_MOVE_FORWARD:
+			//mfMoveToHeading(bHeading, 40, sys->pos);
+			mfTrackLight(sys);
 			if(!fdelay_ms(3700))			//After 3.7 seconds, look for LEDs again
 			{
-				stopRobot();
-				dockingState= RESCAN_BRIGHTEST;
+				mfStopRobot(sys);
+				sys->states.docking = DS_RESCAN_BRIGHTEST;
 			}
 			if(dfUpdateLineSensorStates())	//If line found then follow it
 			{
-				stopRobot();
-				dockingState = FOLLOW_LINE;
+				mfStopRobot(sys);
+				sys->states.docking = DS_FOLLOW_LINE;
 			}
 			break;
 		
 		//Check again for brightest light source by scanning a 180 degree arc left to right to see
 		//if we are still on track to find brightest light source
-		case RESCAN_BRIGHTEST:
+		case DS_RESCAN_BRIGHTEST:
 			//Only look in front, because we should still be roughly in the right direction
-			if(!dfScanBrightestLightSource(&bHeading, 180, imuData))
-				dockingState = FACE_BRIGHTEST;
+			if(!dfScanBrightestLightSource(&bHeading, 180, sys))
+				sys->states.docking = DS_FACE_BRIGHTEST;
 			break;
 		
 		//Follow the line until an obstacle is encountered
-		case FOLLOW_LINE:
-			if(!dfFollowLine(35, &lineHeading, imuData))
-				dockingState = CHRG_CONNECT;//We have followed the line until the forward
-											//obstacle sensor has reached full value. Now we charge
-											//forward to mate with the charging contacts
+		case DS_FOLLOW_LINE:
+			if(!dfFollowLine(35, &lineHeading, sys))
+				//We have followed the line until the forward obstacle sensor has reached full
+				//value. Now we charge forward to mate with the charging contacts
+				sys->states.docking = DS_CHRG_CONNECT;
 			break;
 		
 		//Drive straight ahead until a connection with the charger is connected. When connection
 		//is established, exit with a FINISH state. Still need to include a timeout, incase the
 		//in front of the robot isn't the charger
-		case CHRG_CONNECT:
+		case DS_CHRG_CONNECT:
 			fcChipState = fcState();	//Get status of fast charge chip
 			//If power connected to fc chip
 			if(fcChipState == FC_STATUS_BF_STAT_INRDY || fcChipState == FC_STATUS_BF_STAT_CHRGIN)
 			{
-				dockingState = FINISHED;	//Docking is complete
-				stopRobot();				//Stop moving
+				sys->states.docking = DS_FINISHED;	//Docking is complete
+				mfStopRobot(sys);				//Stop moving
 			} else {
-				mfMoveToHeading(lineHeading, 45, imuData);
+				mfMoveToHeading(lineHeading, 45, sys);
 			}
 			break;
 		
 		//If charger hasn't been found after time period, we enter this state. The resulting
 		//return value that this state invokes will prompt the caller to avoid an obstacle, or
 		//try docking again.
-		case CHRG_NOT_FOUND:
-			dockingState = START;
+		case DS_CHRG_NOT_FOUND:
+			sys->states.docking = DS_START;
 			break;
 		
-		case FINISHED:
-			dockingState = START;
+		case DS_FINISHED:
+			sys->states.docking = DS_START;
 			break;
 	}
-	return dockingState;
+	return sys->states.docking;
 }
 
 /*
@@ -280,8 +285,8 @@ int8_t dfGetLineDirection(void)
 *   Speed that robot will move at while following line (%)
 * float *lineHeading:
 *   Pointer to a float that will store the average heading that the line is believed to be on
-* struct Poistion *imuData
-*   Pointer to the robotPosition data structure
+* struct Poistion *sys->pos
+*   Pointer to the sys->pos. data structure
 *
 * Returns:
 * 0 when finished, otherwise current state
@@ -295,33 +300,33 @@ int8_t dfGetLineDirection(void)
 * Need to find a way to make it smoother.
 *
 */
-uint8_t dfFollowLine(uint8_t speed, float *lineHeading, struct Position *imuData)
+uint8_t dfFollowLine(uint8_t speed, float *lineHeading,  
+						RobotGlobalStructure *sys)
 {
-	movingFlag = 1;
-	enum {START, FIRST_CONTACT, ALIGN, FOLLOW, FINISH};
+	sys->flags.obaMoving = 1;
+	
 	int8_t lineDirection = dfGetLineDirection();			//Get directional data from LF sensors
 	uint16_t forwardProxSens = proxSensRead(MUX_PROXSENS_A);//Will use obstacle data structure once
 															//implemented.
-	static uint8_t lineFollowerState = FIRST_CONTACT;
 	static uint8_t lineJustFound = 1;
 	
-	switch(lineFollowerState)
+	switch(sys->states.followLine)
 	{
-		//Starting state. Has value of 0 so when line following is fineshed will return 0
-		case START:
-			lineFollowerState = FIRST_CONTACT;
-		break;
+		//Starting state. Has value of 0 so when line following is finished will return 0
+		case FLS_START:
+			sys->states.followLine = FLS_FIRST_CONTACT;
+			break;
 		
 		//On first contact, drive forward slowly until line is detected on the middle two sensors.
 		//Once that is the case, then we must be over the line properly, so move to the FOLLOW
 		//state.
-		case FIRST_CONTACT:
+		case FLS_FIRST_CONTACT:
 			lineJustFound = 1;
 			if(!lineDirection)
-				lineFollowerState = FOLLOW;	//If sufficiently over line, begin following
+				sys->states.followLine = FLS_FOLLOW;	//If sufficiently over line, begin following
 			else 
-				steerRobot(25, 0);	//Creep forward some more to straddle line
-		break;
+				moveRobot(0, 25, 0);	//Creep forward some more to straddle line
+			break;
 		
 		//Given the position of the line sensors relative to the wheels on the underside of the 
 		//robot, the robot must stop and rotate on the spot in order to accurately locate the 
@@ -329,55 +334,55 @@ uint8_t dfFollowLine(uint8_t speed, float *lineHeading, struct Position *imuData
 		//clockwise depending on the directional data from the line sensors, and if the line is
 		//detected as being directly underneath the robot, then that heading is recorded and the
 		//function switches to the FOLLOW state.
-		case ALIGN:
+		case FLS_ALIGN:
 			if(lineDirection)
 			{
 				if(lineDirection < 0)
-					rotateRobot(-10 + lineDirection*2);
+					moveRobot(0, -10 + lineDirection*2, 100);
 				if(lineDirection > 0)
-					rotateRobot(10 + lineDirection*2);
+					moveRobot(0, 10 + lineDirection*2, 100);
 			}
 			else 
 			{
 				if(lineJustFound)								//If first time following this line
 				{
-					*lineHeading = imuData->imuYaw;				//Set initial line heading
+					*lineHeading = sys->pos.facing;				//Set initial line heading
 					lineJustFound = 0;
 				}
 				else
-					*lineHeading = (*lineHeading + imuData->imuYaw)/2;	//Running average heading
-				lineFollowerState = FOLLOW;
+					*lineHeading = (*lineHeading + sys->pos.facing)/2;	//Running average heading
+				sys->states.followLine = FLS_FOLLOW;
 			}
-		break;
+			break;
 		
 		//If the directional data from the line sensors suggests that we are centred over the line
 		//then drive along the heading established (in the ALIGN state) as the heading of the line.
 		//Otherwise, switch to the ALIGN state and re-centre over the line. If the forward prox
 		//sensor has been triggered, then slow the robot down proportional to the value of the
 		//sensor, and if maximum value is reached on the proximity sensor, then stop line following.
-		case FOLLOW:
+		case FLS_FOLLOW:
 			if(abs(lineDirection) < 2)
 				//Speed is inversely proportional to the reading from the forward prox sensor
-				mfMoveToHeading(*lineHeading, speed - (forwardProxSens*speed/1023) + 10, imuData);
+				mfMoveToHeading(*lineHeading, speed - (forwardProxSens*speed/1023) + 10, sys);
 			else
-				lineFollowerState = ALIGN;
+				sys->states.followLine = FLS_ALIGN;
 			if(forwardProxSens >= PS_CLOSEST)	//If forward prox is at maximum, then we've 
 												//encountered an obstacle, so finish
-				lineFollowerState = FINISH;
-		break;
+				sys->states.followLine = FLS_FINISH;
+			break;
 		
 		//If finished, reset the state machine for next time and return a 0.
-		case FINISH:
-			lineFollowerState = START;
-		break;
+		case FLS_FINISH:
+			sys->states.followLine = FLS_START;
+			break;
 	}
-	return lineFollowerState;	
+	return sys->states.followLine;	
 }
 
 /*
 * Function:
 * uint8_t dfScanBrightestLightSource(float *brightestHeading, uint16_t sweepAngle,
-*									struct Position *imuData);
+*									RobotGlobalStructure *sys);
 *
 * The robot will scan from -180 degrees to 180 degrees and record the heading with the brightest
 * source of light (which hopefully is the charging station)
@@ -408,11 +413,9 @@ uint8_t dfFollowLine(uint8_t speed, float *lineHeading, struct Position *imuData
 *
 */
 uint8_t dfScanBrightestLightSource(float *brightestHeading, uint16_t sweepAngle, 
-								struct Position *imuData)
+								 RobotGlobalStructure *sys)
 {
 	const float ROTATE_STEP_SZ = 3;
-	enum {FUNCTION_INIT, GOTO_START_POSITION, SWEEP, END};
-	static uint8_t functionState = FUNCTION_INIT;
 	static float startHeading;
 	static float endHeading;
 	static float sHeading;
@@ -420,26 +423,26 @@ uint8_t dfScanBrightestLightSource(float *brightestHeading, uint16_t sweepAngle,
 	float rotateError;
 	uint32_t avgBrightness = 0;
 	
-	switch(functionState)
+	switch(sys->states.scanBrightest)
 	{
-		case FUNCTION_INIT:
+		case SBS_FUNCTION_INIT:
 			//Calculate where to start sweep from
 			brightestVal = 0;								//Reset brightestValue
-			startHeading = imuData->imuYaw - (sweepAngle/2);//Calculate start heading
+			startHeading = sys->pos.facing - (sweepAngle/2);//Calculate start heading
 			endHeading = startHeading + sweepAngle;
 			sHeading = startHeading + sweepAngle/3;
-			functionState = GOTO_START_POSITION;			//Angles set up, lets start
+			sys->states.scanBrightest = SBS_GOTO_START_POSITION;	//Angles set up, lets start
 			return 1;
-		break;
+			break;
 
-		case GOTO_START_POSITION:
-			if(!mfRotateToHeading(startHeading, imuData))
-				functionState = SWEEP;						//In position, now perform sweep
+		case SBS_GOTO_START_POSITION:
+			if(!mfRotateToHeading(startHeading, sys))
+				sys->states.scanBrightest = SBS_SWEEP;						//In position, now perform sweep
 			return 1;
-		break;
+			break;
 		
-		case SWEEP:
-			rotateError = mfRotateToHeading(sHeading, imuData);
+		case SBS_SWEEP:
+			rotateError = mfRotateToHeading(sHeading, sys);
 			if(abs(rotateError) < 170 && sHeading < endHeading)//Keep sHeading only 25 degrees ahead
 															//of current heading so that robot will
 															//always take the long way around
@@ -449,7 +452,7 @@ uint8_t dfScanBrightestLightSource(float *brightestHeading, uint16_t sweepAngle,
 					sHeading = endHeading;
 			}
 			if(!rotateError)
-				functionState = END;
+				sys->states.scanBrightest = SBS_END;
 			else
 			{
 				avgBrightness = (lightSensRead(MUX_LIGHTSENS_L, LS_WHITE_REG) +
@@ -457,14 +460,14 @@ uint8_t dfScanBrightestLightSource(float *brightestHeading, uint16_t sweepAngle,
 				if(avgBrightness > brightestVal)
 				{
 					brightestVal = avgBrightness;
-					*brightestHeading = imuData->imuYaw;
+					*brightestHeading = sys->pos.facing;
 				}
 			}
 			return 1;
-		break;
+			break;
 		
-		case END:
-			functionState = FUNCTION_INIT;
+		case SBS_END:
+			sys->states.scanBrightest = SBS_FUNCTION_INIT;
 			return 0;
 	}
 	return 1;

@@ -16,8 +16,16 @@
 *
 */
 
-#include "manual_mode.h"
+//////////////[Includes]////////////////////////////////////////////////////////////////////////////
+#include "../robot_setup.h"
 
+#include "../Interfaces/xbee_driver.h"
+#include "../Interfaces/motor_driver.h"
+
+#include "manual_mode.h"
+#include "motion_functions.h"
+
+//////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*
 * Function:
 * void manualControl(struct MessageInfo message)
@@ -25,13 +33,14 @@
 * Runs the manual movement controls from the GUI
 * These are:
 *			move straight (N, NE, E, SE, S, SW, W, NW)
-*			rotate (CW, CCW)
+*			rotate (MC_CW, CCW)
 *			stop
 * Movements also have an assigned speed
 *
 * Inputs:
-* struct MessageInfo message
-*			XBee message data
+* RobotGlobalStructure *sys
+*   Pointer to the global system data structure where the last message received by the Xbee can be
+*   retrieved
 *
 * Returns:
 * none
@@ -45,37 +54,38 @@
 * TODO: Adam Comment this -AP
 *
 */
-void manualControl(struct MessageInfo tmessage, struct Position *robotPosition)
+void manualControl(RobotGlobalStructure *sys)
 {
 	static uint8_t receivedTestData[5];
-	newDataFlag = 0;
+	sys->flags.xbeeNewData = 0;
 	uint16_t straightDirection;
-	xbeeConvertData(tmessage, receivedTestData);
+	xbeeCopyData(sys->comms.messageData, receivedTestData);
 	straightDirection = (receivedTestData[0] << 8) + (receivedTestData[1]);
-	if(tmessage.command == MANUAL_STRAIGHT)
+	
+	switch(sys->comms.messageData.command)
 	{
-		moveRobot(straightDirection, receivedTestData[2]);
-		robotPosition->targetHeading = straightDirection;
-		robotPosition->targetSpeed = receivedTestData[2];
-		movingFlag = 1;
-	}
-	else if(tmessage.command == MANUAL_STOP)
-	{
-		stopRobot();
-		mainRobotState = IDLE;
+		case MC_STRAIGHT:
+			moveRobot(straightDirection, receivedTestData[2], 0);
+			sys->pos.targetHeading = straightDirection;
+			sys->pos.targetSpeed = receivedTestData[2];
+			sys->flags.obaMoving = 1;
+			break;
+			
+		case MC_STOP:
+			mfStopRobot(sys);
+			sys->states.mainf = M_IDLE;
+			break;
 		
-	}
-	else if(tmessage.command == CCW)
-	{
-		//CW is reverse so invert speed
-		signed char speed = -1*receivedTestData[0];
-		rotateRobot(speed);
-		movingFlag = 1;
-	}
-	else if(tmessage.command == CW)
-	{
-		//CCW is forward so no need to invert speed
-		rotateRobot(receivedTestData[0]);
-		movingFlag = 1;
+		case MC_CCW:
+			//MC_CW is reverse so invert speed
+			moveRobot(0, -(int8_t)receivedTestData[0], 100);
+			sys->flags.obaMoving = 1;
+			break;
+		
+		case MC_CW:
+			//CCW is forward so no need to invert speed
+			moveRobot(0, receivedTestData[0], 100);
+			sys->flags.obaMoving = 1;
+			break;
 	}
 }

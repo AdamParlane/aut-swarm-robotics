@@ -38,10 +38,7 @@
  * fabsf(float x)
  * min(int a, int b)
  */
-////////////SWARM ROBOT CONFIGURATION///////////////////////////////////////////////////////////////
-
-extern uint32_t systemTimestamp;	//millisecs since power on. Declared in timer_interface.c
-
+///////////[SWARM ROBOT CONFIGURATION]//////////////////////////////////////////////////////////////
 static inline int reg_int_cb(struct int_param_s *int_param)
 {
 	//I guess we aren't using interrupt callback
@@ -55,6 +52,7 @@ static inline int reg_int_cb(struct int_param_s *int_param)
 #define min(a,b)		((a<b)?a:b)
 #define i2c_write		twi0Write
 #define i2c_read		twi0Read
+////////////////////////////////////////////////////////////////////////////////////////////////////
 
 #if !defined MPU6050 && !defined MPU9150 && !defined MPU6500 && !defined MPU9250
 #error  Which gyro are you using? Define MPUxxxx in your compiler options.

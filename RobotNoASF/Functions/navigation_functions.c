@@ -15,41 +15,41 @@
 * Relevant reference materials or datasheets if applicable
 *
 * Functions:
-* uint8_t nfRetrieveNavData(void)
-* void nfGetEulerAngles(struct Position *imuData)
+* uint8_t nfRetrieveNavData(RobotGlobalStructure *sys)
+* void nfGetEulerAngles(RobotGlobalStructure *sys)
 * float nfWrapAngle(float angleDeg)
+* void nfDMPEnable(char enable RobotGlobalStructure *sys)
 *
 */
 
 //////////////[Includes]////////////////////////////////////////////////////////////////////////////
+#include "../robot_setup.h"
+
+#include "../IMU-DMP/inv_mpu_CUSTOM.h"
+
+#include "../Interfaces/imu_interface.h"
+#include "../Interfaces/opt_interface.h"
+
 #include "navigation_functions.h"
+
 #include <tgmath.h>				//Required for atan2 in nfGetEulerAngles()
 
 //////////////[Defines]/////////////////////////////////////////////////////////////////////////////
 
 //////////////[Global variables]////////////////////////////////////////////////////////////////////
-//robotPosition is the global data structure that holds all of the robots navigation info. When
+//sys->pos. is the global data structure that holds all of the robots navigation info. When
 //needed it is usually passed to functions as a pointer to avoid duplication.
-struct Position robotPosition =
-{
-	.opticalX = 0,			//Reset mouse's position
-	.opticalY = 0,			//Reset mouse's position
-	.x = 0,					//Resets robot position
-	.y = 0,					//Resets robot position
-	.imuYawOffset = 180,	//Ensures that whatever way the robot is facing when powered
-							//on is 0 degrees heading.
-	.targetHeading = 0,		//Default heading is 0 degrees
-	.targetSpeed = 50		//Default speed is 50%
-};
+//Position sys->pos. =
+
 
 //Read data flag that is set by the external interrupt from the IMU on the V2 or by timer on the V1.
 //Is defined in imu_interface.
-extern uint8_t checkImuFifo;
+
 
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*
 * Function:
-* uint8_t nfRetrieveNavData(void)
+* uint8_t nfRetrieveNavData(RobotGlobalStructure *sys)
 *
 * Checks if the IMU's FIFO interrupt flag has been set, and if so, will read data from the IMU's
 * FIFO buffer, convert the retrieved quaternions to Euler angles and store them and retrieve data
@@ -59,39 +59,52 @@ extern uint8_t checkImuFifo;
 * none
 *
 * Returns:
-* 0 if data was retrieved (checkImuFifo flag was set), otherwise returns 1.
+* 0 if data was retrieved (sys.flags.imuCheckFifo flag was set), otherwise returns 1.
 *
 * Implementation:
-* imuReadFifo() reads the data from the IMU's FIFO buffer and stores the data in robotPosition.
-* nfGetEulerAngles() takes the quaternion data stored in robotPosition and converts it to useful
-* Euler angles (yaw, pitch and roll) and stores it back in robotPosition.
-* getMouseXY() retrieves latest data from the mouse sensor and stored it in robotPosition.
+* imuReadFifo() reads the data from the IMU's FIFO buffer and stores the data in sys->pos..
+* nfGetEulerAngles() takes the quaternion data stored in sys->pos. and converts it to useful
+* Euler angles (yaw, pitch and roll) and stores it back in sys->pos..
+* getMouseXY() retrieves latest data from the mouse sensor and stored it in sys->pos..
 *
 */
-uint8_t nfRetrieveNavData(void)
+uint8_t nfRetrieveNavData(RobotGlobalStructure *sys)
 {
-	if(checkImuFifo)
+	if(sys->flags.imuCheckFifo)
 	{
-		imuReadFifo(&robotPosition);		//Read IMU's FIFO buffer
-		nfGetEulerAngles(&robotPosition);	//Convert IMU quats to Euler angles
-		getMouseXY(&robotPosition);			//Update mouse sensor data while at it
-		checkImuFifo = 0;					//Reset interrupt flag
+		if(sys->pos.Optical.pollEnabled)
+		{
+			getMouseXY(sys);						//Update mouse sensor data
+			nfProcessOpticalData(sys);
+		}
+			
+		if(sys->pos.IMU.pollEnabled)				//If polling enabled for IMU
+		{
+			if(!sys->pos.IMU.dmpEnabled)			//If DMP was disabled then enable it
+				nfDMPEnable(1, sys);
+			imuReadFifo(sys);						//Read IMU's FIFO buffer
+			nfGetEulerAngles(sys);					//Convert IMU quaternions to Euler angles
+		} else {
+			if(sys->pos.IMU.dmpEnabled)				//If polling IMU disabled, then Disable DMP
+				nfDMPEnable(0, sys);
+		}
+		sys->flags.imuCheckFifo = 0;				//Reset interrupt flag
 		return 0;
 	} else
 		return 1;
 }
 
 /*
-* Function: void nfGetEulerAngles(struct Position *imuData)
+* Function: void nfGetEulerAngles(RobotGlobalStructure *sys)
 *
 * Convert Quaternion numbers from the IMU to Euler rotational angles
 *
 * Inputs:
-* struct Position *imuData
-*   Holds the address to the global robotPosition structure that holds all positional data
+* RobotGlobalStructure *sys
+*   Holds the address to the global sys->pos. structure that holds all positional data
 *
 * Returns:
-* Loads Yaw, Pitch and Roll data back into robotPosition.
+* Loads Yaw, Pitch and Roll data back into sys->pos..
 *
 * Implementation:
 * After the quaternions have been converted to Euler angles, the Yaw offset is applied which is a
@@ -99,12 +112,12 @@ uint8_t nfRetrieveNavData(void)
 * ensure it is still in range (-180<Yaw<180) and corrected if necessary.
 *
 */
-void nfGetEulerAngles(struct Position *imuData)
+void nfGetEulerAngles(RobotGlobalStructure *sys)
 {
-	float w = imuData->imuQW;				//Pull quaternions from IMU
-	float x = imuData->imuQX;
-	float y = imuData->imuQY;
-	float z = imuData->imuQZ;
+	float w = sys->pos.IMU.qw;				//Pull quaternions from IMU
+	float x = sys->pos.IMU.qx;
+	float y = sys->pos.IMU.qy;
+	float z = sys->pos.IMU.qz;
 	float sqw = w*w;						//Pre-calculate squares
 	float sqx = x*x;
 	float sqy = y*y;
@@ -113,25 +126,73 @@ void nfGetEulerAngles(struct Position *imuData)
 	float test = x*y + z*w;
 	if (test > 0.499*unit)					// singularity at north pole
 	{
-		imuData->imuRoll = 2 * atan2(x,w);
-		imuData->imuPitch = M_PI/2;
-		imuData->imuYaw = 0;
+		sys->pos.IMU.roll = 2 * atan2(x,w);
+		sys->pos.IMU.pitch = M_PI/2;
+		sys->pos.IMU.yaw = 0;
 		return;
 	}
 	if (test < -0.499*unit)					// singularity at south pole
 	{
-		imuData->imuRoll = -2 * atan2(x,w);
-		imuData->imuPitch = M_PI/2;
-		imuData->imuYaw = 0;
+		sys->pos.IMU.roll = -2 * atan2(x,w);
+		sys->pos.IMU.pitch = M_PI/2;
+		sys->pos.IMU.yaw = 0;
 		return;
 	}
-	imuData->imuRoll = (atan2(2*y*w-2*x*z , sqx - sqy - sqz + sqw))*180/M_PI;
-	imuData->imuPitch = (asin(2*test/unit))*180/M_PI;
-	imuData->imuYaw = (atan2(2*x*w-2*y*z , -sqx + sqy - sqz + sqw))*180/M_PI;
-	//Factor in the Yaw offset (Heading correction from the PC)
-	imuData->imuYaw += imuData->imuYawOffset;
-	//Wrap imuYaw so its always between -180 and 180 degrees
-	imuData->imuYaw = nfWrapAngle(imuData->imuYaw);
+	sys->pos.IMU.roll = (atan2(2*y*w-2*x*z , sqx - sqy - sqz + sqw))*180/M_PI;
+	sys->pos.IMU.pitch = (asin(2*test/unit))*180/M_PI;
+	sys->pos.IMU.yaw = (atan2(2*x*w-2*y*z , -sqx + sqy - sqz + sqw))*180/M_PI;
+	//Factor in the Yaw offset (Heading correction from the PC) and store in pos.facing
+	sys->pos.facing = sys->pos.IMU.yaw + sys->pos.facingOffset;
+	//Wrap facing so its always between -180 and 180 degrees
+	sys->pos.facing = nfWrapAngle(sys->pos.facing);
+}
+
+/*
+* Function:
+* void nfProcessOpticalData(RobotGlobalStructure *sys)
+*
+* Performs processing on optical mouse data to retrieve real absolute x and y and heading 
+* information
+*
+* Inputs:
+* RobotGlobalStructure *sys
+*   Pointer to the global robot data structure which is where the mouse data and calculated data is
+*   is retrieved and stored
+*
+* Returns:
+* none
+*
+* Implementation:
+* TODO:implementation
+*
+* Improvements:
+* [Ideas for improvements that are yet to be made](optional)
+*
+*/
+void nfProcessOpticalData(RobotGlobalStructure *sys)
+{
+	//Calculate headings (deg) if there is fresh data from the optical sensor
+	if(sys->pos.Optical.dx || sys->pos.Optical.dy)
+	{
+		//Relative heading
+		sys->pos.relHeading = atan2(sys->pos.Optical.dx, sys->pos.Optical.dy)*180/M_PI;
+		//Absolute heading
+		sys->pos.heading = sys->pos.facing + sys->pos.relHeading;
+		//Wrap to within -180 to 180 deg
+		sys->pos.heading = nfWrapAngle(sys->pos.heading);
+	}
+	
+	//Calculate dx and dy in mm
+	sys->pos.dx = (float)sys->pos.Optical.dx*OPT_CONV_FACTOR/(float)sys->pos.deltaTime*1000.0;
+	sys->pos.dy = (float)sys->pos.Optical.dy*OPT_CONV_FACTOR/(float)sys->pos.deltaTime*1000.0;
+	
+	//Integrate absolute x and y in mm
+	sys->pos.x += sys->pos.dx;
+	sys->pos.y += sys->pos.dy;
+	
+	//Calculate speed from optical sensor (mm/s)
+	sys->pos.speed = sqrt((sys->pos.dx*sys->pos.dx + sys->pos.dy*sys->pos.dy))
+						/sys->pos.deltaTime*1000;
 }
 
 /*
@@ -162,4 +223,33 @@ float nfWrapAngle(float angleDeg)
 	while(angleDeg < -179.99)
 		angleDeg += 360.0;
 	return angleDeg;
+}
+
+/*
+* Function:
+* void nfDMPEnable(RobotGlobalStructure *sys)
+*
+* Enables the DMP on the IMU and resets the sys.pos.IMU.dmpEnabled flag. Provides a wrapper to
+* enable the DMP
+*
+* Inputs:
+* char enable:
+*   1 to enable DMP and 0 to disable;
+* RobotGlobalStructure *sys:
+*   Pointer to the global robot data structure
+*
+* Returns:
+* None
+*
+* Implementation:
+* Calls the DMP enable function in the IMU driver, and sets dmpEnabled high
+*
+*/
+void nfDMPEnable(char enable, RobotGlobalStructure *sys)
+{
+	if(enable)
+		imuDmpStart();
+	else
+		imuDmpStop();
+	sys->pos.IMU.dmpEnabled = enable;
 }

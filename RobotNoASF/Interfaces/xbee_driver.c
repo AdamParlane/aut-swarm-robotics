@@ -14,9 +14,7 @@
 *
 * Functions:
 * void xbeeInit(void)
-* void xbeeConvertData(struct MessageInfo message, uint8_t *data)
-* void xbeeGetNew()
-* void xbeeInterpretSwarmMessage(struct MessageInfo message)
+* void xbeeCopyData(struct MessageInfo message, uint8_t *data)
 * void xbeeInterpretAPIFrame(struct FrameInfo frame)
 * void xbeeSendAPITransmitRequest(uint64_t destination_64, uint16_t destination_16,
 *                                 uint8_t *data, uint8_t  bytes)
@@ -37,29 +35,38 @@
 */
 
 //////////////[Includes]////////////////////////////////////////////////////////////////////////////
-#include <string.h>
+#include "../robot_setup.h"
+
 #include "xbee_driver.h"
+#include "uart_interface.h"
+
+#include "../Functions/motion_functions.h"	//For interpretswarmmsg.. will be moved
+
+#include <string.h>
 
 //////////////[Global Variables]////////////////////////////////////////////////////////////////////
-//TODO: Mansel, Are all of these necessary?
 //Buffer variables
 //In is the next free location an element can be put into
 //Out is the next element to be read out
 uint8_t FrameBuffer[FRAME_BUFFER_SIZE];
-int FrameBufferIn, FrameBufferOut, FrameBufferUse;
+int FrameBufferIn;
+int FrameBufferOut;
+int FrameBufferUse;
 
 struct FrameInfo FrameBufferInfo[FRAME_BUFFER_INFO_SIZE];
-int FrameBufferInfoIn, FrameBufferInfoOut, FrameBufferInfoUse;
+int FrameBufferInfoIn;
+int FrameBufferInfoOut;
+int FrameBufferInfoUse;
 
 uint8_t MessageBuffer[MESSAGE_BUFFER_SIZE];
-int MessageBufferIn, MessageBufferOut, MessageBufferUse;
+int MessageBufferIn;
+int MessageBufferOut;
+int MessageBufferUse;
 
 struct MessageInfo MessageBufferInfo[MESSAGE_BUFFER_INFO_SIZE];
-int MessageBufferInfoIn, MessageBufferInfoOut, MessageBufferInfoUse;
-
-char obstacleAvoidanceEnabledFlag = 0;
-struct FrameInfo frame; //Xbee API frame
-struct MessageInfo message; //Incoming message with XBee metadata removed
+int MessageBufferInfoIn;
+int MessageBufferInfoOut;
+int MessageBufferInfoUse;
 
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
 //Private function prototypes. See below for function descriptions
@@ -104,9 +111,9 @@ void xbeeInit(void)
 
 /*
 * Function:
-* void xbeeConvertData(struct MessageInfo message, uint8_t* data[50])
+* void xbeeCopyData(struct MessageInfo message, uint8_t* data[50])
 *
-* Converts the received message structure and pointer to an array with the required test command
+* Copies the received message structure and pointer to an array with the required test command
 * data
 *
 * Input is the message structure from the received data
@@ -124,104 +131,23 @@ void xbeeInit(void)
 * This function will quit on a failed return
 *
 */
-void xbeeConvertData(struct MessageInfo message, uint8_t *data)
+void xbeeCopyData(struct MessageInfo message, uint8_t *data)
 {
 	char dataByte;
 	char messageError;
 	MessageBufferOut = message.index;//sets message buffer reader to correct start address
 	for (uint8_t i = 0; i < message.length; i++)//for each entry in the array
 	{
-		messageError = xbeeMessageBufferGet(&dataByte);//retrieve the next byte of received message data
+		messageError = xbeeMessageBufferGet(&dataByte);	//retrieve the next byte of received message 
+														//data
 		if(messageError == 0)//if there was NO error
 		{
 			data[i] = dataByte;//fill the array with the data
 		}
 		else//if there was an error, exit
-		//TO DO: prehaps add some sort of error flagging system??
-		return;
+			//TO DO: perhaps add some sort of error flagging system??
+			return;
 	}
-}
-
-/*
-* Function:
-* void xbeeGetNew(struct FrameInfo *frame, struct MessageInfo *message)
-*
-* Checks for new communications and handlles the interpretation of them
-*
-* Inputs:
-* pointer to frame_info struct and pointer to message_info struct
-*
-* Returns:
-* none
-*
-* Implementation:
-* Checks if the XBee frame buffer is full indicating new data is ready to be read
-* If so, interpret the new XBee API frame and use to fill the message buffer
-* Then is the message buffer is full interpret the swarm message
-*
-* Improvement:
-* I think that this should be in a higher level function file.
-*
-*/
-void xbeeGetNew()
-{
-	if(xbeeFrameBufferInfoGetFull(&frame) == 0)	//Check for a received XBee Message
-	{
-		xbeeInterpretAPIFrame(frame); //Interpret the received XBee Message
-		if(xbeeMessageBufferInfoGetFull(&message) == 0) //Check for a message from the swarm
-		xbeeInterpretSwarmMessage(message);//Interpret the message
-	}
-}
-
-/*
-* Function:
-* void xbeeInterpretSwarmMessage(struct MessageInfo message)
-*
-* Interprets and acts on a received swarm messages
-*
-* Inputs:
-* struct MessageInfo message:
-*	Structure containing information on the message to interpret. The command, index of the message in the Message Buffer and message length
-*
-* Returns:
-* none
-*
-* Implementation:
-* TODO: Mansel implementation description
-*
-* Improvements:
-* Improvements: is it worth defining all these codes, im thinking no << There should be NO magic
-* numbers.
-*
-*/
-void xbeeInterpretSwarmMessage(struct MessageInfo message)
-{
-	//handles the incoming commands and sets the appropriate states / flags calls functions
-	newDataFlag = 1;
-	if(message.command >= 0xE0) //test command range 0xE0-0xEF
-		mainRobotState = TEST;
-	else if (message.command == 0xD0)
-	{
-		movingFlag = 0;
-		stopRobot();
-	}
-	else if(message.command >= 0xD1 && message.command <= 0xD3) //Manual command range 0xD1-0xD3
-		mainRobotState = MANUAL;
-	else if (message.command == 0xD4)
-		//move robot randomly
-		mfRandomMovementGenerator();		
-	else if (message.command == 0xD7)
-		mainRobotState = DOCKING;
-		//0xD6 and D5 are also reserved for docking 
-		//at a later date for different methods if required
-	else if (message.command == 0xD8)
-		obstacleAvoidanceEnabledFlag = 0;
-	else if (message.command == 0xD9)
-		obstacleAvoidanceEnabledFlag = 1;
-	else if (message.command == 0xDA)
-		mainRobotState = LIGHT_FOLLOW;
-	else if (message.command == 0xDB)
-		mainRobotState = LINE_FOLLOW;
 }
 
 /*

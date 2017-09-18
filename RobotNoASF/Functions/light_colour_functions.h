@@ -22,9 +22,6 @@
 #ifndef LIGHT_COLOUR_FUNCTIONS_H_
 #define LIGHT_COLOUR_FUNCTIONS_H_
 
-//////////////[Includes]////////////////////////////////////////////////////////////////////////////
-#include "../robot_setup.h"
-
 //////////////[Defines]/////////////////////////////////////////////////////////////////////////////
 //Parameter definitions for lcfRetrieveLightData()
 #define LCF_RGB_ONLY		0
@@ -78,7 +75,7 @@ void lcfRetrieveLightData(uint8_t convertToHSV);
 * 0 on success, or non-zero when TWI error occurred.
 *
 */
-uint8_t lcfCapture(uint8_t channel, struct ColourSensorData *colours);
+uint8_t lcfCapture(uint8_t channel, ColourSensorData *colours);
 
 /*
 * Function:
@@ -94,6 +91,6 @@ uint8_t lcfCapture(uint8_t channel, struct ColourSensorData *colours);
 * none
 *
 */
-void lcfRGB2HSV(struct ColourSensorData *colours);
+void lcfRGB2HSV(ColourSensorData *colours);
 
 #endif /* LIGHT_COLOUR_FUNCTIONS_H_ */

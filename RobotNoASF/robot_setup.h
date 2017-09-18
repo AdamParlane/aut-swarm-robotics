@@ -25,61 +25,161 @@
 #ifndef ROBOTDEFINES_H_
 #define ROBOTDEFINES_H_
 
-//TODO: change something so that this doesn't have to be first
-//Or maybe all defines should be before includes
-enum MAIN_STATES
-//main loop functionality
-{
-	TEST,
-	TEST_ALL,
-	MANUAL,
-	FORMATION,
-	DOCKING,
-	OBSTACLE_AVOIDANCE,
-	IDLE, CHARGING,
-	LINE_FOLLOW,
-	LIGHT_FOLLOW
-};
+//////////////[Includes]////////////////////////////////////////////////////////////////////////////
+#include "Interfaces/spi.h"		//Fixes SPI issue
+#include "sam.h"				//Micro controller specific defines
+#include <stdint.h>				//Gives standard integer type definitions (ie uint8_t)
+#include <stdbool.h>			//Gives boolean variable types
+#include "Interfaces/xbee_driver.h"//Gives access to MessageInfo structure definition
 
-///////////////Type Definitions/////////////////////////////////////////////////////////////////////
-struct Position
+//////////////[Enumerations]////////////////////////////////////////////////////////////////////////
+//The following enumerations represent states in each state machine in the system
+typedef enum MainStates
+//main() function states
+{
+	M_TEST,
+	M_TEST_ALL,
+	M_MANUAL,
+	M_FORMATION,
+	M_DOCKING,
+	M_OBSTACLE_AVOIDANCE,
+	M_IDLE, 
+	M_CHARGING,
+	M_LINE_FOLLOW,
+	M_LIGHT_FOLLOW
+} MainStates;
+
+typedef enum DockingStates
+//dfDockRobot() function states
+{
+	DS_FINISHED,
+	DS_START,
+	DS_FACE_BRIGHTEST,
+	DS_MOVE_FORWARD,
+	DS_RESCAN_BRIGHTEST,
+	DS_FOLLOW_LINE,
+	DS_CHRG_CONNECT,
+	DS_CHRG_NOT_FOUND
+} DockingStates;
+
+typedef enum FollowLineStates
+//dfFollowLine() function states
+{
+	FLS_START,
+	FLS_FIRST_CONTACT,
+	FLS_ALIGN,
+	FLS_FOLLOW,
+	FLS_FINISH
+} FollowLineStates;
+
+typedef enum ScanBrightestStates
+//mfScanBrightestLightSource() function states
+{
+	SBS_FUNCTION_INIT,
+	SBS_GOTO_START_POSITION,
+	SBS_SWEEP,
+	SBS_END
+} ScanBrightestStates;
+
+typedef enum ChargeCycleStates
+//pfChargeCycleHandler() function states
+{
+	CCS_FINISHED,
+	CCS_CHECK_POWER,
+	CCS_CHARGING,
+	CCS_FAULT,
+	CCS_DISMOUNT,
+	CCS_TURN_AWAY
+} ChargeCycleStates;
+
+typedef enum MTHByDistanceStates
+//mfMoveToHeadingByDistance() function states
+{
+	MHD_START,
+	MHD_MOVING,
+	MHD_STOP
+} MTHByDistanceStates;
+
+////////////////[Type Definitions]//////////////////////////////////////////////////////////////////
+//Stores optical sensor raw and derived data
+typedef struct OpticalSensor
+{
+	int dx;				//Rate of change from optical sensor (X axis is left to right)
+	int dy;				//Rate of change from optical sensor (Y axis is fwd/bckwd)
+	int x;				//Count sum on x axis
+	int y;				//Count sum on y axis
+	char pollEnabled;	//Enable polling the optical sensor
+	char overflowFlag;	//1 if data has overflowed on optical sensor
+	uint8_t surfaceQuality;	//A value signifying quality of the surface (242 = max quality)
+} OpticalSensor;
+
+//Stores IMU sensor raw and converted data
+typedef struct IMUSensor
+{
+	long qw;			//W component of the quaternion complex number returned by DMP
+	long qx;			//X component of the quaternion complex number returned by DMP
+	long qy;			//Y component of the quaternion complex number returned by DMP
+	long qz;			//Z component of the quaternion complex number returned by DMP
+	float accelX;		//Delta X Acceleration in ms^2
+	float accelY;		//Delta Y Acceleration in ms^2
+	float accelZ;		//Delta Z Acceleration in ms^2
+	float gyroX;		//Delta pitch in deg/s
+	float gyroY;		//Delta roll in	deg/s
+	float gyroZ;		//Delta yaw in deg/s (Delta heading)
+	float pitch;		//Absolute pitch from DMP (degrees)
+	float roll;			//Absolute roll from DMP (degrees)
+	float yaw;			//Absolute yaw (heading) from DMP (degrees)
+	char dmpEnabled;	//A flag that states whether or not the DMP is enabled
+	char pollEnabled;	//Enable polling the IMU
+	char gyroCalEnabled;	//Enable gyro calibration on startup.
+} IMUSensor;
+
 //structure to store all the robot side navigation / positioning data
 //this will be written to by getMouseXY, nfGetEulerAngles, and another navigation function which
 //combines them. The structure will store the relevant info from both key sensors and fuse them in
 //an additional function (84bytes i think)
+typedef struct Position
 {
-	float opticalDX;		//Rate of change from optical sensor (X axis is left to right)
-	float opticalDY;		//Rate of change from optical sensor (Y axis is fwd/bckwd)
-	float opticalX;
-	float opticalY;
-	float opticalHdg;		//Heading calculated from optical sensor
-	float opticalSpeed;		//Magnitude calculated from optical sensor
-	long imuQW;				//W component of the quaternion complex number returned by DMP
-	long imuQX;				//X component of the quaternion complex number returned by DMP
-	long imuQY;				//Y component of the quaternion complex number returned by DMP
-	long imuQZ;				//Z component of the quaternion complex number returned by DMP
-	float imuAccelX;		//Delta X Acceleration in ms^2
-	float imuAccelY;		//Delta Y Acceleration in ms^2
-	float imuAccelZ;		//Delta Z Acceleration in ms^2
-	float imuGyroX;			//Delta pitch in deg/s
-	float imuGyroY;			//Delta roll in	deg/s
-	float imuGyroZ;			//Delta yaw in deg/s (Delta heading)
-	float imuPitch;			//Absolute pitch from DMP (degrees)
-	float imuRoll;			//Absolute roll from DMP (degrees)
-	float imuYaw;			//Absolute yaw (heading) from DMP (degrees)
-	float imuYawOffset;		//Used to offset heading value (when corrected by PC)
-	unsigned long imuTimeStamp;//Time at which last IMU reading took place (ms)
-	unsigned short imuDeltaTime;//Time between last IMU reading and IMU previous reading
-	float x;				//Absolute X position in arena
-	float y;				//Absolute Y position in arena
-	float heading;			//Direction of travel
-	signed int targetHeading;	//For obstacle avoidance, desired heading before an obstacel is 
+	OpticalSensor Optical;		//Optical sensor raw data
+	IMUSensor IMU;				//IMU raw and converted data
+	float x;					//Absolute X position in arena (mm)
+	float y;					//Absolute Y position in arena (mm)
+	float dx;					//delta x in mm
+	float dy;					//delta y in mm
+	float speed;				//Speed in mm per second
+	float heading;				//Absolute direction of travel (deg)
+	float relHeading;			//Relative heading of travel (to front of robot)
+	float facing;				//Absolute direction robot is facing (deg)
+	signed int targetHeading;	//For obstacle avoidance, desired heading before an obstacle is 
 								//detected
-	char targetSpeed;	//For obstacle avoidance, desired speed
-};
+	char targetSpeed;			//For obstacle avoidance, desired speed
+	unsigned long timeStamp;	//Time at which last IMU reading took place (ms). Can be used as a
+								//time marker for all Nav data, as it all get polled at the same
+								//time as the IMU
+	unsigned short deltaTime;	//Time between last IMU reading and IMU previous reading
+	float facingOffset;			//Used to offset facing value (when corrected by PC)
+} Position;
 
-struct ColourSensorData
+//Stores information about the battery and charging
+typedef struct BatteryChargeData
+{
+	uint16_t batteryVoltage;			//Battery voltage in mV
+	uint8_t batteryTemp;				//Battery temperature in degrees
+	uint16_t batteryMaxVoltage;			//Fully charged voltage of battery (will calibrate onthefly)
+	uint16_t batteryDockingVoltage;		//Voltage below which the robot should seek dock
+	uint16_t batteryMinVoltage;			//Voltage at which robot is considered completely dead
+	uint8_t fcChipStatus;				//Status or fault code reported by Charge chip
+	uint8_t fcChipFaultFlag;			//Fault detected by charge chip, see Status for code
+	uint8_t pollBatteryEnabled;			//Enable battery voltage polling
+	uint16_t pollBatteryInterval;		//Interval in ms to poll battery voltage/temp
+	uint8_t pollChargingStateEnabled;	//Enable charge chip status polling
+	uint16_t pollChargingStateInterval;	//Interval in ms to poll charge chip
+	uint8_t chargeWatchDogEnabled;		//Enable the FC chip watchdog system (for when charging)
+	uint16_t chargeWatchDogInterval;	//Watchdog routine interval (ms)
+} BatteryChargeData;
+
 //Stores colour sensor data, both raw and converted, for a single colour sensor
+typedef struct ColourSensorData
 {
 	unsigned short red;
 	unsigned short green;
@@ -88,43 +188,68 @@ struct ColourSensorData
 	unsigned short hue;
 	unsigned short saturation;
 	unsigned short value;
-};
-//////////////[Includes]////////////////////////////////////////////////////////////////////////////
-#include "Interfaces/spi.h"
-#include "sam.h"
-#include "Interfaces/pio_interface.h"
-#include "Interfaces/imu_interface.h"
-#include "Interfaces/timer_interface.h"
-#include "Interfaces/external_interrupt.h"
-#include "Interfaces/uart_interface.h"
-#include "Interfaces/xbee_driver.h"
-#include "Interfaces/adc_interface.h"
-#include "Interfaces/opt_interface.h"
-#include "Interfaces/motor_driver.h"
-#include "Interfaces/twimux_interface.h"
-#include "Interfaces/fc_interface.h"
-#include "Interfaces/prox_sens_interface.h"
-#include "Interfaces/light_sens_interface.h"
-#include "Interfaces/line_sens_interface.h"
-#include "Functions/testFunctions.h"
-#include "Functions/docking_functions.h"
-#include "Functions/manual_mode.h"
-#include "Functions/obstacle_avoidance.h"
-#include "Functions/motion_functions.h"
-#include "Functions/navigation_functions.h"
-#include "Functions/light_colour_functions.h"
-#include "Functions/charging_functions.h"
+} ColourSensorData;
+
+typedef struct CommunicationData
+{
+	uint8_t pollEnabled;				//Whether or not to poll for new messages in main()
+	uint16_t pollInterval;				//Interval at which to poll at (ms)
+	struct MessageInfo messageData;		//Next message data
+	uint16_t testModeStreamInterval;	//Interval between sending test data packets (ms)
+} CommunicationData;
+
+//Structure that will store all system flags for global use
+typedef struct SystemFlags
+{
+	char xbeeNewData;	//New data from Xbee interface
+	char imuCheckFifo;	//IMU ext interrupt has been triggered
+	char obaMoving;		//Robot is in motion
+	char obaEnabled;	//Obstacle avoidance enabled
+	char tfStream;		//Test function stream time flag
+} SystemFlags;
+
+//Structure that will store the state of every state machine in the system
+typedef struct SystemStates
+{
+	//Main function state machine state
+	MainStates mainf;
+	MainStates mainfPrev;
+	
+	//dfDockRobot() states
+	DockingStates docking;
+	
+	//dfFollowLine() states
+	FollowLineStates followLine;
+	
+	//dfScanBrightestLightSource() states
+	ScanBrightestStates scanBrightest;
+	
+	//pfChargeCycleHandler() states
+	ChargeCycleStates chargeCycle;
+	
+	//mfMoveToHeadingByDistance() states
+	MTHByDistanceStates moveHeadingDistance;
+} SystemStates;
+
+//Structure to combine all system globals
+typedef struct RobotGlobalStructure
+{
+	SystemStates states;			//System states
+	SystemFlags flags;				//System global flags
+	CommunicationData comms;		//Communication system control and data
+	Position pos;					//Position information
+	BatteryChargeData power;		//Battery/Charging info and control
+	uint32_t timeStamp;				//System timestamp (millisecs since power on)
+} RobotGlobalStructure;
 
 //////////////[Defines]/////////////////////////////////////////////////////////////////////////////
-//Universal Asynchronous Receiver/Transmitter
-#define TXRDY (REG_UART3_SR & UART_SR_TXRDY)	//UART TX READY flag [SHOULD BE IN COMMUNICATIONS]
 
 //////////////[Global variables]////////////////////////////////////////////////////////////////////
-//used for test function calling
-char newDataFlag; //TODO:used for test function probably temporary ((still temporary?)
-char mainRobotState, mainRobotStatePrev;	//main function state machine states
-volatile char streamDelayCounter, streamIntervalFlag;	//TODO:What are these?
-char movingFlag;
+//Global variables should be initialised in robot_setup.c, then an extern to them should be placed
+//here, otherwise we end up with multiple definition errors.
+extern RobotGlobalStructure sys;
+//TODO: add these to the sys structure
+extern volatile char streamDelayCounter;
 
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*

@@ -13,12 +13,12 @@
 * Relevant reference materials or datasheets if applicable
 *
 * Functions:
-* float mfRotateToHeading(float heading, struct Position *imuData)
-* float mfMoveToHeading(float heading, uint8_t speed, struct Position *imuData)
+* float mfRotateToHeading(float heading, RobotGlobalStructure *sys)
+* float mfMoveToHeading(float heading, uint8_t speed, RobotGlobalStructure *sys)
 * float mfMoveToHeadingByDistance(float heading, uint8_t speed, uint32_t distance,
-*                                  struct Position *posData)
-* float mfTrackLight(struct Position *imuData)
-* float mfTrackLightProx(struct Position *imuData)
+*                                  RobotGlobalStructure *sys)
+* float mfTrackLight(RobotGlobalStructure *sys)
+* float mfTrackLightProx(RobotGlobalStructure *sys)
 * char mfRandomMovementGenerator(void) 
 *
 */
@@ -27,7 +27,6 @@
 #define MOTION_FUNCTIONS_H_
 
 //////////////[Includes]////////////////////////////////////////////////////////////////////////////
-#include "../robot_setup.h"
 #include <stdlib.h>
 
 //////////////[Defines]/////////////////////////////////////////////////////////////////////////////
@@ -45,29 +44,33 @@
 #define TLP_KP	10.0
 #define TLP_KI	0.001
 
+//PID constants for mfAdvancedMove
+#define AMH_KP	0.5		//Heading
+#define AMF_KP	3.0		//Facing
+
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*
 * Function:
-* float mfRotateToHeading(float heading, struct Position *imuData)
+* float mfRotateToHeading(float heading, RobotGlobalStructure *sys)
 *
 * Will rotate the robot to face the given heading
 *
 * Inputs:
 * float heading:
 *   The heading in degrees that we wish the robot to face (-180 < heading < 180)
-* struct Position *imuData:
-*   A pointer to the robotPosition structure so we can get imuYaw
+* RobotGlobalStructure *sys:
+*   A pointer to the sys->pos. structure so we can get IMU.yaw
 *
 * Returns:
 * Will return 0 if the robot has settled at the desired heading, otherwise will return the signed
 * error
 *
 */
-float mfRotateToHeading(float heading, struct Position *imuData);
+float mfRotateToHeading(float heading, RobotGlobalStructure *sys);
 
 /*
 * Function:
-* float mfMoveToHeading(float heading, uint8_t speed, struct Position *imuData)
+* float mfMoveToHeading(float heading, uint8_t speed, RobotGlobalStructure *sys)
 *
 * Will rotate and then move the robot along the given heading at the given speed.
 *
@@ -76,20 +79,20 @@ float mfRotateToHeading(float heading, struct Position *imuData);
 *   The heading in degrees that we wish the robot to face (-180 < heading < 180)
 * uint8_t speed:
 *   Absolute speed as a percentage of maximum speed (0-100)
-* struct Position *imuData:
-*   A pointer to the robotPosition structure so we can get imuYaw
+* RobotGlobalStructure *sys:
+*   A pointer to the sys->pos. structure so we can get IMU.yaw
 *
 * Returns:
 * Will return 0 if the robot moving along the desired heading, otherwise will return the signed
 * error
 *
 */
-float mfMoveToHeading(float heading, uint8_t speed, struct Position *imuData);
+float mfMoveToHeading(float heading, uint8_t speed, RobotGlobalStructure *sys);
 
 /*
 * Function:
 * float mfMoveToHeadingByDistance(float heading, uint8_t speed, uint32_t distance,
-*                                  struct Position *posData)
+*									 RobotGlobalStructure *sys);
 *
 * Will allow robot to move along the given heading a given distance.
 *
@@ -100,47 +103,49 @@ float mfMoveToHeading(float heading, uint8_t speed, struct Position *imuData);
 *   Percentage of max speed to move at (0-100%)
 * uint32_t distance:
 *   Distance to travel before stopping.
-* struct Position *posData:
-* Pointer to the robotPosition global structure.
+* struct SystemStates *state
+*   Pointer to the sys.states data structure
+* RobotGlobalStructure *sys:
+*   Pointer to the sys->pos. global structure.
 *
 * Returns:
 * 0 when maneuver is complete, otherwise returns distance remaining before maneuver complete.
 *
 */
 float mfMoveToHeadingByDistance(float heading, uint8_t speed, uint32_t distance, 
-								struct Position *posData);
+								 RobotGlobalStructure *sys);
 
 /*
 * Function:
-* float mfTrackLight(struct Position *imuData)
+* float mfTrackLight(RobotGlobalStructure *sys)
 *
 * Robot while attempt to aim itself at a light source
 *
 * Inputs:
-* struct Position *imuData:
-*   A pointer to the robotPosition structure
+* RobotGlobalStructure *sys:
+*   A pointer to the sys->pos. structure
 *
 * Returns:
 * 0 if equilibrium is reached, otherwise will return the proportional error value
 *
 */
-float mfTrackLight(struct Position *imuData);
+float mfTrackLight(RobotGlobalStructure *sys);
 
 /*
 * Function:
-* float mfTrackLightProx(struct Position *imuData)
+* float mfTrackLightProx(RobotGlobalStructure *sys)
 *
 * Function to track a light source using the proximity sensors.
 *
 * Inputs:
-* struct Position *imuData:
-*   Pointer to the global robotPosition data structure.
+* RobotGlobalStructure *sys:
+*   Pointer to the global sys->pos. data structure.
 *
 * Returns:
 * 0 if facing light source, otherwise will return heading error value
 *
 */
-float mfTrackLightProx(struct Position *imuData);
+float mfTrackLightProx(RobotGlobalStructure *sys);
 
 /*
 * Function:
@@ -156,5 +161,10 @@ float mfTrackLightProx(struct Position *imuData);
 *
 */
 char mfRandomMovementGenerator(void);
+
+void mfStopRobot(RobotGlobalStructure *sys);
+
+char mfAdvancedMove(float heading, float facing, uint8_t speed, 
+						uint8_t maxTurnRatio, RobotGlobalStructure *sys);
 
 #endif /* MOTION_FUNCTIONS_H_ */

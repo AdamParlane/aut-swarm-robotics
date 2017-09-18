@@ -13,16 +13,26 @@
 * See page 446 for information on PIO interrupts (Section 27)
 *
 * Functions:
-* void funcName(void)
+* void extIntInit(void)
 *
 */
 #ifndef EXTERNAL_INTERRUPT_H_
 #define EXTERNAL_INTERRUPT_H_
 
-//////////////[Includes]////////////////////////////////////////////////////////////////////////////
-#include "../robot_setup.h"
-
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
+/*
+* Function:
+* void extIntInit(void)
+*
+* Initialisation for external interrupts goes in here
+*
+* Inputs:
+* none
+*
+* Returns:
+* none
+*
+*/
 void extIntInit(void);
 
 #endif /* EXTERNAL_INTERRUPT_H_ */

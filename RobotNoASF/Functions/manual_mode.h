@@ -20,17 +20,14 @@
 #ifndef MANUAL_MODE_H_
 #define MANUAL_MODE_H_
 
-//////////////[Includes]////////////////////////////////////////////////////////////////////////////
-#include "../robot_setup.h"
-
 //////////////[Defines]/////////////////////////////////////////////////////////////////////////////
-#define MANUAL_STRAIGHT 0xD1
-#define MANUAL_STOP		0xD0
-#define CW	0xD2
-#define CCW 0xD3
+#define MC_STRAIGHT 0xD1
+#define MC_STOP		0xD0
+#define MC_CW		0xD2
+#define MC_CCW		0xD3
 
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
-void manualControl(struct MessageInfo tmessage, struct Position *robotPosition);
+void manualControl(RobotGlobalStructure *sys);
 
 
 #endif /* MANUAL_MODE_H_ */

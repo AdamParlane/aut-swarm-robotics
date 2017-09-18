@@ -39,7 +39,7 @@
       </framework-data>
     </AsfFrameworkConfig>
     <avrtool>com.atmel.avrdbg.tool.atmelice</avrtool>
-    <avrtoolserialnumber>J41800047448</avrtoolserialnumber>
+    <avrtoolserialnumber>J41800047224</avrtoolserialnumber>
     <avrdeviceexpectedsignature>0x295B0AE0</avrdeviceexpectedsignature>
     <com_atmel_avrdbg_tool_jtagice3plus>
       <ToolOptions>
@@ -62,7 +62,7 @@
         <InterfaceName>JTAG</InterfaceName>
       </ToolOptions>
       <ToolType>com.atmel.avrdbg.tool.atmelice</ToolType>
-      <ToolNumber>J41800047448</ToolNumber>
+      <ToolNumber>J41800047224</ToolNumber>
       <ToolName>Atmel-ICE</ToolName>
     </com_atmel_avrdbg_tool_atmelice>
     <custom>
@@ -144,6 +144,7 @@
       <Value>EMPL</Value>
       <Value>USE_DMP</Value>
       <Value>MPU9250</Value>
+      <Value>FIFO_CORRUPTION_CHECK</Value>
     </ListValues>
   </armgcc.compiler.symbols.DefSymbols>
   <armgcc.compiler.directories.IncludePaths>
@@ -186,10 +187,16 @@
     </ToolchainSettings>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="Functions\charging_functions.c">
+    <Compile Include="Functions\comm_functions.c">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="Functions\charging_functions.h">
+    <Compile Include="Functions\comm_functions.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="Functions\power_functions.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="Functions\power_functions.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="Functions\docking_functions.c">
@@ -228,10 +235,10 @@
     <Compile Include="Functions\obstacle_avoidance.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="Functions\testFunctions.c">
+    <Compile Include="Functions\test_functions.c">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="Functions\testFunctions.h">
+    <Compile Include="Functions\test_functions.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="IMU-DMP\dmpKey_CUSTOM.h">

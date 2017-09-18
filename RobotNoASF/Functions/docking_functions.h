@@ -25,7 +25,6 @@
 #define DOCKING_FUNCTIONS_H_
 
 //////////////[Includes]////////////////////////////////////////////////////////////////////////////
-#include "../robot_setup.h"
 
 //////////////[Defines]/////////////////////////////////////////////////////////////////////////////
 
@@ -43,7 +42,7 @@
 * none
 *
 */
-uint8_t dfDockRobot(struct Position *imuData);
+uint8_t dfDockRobot(RobotGlobalStructure *sys);
 
 /*
 * Function:
@@ -83,7 +82,7 @@ int8_t dfGetLineDirection(void);
 
 /*
 * Function:
-* uint8_t dfFollowLine(void)
+* uint8_t dfFollowLine(uint8_t speed, float *lineHeading, RobotGlobalStructure *sys)
 *
 * A basic function to follow a line that seems to work ok
 *
@@ -92,19 +91,18 @@ int8_t dfGetLineDirection(void);
 *   Speed that robot will move at while following line (%)
 * float *lineHeading:
 *   Pointer to a float that will store the average heading that the line is believed to be on
-* struct Poistion *imuData
-*   Pointer to the robotPosition data structure
+* struct Poistion *sys->pos
+*   Pointer to the sys->pos. data structure
 *
 * Returns:
 * 0 when finished, otherwise current state
 *
 */
-uint8_t dfFollowLine(uint8_t speed, float *lineHeading, struct Position *imuData);
+uint8_t dfFollowLine(uint8_t speed, float *lineHeading, RobotGlobalStructure *sys);
 
 /*
 * Function:
-* uint8_t dfScanBrightestLightSource(float *brightestHeading, uint16_t sweepAngle,
-*									struct Position *imuData);
+* uint8_t dfScanBrightestLightSource(float *brightestHeading, uint16_t sweepAngle, RobotGlobalStructure *sys)
 *
 * The robot will scan from -180 degrees to 180 degrees and record the heading with the brightest
 * source of light (which hopefully is the charging station)
@@ -118,8 +116,8 @@ uint8_t dfFollowLine(uint8_t speed, float *lineHeading, struct Position *imuData
 * it means the heading stored at *breightestHeading points to the brightest light source.
 *
 */
-uint8_t dfScanBrightestLightSource(float *brightestHeading, uint16_t sweepAngle,
-								struct Position *imuData);
+uint8_t dfScanBrightestLightSource(float *brightestHeading, uint16_t sweepAngle, RobotGlobalStructure *sys);
+
 /*
 * Function:
 * float dfScanBrightestLightSourceProx(void)

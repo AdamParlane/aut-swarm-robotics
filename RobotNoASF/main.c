@@ -20,11 +20,24 @@
 //////////////[Includes]////////////////////////////////////////////////////////////////////////////
 #include "robot_setup.h"
 
+#include "Interfaces/pio_interface.h"
+#include "Interfaces/timer_interface.h"
+#include "Interfaces/motor_driver.h"
+
+#include "Functions/power_functions.h"
+#include "Functions/comm_functions.h"
+#include "Functions/docking_functions.h"
+#include "Functions/light_colour_functions.h"
+#include "Functions/manual_mode.h"
+#include "Functions/motion_functions.h"
+#include "Functions/navigation_functions.h"
+#include "Functions/obstacle_avoidance.h"
+#include "Functions/test_functions.h"
+
 //////////////[Defines]/////////////////////////////////////////////////////////////////////////////
 
 //////////////[Global variables]////////////////////////////////////////////////////////////////////
-uint16_t battVoltage;					//Stores battery voltage on start up
-extern struct Position robotPosition;	//Passed to docking functions and test functions
+extern RobotGlobalStructure sys;		//System data structure
 extern struct MessageInfo message;		//Incoming message structure
 
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
@@ -72,13 +85,13 @@ extern struct MessageInfo message;		//Incoming message structure
 *				Entered when the robot is docked
 *				Charge_info also contains the charging status should other functions require it
 * IDLE:			***module: N/A
-*				Stops the robot motion by calling stopRobot()
+*				Stops the robot motion by calling mfStopRobot()
 *				Blinks LED 3 every 500ms to show externally that robot is in IDLE
 *				Entered when other majour blocking functions or states are finished
 *				Exitied by PC commands
 *
 * After the state machine 3 functions are run every loop to check key peripherals
-* These are:	xbeeGetNew()			checks and handles incoming commands
+* These are:	commGetNew()			checks and handles incoming commands
 *				nfRetrieveData()				updates the robot's navigation structure
 *				dodgeObstacle()					executes obstacle avoidance routine
 * Note that doegeObstacle() is guarded by 2 flags: obstacleAvoidance enabled and the robot is moving
@@ -91,71 +104,98 @@ extern struct MessageInfo message;		//Incoming message structure
 int main(void)
 {
 	robotSetup(); //Set up the system and peripherals
-	battVoltage = adcBatteryVoltage();	//Add to your watch to keep an eye on the battery
-	mainRobotState = IDLE; //start system at IDLE
-	mainRobotStatePrev = IDLE;
+	//Battery voltage stored in sys.power.batteryVoltage
+	//Initial main function state is set in robot_setup.c
+	//Return variables. Not ideal, but not sure what else to do right now.
 	uint8_t chargeCycleReturn = 0;
 	uint8_t dockingReturn = 0;
 	float lineHeading = 0;
-
+	uint8_t obstacleFlag;	
 	while(1)
 	{
-		switch (mainRobotState)
+		switch (sys.states.mainf)
 		{
-			case TEST: //System Test Mode
+			case M_TEST: //System Test Mode
 			//Entered when test command received from PC
-				testManager(message, &robotPosition); //Interprets test command and executes it
+				testManager(&sys); //Interprets test command and executes it
 				break;
 			
-			case MANUAL: //User controlled mode
+			case M_MANUAL: //User controlled mode
 			//Entered when manual movement command received from PC
-				if(newDataFlag) //if there is new data
-					manualControl(message, &robotPosition);
+				if(sys.flags.xbeeNewData) //if there is new data
+					manualControl(&sys);
 				break;
 			
-			case DOCKING:
+			case M_DOCKING:
 			//if battery low or manual docking command sent from PC
-				dockingReturn = dfDockRobot(&robotPosition);
+				dockingReturn = dfDockRobot(&sys);
 				if(!dockingReturn)	//Execute docking procedure state machine
-					mainRobotState = CHARGING;		//If finished docking, switch to charging
-				else if(dockingReturn == 7)
-					mainRobotState = IDLE;			//If charger connection failed
+					sys.states.mainf = M_CHARGING;		//If finished docking, switch to charging
+				else if(dockingReturn == DS_CHRG_NOT_FOUND)
+					sys.states.mainf = M_IDLE;			//If charger connection failed
 				break;
 			
-			case LINE_FOLLOW:
+			case M_LINE_FOLLOW:
 			//Entered when line follow command received from PC
-				if(!dfFollowLine(35, &lineHeading, &robotPosition))//Line follower will return 0 when complete
-					mainRobotState = IDLE;
+				if(!dfFollowLine(35, &lineHeading, &sys))//Line follower will return 0 when complete
+					sys.states.mainf = M_IDLE;
 				break;
 					
-			case LIGHT_FOLLOW:
+			case M_LIGHT_FOLLOW:
 			//Entered when light follow command received from PC
-				mfTrackLight(&robotPosition);
+				mfTrackLight(&sys);
 				break;
 				
-			case FORMATION:
+			case M_FORMATION:
 			//placeholder
 				break;
-			
-			case CHARGING:
-				chargeCycleReturn = cfChargeCycleHandler(&robotPosition);
-				if(chargeCycleReturn > 0xEF)
-					mainRobotState = IDLE;					//Charging fault occurred
-				if(!chargeCycleReturn)
-					mainRobotState = mainRobotStatePrev;	//Charge finished successfully
+						
+			case M_OBSTACLE_AVOIDANCE:
+				obstacleFlag = dodgeObstacle(&sys);
+				if(!obstacleFlag)//avoid obstacles using proximity sensors
+				{
+					//returning 1 means obstacles have been avoided
+					sys.states.mainf = sys.states.mainfPrev; //reset the state to what it was
+				}
 				break;
 
-			case IDLE:					
-				stopRobot();
+			case M_CHARGING:
+				mfStopRobot(&sys);
+				chargeCycleReturn = pfChargeCycleHandler(&sys);
+				if(chargeCycleReturn > 0xEF)
+					sys.states.mainf = M_IDLE;			//Charging fault occurred
+				if(!chargeCycleReturn)
+					sys.states.mainf = sys.states.mainfPrev;	//Charge finished successfully
+				break;
+				
+			case M_TEST_ALL:
+			//Something
+				break;
+				
+			case M_IDLE:					
+				mfStopRobot(&sys);
 				if(!fdelay_ms(1000))					//Blink LED 3 in Idle mode
-					led3Tog;	
+					led3Tog;				
+				if(sys.pos.y > 32000)
+					led1On;
+				else
+					led1Off;
+				if(sys.pos.y < 0)
+					led2On;
+				else
+					led2Off;
+				
+				
 				break;
 		}
+		commGetNew(&sys);				//Checks for and interprets new communications
 		
-		xbeeGetNew();			//Checks for and interprets new communications
-		nfRetrieveNavData();	//checks if there is new navigation data and updates robotPosition
+		nfRetrieveNavData(&sys);	//checks if there is new navigation data and updates sys->pos.
+		
+		pfPollPower(&sys);			//Poll battery and charging status
+		
 		//check to see if obstacle avoidance is enabled AND the robot is moving
-		if(obstacleAvoidanceEnabledFlag && movingFlag)
-			dodgeObstacle(&robotPosition); //avoid obstacles using proximity sensors
+		if(sys.flags.obaEnabled && sys.flags.obaMoving && sys.states.mainf != M_OBSTACLE_AVOIDANCE)
+			checkForObstacles(&sys); //avoid obstacles using proximity sensors
 	}
 }

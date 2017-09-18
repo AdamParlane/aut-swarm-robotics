@@ -17,7 +17,7 @@
 * void SPI_Init(void);
 * void mouseInit(void);
 * int mouseTestBasic(void);
-* void Get_Mouse_XY(struct Position *mousePos);
+* void Get_Mouse_XY(Position *sys);
 * 
 *
 * Functionality of each function is explained before each function
@@ -27,8 +27,9 @@
 
 //////////////[Includes]////////////////////////////////////////////////////////////////////////////
 #include "../robot_setup.h"
-#include <math.h>
 #include "opt_interface.h"
+#include "timer_interface.h"
+#include <math.h>
 
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*
@@ -144,11 +145,13 @@ void mouseInit(void)
 	SPI_Write(OPT_LSRPWR_CFG1, 0x00);		//complement of set laser current to full
 	SPI_Write(OPT_LASER_CTRL0, 0xC0);		//set laser current range to 4-10mA
 	SPI_Write(OPT_LASER_CTRL1, 0x3F);		//complement of set laser current range to 4-10mA
-	delay_ms(10);						//allow everything to settle after being initialized
+	delay_ms(10);							//allow everything to settle after being initialized
+	
+	SPI_Write(OPT_CONFIG2, 0x6E);			//Resolution = 1600cpi, Force Awake (pg28 in DS)
 }
 
 /*
-* Function: void getMouseXY(struct Position*)
+* Function: void getMouseXY(RobotGlobalStructure *sys)
 *
 * Reads the deltaX and deltaY from the mouse sensor
 * Writes the received deltaX and deltaY into the position structure using pointers
@@ -171,12 +174,15 @@ void mouseInit(void)
 * Needs more descriptive var names
 *
 */
-void getMouseXY(struct Position *mousePos)
+void getMouseXY(RobotGlobalStructure *sys)
 {
 	uint16_t Xtemp = 0, Ytemp = 0;
 	int16_t Xx, Yy; 
 	char topX, topY, data2, data3, data4, data5;	
 	data2 = SPI_Read(OPT_MOTION);
+	
+	sys->pos.Optical.overflowFlag = ((data2 & 0x10) >> 4);
+	
 	if(data2 & (1<<7))
 	{
 		data3 = SPI_Read(OPT_DELTA_X_L);	//delta x low
@@ -190,17 +196,20 @@ void getMouseXY(struct Position *mousePos)
 		Yy = Ytemp << 4;
 		//if(Xtemp & (1<<12))					//if MSB of X is set (for 2s complement)
 			//Xtemp ^= 0b1000100000000000;	//Make the 2s complement bit be MSB of short
-		mousePos->opticalDX = (float)(Xx * RESOLUTION);
+		
+		sys->pos.Optical.dx = Xx;
+		sys->pos.Optical.x += sys->pos.Optical.dx;
 		//if(Ytemp & (1<<12))					//if MSB of Y is set (for 2s complement)
 			//Ytemp ^= 0b1000100000000000;	//Make the 2s complement bit be MSB of short
-		mousePos->opticalDY = (float)(Yy * RESOLUTION);
-		mousePos->opticalX += mousePos->opticalDX;
-		mousePos->opticalY += mousePos->opticalDY;
+		sys->pos.Optical.dy = Yy;
+		sys->pos.Optical.y += sys->pos.Optical.dy;
+		
+		sys->pos.Optical.surfaceQuality = getMouseSQUAL();
 	}
 	else
 	{
-		mousePos->opticalDX = 0;
-		mousePos->opticalDY = 0;
+		sys->pos.Optical.dx = 0;
+		sys->pos.Optical.dy = 0;
 	}
 }
 
@@ -331,7 +340,8 @@ char SPI_Read(char readAddress)
 * [Ideas for improvements that are yet to be made](optional)
 *
 */
-void getMouseSQUAL(void)
+uint8_t getMouseSQUAL(void)
 {
 	uint8_t squal = SPI_Read(OPT_SQUAL);
+	return squal;
 }

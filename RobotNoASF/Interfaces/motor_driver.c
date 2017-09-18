@@ -24,15 +24,22 @@
 * char rearMotorDrive(signed char speed)
 * char frontRightMotorDrive(signed char speed)
 * char frontLeftMotorDrive(signed char speed)
-* void moveRobot(float direction, unsigned char speed);
-* void stopRobot(void);
-* void rotateRobot(signed char speed);
+* void mdStopMotors(void);
 * void setTestMotors(uint8_t motorData[]);
+* void moveRobot(float direction, float speed, float turnRatio);
 *
 */
  
 //////////////[Includes]////////////////////////////////////////////////////////////////////////////
+#include "../robot_setup.h"
 #include "motor_driver.h"
+#include "../Functions/test_functions.h"
+#include "timer_interface.h"				//delay_ms()
+#include <stdlib.h>							//abs()
+#include <tgmath.h>							//Trigonometry
+
+//////////////[Global Variables]////////////////////////////////////////////////////////////////////
+extern RobotGlobalStructure sys;
 
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*
@@ -237,102 +244,9 @@ char frontLeftMotorDrive(signed char speed)
 }
 
 /*
-* Function:
-* void moveRobot(float direction, unsigned char speed)
-*
-* Will start the robot moving in the desired heading at the desired speed
-*
-* Inputs:
-* float direction:
-*	heading in degrees in which the robot should move. Irrelevant if speed = 0
-* unsigned char speed
-*	Speed at which robot should move. Is a percentage of maximum speed (0-100)
-*
-* Returns:
-*	none
-*
-* Implementation:
-* The direction is kept in range of +/-180 by removing whole chunks of 360 deg to it
-* The speed is also limited at 100, so any speed over 100 is set to 100
-* The direction is then converted to radians to allow smooth working with cos()
-* Each motors' speed is calculated using the FORWARD DRIVE DIRECTION of the motor, with respect to
-* the front face of the robot
-* These are:	Motor 1		270 deg
-*				Motor 2		30  deg
-*				Motor 3		150 deg
-* The robot speed is then cos(motor direction - desired robot direction) (performed in radians)
-* This will produce a ratio up to 1 of the full speed in order to achieve the correct direction
-* This is also multiplied by the desired speed to achieve an overall robot speed
-* The long part with if statements simply turns on the correct FIN and RIN pins to achieve the 
-* desired MOTOR direction, this is based off the speed calculation which could return negative
-* Finally the ABSOLUTE value of the motorxspeed is written to the PWM_CUPD register to update
-* the duty cycle.
-*
-* Improvements:
-* None as of 26/7/17
-*
-*/
-void moveRobot(signed int direction, unsigned char speed)
-{
-	signed int rearMotorSpeed, frontRightMotorSpeed, frontLeftMotorSpeed;
-	float directionRad;
-	direction = -1 * direction;
-	//keep direction in range +/-180degrees
-	//direction = nfWrapAngle(direction);
-
-	//stop speed from being over max in case of user input error
-	speed = capToRangeUint(speed, 0, 100);
-
-	directionRad = (direction * M_PI) / 180; //convert desired direction to radians
-	rearMotorSpeed = -1 * (speed * cos ((270 * M_PI) / 180 - directionRad ));//radians
-	frontRightMotorSpeed = -1 *(speed * cos ((30  * M_PI) / 180 - directionRad ));
-	frontLeftMotorSpeed = -1 * (speed * cos ((150 * M_PI) / 180 - directionRad ));
-
-	frontLeftMotorDrive(frontLeftMotorSpeed);
-	frontRightMotorDrive(frontRightMotorSpeed);
-	rearMotorDrive(rearMotorSpeed);
-}
-
-/*
-* Function:
-* void rotateRobot(signed char speed)
-*
-* Will rotate the robot on the spot in the given direcion and relative speed.
-* Sign of speed sets direction (negative is CW, positive is CCW)
-*
-* Inputs:
-* char direction
-*	The direction the robot should rotate (CW or CCW)
-* unsigned char speed
-*	Speed at which robot should move. Is a percentage of maximum speed (0-100)
-*
-* Returns:
-* none
-*
-* Implementation:
-* Sign of speed sets direction (negative is CW, positive is CCW)
-* To rotate Clockwise (CW) all FIN should be LOW and all RIN HIGH (all motors spin in reverse)
-* To rotate Counterclockwise (CCW) all FIN should be HIGH and all RIN LOW (all motors forward)
-* This is set with 2 simple if statements
-* All motors should spin at the same speed which is simply the input arguement speed
-* This is used to update the duty cycle using PWM_CUPD
-*
-* Improvements:
-* None as of 26/7/17
-*
-*/
-void rotateRobot(signed char speed)
-{
-	speed = capToRangeInt(speed, -100, 100);	//In range check.
-	frontLeftMotorDrive(speed);
-	frontRightMotorDrive(speed);
-	rearMotorDrive(speed);
-}
-
-/*
 
 * Function:
-* void stopRobot(void)
+* void mdStopMotors(void)
 *
 * Stop all motors
 *
@@ -346,10 +260,10 @@ void rotateRobot(signed char speed)
 * Sets all direction pins on the motor drivers low.
 *
 */
-void stopRobot(void)
+void mdStopMotors(void)
 {
 	//Stops the robot from moving
-	movingFlag = 0;
+	sys.flags.obaMoving = 0;
 	frontRightMotorDrive(0);
 	frontLeftMotorDrive(0);
 	rearMotorDrive(0);
@@ -463,48 +377,90 @@ void PWMSpeedTest(void)
 	delay_ms(5000);
 	frontRightPwm = 100;
 	delay_ms(5000);
-	stopRobot();
+	mdStopMotors();
 }
 
 /*
 * Function:
-* uint8_t steerRobot(uint8_t speed, int8_t turnRatio)
+* uint8_t moveRobot(float heading, float speed, float turnRatio)
 *
-* Allows robot to turn while moving forward by a percentage of the forward speed.
+* Provides total control of the motion of the robot. This function replaces the old moveRobot(),
+* rotateRobot() and steerRobot() functions as it is a combination of all three. It should allow us
+* to achieve our aim to get the robot to rotate as it moves to a target heading.
+*
+* How to achieve old moveRobot() behaviour:
+*   moveRobot(90, 50, 0) <-- turnRatio set to 0
+*
+* How to achieve old rotateRobot(-60) behaviour:
+*   moveRobot(0, -60, 100) <-- turnRatio is 100 and heading is ignored
+*          --OR--
+*   moveRobot(0, 60, -100)
 *
 * Inputs:
-* uint8_t speed:
-*   A percentage of maximum speed (0-100%)
-* int8_t turnRatio:
-*   The ratio of rotation to be applied to the motion (+-%). if turnRatio is 0%, then robot just
-*   drives straight at 'speed'. -100% will have robot rotating on the spot anti-clockwise at 
-*   'speed'. 50% would be half and half driving forward with a clockwise rotational element applied.
+* float heading:
+*   The heading the the robot will move in (degrees). If turnRatio is 100 then heading has no effect
+* float speed:
+*   A percentage of maximum speed (-100% to 100%) and direction of rotation (<0 is CCW and >0 is CW)
+*   If turnRatio is 0 then signedness of speed has no effect.
+* float turnRatio:
+*   The ratio of rotation to be applied to the motion (-100% to 100%). if turnRatio is 0%, then  
+*   robot just drives straight at 'speed'. -100% will have robot rotating CCW on the spot at 
+*   'speed'. 50% would be half and half driving forward with a CW rotational element applied. If
+*   both speed and turnRatio are negative, then robot will rotate in CW (-1*-1) = 1
 *
 * Returns:
 * 0 on success
 *
 * Implementation:
-* First check that speed and turnRatio are in the correct range and fix if necessary.
+* First, the heading is converted to radians to allow smooth working with cos()
+* Then check that speed and turnRatio are in the correct range and fix if necessary.
 * Next calculate the speed ratios for forward motion and rotational motion based on the speed and
 * turn ratio passed to the function. forwardSpeed is inversely proportional to the absolute value
-* of rotational speed. Finally, apply speeds to the motors.
+* of rotational speed. 
+
+* Each motors' speed is calculated using the FORWARD DRIVE DIRECTION of the motor, with respect to
+* the front face of the robot
+* These are:	Motor 1		270 deg 
+*				Motor 2		30  deg
+*				Motor 3		150 deg
+* The robot speed is then cos(motor direction - desired robot direction) (performed in radians)
+* This will produce a ratio up to 1 of the full speed in order to achieve the correct direction
+* This is also multiplied by the straight line speed to give the speed that the robot will be moving
+* in a straight line. Finally, the rotational speed component is added to this value.
+*
+* Lastly, apply speeds to the motors.
 *
 */
-uint8_t steerRobot(uint8_t speed, int8_t turnRatio)
+uint8_t moveRobot(float heading, float speed, float turnRatio)
 {
-	//Make sure parameters are in range and correct if necessary
-	speed = capToRangeUint(speed, 0, 100);
-	turnRatio = capToRangeInt(turnRatio, -100, 100);
+	int8_t rearMotorSpeed, frontRightMotorSpeed, frontLeftMotorSpeed;
 	
-	//Calculate speed ratios	
+	//If speed is set to 0, then save processor cycles
+	if(speed == 0.0)
+	{
+		mdStopMotors();
+		return 0;
+	}
+	
+	float headingRad = -heading*M_PI/180.0; //convert desired direction to radians (and invert)
+		
+	//Make sure parameters are in range and correct if necessary
+	speed = capToRangeFlt(speed, -100, 100);
+	turnRatio = capToRangeFlt(turnRatio, -100, 100);
+	
+	//Calculate speed ratios
 	float rotationalSpeed = speed*(turnRatio/100.0);
-	float straightSpeed = speed - (abs(rotationalSpeed));
+	float straightSpeed = abs(speed) - (abs(rotationalSpeed));
+	
+	//Calculate individual motor speeds
+	rearMotorSpeed			= -straightSpeed*cos(RM_ANGLE_RAD - headingRad) + rotationalSpeed;
+	frontRightMotorSpeed	= -straightSpeed*cos(FRM_ANGLE_RAD - headingRad) + rotationalSpeed;
+	frontLeftMotorSpeed		= -straightSpeed*cos(FLM_ANGLE_RAD - headingRad) + rotationalSpeed;
 	
 	//Apply speeds and directions to motors
-	//Only front motors provide forward drive. Rear motor is for rotation only.
-	frontRightMotorDrive((int8_t)(-straightSpeed + rotationalSpeed));
-	frontLeftMotorDrive((int8_t)(straightSpeed + rotationalSpeed));
-	rearMotorDrive((int8_t)rotationalSpeed);
+	frontRightMotorDrive(frontRightMotorSpeed);
+	frontLeftMotorDrive(frontLeftMotorSpeed);
+	rearMotorDrive(rearMotorSpeed);
 	
 	return 0;
 }

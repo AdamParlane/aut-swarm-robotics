@@ -14,14 +14,12 @@
 *
 * Functions:
 * void scanProximity(void)
-* void dodgeObstacle(struct Position *robotPosition)
+* void dodgeObstacle(RobotGlobalStructure *sys)
 *
 */
 
 #ifndef OBSTACLE_AVOIDANCE_H_
 #define OBSTACLE_AVOIDANCE_H_
-//////////////[Includes]////////////////////////////////////////////////////////////////////////////
-#include "../robot_setup.h"
 
 //////////////[Defines]/////////////////////////////////////////////////////////////////////////////
 #define OBSTACLE_THRESHOLD 0x0100 //Subject to change on testing but seems reasonable
@@ -48,7 +46,7 @@ void scanProximity(void);
 
 /*
 * Function:
-* void dodgeObstacle(struct Position *robotPosition)
+* void dodgeObstacle(RobotGlobalStructure *sys)
 *
 * Will make the robot avoid obstacles while (hopefully remain on the current track
 *
@@ -61,7 +59,13 @@ void scanProximity(void);
 *
 *
 */
-void dodgeObstacle(struct Position *robotPosition);
+uint8_t dodgeObstacle(RobotGlobalStructure *sys);
+
+void checkForObstacles(RobotGlobalStructure *sys);
+
+#define LEFT	0
+#define RIGHT	1
+
 
 
 

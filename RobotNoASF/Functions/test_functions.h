@@ -1,15 +1,12 @@
 /*
- * testFunctions.h
+ * test_functions.h
  *
  * Created: 13/07/2017 4:55:41 PM
- *  Author: adams
+ *  Author: TODO:COMMECNTING AND HEADERSadams
  */ 
-
 
 #ifndef TESTFUNCTIONS_H_
 #define TESTFUNCTIONS_H_
-
-#include "../robot_setup.h"
 
 #define TEST_COMMUNICATIONS		0xE1
 #define TEST_PROXIMITY_SENSORS	0xE4
@@ -31,10 +28,9 @@
 #define STREAM_DATA				0x02
 #define STOP_STREAMING			0xFF
 
-
 #define REAR_MOTOR				0x01
-#define F_RIGHT_MOTOR					0x02
-#define F_LEFT_MOTOR					0x03
+#define F_RIGHT_MOTOR			0x02
+#define F_LEFT_MOTOR			0x03
 
 struct transmitDataStructure
 {
@@ -42,11 +38,15 @@ struct transmitDataStructure
 	uint8_t DataSize;//size of the transmit array
 };
 
+union float_bytes {
+	float val;
+	unsigned char bytes[sizeof(float)];
+}data;
 
+struct MessageInfo;	//Defined in xbee_driver.h
 
 /*
-* Function: uint8_t testManager(struct MessageInfo message, struct transmitDataStructure *transmit,
-*			struct Position *robotPosition)
+* Function: uint8_t testManager(struct transmitDataStructure *transmit,	RobotGlobalStructure *sys)
 *
 * Handles the interpretation of received test commands,
 * calling the appropriate test functions / performing tests
@@ -62,15 +62,14 @@ struct transmitDataStructure
 * ***Streaming Interval = 100ms***
 *
 */
-uint8_t getTestData(struct MessageInfo message, struct transmitDataStructure *transmit, 
-struct Position *robotPosition);
+uint8_t getTestData(struct transmitDataStructure *transmit, RobotGlobalStructure *sys);
 
-void testManager(struct MessageInfo message, struct Position *robotPosition);
+void testManager(RobotGlobalStructure *sys);
 
 
 
 /*
-* Function: void testAll(struct transmitDataStructure *transmit)
+* Function: void testAll(struct transmitDataStructure *transmit, RobotGlobalStructure *sys)
 *
 * tests all the peripherals in a set order and returns them all back to the GUI in one packet
 * calling the appropriate test functions / performing tests
@@ -81,15 +80,12 @@ void testManager(struct MessageInfo message, struct Position *robotPosition);
 * No Return Values
 *
 */
-void testAll(struct transmitDataStructure *transmit);
+void testAll(struct transmitDataStructure *transmit, RobotGlobalStructure *sys);
 
 
 
 
-union float_bytes {
-	float val;
-	unsigned char bytes[sizeof(float)];
-}data;
+
 
 
 
