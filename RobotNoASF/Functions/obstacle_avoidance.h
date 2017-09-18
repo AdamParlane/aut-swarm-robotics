@@ -61,14 +61,13 @@ void scanProximity(void);
 *
 *
 */
-void dodgeObstacle(struct Position *robotPosition);
-//signed int dodgeObstacle(signed int aim, char speed);
+uint8_t dodgeObstacle(struct Position *robotPosition);
 
-void obstacleAvoidance(signed int aim);
+void checkForObstacles(struct Position *robotPosition);
 
 #define LEFT	0
 #define RIGHT	1
-#define CORNER	2
+
 
 
 #endif /* OBSTACLE_AVOIDANCE_H_ */

@@ -48,7 +48,7 @@ void scanProximity(void)
 	{
 		proximity[index] = proxSensRead(i);
 		index++;
-	}		
+	}
 }
 
 
@@ -71,103 +71,85 @@ void scanProximity(void)
 * [WIP]
 *
 */
-void dodgeObstacle(struct Position *robotPosition)
+uint8_t dodgeObstacle(struct Position *robotPosition)
 {
-	scanProximity();	//update proximity readings
-	uint16_t proxRange = 0;
-	static uint8_t save = 0;// 0 for not set, 1 for moving left, 2 for moving right
-	static uint8_t firstTime = 1; // 1 on firstTime, 0 on other times
-	static signed int movingDirection = 0;
-	if(firstTime)
-		movingDirection = robotPosition -> targetHeading;
-	uint8_t indexLeft, indexRight;
-	for(uint8_t index = 0; index < 6 ; index++)
+	scanProximity();// updates proximity sensors
+	signed int proxRange = 0, proxRangeHigh, proxRangeLow;// value assigned by index, can be 0, 60, 120, 180, 240, 300
+	static char direction;
+	static char firstLoop = 1;
+	uint8_t indexLeft, indexRight;//follows and leads index for the sake of checking proximity of nearby sensors
+	for(uint8_t index = 0; index <= 5 ; index++)//0, 1, 2, 3, 4, 5
 	{
 		proxRange = index * 60; //convert angle to degrees
+		proxRangeHigh = proxRange + 30;
+		proxRangeLow = proxRange - 30;
 		indexLeft = index + 1;
 		indexRight = index - 1;
 		//keep left and right indexes in range
 		if(indexLeft > 5)
-			indexLeft = 0;
+		indexLeft = 0;
 		if(indexRight > 5)
-			indexRight = 5;
-		if((robotPosition->targetHeading > (proxRange - 30) && 
-		(robotPosition->targetHeading <= (proxRange + 30))) || ((index == 0) && 
-		(robotPosition->targetHeading > 330) && (robotPosition->targetHeading <= 30)))
+		indexRight = 5;
+		if(robotPosition->targetHeading > proxRangeLow && robotPosition->targetHeading <= proxRangeHigh) // if the prox is on the FACE we care about
 		{
-			if((proximity[index] > OBSTACLE_THRESHOLD) || (proximity[indexLeft] > 800) || (proximity[indexRight] > 800))
+			if((proximity[index] > OBSTACLE_THRESHOLD) || (proximity[indexLeft] > 1000) || (proximity[indexRight] > 1000))
 			{
-				if(firstTime)// || (proximity[indexLeft] > 1000) || (proximity[indexRight] > 1000))
+				if(firstLoop) //choose a direction to dodge on first attempt
 				{
-					if((proximity[indexLeft] > proximity[indexRight]) && (proximity[indexLeft] < 800) && (proximity[indexRight] < 800))
+					if((proximity[indexLeft] > proximity[indexRight]))
 					{
-						//robotPosition ->targetHeading +=90;
-						save = 2;
-						firstTime = 0;
-						movingDirection =+ 90;
-						//moveRobot(movingDirection, robotPosition -> targetSpeed);//move right
-						
+						robotPosition->targetHeading +=90;
+						moveRobot(robotPosition->targetHeading, robotPosition->targetSpeed);//move right
+						direction = RIGHT;
 					}
-					else if ((proximity[indexLeft] < proximity[indexRight]) && (proximity[indexLeft] < 800) && (proximity[indexRight] < 800))
+					else if ((proximity[indexLeft] < proximity[indexRight]))
 					{
-						//robotPosition -> targetHeading -= 90;
-						firstTime = 0;
-						save = 1;
-						movingDirection -= 90;
-						//moveRobot(movingDirection, robotPosition -> targetSpeed);//move left
-					}				
+						robotPosition->targetHeading -= 90;
+						moveRobot(robotPosition->targetHeading, robotPosition->targetSpeed);//move left
+						direction = LEFT;
+					}
+					firstLoop = 0;
 				}
-				//else if(!firstTime)
-				//{
-					//if(save == 2)//already moving right
-					//{
-						////robotposition ->targetheading +=90;
-						////save = 2;
-						//moveRobot(movingDirection, robotPosition -> targetSpeed);//move right
-					//}
-					//if (save == 1)//already moving left
-					//{
-						////robotposition -> targetheading -= 90;
-						//moveRobot(movingDirection, robotPosition -> targetSpeed);//move left
-					//}
-				//}
-				if(proximity[indexLeft] > 800)
+				//moving left but its getting worse
+				else if ((direction == LEFT) && (proximity[indexLeft] > (proximity[indexRight] + 100)) && proximity[indexLeft] > 600)
 				{
-					movingDirection += 90;
+					robotPosition->targetHeading += 90;
+					moveRobot(robotPosition->targetHeading, robotPosition->targetSpeed);
+					direction = RIGHT;
 				}
-				if(proximity[indexRight] > 800)
+				//moving right but its getting worse
+				else if ((direction == RIGHT) && (proximity[indexRight] > (proximity[indexLeft] + 100)) && proximity[indexRight] > 600)
 				{
-					movingDirection -=90;
+					robotPosition->targetHeading -= 90;
+					moveRobot(robotPosition->targetHeading, robotPosition->targetSpeed);
+					direction = LEFT;
 				}
-				moveRobot(movingDirection, robotPosition -> targetSpeed);
+				//stuck in a corner
+				else if((proximity[index] > OBSTACLE_THRESHOLD) && (proximity[indexLeft] > 800) && (proximity[indexRight] > 800))
+				{
+					robotPosition->targetHeading -= 120;
+					moveRobot(robotPosition->targetHeading, robotPosition->targetSpeed);
+				}
 			}
 			else
-			{ 
-				moveRobot(robotPosition->targetHeading, robotPosition -> targetSpeed);
-				firstTime = 1;
-				save = 0;
+			{
+				moveRobot(robotPosition->targetHeading, robotPosition->targetSpeed);
+				firstLoop = 1;
+				return 0;
 			}
-		}	
-	}	
-	if(movingDirection > 360)
-		movingDirection -= 360;	
-	if(movingDirection < 0)
-		movingDirection += 360;
+		}
+	}
+	if(robotPosition->targetHeading > 360)
+		robotPosition->targetHeading -= 360;
+	if(robotPosition->targetHeading < 0)
+		robotPosition->targetHeading +=360;
+	return 1;
 }
 
-void obstacleAvoidance(signed int aim)
+void checkForObstacles(struct Position *robotPosition)
 {
 	scanProximity();// updates proximity sensors
 	signed int proxRange = 0, proxRangeHigh, proxRangeLow;// value assigned by index, can be 0, 60, 120, 180, 240, 300
-	static char obstacleFlag = 0;
-	static char direction;
-	static signed int newAim = 0;
-	static char firstLoop = 1;
-	if(firstLoop)//on the first run through assign aim to newAim
-	{
-		newAim = aim;
-		//firstLoop = 0;
-	}
 	uint8_t indexLeft, indexRight;//follows and leads index for the sake of checking proximity of nearby sensors
 	for(uint8_t index = 0; index <= 5 ; index++)//0, 1, 2, 3, 4, 5
 	{
@@ -181,151 +163,14 @@ void obstacleAvoidance(signed int aim)
 			indexLeft = 0;
 		if(indexRight > 5)
 			indexRight = 5;
-		if(newAim > proxRangeLow && newAim <= proxRangeHigh) // if the prox is on the FACE we care about
+		if(robotPosition->targetHeading > proxRangeLow && robotPosition->targetHeading <= proxRangeHigh) // if the prox is on the FACE we care about
 		{
 			if((proximity[index] > OBSTACLE_THRESHOLD) || (proximity[indexLeft] > 1000) || (proximity[indexRight] > 1000))
 			{
-				if(firstLoop)
-				{
-					if((proximity[indexLeft] > proximity[indexRight]))
-					{
-						aim +=90;
-						moveRobot(aim, 50);//move right 
-						direction = RIGHT;
-					}
-					else if ((proximity[indexLeft] < proximity[indexRight]))
-					{
-						aim -= 90;
-						moveRobot(aim, 50);//move left
-						direction = LEFT;
-					}
-					firstLoop = 0;
-				}
-				else if ((direction == LEFT) && (proximity[indexLeft] > (proximity[indexRight] + 100)) && proximity[indexLeft] > 600)
-				{
-					aim += 90;
-					moveRobot(aim, 50);
-					direction = RIGHT;
-				}
-				else if ((direction == RIGHT) && (proximity[indexRight] > (proximity[indexLeft] + 100)) && proximity[indexRight] > 600)
-				{
-					aim -= 90;
-					moveRobot(aim, 50);
-					direction = LEFT;
-				}
-				else if((proximity[index] > OBSTACLE_THRESHOLD) && (proximity[indexLeft] > 800) && (proximity[indexRight] > 800))
-				{
-					aim -= 120;
-					moveRobot(aim, 50);
-					//delay_ms(1000);
-				}
+				//if there is obstacles
+				mainRobotStatePrev = mainRobotState;
+				mainRobotState = OBSTACLE_AVOIDANCE;
 			}
-			else
-			{
-				moveRobot(aim, 50);	
-				firstLoop = 1;
-			}
-
 		}
-			//if((proximity[index] > OBSTACLE_THRESHOLD) && !obstacleFlag)//obstacle straight(ish) ahead
-			//{
-				////if(proximity[indexLeft] > 800 && proximity[indexRight] > 800)
-				////{
-					//////if robot is surrounded by obstacles
-					////newAim = aim - 180;
-					////moveRobot(newAim, 50);
-					////obstacleFlag = 1;
-				////}
-				//if(proximity[indexLeft] > proximity[indexRight])//obstacle to left
-				//{
-					////move RIGHT away from obstacle
-					//newAim = aim + 90;
-					//moveRobot(newAim, 50);//move right
-					//obstacleFlag = 1;				
-				//}
-				//if(proximity[indexLeft] < proximity[indexRight])//obstacle to right
-				//{
-					////move LEFT away from obstacle
-					//newAim = aim - 90;
-					//moveRobot(newAim, 50);//move left
-					//obstacleFlag = 1;
-				//}
-			//}
-			//else if(proximity[indexLeft] > 800)
-			//{
-				////Something close on left side
-				////move RIGHT away from obstacle
-				//newAim = aim + 90;
-				//moveRobot(newAim, 50);//move right
-				//obstacleFlag = 1;				
-			//}
-			//else if(proximity[indexRight] > 800)
-			//{
-				////Something close on right side
-				////move LEFT away from obstacle
-				//newAim = aim - 90;
-				//moveRobot(newAim, 50);//move left
-				//obstacleFlag = 1;
-			//}
-			//else if((proximity[index] < OBSTACLE_THRESHOLD) && obstacleFlag)
-			//{
-				////timer to ensure robot passes edge of object not just field of view of sensor
-				//delay_ms(300); //has potential will need to change to non blocking
-				//obstacleFlag = 0;
-			//}
-			//else if((proximity[index] < OBSTACLE_THRESHOLD) && !obstacleFlag)
-			//{
-				//moveRobot(aim, 50);//continue straight
-				//firstLoop = 1;
-			//}		
-		//}
-		//else if(aim == proxRangeHigh) //aiming on a corner
-		//{
-			////different strategy involving averaging the 2 adjacent prox sensors
-			////to work without this, make if(aim > proxRangeLow && aim <= proxRangeHigh)
-		//}
 	}
-	//if(newAim > 360)
-		//newAim -= 360;
-	//if(newAim < 0)
-		//newAim += 360;	
 }
-
-
-//signed int dodgeObstacle(signed int aim, char speed)
-//{
-	//scanProximity();	//update proximity readings
-	//static int oAim = 0;
-	//uint16_t proxRange = 0;
-	//uint8_t indexLeft, indexRight;
-	//for(uint8_t index = 0; index < 6 ; index++)
-	//{
-		//proxRange = index * 60; //convert angle to degrees
-		//indexLeft = index + 1;
-		//indexRight = index - 1;
-		////keep left and right indexes in range
-		//if(indexLeft > 5)
-		//indexLeft = 0;
-		//if(indexRight > 5)
-		//indexRight = 5;
-		//if((aim >= (proxRange - 30) && (aim < (proxRange + 30))) || ((index == 0) && (aim > 330) && (aim < 30)))
-		//{
-			//if((proximity[index] > OBSTACLE_THRESHOLD) || (proximity[indexLeft] > 1000) || (proximity[indexRight] > 1000))
-			//{
-				//if(proximity[indexLeft] > proximity[indexRight])
-				//{
-					//aim +=90;
-					//moveRobot(aim, speed);//moveLeft
-				//}
-				//else if (proximity[indexLeft] < (proximity[indexRight]-50))
-				//{
-					//aim -= 90;
-					//moveRobot(aim, speed);//move right
-				//}
-			//}
-			//else
-			//moveRobot(aim, speed);
-		//}
-	//}
-	//return aim;
-//}

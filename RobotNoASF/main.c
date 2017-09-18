@@ -92,14 +92,13 @@ int main(void)
 {
 	robotSetup(); //Set up the system and peripherals
 	battVoltage = adcBatteryVoltage();	//Add to your watch to keep an eye on the battery
-	mainRobotState = IDLE; //start system at IDLE
+	mainRobotState = FORMATION; //start system at IDLE
 	mainRobotStatePrev = IDLE;
 	uint8_t chargeCycleReturn = 0;
 	uint8_t dockingReturn = 0;
 	float lineHeading = 0;
+	uint8_t obstacleFlag;
 	obstacleAvoidanceEnabledFlag = 1;
-	movingFlag = 1;
-	signed int aim = 0;
 	robotPosition.targetHeading = 0;
 	robotPosition.targetSpeed = 50;
 	
@@ -140,8 +139,19 @@ int main(void)
 				
 			case FORMATION:
 			//placeholder
+				moveRobot(0, robotPosition.targetSpeed);
+				robotPosition.targetHeading = 0;
 				break;
 			
+			case OBSTACLE_AVOIDANCE:
+				obstacleFlag = dodgeObstacle(&robotPosition);
+				if(!obstacleFlag)//avoid obstacles using proximity sensors
+				{
+					//returning 1 means obstacles have been avoided
+					mainRobotState = mainRobotStatePrev; //reset the state to what it was
+				}
+				break;
+				
 			case CHARGING:
 				chargeCycleReturn = cfChargeCycleHandler(&robotPosition);
 				if(chargeCycleReturn > 0xEF)
@@ -151,17 +161,15 @@ int main(void)
 				break;
 
 			case IDLE:					
-				//stopRobot();
+				stopRobot();
 				if(!fdelay_ms(1000))					//Blink LED 3 in Idle mode
 					led3Tog;	
 				break;
 		}
-		
 		xbeeGetNew();			//Checks for and interprets new communications
 		nfRetrieveNavData();	//checks if there is new navigation data and updates robotPosition
 		//check to see if obstacle avoidance is enabled AND the robot is moving
-		//if(obstacleAvoidanceEnabledFlag && movingFlag)
-		//	dodgeObstacle(&robotPosition); //avoid obstacles using proximity sensors
-		obstacleAvoidance(aim);	
+		if(obstacleAvoidanceEnabledFlag && mainRobotState != OBSTACLE_AVOIDANCE)
+			checkForObstacles(&robotPosition); 
 	}
 }
