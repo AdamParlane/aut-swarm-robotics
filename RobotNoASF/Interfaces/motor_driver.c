@@ -165,7 +165,7 @@ void motorInit(void)
 char rearMotorDrive(signed char speed)
 {
 	speed = capToRangeInt(speed, -100, 100);	//Make sure speed is in range
-	rearPwm = abs(speed)*0.7;
+	rearPwm = abs(speed);
 	if(speed > 0)		//Forwards
 		rearMotorCW;
 	if(speed < 0)		//Reverse
