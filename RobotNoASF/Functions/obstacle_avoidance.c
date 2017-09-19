@@ -24,7 +24,8 @@
 #include "../Interfaces/twimux_interface.h"
 #include "../Interfaces/motor_driver.h"
 #include "../Interfaces/prox_sens_interface.h"
-
+#include "../Interfaces/timer_interface.h"
+#include "../Functions/motion_functions.h"
 #include "obstacle_avoidance.h"
 
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
@@ -47,14 +48,22 @@
 * Reads each proximity sensor and fills the proximity array with their values
 *
 */
-void scanProximity(void)
+void scanProximity(RobotGlobalStructure *sys)
 {
 	uint8_t index = 0;
-	for(uint16_t i = MUX_PROXSENS_A; i <= MUX_PROXSENS_B; i++)
+	static uint32_t pollProxTime = 0;
+	//If fast charge chip polling is enabled
+	if(sys->prox.pollEnabled && pollProxTime <= sys->timeStamp)
 	{
-		proximity[index] = proxSensRead(i);
-		index++;
-	}
+		//Store the time at which the charger status will next be polled
+		pollProxTime = sys->timeStamp + sys->prox.pollInterval;
+		for(uint16_t i = MUX_PROXSENS_A; i <= MUX_PROXSENS_B; i++)
+		{
+			proximity[index] = proxSensRead(i);
+			index++;
+			delay_ms(1);
+		}
+	}	
 }
 
 
@@ -79,13 +88,13 @@ void scanProximity(void)
 */
 uint8_t dodgeObstacle(RobotGlobalStructure *sys)
 {
-	scanProximity();// updates proximity sensors
+	scanProximity(sys);// updates proximity sensors
 	signed int proxRange = 0, proxRangeHigh, proxRangeLow;// value assigned by index, can be 0, 60, 120, 180, 240, 300
 	static char direction;
 	static char firstLoop = 1;
 	static char obs = 0;
 	static uint8_t original;
-	float heading;
+	float facing;
 	if(firstLoop)
 		original = sys->pos.targetHeading % 60;
 	uint8_t indexLeft, indexRight;//follows and leads index for the sake of checking proximity of nearby sensors
@@ -110,7 +119,6 @@ uint8_t dodgeObstacle(RobotGlobalStructure *sys)
 					if((proximity[indexLeft] > proximity[indexRight]))
 					{
 						sys->pos.targetHeading +=90;
-						//moveRobot(sys->pos.targetHeading, sys->pos.targetSpeed, 0);//move right
 						direction = RIGHT;
 						firstLoop = 0;
 						obs = 1;
@@ -118,7 +126,6 @@ uint8_t dodgeObstacle(RobotGlobalStructure *sys)
 					else if ((proximity[indexLeft] < proximity[indexRight]))
 					{
 						sys->pos.targetHeading -= 90;
-						//moveRobot(sys->pos.targetHeading, sys->pos.targetSpeed, 0);//move left
 						direction = LEFT;
 						firstLoop = 0;
 						obs = 1;
@@ -130,7 +137,6 @@ uint8_t dodgeObstacle(RobotGlobalStructure *sys)
 					sys->pos.targetHeading += 90;
 					if(sys->pos.targetHeading == 0)
 						sys->pos.targetHeading += 90;
-					//moveRobot(sys->pos.targetHeading, sys->pos.targetSpeed, 0);
 					direction = RIGHT;
 					obs = 0;
 				}
@@ -140,7 +146,6 @@ uint8_t dodgeObstacle(RobotGlobalStructure *sys)
 					sys->pos.targetHeading -= 90;
 					if(sys->pos.targetHeading == 0)
 						sys->pos.targetHeading -= 90;
-					//moveRobot(sys->pos.targetHeading, sys->pos.targetSpeed, 0);
 					direction = LEFT;
 					obs = 0;
 				}
@@ -148,31 +153,28 @@ uint8_t dodgeObstacle(RobotGlobalStructure *sys)
 				else if((proximity[index] > OBSTACLE_THRESHOLD) && (proximity[indexLeft] > 800) && (proximity[indexRight] > 800))
 				{
 					sys->pos.targetHeading -= 120;
-					//moveRobot(sys->pos.targetHeading, sys->pos.targetSpeed, 0);
 				}
 			}
 			else if (proximity[original] < OBSTACLE_THRESHOLD) //obstacle has been avoided
 			{
-				//moveRobot(sys->pos.targetHeading, sys->pos.targetSpeed, 0);
 				firstLoop = 1;
 				obs = 0;
 				return 0;
 			}
 		}
 	}
-	if(firstLoop)
-		heading = sys->pos.heading;
-	mfAdvancedMove(heading, sys->pos.targetHeading, sys->pos.targetSpeed, 0, sys);
-	if(sys->pos.targetHeading > 360)
+	facing = sys->pos.facing;
+	if(sys->pos.targetHeading >= 360)
 		sys->pos.targetHeading -= 360;
 	if(sys->pos.targetHeading < 0)
 		sys->pos.targetHeading +=360;
+	mfAdvancedMove(facing, sys->pos.targetHeading + facing, sys->pos.targetSpeed, 0, sys);
 	return 1;
 }
 
 void checkForObstacles(RobotGlobalStructure *sys)
 {
-	scanProximity();// updates proximity sensors
+	scanProximity(sys);// updates proximity sensors
 	signed int proxRange = 0, proxRangeHigh, proxRangeLow;// value assigned by index, can be 0, 60, 120, 180, 240, 300
 	uint8_t indexLeft, indexRight;//follows and leads index for the sake of checking proximity of nearby sensors
 	for(uint8_t index = 0; index <= 5 ; index++)//0, 1, 2, 3, 4, 5

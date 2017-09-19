@@ -34,6 +34,7 @@
 #include "../robot_setup.h"
 #include "motor_driver.h"
 #include "../Functions/test_functions.h"
+#include "../Functions/navigation_functions.h"	//nfWrapAngle in moveRobot()
 #include "timer_interface.h"				//delay_ms()
 #include <stdlib.h>							//abs()
 #include <tgmath.h>							//Trigonometry
@@ -434,6 +435,8 @@ void PWMSpeedTest(void)
 uint8_t moveRobot(float heading, float speed, float turnRatio)
 {
 	int8_t rearMotorSpeed, frontRightMotorSpeed, frontLeftMotorSpeed;
+	
+	heading = nfWrapAngle(heading);
 	
 	//If speed is set to 0, then save processor cycles
 	if(speed == 0.0)

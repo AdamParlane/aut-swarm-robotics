@@ -23,7 +23,6 @@
 
 //////////////[Defines]/////////////////////////////////////////////////////////////////////////////
 #define OBSTACLE_THRESHOLD 0x0100 //Subject to change on testing but seems reasonable
-#include "motion_functions.h"
 //////////////[Global Variables]///////////////////////////////////////////////////////////////////////////
 uint16_t proximity[6];
 
@@ -42,7 +41,7 @@ uint16_t proximity[6];
 * No return values
 *
 */
-void scanProximity(void);
+void scanProximity(RobotGlobalStructure *sys);
 
 /*
 * Function:

@@ -122,6 +122,13 @@ RobotGlobalStructure sys =
 		.testModeStreamInterval		= 100
 	},
 	
+	//Proximity Sensors
+	.prox = 
+	{
+		.pollEnabled				= 1,
+		.pollInterval				= 20
+	}, 
+	
 	//Robot Position
 	.pos =
 	{

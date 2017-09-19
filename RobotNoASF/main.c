@@ -111,7 +111,7 @@ int main(void)
 	uint8_t dockingReturn = 0;
 	float lineHeading = 0;
 	uint8_t obstacleFlag;
-	sys.states.mainf = M_IDLE;
+	sys.states.mainf = M_FORMATION;
 	sys.flags.obaEnabled = 1;
 	sys.flags.obaMoving	= 1;
 	while(1)
@@ -152,7 +152,7 @@ int main(void)
 			case M_FORMATION:
 			//placeholder
 				//mfAdvancedMove(0, 90, 50, 100, &sys);
-				moveRobot(0, 50, 0);
+				mfAdvancedMove(0, 0, 50, 25, &sys);
 				sys.pos.targetHeading = 0;
 				sys.pos.targetSpeed = 50;
 				break;
@@ -181,7 +181,6 @@ int main(void)
 				
 			case M_IDLE:					
 				mfStopRobot(&sys);
-				
 				if(!fdelay_ms(1000))					//Blink LED 3 in Idle mode
 					led3Tog;				
 				if(sys.pos.y > 32000)
@@ -201,7 +200,7 @@ int main(void)
 		pfPollPower(&sys);			//Poll battery and charging status
 		
 		//check to see if obstacle avoidance is enabled AND the robot is moving
-		if(sys.flags.obaEnabled && sys.flags.obaMoving && sys.states.mainf != M_OBSTACLE_AVOIDANCE)
-			checkForObstacles(&sys); //avoid obstacles using proximity sensors
+		//if(sys.flags.obaEnabled && sys.flags.obaMoving && sys.states.mainf != M_OBSTACLE_AVOIDANCE)
+			//checkForObstacles(&sys); //avoid obstacles using proximity sensors
 	}
 }

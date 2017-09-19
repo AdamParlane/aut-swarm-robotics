@@ -190,6 +190,13 @@ typedef struct ColourSensorData
 	unsigned short value;
 } ColourSensorData;
 
+//Stores proximity data, both raw and converted, for a single proximity sensor
+typedef struct ProximityData
+{
+	uint8_t pollEnabled;				//Whether or not to poll for new messages in main()
+	uint16_t pollInterval;				//Interval at which to poll at (ms)
+} ProximityData;
+
 typedef struct CommunicationData
 {
 	uint8_t pollEnabled;				//Whether or not to poll for new messages in main()
@@ -237,6 +244,7 @@ typedef struct RobotGlobalStructure
 	SystemStates states;			//System states
 	SystemFlags flags;				//System global flags
 	CommunicationData comms;		//Communication system control and data
+	ProximityData prox;				//Proximity information
 	Position pos;					//Position information
 	BatteryChargeData power;		//Battery/Charging info and control
 	uint32_t timeStamp;				//System timestamp (millisecs since power on)
