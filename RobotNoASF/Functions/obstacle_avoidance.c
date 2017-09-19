@@ -168,7 +168,7 @@ uint8_t dodgeObstacle(RobotGlobalStructure *sys)
 		sys->pos.targetHeading -= 360;
 	if(sys->pos.targetHeading < 0)
 		sys->pos.targetHeading +=360;
-	mfAdvancedMove(facing, sys->pos.targetHeading + facing, sys->pos.targetSpeed, 0, sys);
+	mfAdvancedMove( sys->pos.targetHeading + facing, facing, sys->pos.targetSpeed, 0, sys);
 	return 1;
 }
 
