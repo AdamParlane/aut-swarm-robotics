@@ -120,7 +120,13 @@ uint8_t uart3Write(uint8_t data)
 *
 * Implementation:
 * TODO: Mansel, implentation description for UART3 interrupt handler
-*
+
+*	Checks to see that we have data ready to be received
+*	Stores the incoming data into a temporary variable
+*	Checks if we receive a start delimiter out of sequence
+*	Checks if we receive a escape byte
+*	If the data needs to be escaped we calculate the correct byte
+*	
 */
 void UART3_Handler(void)
 {
@@ -142,8 +148,7 @@ void UART3_Handler(void)
 	{
 		temp = REG_UART3_RHR;	//store the incoming data in a temporary variable
 
-		if(temp == FRAME_DELIMITER && receiveState != START )//if we receive a start byte out of 
-															//sequence
+		if(temp == FRAME_DELIMITER && receiveState != START )//if we receive a start byte out of sequence
 			receiveState = START;	//reset back to the start state
 		else if(temp == ESCAPE_BYTE) //if the next byte needs to be escaped
 			escape = true;	//set the flag
