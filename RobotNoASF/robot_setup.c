@@ -125,8 +125,8 @@ RobotGlobalStructure sys =
 	//Robot Position
 	.pos =
 	{
-		.x							= 0.0,		//Resets robot position
-		.y							= 0.0,		//Resets robot position
+		.x							= 0,		//Resets robot position
+		.y							= 0,		//Resets robot position
 		.heading					= 0.0,		//Reset heading
 		.facingOffset				= 180,		//Ensures that whatever way the robot is facing when
 												//powered on is 0 degrees heading.
@@ -135,7 +135,7 @@ RobotGlobalStructure sys =
 		.IMU =
 		{
 			.pollEnabled			= 1,		//Enable IMU polling
-			.gyroCalEnabled			= 0			//Enables gyro calibration at start up. Takes 8sec,
+			.gyroCalEnabled			= 1			//Enables gyro calibration at start up. Takes 8sec,
 												//so best to disable while debugging
 		},
 		.Optical =

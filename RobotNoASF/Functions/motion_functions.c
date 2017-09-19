@@ -482,3 +482,44 @@ char mfAdvancedMove(float heading, float facing, uint8_t speed,
 	else
 		return pErrF;	//If not, return pErrF
 }
+
+int32_t mfMoveToPosition(int32_t x, int32_t y, uint8_t speed, float facing, 
+						uint8_t maxTurnRatio, RobotGlobalStructure *sys)
+{
+	enum {START, CALC_HEADING, MOVE_TO_POS, FINISHED};
+	static uint8_t state = START;
+	static float currentHeading = 0;
+	static uint32_t initialDistance;
+	static uint32_t distTravelled = 0;
+	
+	switch(state)
+	{
+		case START:
+			initialDistance = sqrt((x - sys->pos.x)*(x - sys->pos.x) + 
+									(y - sys->pos.y)*(y - sys->pos.y));
+			state = CALC_HEADING;
+			break;
+		
+		case CALC_HEADING:
+			distTravelled = 0;
+			
+			state = MOVE_TO_POS;
+			break;
+			
+		case MOVE_TO_POS:
+			
+			//distTravelled += sqrt(sys->pos.dx*sys->pos.dx + sys->pos.dy*sys->pos.dy);
+			currentHeading = atan2((x - sys->pos.x), (y - sys->pos.y))*180/M_PI;
+			mfAdvancedMove(currentHeading, facing, speed, maxTurnRatio, sys);
+			if((abs(x - sys->pos.x) < 10) && (abs(y - sys->pos.y) < 10))
+				state = FINISHED;
+			break;
+			
+		case FINISHED:
+			mfStopRobot(sys);
+			state = START;
+			break;
+	}
+	
+	return state;
+}

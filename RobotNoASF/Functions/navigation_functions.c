@@ -35,6 +35,7 @@
 #include "motion_functions.h"	//Temp used by nfOpticalTesting
 #include "navigation_functions.h"
 
+#include <math.h>				//Required for round() in nfProcessOpticalData()
 #include <tgmath.h>				//Required for atan2 in nfGetEulerAngles()
 
 //////////////[Defines]/////////////////////////////////////////////////////////////////////////////
@@ -186,8 +187,8 @@ void nfProcessOpticalData(RobotGlobalStructure *sys)
 	}
 	
 	//Calculate dx and dy in mm
-	sys->pos.dx = (float)sys->pos.Optical.dx*OPT_CONV_FACTOR;
-	sys->pos.dy = (float)sys->pos.Optical.dy*OPT_CONV_FACTOR;
+	sys->pos.dx = round(sys->pos.Optical.dx*OPT_CONV_FACTOR);
+	sys->pos.dy = round(sys->pos.Optical.dy*OPT_CONV_FACTOR);
 	
 	//Integrate absolute x and y in mm
 	sys->pos.x += sys->pos.dx;
@@ -257,6 +258,31 @@ void nfDMPEnable(char enable, RobotGlobalStructure *sys)
 	sys->pos.IMU.dmpEnabled = enable;
 }
 
+/*
+* Function:
+* void nfApplyPositionUpdateFromPC(uint8_t *rawData, RobotGlobalStructure *sys)
+*
+* Takes the raw data buffer containing position information and updates the robots current position
+*
+* Inputs:
+* uint8_t *rawData
+*   Pointer to the data buffer array retrieved from the xbee
+* RobotGlobalStructure *sys
+*   Pointer to the global robot data structure
+*
+* Returns:
+* [return values and any relevant explanation]
+*
+* Implementation:
+* [explain key steps of function]
+* [use heavy detail for anything complicated]
+* Template c file function header. H file function header will be the same without the
+* implementation/improvement section
+*
+* Improvements:
+* [Ideas for improvements that are yet to be made](optional)
+*
+*/
 void nfApplyPositionUpdateFromPC(uint8_t *rawData, RobotGlobalStructure *sys)
 {
 	//Update position

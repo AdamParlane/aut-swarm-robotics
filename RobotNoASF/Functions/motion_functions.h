@@ -173,5 +173,8 @@ void mfStopRobot(RobotGlobalStructure *sys);
 
 char mfAdvancedMove(float heading, float facing, uint8_t speed, 
 						uint8_t maxTurnRatio, RobotGlobalStructure *sys);
+						
+int32_t mfMoveToPosition(int32_t x, int32_t y, uint8_t speed, float facing,
+							uint8_t maxTurnRatio, RobotGlobalStructure *sys);
 
 #endif /* MOTION_FUNCTIONS_H_ */
