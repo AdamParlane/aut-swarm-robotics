@@ -119,13 +119,12 @@ uint8_t uart3Write(uint8_t data)
 * none
 *
 * Implementation:
-* TODO: Mansel, implentation description for UART3 interrupt handler
-
 *	Checks to see that we have data ready to be received
 *	Stores the incoming data into a temporary variable
 *	Checks if we receive a start delimiter out of sequence
 *	Checks if we receive a escape byte
 *	If the data needs to be escaped we calculate the correct byte
+*	Then we move through a receive state machine for the xbee frame with states for: start, length, data, checksum
 *	
 */
 void UART3_Handler(void)
