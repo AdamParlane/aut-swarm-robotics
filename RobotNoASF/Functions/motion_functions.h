@@ -37,7 +37,7 @@
 #define MTH_KP	4.0
 
 //PID constants for mfMoveToHeadingByDistance
-#define MTHD_KP	2.0
+#define MTHD_KP	2.8
 
 //PID constants for mfTrackLight
 #define TL_KP	10.0
@@ -50,6 +50,10 @@
 //PID constants for mfAdvancedMove
 #define AMH_KP	0.5		//Heading
 #define AMF_KP	3.0		//Facing
+
+//Motion function success conditions
+#define MF_FACING_ERR		0.1
+#define MF_DELTA_GYRO_ERR	0.5
 
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*

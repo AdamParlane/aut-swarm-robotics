@@ -102,7 +102,7 @@ float mfRotateToHeading(float heading, RobotGlobalStructure *sys)
 
 	//If error is less than 0.5 deg and delta yaw is less than 0.5 degrees per second then we can
 	//stop
-	if((abs(pErr) < 0.5) && (abs(sys->pos.IMU.gyroZ) < 0.5))	
+	if((abs(pErr) < MF_FACING_ERR) && (abs(sys->pos.IMU.gyroZ) < MF_DELTA_GYRO_ERR))	
 	{
 		mfStopRobot(sys);
 		pErr = 0;			//Clear the static vars so they don't interfere next time we call this
@@ -181,7 +181,7 @@ float mfMoveToHeading(float heading, uint8_t speed, RobotGlobalStructure *sys)
 	
 	//If error is less than 0.5 deg and delta yaw is less than 0.5 degrees per second then we can
 	//return 0 (ie robot is more or less on correct heading)
-	if((abs(pErr) < 0.5) && (abs(sys->pos.IMU.gyroZ) < 0.5))
+	if((abs(pErr) < MF_FACING_ERR) && (abs(sys->pos.IMU.gyroZ) < MF_DELTA_GYRO_ERR))
 		return 0;
 	else
 		return pErr;	//If not, return pErr	
@@ -235,10 +235,11 @@ float mfMoveToHeadingByDistance(float heading, uint8_t speed, float distance,
 		break;
 		
 		case MHD_MOVING:
-			speed = capToRangeUint(round((distance - distanceTravelled)*MTHD_KP), 0, 100);
+			//Once we are facing the right direction we can start keeping track of the distance 
+			//traveled.
+			speed = capToRangeUint(round((distance - distanceTravelled)*MTHD_KP + 25), 0, 100);
 			mfMoveToHeading(heading, speed, sys);
-			distanceTravelled += sys->pos.dy;//Once we are facing the right direction we can
-													//start keeping track of the distance traveled.
+			distanceTravelled += sqrt(sys->pos.dy*sys->pos.dy + sys->pos.dx*sys->pos.dx);
 			if(distanceTravelled > distance)		//If we have gone the distance
 				sys->states.moveHeadingDistance = MHD_STOP;//Time to stop.
 		break;
@@ -246,7 +247,7 @@ float mfMoveToHeadingByDistance(float heading, uint8_t speed, float distance,
 		case MHD_STOP:
 			mfStopRobot(sys);						//Stop robot
 			distanceTravelled = 0;					//Reset static distance variable
-			sys->states.moveHeadingDistance = MHD_START;	//Reset function state.
+			sys->states.moveHeadingDistance = MHD_START;//Reset function state.
 			return 0;								//Indicate that maneuver is complete
 		break;
 	}
@@ -295,17 +296,17 @@ float mfTrackLight(RobotGlobalStructure *sys)
 	dHeading = TL_KP*pErr + TL_KI*iErr;
 	dHeading = capToRangeInt(dHeading, -45, 45);
 	
+	mfMoveToHeading(sys->pos.facing + dHeading, 60, sys);
+	
 	//If error is less than 0.5 deg and delta yaw is less than 0.5 degrees per second then we can
 	//stop
-	if((abs(dHeading) < 0.5) && (abs(sys->pos.IMU.gyroZ) < 0.5))
+	if((abs(dHeading) < MF_FACING_ERR) && (abs(sys->pos.IMU.gyroZ) < MF_DELTA_GYRO_ERR))
 	{
-		mfStopRobot(sys);
 		pErr = 0;			//Clear the static vars so they don't interfere next time we call this
 							//function
 		iErr = 0;
 		return 0;
 	} else {
-		mfMoveToHeading(sys->pos.facing + dHeading, 60, sys);
 		return pErr;		//If not, return pErr
 	}
 }
@@ -363,7 +364,7 @@ float mfTrackLightProx(RobotGlobalStructure *sys)
 	
 	//If error is less than 0.5 deg and delta yaw is less than 0.5 degrees per second then we can
 	//stop
-	if((abs(dHeading) < 0.5) && (abs(sys->pos.IMU.gyroZ) < 0.5))
+	if((abs(dHeading) < MF_FACING_ERR) && (abs(sys->pos.IMU.gyroZ) < MF_DELTA_GYRO_ERR))
 	{
 		mfStopRobot(sys);
 		pErr = 0;			//Clear the static vars so they don't interfere next time we call this
@@ -454,10 +455,10 @@ char mfAdvancedMove(float heading, float facing, uint8_t speed,
 	//Force the P controller to always take the shortest path to the destination.
 	//For example if the robot was currently facing at -120 degrees and the target was 130 degrees,
 	//instead of going right around from -120 to 130, it will go to -180 and down to 130.
-	if(pErrH > 180)
-		pErrH -= 360;
-	if(pErrH < -180)
-		pErrH += 360;
+	//if(pErrH > 180)
+		//pErrH -= 360;
+	//if(pErrH < -180)
+		//pErrH += 360;
 
 	if(pErrF > 180)
 		pErrF -= 360;
@@ -476,7 +477,7 @@ char mfAdvancedMove(float heading, float facing, uint8_t speed,
 	
 	//If error is less than 0.5 deg and delta yaw is less than 0.5 degrees per second then we can
 	//return 0 (ie robot is more or less on correct heading)
-	if((abs(sys->pos.IMU.gyroZ) < 0.5) && (abs(pErrF) < 0.5))
+	if((abs(sys->pos.IMU.gyroZ) < MF_DELTA_GYRO_ERR) && (abs(pErrF) < MF_FACING_ERR))
 		return 0;
 	else
 		return pErrF;	//If not, return pErrF

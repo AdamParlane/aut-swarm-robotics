@@ -19,6 +19,7 @@
 * void nfGetEulerAngles(RobotGlobalStructure *sys)
 * float nfWrapAngle(float angleDeg)
 * void nfDMPEnable(char enable RobotGlobalStructure *sys)
+* void nfApplyPositionUpdateFromPC(uint8_t *rawData, RobotGlobalStructure *sys)
 *
 */
 
@@ -29,7 +30,9 @@
 
 #include "../Interfaces/imu_interface.h"
 #include "../Interfaces/opt_interface.h"
+#include "../Interfaces/timer_interface.h"	//temp used by nfOpticalTesting
 
+#include "motion_functions.h"	//Temp used by nfOpticalTesting
 #include "navigation_functions.h"
 
 #include <tgmath.h>				//Required for atan2 in nfGetEulerAngles()
@@ -252,4 +255,56 @@ void nfDMPEnable(char enable, RobotGlobalStructure *sys)
 	else
 		imuDmpStop();
 	sys->pos.IMU.dmpEnabled = enable;
+}
+
+void nfApplyPositionUpdateFromPC(uint8_t *rawData, RobotGlobalStructure *sys)
+{
+	//Update position
+	sys->pos.x = (uint16_t)((rawData[0]<<8)|rawData[1]);
+	sys->pos.y = (uint16_t)((rawData[2]<<8)|rawData[3]);
+	//Update facing
+	imuApplyYawCorrection((int16_t)((rawData[4]<<8)|rawData[5]), sys);
+}
+
+uint8_t nfOpticalTesting(uint8_t speed, uint8_t distance, RobotGlobalStructure *sys)
+{
+	static uint8_t state = 0;
+		
+	switch(state)
+	{
+		case 1:
+			if(!mfMoveToHeadingByDistance(0, speed, distance, sys))
+			if(!fdelay_ms(2500))
+				state = 2;
+			//mfAdvancedMove(0, -90, 100, 25, sys);
+			break;
+			
+		case 2:
+			if(!mfMoveToHeadingByDistance(90, speed, distance, sys))
+			if(!fdelay_ms(2500))
+				state = 3;
+			//mfAdvancedMove(-90, 0, 100, 25, sys);
+			
+			break;
+			
+		case 3:
+			if(!mfMoveToHeadingByDistance(180, speed, distance, sys))
+			if(!fdelay_ms(2500))
+				state = 4;
+			//mfAdvancedMove(180, 45, 100, 25, sys);
+		
+			break;
+			
+		case 4:
+			if(!mfMoveToHeadingByDistance(270, speed, distance, sys))
+			if(!fdelay_ms(2500))
+				state = 0;
+			//mfAdvancedMove(90, -135, 100, 25, sys);
+			break;
+			
+		case 0:
+			state = 1;
+			break;
+	}
+	return state;
 }

@@ -23,6 +23,7 @@
 
 #include "../Interfaces/xbee_driver.h"
 
+#include "navigation_functions.h"		//Updating robot position
 #include "motion_functions.h"
 #include "comm_functions.h"
 
@@ -88,30 +89,105 @@ void commGetNew(RobotGlobalStructure *sys)
 */
 void commInterpretSwarmMessage(RobotGlobalStructure *sys)
 {
+	uint8_t dataBuffer[20];
+
 	//handles the incoming commands and sets the appropriate states / flags calls functions
 	sys->flags.xbeeNewData = 1;
-	if(sys->comms.messageData.command >= 0xE0) //test command range 0xE0-0xEF
-		sys->states.mainf = M_TEST;
-	else if (sys->comms.messageData.command == 0xD0)
+
+	switch(sys->comms.messageData.command & 0xF0)
 	{
-		mfStopRobot(sys);
+		//Position commands
+		case 0xA0:
+			switch(sys->comms.messageData.command & 0x0F)
+			{
+				//X, Y position from PC
+				case 0x00:
+					xbeeCopyData(sys->comms.messageData, dataBuffer);
+					nfApplyPositionUpdateFromPC(dataBuffer, sys);
+					break;
+			}
+			break;
+		
+		//Test commands
+		case 0xE0:
+			sys->states.mainf = M_TEST;
+			break;
+
+		//Manual control
+		case 0xD0:
+			switch(sys->comms.messageData.command & 0x0F)
+			{
+				case 0x01:
+					sys->states.mainf = M_MANUAL;
+					break;
+
+				case 0x02:
+					sys->states.mainf = M_MANUAL;
+					break;
+
+				case 0x03:
+					sys->states.mainf = M_MANUAL;
+					break;
+
+				case 0x04:
+					//move robot randomly
+					mfRandomMovementGenerator();
+					break;
+					
+				case 0x05:
+					//0xD6 and D5 are also reserved for docking
+					//at a later date for different methods if required
+					break;
+					
+				case 0x06:
+					break; 
+					
+				case 0x07:
+					sys->states.mainf = M_DOCKING;
+					break;
+
+				case 0x08:
+					sys->flags.obaEnabled = 0;
+					break;
+
+				case 0x09:
+					sys->flags.obaEnabled = 1;
+					break;
+
+				case 0x0A:
+					sys->states.mainf = M_LIGHT_FOLLOW;
+					break;
+
+				case 0x0B:
+					sys->states.mainf = M_LINE_FOLLOW;
+					break;				
+			}
+			break;
+
+
+
 	}
-	//Manual command range 0xD1-0xD3
-	else if(sys->comms.messageData.command >= 0xD1 && sys->comms.messageData.command <= 0xD3) 
-		sys->states.mainf = M_MANUAL;
-	else if (sys->comms.messageData.command == 0xD4)
-		//move robot randomly
-		mfRandomMovementGenerator();
-	else if (sys->comms.messageData.command == 0xD7)
-		sys->states.mainf = M_DOCKING;
-	//0xD6 and D5 are also reserved for docking
-	//at a later date for different methods if required
-	else if (sys->comms.messageData.command == 0xD8)
-		sys->flags.obaEnabled = 0;
-	else if (sys->comms.messageData.command == 0xD9)
-		sys->flags.obaEnabled = 1;
-	else if (sys->comms.messageData.command == 0xDA)
-		sys->states.mainf = M_LIGHT_FOLLOW;
-	else if (sys->comms.messageData.command == 0xDB)
-		sys->states.mainf = M_LINE_FOLLOW;
+	//if(sys->comms.messageData.command >= 0xE0) //test command range 0xE0-0xEF
+		//sys->states.mainf = M_TEST;
+	//else if (sys->comms.messageData.command == 0xD0)
+	//{
+		//mfStopRobot(sys);
+	//}
+	////Manual command range 0xD1-0xD3
+	//else if(sys->comms.messageData.command >= 0xD1 && sys->comms.messageData.command <= 0xD3) 
+		//sys->states.mainf = M_MANUAL;
+	//else if (sys->comms.messageData.command == 0xD4)
+		////move robot randomly
+		//mfRandomMovementGenerator();
+	//else if (sys->comms.messageData.command == 0xD7)
+		//sys->states.mainf = M_DOCKING;
+//
+	//else if (sys->comms.messageData.command == 0xD8)
+		//sys->flags.obaEnabled = 0;
+	//else if (sys->comms.messageData.command == 0xD9)
+		//sys->flags.obaEnabled = 1;
+	//else if (sys->comms.messageData.command == 0xDA)
+		//sys->states.mainf = M_LIGHT_FOLLOW;
+	//else if (sys->comms.messageData.command == 0xDB)
+		//sys->states.mainf = M_LINE_FOLLOW;
 }
