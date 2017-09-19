@@ -110,7 +110,10 @@ int main(void)
 	uint8_t chargeCycleReturn = 0;
 	uint8_t dockingReturn = 0;
 	float lineHeading = 0;
-	uint8_t obstacleFlag;	
+	uint8_t obstacleFlag;
+	sys.states.mainf = M_IDLE;
+	sys.flags.obaEnabled = 1;
+	sys.flags.obaMoving	= 1;
 	while(1)
 	{
 		switch (sys.states.mainf)
@@ -148,6 +151,10 @@ int main(void)
 				
 			case M_FORMATION:
 			//placeholder
+				//mfAdvancedMove(0, 90, 50, 100, &sys);
+				moveRobot(0, 50, 0);
+				sys.pos.targetHeading = 0;
+				sys.pos.targetSpeed = 50;
 				break;
 						
 			case M_OBSTACLE_AVOIDANCE:
@@ -174,6 +181,7 @@ int main(void)
 				
 			case M_IDLE:					
 				mfStopRobot(&sys);
+				
 				if(!fdelay_ms(1000))					//Blink LED 3 in Idle mode
 					led3Tog;				
 				if(sys.pos.y > 32000)
@@ -184,8 +192,6 @@ int main(void)
 					led2On;
 				else
 					led2Off;
-				
-				
 				break;
 		}
 		commGetNew(&sys);				//Checks for and interprets new communications

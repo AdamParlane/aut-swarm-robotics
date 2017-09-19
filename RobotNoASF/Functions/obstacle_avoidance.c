@@ -85,6 +85,7 @@ uint8_t dodgeObstacle(RobotGlobalStructure *sys)
 	static char firstLoop = 1;
 	static char obs = 0;
 	static uint8_t original;
+	float heading;
 	if(firstLoop)
 		original = sys->pos.targetHeading % 60;
 	uint8_t indexLeft, indexRight;//follows and leads index for the sake of checking proximity of nearby sensors
@@ -109,7 +110,7 @@ uint8_t dodgeObstacle(RobotGlobalStructure *sys)
 					if((proximity[indexLeft] > proximity[indexRight]))
 					{
 						sys->pos.targetHeading +=90;
-						moveRobot(sys->pos.targetHeading, sys->pos.targetSpeed, 0);//move right
+						//moveRobot(sys->pos.targetHeading, sys->pos.targetSpeed, 0);//move right
 						direction = RIGHT;
 						firstLoop = 0;
 						obs = 1;
@@ -117,7 +118,7 @@ uint8_t dodgeObstacle(RobotGlobalStructure *sys)
 					else if ((proximity[indexLeft] < proximity[indexRight]))
 					{
 						sys->pos.targetHeading -= 90;
-						moveRobot(sys->pos.targetHeading, sys->pos.targetSpeed, 0);//move left
+						//moveRobot(sys->pos.targetHeading, sys->pos.targetSpeed, 0);//move left
 						direction = LEFT;
 						firstLoop = 0;
 						obs = 1;
@@ -129,7 +130,7 @@ uint8_t dodgeObstacle(RobotGlobalStructure *sys)
 					sys->pos.targetHeading += 90;
 					if(sys->pos.targetHeading == 0)
 						sys->pos.targetHeading += 90;
-					moveRobot(sys->pos.targetHeading, sys->pos.targetSpeed, 0);
+					//moveRobot(sys->pos.targetHeading, sys->pos.targetSpeed, 0);
 					direction = RIGHT;
 					obs = 0;
 				}
@@ -139,7 +140,7 @@ uint8_t dodgeObstacle(RobotGlobalStructure *sys)
 					sys->pos.targetHeading -= 90;
 					if(sys->pos.targetHeading == 0)
 						sys->pos.targetHeading -= 90;
-					moveRobot(sys->pos.targetHeading, sys->pos.targetSpeed, 0);
+					//moveRobot(sys->pos.targetHeading, sys->pos.targetSpeed, 0);
 					direction = LEFT;
 					obs = 0;
 				}
@@ -147,18 +148,21 @@ uint8_t dodgeObstacle(RobotGlobalStructure *sys)
 				else if((proximity[index] > OBSTACLE_THRESHOLD) && (proximity[indexLeft] > 800) && (proximity[indexRight] > 800))
 				{
 					sys->pos.targetHeading -= 120;
-					moveRobot(sys->pos.targetHeading, sys->pos.targetSpeed, 0);
+					//moveRobot(sys->pos.targetHeading, sys->pos.targetSpeed, 0);
 				}
 			}
 			else if (proximity[original] < OBSTACLE_THRESHOLD) //obstacle has been avoided
 			{
-				moveRobot(sys->pos.targetHeading, sys->pos.targetSpeed, 0);
+				//moveRobot(sys->pos.targetHeading, sys->pos.targetSpeed, 0);
 				firstLoop = 1;
 				obs = 0;
 				return 0;
 			}
 		}
 	}
+	if(firstLoop)
+		heading = sys->pos.heading;
+	mfAdvancedMove(heading, sys->pos.targetHeading, sys->pos.targetSpeed, 0, sys);
 	if(sys->pos.targetHeading > 360)
 		sys->pos.targetHeading -= 360;
 	if(sys->pos.targetHeading < 0)
