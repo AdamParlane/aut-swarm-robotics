@@ -15,7 +15,7 @@
 * Functions:
 * float mfRotateToHeading(float heading, RobotGlobalStructure *sys)
 * float mfMoveToHeading(float heading, uint8_t speed, RobotGlobalStructure *sys)
-* float mfMoveToHeadingByDistance(float heading, uint8_t speed, uint32_t distance,
+* float mfMoveToHeadingByDistance(float heading, uint8_t speed, float distance,
 *                                  RobotGlobalStructure *sys)
 * float mfTrackLight(RobotGlobalStructure *sys)
 * float mfTrackLightProx(RobotGlobalStructure *sys)
@@ -36,6 +36,9 @@
 //PID constants for mfMoveToHeading
 #define MTH_KP	4.0
 
+//PID constants for mfMoveToHeadingByDistance
+#define MTHD_KP	2.8
+
 //PID constants for mfTrackLight
 #define TL_KP	10.0
 #define TL_KI	0.001
@@ -47,6 +50,10 @@
 //PID constants for mfAdvancedMove
 #define AMH_KP	0.5		//Heading
 #define AMF_KP	3.0		//Facing
+
+//Motion function success conditions
+#define MF_FACING_ERR		0.1
+#define MF_DELTA_GYRO_ERR	0.5
 
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*
@@ -91,7 +98,7 @@ float mfMoveToHeading(float heading, uint8_t speed, RobotGlobalStructure *sys);
 
 /*
 * Function:
-* float mfMoveToHeadingByDistance(float heading, uint8_t speed, uint32_t distance,
+* float mfMoveToHeadingByDistance(float heading, uint8_t speed, float distance,
 *									 RobotGlobalStructure *sys);
 *
 * Will allow robot to move along the given heading a given distance.
@@ -101,7 +108,7 @@ float mfMoveToHeading(float heading, uint8_t speed, RobotGlobalStructure *sys);
 *   Heading to move along (-180 to 180 degrees)
 * uint8_t speed:
 *   Percentage of max speed to move at (0-100%)
-* uint32_t distance:
+* float distance:
 *   Distance to travel before stopping.
 * struct SystemStates *state
 *   Pointer to the sys.states data structure
@@ -112,7 +119,7 @@ float mfMoveToHeading(float heading, uint8_t speed, RobotGlobalStructure *sys);
 * 0 when maneuver is complete, otherwise returns distance remaining before maneuver complete.
 *
 */
-float mfMoveToHeadingByDistance(float heading, uint8_t speed, uint32_t distance, 
+float mfMoveToHeadingByDistance(float heading, uint8_t speed, float distance, 
 								 RobotGlobalStructure *sys);
 
 /*

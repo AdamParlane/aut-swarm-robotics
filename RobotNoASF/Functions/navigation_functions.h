@@ -17,6 +17,7 @@
 * void nfGetEulerAngles(RobotGlobalStructure *sys)
 * float nfWrapAngle(float angleDeg)
 * void nfDMPEnable(char enable RobotGlobalStructure *sys)
+* void nfApplyPositionUpdateFromPC(uint8_t *rawData, RobotGlobalStructure *sys)
 *
 */
 
@@ -118,5 +119,9 @@ float nfWrapAngle(float angleDeg);
 *
 */
 void nfDMPEnable(char enable, RobotGlobalStructure *sys);
+
+void nfApplyPositionUpdateFromPC(uint8_t *rawData, RobotGlobalStructure *sys);
+
+uint8_t nfOpticalTesting(uint8_t speed, uint8_t distance, RobotGlobalStructure *sys);
 
 #endif /* NAVIGATION_FUNCTIONS_H_ */
