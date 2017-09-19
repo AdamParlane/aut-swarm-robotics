@@ -15,7 +15,7 @@
 * Functions:
 * float mfRotateToHeading(float heading, RobotGlobalStructure *sys)
 * float mfMoveToHeading(float heading, uint8_t speed, RobotGlobalStructure *sys)
-* float mfMoveToHeadingByDistance(float heading, uint8_t speed, uint32_t distance,
+* float mfMoveToHeadingByDistance(float heading, uint8_t speed, float distance,
 *                                  RobotGlobalStructure *sys)
 * float mfTrackLight(RobotGlobalStructure *sys)
 * float mfTrackLightProx(RobotGlobalStructure *sys)
@@ -25,6 +25,8 @@
 */
 //////////////[Includes]////////////////////////////////////////////////////////////////////////////
 #include "../robot_setup.h"
+
+#include <math.h>		//For round()
 
 #include "../Interfaces/motor_driver.h"
 #include "../Interfaces/light_sens_interface.h"
@@ -187,7 +189,7 @@ float mfMoveToHeading(float heading, uint8_t speed, RobotGlobalStructure *sys)
 
 /*
 * Function:
-* float mfMoveToHeadingByDistance(float heading, uint8_t speed, uint32_t distance,
+* float mfMoveToHeadingByDistance(float heading, uint8_t speed, float distance,
 *									 RobotGlobalStructure *sys);
 *
 * Will allow robot to move along the given heading a given distance.
@@ -197,7 +199,7 @@ float mfMoveToHeading(float heading, uint8_t speed, RobotGlobalStructure *sys)
 *   Heading to move along (-180 to 180 degrees)
 * uint8_t speed:
 *   Percentage of max speed to move at (0-100%)
-* uint32_t distance:
+* float distance:
 *   Distance to travel before stopping.
 * struct SystemStates *state
 *   Pointer to the sys.states data structure
@@ -220,27 +222,29 @@ float mfMoveToHeading(float heading, uint8_t speed, RobotGlobalStructure *sys)
 * desired distance then the function returns the distance remaining to be traveled.
 *
 */
-float mfMoveToHeadingByDistance(float heading, uint8_t speed, uint32_t distance, RobotGlobalStructure *sys)
+float mfMoveToHeadingByDistance(float heading, uint8_t speed, float distance, 
+									RobotGlobalStructure *sys)
 {
 	static float distanceTravelled = 0;
 	
 	switch(sys->states.moveHeadingDistance)
 	{
 		case MHD_START:
-			if(!mfRotateToHeading(heading, sys))//Face the right direction
+			if(!mfRotateToHeading(heading, sys) && sys->pos.dy == 0)//Face the right direction
 				sys->states.moveHeadingDistance = MHD_MOVING;
 		break;
 		
 		case MHD_MOVING:
+			speed = capToRangeUint(round((distance - distanceTravelled)*MTHD_KP), 0, 100);
 			mfMoveToHeading(heading, speed, sys);
-			distanceTravelled += sys->pos.Optical.dy;//Once we are facing the right direction we can
+			distanceTravelled += sys->pos.dy;//Once we are facing the right direction we can
 													//start keeping track of the distance traveled.
 			if(distanceTravelled > distance)		//If we have gone the distance
 				sys->states.moveHeadingDistance = MHD_STOP;//Time to stop.
 		break;
 						
 		case MHD_STOP:
-			mfStopRobot(sys);							//Stop robot
+			mfStopRobot(sys);						//Stop robot
 			distanceTravelled = 0;					//Reset static distance variable
 			sys->states.moveHeadingDistance = MHD_START;	//Reset function state.
 			return 0;								//Indicate that maneuver is complete

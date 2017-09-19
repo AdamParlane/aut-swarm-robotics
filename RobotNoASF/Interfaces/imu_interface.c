@@ -35,8 +35,9 @@
 //////////////[Includes]////////////////////////////////////////////////////////////////////////////
 #include "../robot_setup.h"
 #include "twimux_interface.h"	//twi and multiplexer
-#include "../Functions/navigation_functions.h"
+#include "timer_interface.h"
 #include "imu_interface.h"
+#include "../Functions/navigation_functions.h"
 
 //Invensense Direct Motion Processing Driver Files
 #include "../IMU-DMP/inv_mpu_dmp_motion_driver_CUSTOM.h"//Direct Motion Processing setup functions
@@ -136,7 +137,10 @@ int imuDmpInit(char calibrateGyro)
 	result += mpu_set_dmp_state(1);						//Start DMP (also starts IMU interrupt)
 	
 	if(calibrateGyro)
-		result += dmp_enable_gyro_cal(1);					//Enable gyro calibration
+	{
+		delay_ms(8000);
+		result += dmp_enable_gyro_cal(1);				//Enable gyro calibration
+	}
 	
 	return result;
 }

@@ -183,8 +183,8 @@ void nfProcessOpticalData(RobotGlobalStructure *sys)
 	}
 	
 	//Calculate dx and dy in mm
-	sys->pos.dx = (float)sys->pos.Optical.dx*OPT_CONV_FACTOR/(float)sys->pos.deltaTime*1000.0;
-	sys->pos.dy = (float)sys->pos.Optical.dy*OPT_CONV_FACTOR/(float)sys->pos.deltaTime*1000.0;
+	sys->pos.dx = (float)sys->pos.Optical.dx*OPT_CONV_FACTOR;
+	sys->pos.dy = (float)sys->pos.Optical.dy*OPT_CONV_FACTOR;
 	
 	//Integrate absolute x and y in mm
 	sys->pos.x += sys->pos.dx;
