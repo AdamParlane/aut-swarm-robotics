@@ -19,6 +19,7 @@
 * void nfGetEulerAngles(RobotGlobalStructure *sys)
 * float nfWrapAngle(float angleDeg)
 * void nfDMPEnable(char enable RobotGlobalStructure *sys)
+* void nfApplyPositionUpdateFromPC(uint8_t *rawData, RobotGlobalStructure *sys)
 *
 */
 
@@ -29,9 +30,12 @@
 
 #include "../Interfaces/imu_interface.h"
 #include "../Interfaces/opt_interface.h"
+#include "../Interfaces/timer_interface.h"	//temp used by nfOpticalTesting
 
+#include "motion_functions.h"	//Temp used by nfOpticalTesting
 #include "navigation_functions.h"
 
+#include <math.h>				//Required for round() in nfProcessOpticalData()
 #include <tgmath.h>				//Required for atan2 in nfGetEulerAngles()
 
 //////////////[Defines]/////////////////////////////////////////////////////////////////////////////
@@ -183,8 +187,8 @@ void nfProcessOpticalData(RobotGlobalStructure *sys)
 	}
 	
 	//Calculate dx and dy in mm
-	sys->pos.dx = (float)sys->pos.Optical.dx*OPT_CONV_FACTOR/(float)sys->pos.deltaTime*1000.0;
-	sys->pos.dy = (float)sys->pos.Optical.dy*OPT_CONV_FACTOR/(float)sys->pos.deltaTime*1000.0;
+	sys->pos.dx = round(sys->pos.Optical.dx*OPT_CONV_FACTOR);
+	sys->pos.dy = round(sys->pos.Optical.dy*OPT_CONV_FACTOR);
 	
 	//Integrate absolute x and y in mm
 	sys->pos.x += sys->pos.dx;
@@ -252,4 +256,82 @@ void nfDMPEnable(char enable, RobotGlobalStructure *sys)
 	else
 		imuDmpStop();
 	sys->pos.IMU.dmpEnabled = enable;
+}
+
+/*
+* Function:
+* void nfApplyPositionUpdateFromPC(uint8_t *rawData, RobotGlobalStructure *sys)
+*
+* Takes the raw data buffer containing position information and updates the robots current position
+*
+* Inputs:
+* uint8_t *rawData
+*   Pointer to the data buffer array retrieved from the xbee
+* RobotGlobalStructure *sys
+*   Pointer to the global robot data structure
+*
+* Returns:
+* none
+*
+* Implementation:
+* Three 16bit unsigned integers representing the position of the robot in the arena in mm are sent
+* The first is x, the second is y and the third is a facing in degrees. The coordinate system of 
+* the web cam has the origin in the top left corner. On the robot however the origin would be the
+* bottom left corner. To bandage this, the y value is converted to negative (and the robot thinks
+* its working in the lower right quadrant)
+*
+* Improvements:
+* Find a better way to handle coordinated between the robot and PC
+*
+*/
+void nfApplyPositionUpdateFromPC(uint8_t *rawData, RobotGlobalStructure *sys)
+{
+	//Update position
+	sys->pos.x = (uint16_t)((rawData[0]<<8)|rawData[1]);
+	sys->pos.y = -(uint16_t)((rawData[2]<<8)|rawData[3]);
+	//Update facing
+	imuApplyYawCorrection((int16_t)((rawData[4]<<8)|rawData[5]), sys);
+}
+
+uint8_t nfOpticalTesting(uint8_t speed, uint8_t distance, RobotGlobalStructure *sys)
+{
+	static uint8_t state = 0;
+		
+	switch(state)
+	{
+		case 1:
+			if(!mfMoveToHeadingByDistance(0, speed, distance, sys))
+			if(!fdelay_ms(2500))
+				state = 2;
+			//mfAdvancedMove(0, -90, 100, 25, sys);
+			break;
+			
+		case 2:
+			if(!mfMoveToHeadingByDistance(90, speed, distance, sys))
+			if(!fdelay_ms(2500))
+				state = 3;
+			//mfAdvancedMove(-90, 0, 100, 25, sys);
+			
+			break;
+			
+		case 3:
+			if(!mfMoveToHeadingByDistance(180, speed, distance, sys))
+			if(!fdelay_ms(2500))
+				state = 4;
+			//mfAdvancedMove(180, 45, 100, 25, sys);
+		
+			break;
+			
+		case 4:
+			if(!mfMoveToHeadingByDistance(270, speed, distance, sys))
+			if(!fdelay_ms(2500))
+				state = 0;
+			//mfAdvancedMove(90, -135, 100, 25, sys);
+			break;
+			
+		case 0:
+			state = 1;
+			break;
+	}
+	return state;
 }

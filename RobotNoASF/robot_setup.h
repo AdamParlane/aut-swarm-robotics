@@ -142,10 +142,10 @@ typedef struct Position
 {
 	OpticalSensor Optical;		//Optical sensor raw data
 	IMUSensor IMU;				//IMU raw and converted data
-	float x;					//Absolute X position in arena (mm)
-	float y;					//Absolute Y position in arena (mm)
-	float dx;					//delta x in mm
-	float dy;					//delta y in mm
+	int32_t x;					//Absolute X position in arena (mm)
+	int32_t y;					//Absolute Y position in arena (mm)
+	int32_t dx;					//delta x in mm
+	int32_t dy;					//delta y in mm
 	float speed;				//Speed in mm per second
 	float heading;				//Absolute direction of travel (deg)
 	float relHeading;			//Relative heading of travel (to front of robot)

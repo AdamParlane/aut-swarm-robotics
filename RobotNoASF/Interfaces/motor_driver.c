@@ -450,7 +450,7 @@ uint8_t moveRobot(float heading, float speed, float turnRatio)
 	
 	//Calculate speed ratios
 	float rotationalSpeed = speed*(turnRatio/100.0);
-	float straightSpeed = abs(speed) - (abs(rotationalSpeed));
+	float straightSpeed = abs(speed)-(abs(rotationalSpeed));
 	
 	//Calculate individual motor speeds
 	rearMotorSpeed			= -straightSpeed*cos(RM_ANGLE_RAD - headingRad) + rotationalSpeed;

@@ -210,12 +210,12 @@ uint8_t imuCommTest(void);
 * float correctHeading
 *   Correct heading of the robot (from webcam) (between -180 and 180)
 * RobotGlobalStructure *sys
-*   Pointer to the sys->pos. structure
+*   Pointer to the sys structure
 *
 * Returns:
 * none
 *
 */
-void imuApplyYawCorrection(float correctHeading, RobotGlobalStructure *sys);
+void imuApplyYawCorrection(int16_t correctHeading, RobotGlobalStructure *sys);
 
 #endif /* IMU_INTERFACE_H_ */

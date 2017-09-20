@@ -125,8 +125,9 @@ RobotGlobalStructure sys =
 	//Robot Position
 	.pos =
 	{
-		.x							= 0.0,		//Resets robot position
-		.y							= 0.0,		//Resets robot position
+		.x							= 0,		//Resets robot position
+		.y							= 0,		//Resets robot position
+		.heading					= 0.0,		//Reset heading
 		.facingOffset				= 180,		//Ensures that whatever way the robot is facing when
 												//powered on is 0 degrees heading.
 		.targetHeading				= 0,		//Default heading is 0 degrees
@@ -152,7 +153,7 @@ RobotGlobalStructure sys =
 		.fcChipFaultFlag			= 0,		//Fast charge fault flag
 		.pollBatteryEnabled			= 1,		//Battery polling enabled
 		.pollChargingStateEnabled	= 0,		//Charge status polling disabled
-		.pollChargingStateInterval	= 0,		//Poll charging status as fast as possible
+		.pollChargingStateInterval	= 100,		//Poll charging status as fast as possible
 		.pollBatteryInterval		= 30000,	//Poll battery every thirty seconds
 		.chargeWatchDogEnabled		= 0,		//Watchdog enabled
 		.chargeWatchDogInterval		= 1000		//How often to send watchdog pulse to FC chip
@@ -207,7 +208,9 @@ void robotSetup(void)
 	mouseInit();						//Initialise mouse sensor
 	lfInit();							//Initialise line follow sensors. Only on V2.
 	
-	delay_ms(2500);						//Stops robot running away while programming
+	if(!sys.pos.IMU.gyroCalEnabled)		//If gyro cal no enabled (because it introduces its own
+										//delay
+		delay_ms(2500);					//Stops robot running away while programming
 	srand(sys.timeStamp);				//Seed rand() to give unique random numbers
 	return;
 }

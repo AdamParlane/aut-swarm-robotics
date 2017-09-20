@@ -147,7 +147,9 @@ int main(void)
 				break;
 				
 			case M_FORMATION:
-			//placeholder
+				if(!mfMoveToPosition(200, 200, 50, 0, 40, &sys))
+				//mfAdvancedMove(0, 0, 100, 25, &sys);
+					sys.states.mainf = M_IDLE;
 				break;
 						
 			case M_OBSTACLE_AVOIDANCE:
