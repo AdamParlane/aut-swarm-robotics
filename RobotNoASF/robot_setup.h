@@ -197,13 +197,13 @@ typedef struct ColourSensorData
 //because there is a gray area when the sensor is half on and half off the line, so by establishing
 //hysteresis and only changing the stored states when an upper and lower threshold is crossed,
 //jitter should be reduced.
-struct LineSensorArray
+typedef struct LineSensorArray
 {
 	uint8_t outerLeft;
 	uint8_t innerLeft;
 	uint8_t innerRight;
 	uint8_t outerRight;
-};
+} LineSensorArray;
 
 typedef struct CommunicationData
 {

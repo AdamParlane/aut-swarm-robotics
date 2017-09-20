@@ -91,7 +91,7 @@ uint8_t dfDockRobot( RobotGlobalStructure *sys)
 				mfStopRobot(sys);
 				sys->states.docking = DS_RESCAN_BRIGHTEST;
 			}
-			if(dfUpdateLineSensorStates())	//If line found then follow it
+			if(dfUpdateLineSensorStates(sys))	//If line found then follow it
 			{
 				mfStopRobot(sys);
 				lineFound = 1;
@@ -395,7 +395,7 @@ uint8_t dfFollowLine(uint8_t speed, float *lineHeading,	RobotGlobalStructure *sy
 				sys->states.followLine = FLS_FINISH;
 			break;
 		
-		FLS_GIVE_UP:						//If the line has been lost
+		case FLS_GIVE_UP:						//If the line has been lost
 			sys->states.followLine = FLS_START;
 			break;
 		
