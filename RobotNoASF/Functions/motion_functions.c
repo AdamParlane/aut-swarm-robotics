@@ -298,7 +298,7 @@ float mfTrackLight(RobotGlobalStructure *sys)
 			
 	//If dHeading ends up being out of range, then dial it back
 	dHeading = TL_KP*pErr + TL_KI*iErr;
-	dHeading = capToRangeInt(dHeading, -45, 45);
+	dHeading = capToRangeInt(dHeading, -60, 60);
 	
 	mfMoveToHeading(sys->pos.facing + dHeading, 60, sys);
 	
@@ -311,6 +311,7 @@ float mfTrackLight(RobotGlobalStructure *sys)
 		iErr = 0;
 		return 0;
 	} else {
+		mfMoveToHeading(sys->pos.facing + dHeading, 70, sys);
 		return pErr;		//If not, return pErr
 	}
 }
@@ -577,19 +578,17 @@ int32_t mfMoveToPosition(int32_t x, int32_t y, uint8_t speed, float facing,
 	enum {START, CALC_HEADING, MOVE_TO_POS, FINISHED};
 	static uint8_t state = START;
 	static float currentHeading = 0;
-	static uint32_t initialDistance;
-	static uint32_t distTravelled = 0;
 	
 	switch(state)
 	{
 		case START:
-			initialDistance = sqrt((x - sys->pos.x)*(x - sys->pos.x) + 
-									(y - sys->pos.y)*(y - sys->pos.y));
+			//initialDistance = sqrt((x - sys->pos.x)*(x - sys->pos.x) + 
+			//						(y - sys->pos.y)*(y - sys->pos.y));
 			state = CALC_HEADING;
 			break;
 		
 		case CALC_HEADING:
-			distTravelled = 0;
+			//distTravelled = 0;
 			
 			state = MOVE_TO_POS;
 			break;
