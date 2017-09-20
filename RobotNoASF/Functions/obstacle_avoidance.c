@@ -63,17 +63,17 @@ void scanProximity(RobotGlobalStructure *sys)
 			index++;
 			delay_ms(1);
 		}
-		//if(!checkProximity())
-		//{
-			////error so reset sensors
-			//proxSensInit();		//Initialise proximity sensors
-			////delay_ms(50);
-			//sys->prox.errorCount ++;
-			//if(sys->prox.errorCount < 2)
-				//scanProximity(sys);	//rescan the sensors
-		//}
-		//else
-			//sys->prox.errorCount = 0;
+		if(!checkProximity())
+		{
+			//error so reset sensors
+			proxSensInit();		//Initialise proximity sensors
+			//delay_ms(50);
+			sys->prox.errorCount ++;
+			if(sys->prox.errorCount < 2)
+				scanProximity(sys);	//rescan the sensors
+		}
+		else
+			sys->prox.errorCount = 0;
 	}	
 }
 
@@ -85,7 +85,7 @@ uint8_t checkProximity(void)
 		if(proximity[i] == proximity[i+1])//compare each proximity sensor with the one after it
 			matches ++; //count the number of matches
 	}
-	if(matches <= 5)//if they are not all the same
+	if(matches <= 4)//if they are not all the same
 		return 1;//return 1 sensors are okay
 	else
 		return 0;//return 0 problem with sensors
@@ -119,7 +119,7 @@ uint8_t dodgeObstacle(RobotGlobalStructure *sys)
 	static char firstLoop = 1;
 	static char obs = 0;
 	static uint8_t original;
-	float facing;
+	static float facing = 0;
 	if(firstLoop)
 		original = sys->pos.targetHeading % 60;
 	uint8_t indexLeft, indexRight;//follows and leads index for the sake of checking proximity of nearby sensors
@@ -190,9 +190,9 @@ uint8_t dodgeObstacle(RobotGlobalStructure *sys)
 	}
 	if(firstLoop)
 		facing = sys->pos.facing;
-	if(sys->pos.targetHeading >= 360)
+	while(sys->pos.targetHeading >= 360)
 		sys->pos.targetHeading -= 360;
-	if(sys->pos.targetHeading < 0)
+	while(sys->pos.targetHeading < 0)
 		sys->pos.targetHeading +=360;
 	mfAdvancedMove( sys->pos.targetHeading + facing, facing, sys->pos.targetSpeed, 0, sys);
 	return 1;
