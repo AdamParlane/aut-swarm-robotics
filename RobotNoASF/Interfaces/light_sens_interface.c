@@ -58,7 +58,7 @@
 */
 void lightSensInit(uint8_t channel)
 {
-	uint8_t writeBuffer = LS_AUTO|LS_80MS;	//Auto trigger, 80ms integration time
+	uint8_t writeBuffer = LS_AUTO|LS_40MS;	//Auto trigger, 80ms integration time
 	twi0MuxSwitch(channel); //Set multiplexer address to correct device
 	twi0Write(TWI0_LIGHTSENS_ADDR, LS_CONFIG_REG, 1, &writeBuffer);
 }

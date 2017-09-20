@@ -69,6 +69,7 @@ typedef enum FollowLineStates
 	FLS_FIRST_CONTACT,
 	FLS_ALIGN,
 	FLS_FOLLOW,
+	FLS_GIVE_UP,
 	FLS_FINISH
 } FollowLineStates;
 
@@ -192,6 +193,18 @@ typedef struct ColourSensorData
 	unsigned short value;
 } ColourSensorData;
 
+//Will store states of the line sensors. This is necessary
+//because there is a gray area when the sensor is half on and half off the line, so by establishing
+//hysteresis and only changing the stored states when an upper and lower threshold is crossed,
+//jitter should be reduced.
+struct LineSensorArray
+{
+	uint8_t outerLeft;
+	uint8_t innerLeft;
+	uint8_t innerRight;
+	uint8_t outerRight;
+};
+
 typedef struct CommunicationData
 {
 	uint8_t pollEnabled;				//Whether or not to poll for new messages in main()
@@ -233,11 +246,20 @@ typedef struct SystemStates
 	MTHByDistanceStates moveHeadingDistance;
 } SystemStates;
 
+//Sensors sub-structure
+typedef struct SensorData
+{
+	LineSensorArray line;
+	ColourSensorData colourLeft;
+	ColourSensorData colourRight;
+} SensorData;
+
 //Structure to combine all system globals
 typedef struct RobotGlobalStructure
 {
 	SystemStates states;			//System states
 	SystemFlags flags;				//System global flags
+	SensorData sensors;				//Sensor data
 	CommunicationData comms;		//Communication system control and data
 	Position pos;					//Position information
 	BatteryChargeData power;		//Battery/Charging info and control

@@ -15,8 +15,8 @@
 * Functions:
 * void dfDockRobot(void)
 * void dfUpdateLineSensorStates(void)
-* int8_t dfGetLineDirection(void)
-* uint8_t dfFollowLine(void)
+* int8_t dfGetLineDirection(RobotGlobalStructure *sys)
+* uint8_t dfFollowLine(uint8_t speed, float *lineHeading, RobotGlobalStructure *sys)
 * uint8_t dfScanBrightestLightSource(int16_t *brightestHeading)
 *
 */
@@ -58,11 +58,11 @@ uint8_t dfDockRobot(RobotGlobalStructure *sys);
 * 1 if line state change detected, otherwise 0
 *
 */
-uint8_t dfUpdateLineSensorStates(void);
+uint8_t dfUpdateLineSensorStates(RobotGlobalStructure *sys);
 
 /*
 * Function:
-* int8_t dfGetLineDirection(void)
+* int8_t dfGetLineDirection(RobotGlobalStructure *sys)
 *
 * This function examines the states of the line follower sensors and determines the direction and
 * urgency factor by which the robot should move to find its way to the centre of the line.
@@ -78,7 +78,7 @@ uint8_t dfUpdateLineSensorStates(void);
 * able to be derived from sensor array.
 *
 */
-int8_t dfGetLineDirection(void);
+int8_t dfGetLineDirection(RobotGlobalStructure *sys);
 
 /*
 * Function:
@@ -110,6 +110,10 @@ uint8_t dfFollowLine(uint8_t speed, float *lineHeading, RobotGlobalStructure *sy
 * Inputs:
 * int16_t *brightestHeading
 *   A pointer to a variable that contains a heading to the brightest detected light source so far.
+* uint16_t sweepAngle:
+*   The size of the arc to scan (360 would be a complete rotation)
+* RobotGlobalStructure *sys
+*   Pointer to the global robot data structure.
 *
 * Returns:
 * Returns a 1 if the function hasn't completed yet, or a 0 if it has. When the function returns a 0
