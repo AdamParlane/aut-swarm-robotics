@@ -147,7 +147,9 @@ int main(void)
 				break;
 				
 			case M_FORMATION:
-			//placeholder
+				if(!mfMoveToPosition(200, 200, 50, 0, 40, &sys))
+				//mfAdvancedMove(0, 0, 100, 25, &sys);
+					sys.states.mainf = M_IDLE;
 				break;
 						
 			case M_OBSTACLE_AVOIDANCE:
@@ -176,14 +178,7 @@ int main(void)
 				mfStopRobot(&sys);
 				if(!fdelay_ms(1000))					//Blink LED 3 in Idle mode
 					led3Tog;				
-				if(sys.pos.y > 32000)
-					led1On;
-				else
-					led1Off;
-				if(sys.pos.y < 0)
-					led2On;
-				else
-					led2Off;
+				//mfRotateToHeading(0,&sys);
 				
 				
 				break;
