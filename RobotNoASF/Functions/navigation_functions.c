@@ -271,23 +271,24 @@ void nfDMPEnable(char enable, RobotGlobalStructure *sys)
 *   Pointer to the global robot data structure
 *
 * Returns:
-* [return values and any relevant explanation]
+* none
 *
 * Implementation:
-* [explain key steps of function]
-* [use heavy detail for anything complicated]
-* Template c file function header. H file function header will be the same without the
-* implementation/improvement section
+* Three 16bit unsigned integers representing the position of the robot in the arena in mm are sent
+* The first is x, the second is y and the third is a facing in degrees. The coordinate system of 
+* the web cam has the origin in the top left corner. On the robot however the origin would be the
+* bottom left corner. To bandage this, the y value is converted to negative (and the robot thinks
+* its working in the lower right quadrant)
 *
 * Improvements:
-* [Ideas for improvements that are yet to be made](optional)
+* Find a better way to handle coordinated between the robot and PC
 *
 */
 void nfApplyPositionUpdateFromPC(uint8_t *rawData, RobotGlobalStructure *sys)
 {
 	//Update position
 	sys->pos.x = (uint16_t)((rawData[0]<<8)|rawData[1]);
-	sys->pos.y = (uint16_t)((rawData[2]<<8)|rawData[3]);
+	sys->pos.y = -(uint16_t)((rawData[2]<<8)|rawData[3]);
 	//Update facing
 	imuApplyYawCorrection((int16_t)((rawData[4]<<8)|rawData[5]), sys);
 }

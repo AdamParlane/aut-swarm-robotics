@@ -94,7 +94,7 @@ void commInterpretSwarmMessage(RobotGlobalStructure *sys)
 	//handles the incoming commands and sets the appropriate states / flags calls functions
 	sys->flags.xbeeNewData = 1;
 
-	switch(sys->comms.messageData.command & 0xF0)
+	switch(sys->comms.messageData.command & 0xF0)	//Look at upper nibble only
 	{
 		//Position commands
 		case 0xA0:
