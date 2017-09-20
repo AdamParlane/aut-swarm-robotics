@@ -93,7 +93,7 @@ void pfPollPower(RobotGlobalStructure *sys)
 	}
 	
 	//If Charger Watchdog is enabled and chargeWatchDogEnabled flag has just been set, or 
-	//chargeWatchDagTime has elapsed then poll
+	//chargeWatchDogTime has elapsed then poll
 	if(sys->power.pollChargingStateEnabled && chargerWatchDogTime <= sys->timeStamp)
 	{
 		//Set time at which watchdog will next be triggered
@@ -135,14 +135,12 @@ void pfPollPower(RobotGlobalStructure *sys)
 uint8_t pfChargeCycleHandler(RobotGlobalStructure *sys)
 {
 	static float currentHeading = 0;
-	uint8_t chipState = 0;
-	fcWatchdogReset();							//Reset watchdog timer on fc chip
-	chipState = fcState();
 	
 	switch(sys->states.chargeCycle)
 	{
 		case CCS_CHECK_POWER:
-			if(chipState == FC_BATTERY_CHARGING || chipState == FC_POWER_CONNECTED)
+			if(sys->power.fcChipStatus == FC_BATTERY_CHARGING 
+			|| sys->power.fcChipStatus == FC_POWER_CONNECTED)
 				sys->states.chargeCycle = CCS_CHARGING;
 			break;
 		
@@ -150,15 +148,17 @@ uint8_t pfChargeCycleHandler(RobotGlobalStructure *sys)
 			//Blink LED
 			if(!fdelay_ms(250))
 				led3Tog;
-			if(chipState == FC_BATTERY_CHARGED)	//If finished charging
+			if(sys->power.fcChipStatus == FC_BATTERY_CHARGED)	//If finished charging
 				sys->states.chargeCycle = CCS_DISMOUNT;
 
-			if((chipState & 0xF0) == 0xF0)		//If fault (Upper nibble = F)
+			if(sys->power.fcChipFaultFlag)						//If fault (Upper nibble = F)
+			{
 				sys->states.chargeCycle = CCS_FAULT;
+			}
 			break;
 		
 		case CCS_FAULT:
-			fcEnableCharging(0);				//Stop charging
+			sys->power.fcChipFaultFlag = 0;
 			sys->states.chargeCycle = CCS_DISMOUNT;
 			return 0xFF;						//Indicate that a fault occurred
 		

@@ -105,7 +105,7 @@ RobotGlobalStructure sys =
 	//System States
 	.states =
 	{
-		.mainf						= M_IDLE,
+		.mainf						= M_CHARGING,
 		.mainfPrev					= M_IDLE,
 		.docking					= DS_START,
 		.chargeCycle				= CCS_CHECK_POWER,
@@ -134,7 +134,7 @@ RobotGlobalStructure sys =
 		.IMU =
 		{
 			.pollEnabled			= 1,		//Enable IMU polling
-			.gyroCalEnabled			= 1			//Enables gyro calibration at start up. Takes 8sec,
+			.gyroCalEnabled			= 0			//Enables gyro calibration at start up. Takes 8sec,
 												//so best to disable while debugging
 		},
 		.Optical =
@@ -146,14 +146,16 @@ RobotGlobalStructure sys =
 	//Power/Battery/Charge
 	.power =
 	{
-		.batteryDockingVoltage		= 3500,		//Battery voltage at which its time to find charger
-		.batteryMaxVoltage			= 3800,		//Maximum battery voltage (full charge)
+		.batteryDockingVoltage		= 3550,		//Battery voltage at which its time to find charger
+		.batteryMaxVoltage			= 3900,		//Maximum battery voltage (full charge)
 		.batteryMinVoltage			= 3300,		//Dead flat battery voltage
 		.fcChipFaultFlag			= 0,		//Fast charge fault flag
 		.pollBatteryEnabled			= 1,		//Battery polling enabled
 		.pollChargingStateEnabled	= 0,		//Charge status polling disabled
 		.pollChargingStateInterval	= 0,		//Poll charging status as fast as possible
-		.pollBatteryInterval		= 30000		//Poll battery every thirty seconds
+		.pollBatteryInterval		= 30000,	//Poll battery every thirty seconds
+		.chargeWatchDogEnabled		= 0,		//Watchdog enabled
+		.chargeWatchDogInterval		= 1000		//How often to send watchdog pulse to FC chip
 	},
 	
 	.timeStamp = 0								//millisecs since power on

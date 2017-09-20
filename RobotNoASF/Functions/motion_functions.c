@@ -289,19 +289,18 @@ float mfTrackLight(RobotGlobalStructure *sys)
 			
 	//If dHeading ends up being out of range, then dial it back
 	dHeading = TL_KP*pErr + TL_KI*iErr;
-	dHeading = capToRangeInt(dHeading, -45, 45);
+	dHeading = capToRangeInt(dHeading, -60, 60);
 	
 	//If error is less than 0.5 deg and delta yaw is less than 0.5 degrees per second then we can
 	//stop
 	if((abs(dHeading) < 0.5) && (abs(sys->pos.IMU.gyroZ) < 0.5))
 	{
-		mfStopRobot(sys);
 		pErr = 0;			//Clear the static vars so they don't interfere next time we call this
 							//function
 		iErr = 0;
 		return 0;
 	} else {
-		mfMoveToHeading(sys->pos.facing + dHeading, 60, sys);
+		mfMoveToHeading(sys->pos.facing + dHeading, 70, sys);
 		return pErr;		//If not, return pErr
 	}
 }
