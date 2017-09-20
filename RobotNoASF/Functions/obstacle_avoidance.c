@@ -135,6 +135,7 @@ uint8_t dodgeObstacle(RobotGlobalStructure *sys)
 		indexLeft = 0;
 		if(indexRight > 5)
 		indexRight = 5;
+		//TO DO 
 		if(sys->pos.targetHeading > proxRangeLow && sys->pos.targetHeading <= proxRangeHigh) // if the prox is on the FACE we care about
 		{
 			if((proximity[index] > OBSTACLE_THRESHOLD) || (proximity[indexLeft] > 1000) || (proximity[indexRight] > 1000))
@@ -156,6 +157,11 @@ uint8_t dodgeObstacle(RobotGlobalStructure *sys)
 						obs = 1;
 					}
 				}
+				//stuck in a corner
+				else if((proximity[index] > OBSTACLE_THRESHOLD) && (proximity[indexLeft] > 500) && (proximity[indexRight] > 500))
+				{
+					sys->pos.targetHeading -= 120;
+				}
 				//moving left but its getting worse
 				else if ((direction == LEFT) && (proximity[indexLeft] > (proximity[indexRight] + 100)) && (proximity[indexLeft] > 600 || obs))
 				{
@@ -174,11 +180,6 @@ uint8_t dodgeObstacle(RobotGlobalStructure *sys)
 					direction = LEFT;
 					obs = 0;
 				}
-				//stuck in a corner
-				else if((proximity[index] > OBSTACLE_THRESHOLD) && (proximity[indexLeft] > 800) && (proximity[indexRight] > 800))
-				{
-					sys->pos.targetHeading -= 120;
-				}
 			}
 			else if (proximity[original] < OBSTACLE_THRESHOLD) //obstacle has been avoided
 			{
@@ -190,6 +191,7 @@ uint8_t dodgeObstacle(RobotGlobalStructure *sys)
 	}
 	if(firstLoop)
 		facing = sys->pos.facing;
+	//sys->pos.targetHeading = nfWrapAngle(sys->pos.targetHeading) + 180;
 	while(sys->pos.targetHeading >= 360)
 		sys->pos.targetHeading -= 360;
 	while(sys->pos.targetHeading < 0)

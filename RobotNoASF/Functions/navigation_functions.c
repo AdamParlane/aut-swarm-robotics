@@ -222,8 +222,6 @@ void nfProcessOpticalData(RobotGlobalStructure *sys)
 */
 float nfWrapAngle(float angleDeg)
 {
-	if(angleDeg > 1000)
-		angleDeg = 0;
 	while(angleDeg > 180.0)
 		angleDeg -= 360.0;
 	while(angleDeg < -179.99)
