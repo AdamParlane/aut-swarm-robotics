@@ -292,7 +292,7 @@ void xbeeInterpretAPIFrame(struct FrameInfo Xbeeframe)
 * none
 *
 * Implementation:
-* TODO: Mansel implementation description
+* Copies data into a single array for the correct format required by the Xbee protocol
 *
 */
 void xbeeSendAPITransmitRequest(uint64_t destination_64, uint16_t destination_16,
@@ -339,15 +339,16 @@ void xbeeSendAPITransmitRequest(uint64_t destination_64, uint16_t destination_16
 *
 * Inputs:
 * uint8_t *frame_data:
-*   TODO: Mansel input description
+*   The data of the xbee frame to be sent
 * int len:
-*   TODO: Mansel input description
+*   The length of the frame data
 *
 * Returns:
 * none
 *
 * Implementation:
-* TODO: Mansel implementation description
+* Adds the xbee header: frame delimiter and length, frame data and calculates the checksum and places it all in a single array
+* Sends the entire frame to the xbee over the uart escaping the characters as required by xbee API mode 2
 *
 */
 static void xbeeSendAPIFrame(uint8_t *frame_data, int len)
@@ -399,13 +400,16 @@ static void xbeeSendAPIFrame(uint8_t *frame_data, int len)
 *
 * Inputs:
 * struct FrameInfo * info:
-*   TODO: Mansel input desc
+*	Pointer to the structure to store the information on the Xbee Frame retrieved from the buffer.
 *
 * Returns:
-* TODO: Mansel return desc
+*	0: No errors
+*	-1: Buffer empty
 *
 * Implementation:
-* TODO: Mansel implementation description
+*	Checks to see if the buffer is empty
+*	Fetches the info structure from the buffer
+*	Updates the buffer book keeping variables
 *
 */
 int xbeeFrameBufferInfoGetFull(struct FrameInfo * info)
@@ -433,13 +437,16 @@ int xbeeFrameBufferInfoGetFull(struct FrameInfo * info)
 *
 * Inputs:
 * struct MessageInfo * info:
-*   TODO: Mansel input desc
+*	Pointer to the structure to store the information on the swarm message retrieved from the buffer.
 *
 * Returns:
-* TODO: Mansel return desc
+*	0: No errors
+*	-1: Buffer empty
 *
 * Implementation:
-* TODO: Mansel implementation description
+*	Checks to see if the buffer is empty
+*	Fetches the info structure from the buffer
+*	Updates the buffer book keeping variables
 *
 */
 int xbeeMessageBufferInfoGetFull(struct MessageInfo * info)
@@ -472,7 +479,7 @@ int xbeeMessageBufferInfoGetFull(struct MessageInfo * info)
 * none
 *
 * Implementation:
-* TODO: Mansel implementation description
+*	Sets the buffer book keeping variables to point to the beginning of the array
 *
 */
 static void xbeeFrameBufferInit(void)
@@ -491,14 +498,16 @@ static void xbeeFrameBufferInit(void)
 *
 * Inputs:
 * uint8_t new:
-*   TODO: Mansel input desc
+*  the new data to add to the end of the array
 *
 * Returns:
-* TODO: Mansel return desc
+*	0: No errors
+*	-1: Buffer full
 *
 * Implementation:
-* TODO: Mansel implementation description
-*
+*	Checks that the buffer is not full
+*	Puts the new byte into the buffer
+*	Updates our buffer book keeping variables
 */
 int xbeeFrameBufferPut(uint8_t new)
 {
@@ -525,13 +534,16 @@ int xbeeFrameBufferPut(uint8_t new)
 *
 * Inputs:
 * uint8_t *old:
-*   TODO: Mansel input desc
+*   Pointer to where the oldest byte should be stored
 *
 * Returns:
-* TODO: Mansel return desc
+*	0: No errors
+*	-1: Buffer empty
 *
 * Implementation:
-* TODO: Mansel implementation description
+*	Checks to see if the buffer is empty
+*	Fetches the byte from the buffer
+*	Updates the buffer book keeping variables
 *
 */
 static int xbeeFrameBufferGet(uint8_t *old)
@@ -542,7 +554,7 @@ static int xbeeFrameBufferGet(uint8_t *old)
 		return -1; // FrameBuffer Empty - nothing to get
 	}
 	
-	//fetch the info struct from the buffer
+	//fetch the byte from the buffer
 	*old = FrameBuffer[FrameBufferOut];
 
 	//Update our buffer variables
@@ -564,7 +576,7 @@ static int xbeeFrameBufferGet(uint8_t *old)
 * none
 *
 * Implementation:
-* TODO: Mansel implementation description
+*	Sets the buffer book keeping variables to point to the beginning of the array
 *
 */
 static void xbeeFrameBufferInfoInit(void)
@@ -579,21 +591,24 @@ static void xbeeFrameBufferInfoInit(void)
 * Function:
 * int xbeeFrameBufferInfoPut(int ind, uint8_t typ, int len)
 *
-* Adds a element to the end of the array
+* Adds a info element to the end of the array
 *
 * Inputs:
 * int ind:
-*   TODO: Mansel input desc
+*  The index of where the frame is stored in the Xbee frame buffer
 * uint8_t typ:
-*   TODO: Mansel input desc
+*   The type of Xbee frame
 * int len:
-*   TODO: Mansel input desc
+*   The length of the Xbee frame
 *
 * Returns:
-* TODO: Mansel return desc
+*	0: No errors
+*	-1: Buffer full
 *
 * Implementation:
-* TODO: Mansel implementation description
+*	Checks to see if the buffer is full 
+*	Copies the new data into the buffer
+*	Updates the buffer book keeping variables
 *
 */
 int xbeeFrameBufferInfoPut(int ind, uint8_t typ, int len)
@@ -628,7 +643,7 @@ int xbeeFrameBufferInfoPut(int ind, uint8_t typ, int len)
 * none
 *
 * Implementation:
-* TODO: Mansel implementation description
+*	Sets the buffer book keeping variables to point to the beginning of the array
 *
 */
 static void xbeeMessageBufferInit(void)
@@ -647,13 +662,16 @@ static void xbeeMessageBufferInit(void)
 *
 * Inputs:
 * uint8_t new:
-*   TODO: Mansel input desc
+*	dat to add to the array
 *
 * Returns:
-* TODO: Mansel return desc
+*	0: No errors
+*	-1: Buffer full
 *
 * Implementation:
-* TODO: Mansel implementation description
+*	Checks to see if the buffer is full
+*	Adds the byte to the buffer
+*	Updates our buffer book keeping variables
 *
 */
 static int xbeeMessageBufferPut(uint8_t new)
@@ -675,20 +693,22 @@ static int xbeeMessageBufferPut(uint8_t new)
 
 /*
 * Function:
-* static void xbeeFrameBufferInit(void)
+* static void xbeeMessageBufferGet(void)
 *
 * Gets the oldest byte from the array
 *
 * Inputs:
 * char *old:
-*   TODO: Mansel input desc
+*	Pointer to the byte to store the information on the Xbee Frame retrieved from the buffer.
 *
 * Returns:
-* TODO: Mansel return desc
+*	0: No errors
+*	-1: Buffer empty
 *
 * Implementation:
-* TODO: Mansel implementation description
-*
+*	Checks to see if the buffer is empty
+*	Fetches the byte from the buffer
+*	Updates the buffer book keeping variables
 */
 static int xbeeMessageBufferGet(char *old)
 {
@@ -720,7 +740,7 @@ static int xbeeMessageBufferGet(char *old)
 * none
 *
 * Implementation:
-* TODO: Mansel implementation description
+*	Sets the buffer book keeping variables to point to the beginning of the array
 *
 */
 static void xbeeMessageBufferInfoInit(void)
@@ -739,17 +759,20 @@ static void xbeeMessageBufferInfoInit(void)
 *
 * Inputs:
 * int ind:
-*   TODO: Mansel input description
-* uint8_t cmd:
-*   TODO: Mansel input description
+*  The index of where the frame is stored in the Xbee frame buffer
+* uint8_t typ:
+*   The type of Xbee frame
 * int len:
-*   TODO: Mansel input description
+*   The length of the Xbee frame
 *
 * Returns:
-* none
+*	0: No errors
+*	-1: Buffer full
 *
 * Implementation:
-* TODO: Mansel implementation description
+*	Checks to see if the buffer is full
+*	Copies the new data into the buffer
+*	Updates the buffer book keeping variables
 *
 */
 static int xbeeMessageBufferInfoPut(int ind, uint8_t cmd, int len)

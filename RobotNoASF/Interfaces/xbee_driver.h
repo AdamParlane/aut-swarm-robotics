@@ -97,7 +97,8 @@
 //Test Messages
 
 //////////////[Type Definitions]////////////////////////////////////////////////////////////////////
-//TODO: Mansel description of structure
+//Structure containing information on a swarm robotics message
+//Used within the communication system as an "instance" of each message
 struct MessageInfo
 {
 	int index;
@@ -105,7 +106,8 @@ struct MessageInfo
 	int length;
 };
 
-//TODO:Mansel description of structure
+//Structure containing information on a Xbee Frame
+//Used within the communication system as an "instance" of each frame
 struct FrameInfo
 {
 	int index;
