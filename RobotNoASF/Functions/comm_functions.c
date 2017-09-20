@@ -22,6 +22,7 @@
 #include "../robot_setup.h"
 
 #include "../Interfaces/xbee_driver.h"
+#include "../Interfaces/twimux_interface.h"
 
 #include "motion_functions.h"
 #include "comm_functions.h"
@@ -62,6 +63,7 @@ void commGetNew(RobotGlobalStructure *sys)
 			if(!xbeeMessageBufferInfoGetFull(&sys->comms.messageData))//Check for a message from the swarm
 				commInterpretSwarmMessage(sys);					//Interpret the message
 		}
+		
 	}
 }
 
@@ -114,4 +116,63 @@ void commInterpretSwarmMessage(RobotGlobalStructure *sys)
 		sys->states.mainf = M_LIGHT_FOLLOW;
 	else if (sys->comms.messageData.command == 0xDB)
 		sys->states.mainf = M_LINE_FOLLOW;
+}
+
+/*
+* Function:
+* char commTwi2SlaveRequest()
+*
+* Checks for a request from a master on TWI2 and acts on it (for the LCD interface)
+*
+* Inputs:
+* none
+*
+* Returns:
+* 0 on success
+*
+* Implementation:
+* [[[WIP]]]
+*
+* Improvements:
+* [Ideas for improvements that are yet to be made](optional)
+*
+*/
+char commTwi2SlaveRequest(void)
+{
+	enum TwiSlaveStates {IDLE, GET_CMD, SEND_DATA, FINISH};
+	uint8_t twiSlaveState = IDLE;
+	uint8_t comInProgress = 0;
+	uint8_t command = 0;
+	
+	do 
+	{
+		switch (twiSlaveState)
+		{
+			case IDLE:
+				if(twi2SlaveAccessPoll() & 0x01)	//If ReadMode
+						twiSlaveState = GET_CMD;
+				break;
+			
+			case GET_CMD:
+				twi2SlaveRead(&command, &comInProgress);
+				twiSlaveState = SEND_DATA;
+				break;
+				
+			case SEND_DATA:
+				switch(command)
+				{
+					case 1:				//Commands go here
+						//twi2SlaveWrite(data, &comInProgress);
+						break;
+				}
+				twiSlaveState = FINISH;
+					break;
+				
+			case FINISH:
+				twiSlaveState = IDLE;
+				break;
+		}
+	} while (comInProgress);
+	
+	return 0;
 }
