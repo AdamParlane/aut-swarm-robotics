@@ -62,6 +62,8 @@ uint8_t dodgeObstacle(RobotGlobalStructure *sys);
 
 void checkForObstacles(RobotGlobalStructure *sys);
 
+uint8_t checkProximity(void);
+
 #define LEFT	0
 #define RIGHT	1
 

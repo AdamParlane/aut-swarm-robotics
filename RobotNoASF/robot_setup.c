@@ -125,6 +125,7 @@ RobotGlobalStructure sys =
 	//Proximity Sensors
 	.prox = 
 	{
+		.errorCount					= 0,
 		.pollEnabled				= 1,
 		.pollInterval				= 20
 	}, 
@@ -142,7 +143,7 @@ RobotGlobalStructure sys =
 		.IMU =
 		{
 			.pollEnabled			= 1,		//Enable IMU polling
-			.gyroCalEnabled			= 0			//Enables gyro calibration at start up. Takes 8sec,
+			.gyroCalEnabled			= 1			//Enables gyro calibration at start up. Takes 8sec,
 												//so best to disable while debugging
 		},
 		.Optical =

@@ -63,7 +63,32 @@ void scanProximity(RobotGlobalStructure *sys)
 			index++;
 			delay_ms(1);
 		}
+		if(!checkProximity())
+		{
+			//error so reset sensors
+			proxSensInit();		//Initialise proximity sensors
+			//delay_ms(50);
+			sys->prox.errorCount ++;
+			if(sys->prox.errorCount < 2)
+				scanProximity(sys);	//rescan the sensors
+		}
+		else
+			sys->prox.errorCount = 0;
 	}	
+}
+
+uint8_t checkProximity(void)
+{
+	char matches = 0; //counts how many prox sensors have the same value
+	for(uint8_t i = 0; i < 5; i++)
+	{
+		if(proximity[i] == proximity[i+1])//compare each proximity sensor with the one after it
+			matches ++; //count the number of matches
+	}
+	if(matches <= 5)//if they are not all the same
+		return 1;//return 1 sensors are okay
+	else
+		return 0;//return 0 problem with sensors
 }
 
 
@@ -163,7 +188,8 @@ uint8_t dodgeObstacle(RobotGlobalStructure *sys)
 			}
 		}
 	}
-	facing = sys->pos.facing;
+	if(firstLoop)
+		facing = sys->pos.facing;
 	if(sys->pos.targetHeading >= 360)
 		sys->pos.targetHeading -= 360;
 	if(sys->pos.targetHeading < 0)

@@ -193,6 +193,7 @@ typedef struct ColourSensorData
 //Stores proximity data, both raw and converted, for a single proximity sensor
 typedef struct ProximityData
 {
+	uint8_t errorCount;					//Counts the number of times proximity sensors have failed
 	uint8_t pollEnabled;				//Whether or not to poll for new messages in main()
 	uint16_t pollInterval;				//Interval at which to poll at (ms)
 } ProximityData;
