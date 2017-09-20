@@ -35,6 +35,7 @@
 #include "motion_functions.h"	//Temp used by nfOpticalTesting
 #include "navigation_functions.h"
 
+#include <math.h>				//Required for round() in nfProcessOpticalData()
 #include <tgmath.h>				//Required for atan2 in nfGetEulerAngles()
 
 //////////////[Defines]/////////////////////////////////////////////////////////////////////////////
@@ -186,8 +187,8 @@ void nfProcessOpticalData(RobotGlobalStructure *sys)
 	}
 	
 	//Calculate dx and dy in mm
-	sys->pos.dx = (float)sys->pos.Optical.dx*OPT_CONV_FACTOR;
-	sys->pos.dy = (float)sys->pos.Optical.dy*OPT_CONV_FACTOR;
+	sys->pos.dx = round(sys->pos.Optical.dx*OPT_CONV_FACTOR);
+	sys->pos.dy = round(sys->pos.Optical.dy*OPT_CONV_FACTOR);
 	
 	//Integrate absolute x and y in mm
 	sys->pos.x += sys->pos.dx;
@@ -257,11 +258,37 @@ void nfDMPEnable(char enable, RobotGlobalStructure *sys)
 	sys->pos.IMU.dmpEnabled = enable;
 }
 
+/*
+* Function:
+* void nfApplyPositionUpdateFromPC(uint8_t *rawData, RobotGlobalStructure *sys)
+*
+* Takes the raw data buffer containing position information and updates the robots current position
+*
+* Inputs:
+* uint8_t *rawData
+*   Pointer to the data buffer array retrieved from the xbee
+* RobotGlobalStructure *sys
+*   Pointer to the global robot data structure
+*
+* Returns:
+* none
+*
+* Implementation:
+* Three 16bit unsigned integers representing the position of the robot in the arena in mm are sent
+* The first is x, the second is y and the third is a facing in degrees. The coordinate system of 
+* the web cam has the origin in the top left corner. On the robot however the origin would be the
+* bottom left corner. To bandage this, the y value is converted to negative (and the robot thinks
+* its working in the lower right quadrant)
+*
+* Improvements:
+* Find a better way to handle coordinated between the robot and PC
+*
+*/
 void nfApplyPositionUpdateFromPC(uint8_t *rawData, RobotGlobalStructure *sys)
 {
 	//Update position
 	sys->pos.x = (uint16_t)((rawData[0]<<8)|rawData[1]);
-	sys->pos.y = (uint16_t)((rawData[2]<<8)|rawData[3]);
+	sys->pos.y = -(uint16_t)((rawData[2]<<8)|rawData[3]);
 	//Update facing
 	imuApplyYawCorrection((int16_t)((rawData[4]<<8)|rawData[5]), sys);
 }

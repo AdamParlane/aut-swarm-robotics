@@ -63,17 +63,17 @@ void scanProximity(RobotGlobalStructure *sys)
 			index++;
 			delay_ms(1);
 		}
-		if(!checkProximity())
-		{
-			//error so reset sensors
-			proxSensInit();		//Initialise proximity sensors
-			//delay_ms(50);
-			sys->prox.errorCount ++;
-			if(sys->prox.errorCount < 2)
-				scanProximity(sys);	//rescan the sensors
-		}
-		else
-			sys->prox.errorCount = 0;
+		//if(!checkProximity())
+		//{
+			////error so reset sensors
+			//proxSensInit();		//Initialise proximity sensors
+			////delay_ms(50);
+			//sys->prox.errorCount ++;
+			//if(sys->prox.errorCount < 2)
+				//scanProximity(sys);	//rescan the sensors
+		//}
+		//else
+			//sys->prox.errorCount = 0;
 	}	
 }
 

@@ -133,8 +133,8 @@ RobotGlobalStructure sys =
 	//Robot Position
 	.pos =
 	{
-		.x							= 0.0,		//Resets robot position
-		.y							= 0.0,		//Resets robot position
+		.x							= 0,		//Resets robot position
+		.y							= 0,		//Resets robot position
 		.heading					= 0.0,		//Reset heading
 		.facingOffset				= 180,		//Ensures that whatever way the robot is facing when
 												//powered on is 0 degrees heading.

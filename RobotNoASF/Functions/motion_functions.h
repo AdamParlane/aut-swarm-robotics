@@ -19,7 +19,12 @@
 *                                  RobotGlobalStructure *sys)
 * float mfTrackLight(RobotGlobalStructure *sys)
 * float mfTrackLightProx(RobotGlobalStructure *sys)
-* char mfRandomMovementGenerator(void) 
+* char mfRandomMovementGenerator(void)
+* void mfStopRobot(RobotGlobalStructure *sys)
+* char mfAdvancedMove(float heading, float facing, uint8_t speed,
+* 							uint8_t maxTurnRatio, RobotGlobalStructure *sys)
+* int32_t mfMoveToPosition(int32_t x, int32_t y, uint8_t speed, float facing,
+*							uint8_t maxTurnRatio, RobotGlobalStructure *sys)
 *
 */
 
@@ -169,9 +174,85 @@ float mfTrackLightProx(RobotGlobalStructure *sys);
 */
 char mfRandomMovementGenerator(void);
 
+/*
+* Function:
+* void mfStopRobot(RobotGlobalStructure *sys)
+*
+* Stops the robot (High level function to avoid direct access to the motor_driver from other
+* high level functions
+*
+* Inputs:
+* RobotGlobalStructure *sys
+*   Pointer to the global robot data structure
+*
+* Returns:
+* none
+*
+*/
 void mfStopRobot(RobotGlobalStructure *sys);
 
+/*
+* Function:
+* char mfAdvancedMove(float heading, float facing, uint8_t speed,
+* 							uint8_t maxTurnRatio, RobotGlobalStructure *sys)
+*
+* Will move the robot along a heading, and also rotate the robot to face the given facing,
+* using closed loop control from the mouse and IMU to achieve it.
+*
+* Inputs:
+* float heading:
+*   The absolute (arena) heading that the robot should travel along
+* float facing:
+*   The absolute (arena) facing that the robot should face
+* uint8_t speed:
+*   The maximum motor speed (0-100%)
+* uint8_t maxTurnRatio:
+*   The percentage of rotational speed to be applied to the motors (ie how fast the robot will
+*   rotate towards the desired facing). 0% means the robot will not rotate at all. %100 means that
+*   The robot will only rotate on the spot until the desired facing is achieve before setting off
+*   on the desired heading. Anything in between will have the robot gradually rotate while
+*   travelling along the desired heading.
+* RobotGlobalStructure *sys:
+*   Pointer to the global robot data structure
+*
+* Returns:
+* 0 when the robot has achieved the desired facing, otherwise the proportional error between the
+* desired facing and the current facing of the robot.
+*
+*/
 char mfAdvancedMove(float heading, float facing, uint8_t speed, 
 						uint8_t maxTurnRatio, RobotGlobalStructure *sys);
+
+/*
+* Function:
+* int32_t mfMoveToPosition(int32_t x, int32_t y, uint8_t speed, float facing,
+*							uint8_t maxTurnRatio, RobotGlobalStructure *sys)
+*
+* Will move the robot to the given position in the arena
+*
+* Inputs:
+* int32_t x:
+*   The absolute (arena) x position (mm) that the robot should drive to
+* int32_t y:
+*   The absolute (arena) y position (mm) that the robot should drive to
+* uint8_t speed:
+*   The maximum motor speed (0-100%)
+* float facing:
+*   The absolute (arena) facing that the robot should face
+* uint8_t maxTurnRatio:
+*   The percentage of rotational speed to be applied to the motors (ie how fast the robot will
+*   rotate towards the desired facing). 0% means the robot will not rotate at all. %100 means that
+*   The robot will only rotate on the spot until the desired facing is achieve before setting off
+*   on the desired heading. Anything in between will have the robot gradually rotate while
+*   travelling along the desired heading.
+* RobotGlobalStructure *sys:
+*   Pointer to the global robot data structure
+*
+* Returns:
+* current state
+*
+*/				
+int32_t mfMoveToPosition(int32_t x, int32_t y, uint8_t speed, float facing,
+							uint8_t maxTurnRatio, RobotGlobalStructure *sys);
 
 #endif /* MOTION_FUNCTIONS_H_ */

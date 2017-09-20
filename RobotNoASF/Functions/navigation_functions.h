@@ -24,8 +24,6 @@
 #ifndef NAVIGATION_FUNCTIONS_H_
 #define NAVIGATION_FUNCTIONS_H_
 
-//////////////[Defines]/////////////////////////////////////////////////////////////////////////////
-
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*
 * Function:
@@ -120,8 +118,25 @@ float nfWrapAngle(float angleDeg);
 */
 void nfDMPEnable(char enable, RobotGlobalStructure *sys);
 
+/*
+* Function:
+* void nfApplyPositionUpdateFromPC(uint8_t *rawData, RobotGlobalStructure *sys)
+*
+* Takes the raw data buffer containing position information and updates the robots current position
+*
+* Inputs:
+* uint8_t *rawData
+*   Pointer to the data buffer array retrieved from the xbee
+* RobotGlobalStructure *sys
+*   Pointer to the global robot data structure
+*
+* Returns:
+* none
+*
+*/
 void nfApplyPositionUpdateFromPC(uint8_t *rawData, RobotGlobalStructure *sys);
 
+//Temp nav testing function
 uint8_t nfOpticalTesting(uint8_t speed, uint8_t distance, RobotGlobalStructure *sys);
 
 #endif /* NAVIGATION_FUNCTIONS_H_ */

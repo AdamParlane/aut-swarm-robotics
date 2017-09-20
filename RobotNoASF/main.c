@@ -157,6 +157,7 @@ int main(void)
 				sys.pos.targetSpeed = 50;
 				//if(!mfMoveToHeadingByDistance(0, 100, 200, &sys))
 					//sys.states.mainf = M_IDLE;
+
 				break;
 						
 			case M_OBSTACLE_AVOIDANCE:
