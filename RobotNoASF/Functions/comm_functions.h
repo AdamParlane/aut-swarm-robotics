@@ -60,4 +60,19 @@ void commGetNew(RobotGlobalStructure *sys);
 */
 void commInterpretSwarmMessage(RobotGlobalStructure *sys);
 
+/*
+* Function:
+* char commTwi2SlaveRequest()
+*
+* Checks for a request from a master on TWI2 and acts on it (for the LCD interface)
+*
+* Inputs:
+* none
+*
+* Returns:
+* 0 on success
+*
+*/
+char commTwi2SlaveRequest(void);
+
 #endif /* COMM_FUNCTIONS_H_ */
