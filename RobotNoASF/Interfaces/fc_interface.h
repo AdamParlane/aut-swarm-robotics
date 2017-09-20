@@ -82,7 +82,7 @@
 #define FC_CONTROL_CHARGE_DISABLE	0x0E//Same as above but disables CE bit
 #define FC_BATTVOL_INIT	0x8E	//Vreg = 4.2v, input current = 2.5A (FC_BATVOL_REG)
 //#define FC_CHARGE_INIT	0xFA	//charge current set to max Ic=2875mA, termination current
-#define FC_CHARGE_INIT	0xD7								//Iterm=450mA (default) (FC_CHARGE_REG)
+#define FC_CHARGE_INIT	0xD7								//Iterm=450mA (FC_CHARGE_REG)
 
 //Fast charge status
 #define FC_POWER_CONNECTED		FC_STATUS_BF_STAT_INRDY

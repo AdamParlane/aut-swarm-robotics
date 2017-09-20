@@ -45,7 +45,7 @@
 #define MTHD_KP	2.8
 
 //PID constants for mfTrackLight
-#define TL_KP	10.0
+#define TL_KP	20.0
 #define TL_KI	0.001
 
 //PID constants for mfTrackLightprox

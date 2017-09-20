@@ -435,17 +435,11 @@ char twi2SlaveAccessPoll(void)
 {
 	if(twi2SlaveAccess)
 	{
-		switch(twi2SlaveReadMode)
-		{
-			case 0:
-				return 0x10;
-				break;
-					
-			case 1:
-				return 0x11;
-				break;
-		}
-	}		
+		if(twi2SlaveReadMode)
+			return 0x11;
+		else
+			return 0x10;
+	}
 	return 0;
 }
 

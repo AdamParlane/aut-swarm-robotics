@@ -87,9 +87,11 @@ typedef enum ChargeCycleStates
 	CCS_FINISHED,
 	CCS_CHECK_POWER,
 	CCS_CHARGING,
+	CCS_RECONNECT,
 	CCS_FAULT,
 	CCS_DISMOUNT,
-	CCS_TURN_AWAY
+	CCS_TURN_AWAY,
+	CCS_STOP_POLLING
 } ChargeCycleStates;
 
 typedef enum MTHByDistanceStates

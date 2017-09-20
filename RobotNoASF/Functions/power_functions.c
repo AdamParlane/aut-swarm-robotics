@@ -139,6 +139,8 @@ uint8_t pfChargeCycleHandler(RobotGlobalStructure *sys)
 	switch(sys->states.chargeCycle)
 	{
 		case CCS_CHECK_POWER:
+			sys->power.pollChargingStateEnabled = 1;
+			sys->power.pollChargingStateInterval = 10;
 			if(sys->power.fcChipStatus == FC_BATTERY_CHARGING 
 			|| sys->power.fcChipStatus == FC_POWER_CONNECTED)
 				sys->states.chargeCycle = CCS_CHARGING;
@@ -148,6 +150,7 @@ uint8_t pfChargeCycleHandler(RobotGlobalStructure *sys)
 			//Blink LED
 			if(!fdelay_ms(250))
 				led3Tog;
+			sys->power.chargeWatchDogEnabled = 1;
 			if(sys->power.fcChipStatus == FC_BATTERY_CHARGED)	//If finished charging
 				sys->states.chargeCycle = CCS_DISMOUNT;
 
@@ -155,12 +158,29 @@ uint8_t pfChargeCycleHandler(RobotGlobalStructure *sys)
 			{
 				sys->states.chargeCycle = CCS_FAULT;
 			}
+			
+			if(sys->power.fcChipStatus == 0)					//If connection broken
+			{
+				currentHeading = sys->pos.facing;
+				sys->states.chargeCycle = CCS_RECONNECT;
+			}
+			break;
+		
+		case CCS_RECONNECT:
+			mfAdvancedMove(currentHeading, currentHeading, 100, 70, sys);	//Charge Forward
+			if(sys->power.fcChipStatus == FC_BATTERY_CHARGING
+			|| sys->power.fcChipStatus == FC_POWER_CONNECTED)
+			{
+				sys->states.chargeCycle = CCS_CHARGING;						//If reconnected
+				mfStopRobot(sys);	
+			}
+			
 			break;
 		
 		case CCS_FAULT:
 			sys->power.fcChipFaultFlag = 0;
 			sys->states.chargeCycle = CCS_DISMOUNT;
-			return 0xFF;						//Indicate that a fault occurred
+			return 0xFF;										//Indicate that a fault occurred
 		
 		//See which direction we are facing right now, then switch to CCS_TURN_AWAY
 		case CCS_DISMOUNT:
@@ -170,10 +190,17 @@ uint8_t pfChargeCycleHandler(RobotGlobalStructure *sys)
 		
 		//Rotate 180 degrees, then switch to CCS_FINISHED STATE
 		case CCS_TURN_AWAY:
-			if(!mfMoveToHeadingByDistance(currentHeading - 180, 35, 10, sys))
-				sys->states.chargeCycle = CCS_FINISHED;
+			if(!mfRotateToHeading(currentHeading + 180, sys))
+				sys->states.chargeCycle = CCS_STOP_POLLING;
 			break;
 		
+		case CCS_STOP_POLLING:
+			sys->power.pollChargingStateInterval = 100;
+			sys->power.pollChargingStateEnabled = 0;
+			sys->power.chargeWatchDogEnabled = 0;
+			sys->states.chargeCycle = CCS_FINISHED;
+			break;
+			
 		case CCS_FINISHED:
 			sys->states.chargeCycle = CCS_CHECK_POWER;
 			break;
