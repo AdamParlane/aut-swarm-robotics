@@ -17,7 +17,7 @@
 * void SPI_Init(void);
 * void mouseInit(void);
 * int mouseTestBasic(void);
-* void getMouseXY(Position *sys);
+* void getMouseXY(PositionGroup *sys);
 * uint8_t detectMouseMove(uint16_t threshold);
 *
 * Functionality of each function is explained before each function

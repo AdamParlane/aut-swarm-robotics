@@ -43,7 +43,7 @@
 //////////////[Global variables]////////////////////////////////////////////////////////////////////
 //sys->pos. is the global data structure that holds all of the robots navigation info. When
 //needed it is usually passed to functions as a pointer to avoid duplication.
-//Position sys->pos. =
+//PositionGroup sys->pos. =
 
 
 //Read data flag that is set by the external interrupt from the IMU on the V2 or by timer on the V1.

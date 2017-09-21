@@ -105,7 +105,7 @@ RobotGlobalStructure sys =
 	//System States
 	.states =
 	{
-		.mainf						= M_DOCKING,
+		.mainf						= M_IDLE,
 		.mainfPrev					= M_IDLE,
 		.docking					= DS_START,
 		.chargeCycle				= CCS_CHECK_POWER,
@@ -122,7 +122,30 @@ RobotGlobalStructure sys =
 		.testModeStreamInterval		= 100
 	},
 	
-	//Robot Position
+	//Sensor polling setup
+	.sensors =
+	{
+		.line =
+		{
+			.pollEnabled			= 1,
+			.pollInterval			= 40
+		},
+		
+		.colour =
+		{
+			.pollEnabled			= 0x03,
+			.pollInterval			= 40,
+			.getHSV					= 1
+		},
+		
+		.prox =
+		{
+			.pollEnabled			= 0x3F,
+			.pollInterval			= 40
+		}
+	},
+	
+	//Robot PositionGroup
 	.pos =
 	{
 		.x							= 0,		//Resets robot position
@@ -135,7 +158,7 @@ RobotGlobalStructure sys =
 		.IMU =
 		{
 			.pollEnabled			= 1,		//Enable IMU polling
-			.gyroCalEnabled			= 1			//Enables gyro calibration at start up. Takes 8sec,
+			.gyroCalEnabled			= 0			//Enables gyro calibration at start up. Takes 8sec,
 												//so best to disable while debugging
 		},
 		.Optical =

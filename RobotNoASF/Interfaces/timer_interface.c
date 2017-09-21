@@ -191,6 +191,9 @@ uint8_t fdelay_ms(uint32_t period_ms)
 	static uint32_t startTime;
 	uint32_t timeStamp;
 
+	if(!period_ms)
+		delayState = STOP;
+	
 	switch(delayState)
 	{
 		case START:

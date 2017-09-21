@@ -24,10 +24,6 @@
 #ifndef DOCKING_FUNCTIONS_H_
 #define DOCKING_FUNCTIONS_H_
 
-//////////////[Includes]////////////////////////////////////////////////////////////////////////////
-
-//////////////[Defines]/////////////////////////////////////////////////////////////////////////////
-
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*
 * Function:
@@ -43,42 +39,6 @@
 *
 */
 uint8_t dfDockRobot(RobotGlobalStructure *sys);
-
-/*
-* Function:
-* void dfUpdateLineSensorStates(void)
-*
-* Sees if any sensors have made a definite state change and loads the states into the line sensor
-* state structure for use by other functions in this module.
-*
-* Inputs:
-* none
-*
-* Returns:
-* 1 if line state change detected, otherwise 0
-*
-*/
-uint8_t dfUpdateLineSensorStates(RobotGlobalStructure *sys);
-
-/*
-* Function:
-* int8_t dfGetLineDirection(RobotGlobalStructure *sys)
-*
-* This function examines the states of the line follower sensors and determines the direction and
-* urgency factor by which the robot should move to find its way to the centre of the line.
-*
-* Inputs:
-* none
-*
-* Returns:
-* returns a signed integer between -3 and 3 that determines the direction and speed magnitude that
-* the robot should move to find the centre of the line.
-* A negative output means that the robot should move left to find the line and a positive output
-* means that the robot should move right. 0 means keep going straight because no direction data is
-* able to be derived from sensor array.
-*
-*/
-int8_t dfGetLineDirection(RobotGlobalStructure *sys);
 
 /*
 * Function:
