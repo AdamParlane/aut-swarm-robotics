@@ -281,7 +281,7 @@ float mfMoveToHeadingByDistance(float heading, uint8_t speed, float distance,
 * Add speed parameter
 *
 */
-float mfTrackLight(RobotGlobalStructure *sys)
+float mfTrackLight(uint8_t speed, RobotGlobalStructure *sys)
 {
 	sys->flags.obaMoving = 1;	
 	static float pErr;			//Proportional error
@@ -311,7 +311,7 @@ float mfTrackLight(RobotGlobalStructure *sys)
 		iErr = 0;
 		return 0;
 	} else {
-		mfMoveToHeading(sys->pos.facing + dHeading, 70, sys);
+		mfMoveToHeading(sys->pos.facing + dHeading, speed, sys);
 		return pErr;		//If not, return pErr
 	}
 }

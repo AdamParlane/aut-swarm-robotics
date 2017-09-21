@@ -17,7 +17,8 @@
 * void SPI_Init(void);
 * void mouseInit(void);
 * int mouseTestBasic(void);
-* void Get_Mouse_XY(Position *sys);
+* void getMouseXY(Position *sys);
+* uint8_t detectMouseMove(uint16_t threshold);
 *
 * Functionality of each function is explained before each function
 * In the this file that is a summary of purpose, input and return values
@@ -132,6 +133,7 @@ char mouseTestBasic(void);
 */
 void getMouseXY(RobotGlobalStructure *sys);
 
+uint8_t detectMouseMove(uint16_t threshold);
 
 /*
 * Function: void getMouseSQUAL(void)

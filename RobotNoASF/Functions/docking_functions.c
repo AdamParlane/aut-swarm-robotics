@@ -34,6 +34,7 @@
 #include "../Interfaces/fc_interface.h"
 #include "../Interfaces/timer_interface.h"
 #include "../Interfaces/motor_driver.h"
+#include "../Interfaces/pio_interface.h"
 #include <stdlib.h>				//abs() function in dfFollowLine()
 
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
@@ -63,17 +64,22 @@ uint8_t dfDockRobot( RobotGlobalStructure *sys)
 	static float bHeading = 0;			//Brightest Heading
 	static float lineHeading = 0.0;		//Heading of line
 	static uint8_t lineFound = 0;		//Whether or not we have found the line
+	uint16_t forwardProxSens = proxSensRead(MUX_PROXSENS_A);//Will use obstacle data structure once
+															//implemented.
+
 	
 	switch(sys->states.docking)
 	{
 		//Begin by scanning for the brightest light source
 		case DS_START:
+			//pioLedNumber(1);
 			if(!dfScanBrightestLightSource(&bHeading, 359, sys))
 				sys->states.docking = DS_FACE_BRIGHTEST;
 			break;
 		
 		//Turn to face brightest light source seen
 		case DS_FACE_BRIGHTEST:
+			//pioLedNumber(2);
 			if(!mfRotateToHeading(bHeading, sys))
 			{
 				if(lineFound)
@@ -85,25 +91,36 @@ uint8_t dfDockRobot( RobotGlobalStructure *sys)
 		
 		//Move towards brightestes light source
 		case DS_MOVE_FORWARD:
-			mfTrackLight(sys);
-			if(!fdelay_ms(3500))			//After 3.7 seconds, look for LEDs again
+			//pioLedNumber(3);
+			mfTrackLight(70, sys);
+			if(!fdelay_ms(3000))			//After 3.7 seconds, look for LEDs again
 			{
 				mfStopRobot(sys);
 				sys->states.docking = DS_RESCAN_BRIGHTEST;
 			}
-			if(dfUpdateLineSensorStates(sys))	//If line found then follow it
+			if(dfUpdateLineSensorStates(sys))	//If line found then straddle it
 			{
 				mfStopRobot(sys);
 				lineFound = 1;
-				sys->states.docking = DS_START;	//Determine which way to move down the line by
-												//doing 360 deg scan for brightest light source
-												//again
+				sys->states.docking = DS_START;
+
 			}
 			break;
 		
+		case DS_MOUNT_LINE:
+			switch(dfFollowLine(70, &lineHeading, sys))
+			{
+				case FLS_FOLLOW:					//If the line has been mounted
+					sys->states.docking = DS_START;	//Determine which way to move down the line by
+					break;						//doing 360 deg scan for brightest light source
+												//again		
+			}
+			break;
+			
 		//Check again for brightest light source by scanning a 180 degree arc left to right to see
 		//if we are still on track to find brightest light source
 		case DS_RESCAN_BRIGHTEST:
+			//pioLedNumber(4);
 			//Only look in front, because we should still be roughly in the right direction
 			if(!dfScanBrightestLightSource(&bHeading, 180, sys))
 				sys->states.docking = DS_FACE_BRIGHTEST;
@@ -111,29 +128,37 @@ uint8_t dfDockRobot( RobotGlobalStructure *sys)
 		
 		//Follow the line until an obstacle is encountered
 		case DS_FOLLOW_LINE:
+			//pioLedNumber(5);
 			//Enable fast scharge chip polling
 			sys->power.pollChargingStateEnabled = 1;
 			sys->power.pollChargingStateInterval = 10;
-			switch(dfFollowLine(40, &lineHeading, sys))
-			{
-				case 0:
-					//We have followed the line until the forward obstacle sensor has reached full
-					//value. Now we charge forward to mate with the charging contacts
-					sys->states.docking = DS_CHRG_CONNECT;
-					break;
-					
-				case FLS_GIVE_UP:
-					//Line was lost, Start over
-					lineFound = 0;
-					sys->states.docking = DS_START;
-					break;
-			}
+			
+			mfTrackLight(35, sys);
+			if(forwardProxSens >= PS_CLOSEST)
+				sys->states.docking = DS_CHRG_CONNECT;
+
+			//switch(dfFollowLine(70, &lineHeading, sys))
+			//{
+				//case 0:
+					////We have followed the line until the forward obstacle sensor has reached full
+					////value. Now we charge forward to mate with the charging contacts
+					//sys->states.docking = DS_CHRG_CONNECT;
+					//break;
+					//
+				//case FLS_GIVE_UP:
+					//pioLedNumber(0);
+					////Line was lost, Start over
+					//lineFound = 0;
+					//sys->states.docking = DS_START;
+					//break;
+			//}
 			break;
 		
 		//Drive straight ahead until a connection with the charger is connected. When connection
 		//is established, exit with a FINISH state. Still need to include a timeout, incase the
 		//in front of the robot isn't the charger
 		case DS_CHRG_CONNECT:
+			pioLedNumber(7);
 			//If power connected to fc chip
 			if(sys->power.fcChipStatus == FC_STATUS_BF_STAT_INRDY 
 			|| sys->power.fcChipStatus == FC_STATUS_BF_STAT_CHRGIN)
@@ -141,7 +166,8 @@ uint8_t dfDockRobot( RobotGlobalStructure *sys)
 				sys->states.docking = DS_FINISHED;	//Docking is complete
 				mfStopRobot(sys);					//Stop moving
 			} else {
-				mfMoveToHeading(lineHeading, 100, sys);
+				mfTrackLight(70, sys);
+				//mfMoveToHeading(lineHeading, 100, sys);
 			}
 			break;
 		
@@ -154,6 +180,7 @@ uint8_t dfDockRobot( RobotGlobalStructure *sys)
 			break;
 		
 		case DS_FINISHED:
+			//pioLedNumber(7);
 			lineFound = 0;
 			sys->states.docking = DS_START;
 			break;
@@ -331,13 +358,17 @@ uint8_t dfFollowLine(uint8_t speed, float *lineHeading,	RobotGlobalStructure *sy
 															//implemented.
 	static uint8_t lineJustFound = 1;
 	
-	if(lineDirection == 4)				//Line has been lost, give up
+	if(lineDirection == 4)				//Line has been lost, give up (will return FLS_GIVE_UP)
+	{
 		sys->states.followLine = FLS_GIVE_UP;
+		return sys->states.followLine;
+	}
 		
 	switch(sys->states.followLine)
 	{
 		//Starting state. Has value of 0 so when line following is finished will return 0
 		case FLS_START:
+			pioLedNumber(1);
 			sys->states.followLine = FLS_FIRST_CONTACT;
 			break;
 		
@@ -345,10 +376,11 @@ uint8_t dfFollowLine(uint8_t speed, float *lineHeading,	RobotGlobalStructure *sy
 		//Once that is the case, then we must be over the line properly, so move to the FOLLOW
 		//state.
 		case FLS_FIRST_CONTACT:
+			pioLedNumber(2);
 			lineJustFound = 1;
 			if(!lineDirection)
 				sys->states.followLine = FLS_FOLLOW;	//If sufficiently over line, begin following
-			else 
+			else
 				moveRobot(0, 35, 0);	//Creep forward some more to straddle line
 			break;
 		
@@ -396,7 +428,9 @@ uint8_t dfFollowLine(uint8_t speed, float *lineHeading,	RobotGlobalStructure *sy
 			break;
 		
 		case FLS_GIVE_UP:						//If the line has been lost
+			mfStopRobot(sys);
 			sys->states.followLine = FLS_START;
+			lineJustFound = 1;
 			break;
 		
 		//If finished, reset the state machine for next time and return a 0.

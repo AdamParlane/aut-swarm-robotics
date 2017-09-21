@@ -182,10 +182,12 @@ int main(void)
 				break;
 				
 			case M_IDLE:					
-				mfStopRobot(&sys);
+				//mfStopRobot(&sys);
 				if(!fdelay_ms(1000))					//Blink LED 3 in Idle mode
 					led3Tog;		
+				//frontRightMotorDrive(-100);
 				break;
+				
 		}
 		
 		commGetNew(&sys);				//Checks for and interprets new communications

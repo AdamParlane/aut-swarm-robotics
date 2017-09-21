@@ -141,7 +141,7 @@ float mfMoveToHeadingByDistance(float heading, uint8_t speed, float distance,
 * 0 if equilibrium is reached, otherwise will return the proportional error value
 *
 */
-float mfTrackLight(RobotGlobalStructure *sys);
+float mfTrackLight(uint8_t speed, RobotGlobalStructure *sys);
 
 /*
 * Function:
