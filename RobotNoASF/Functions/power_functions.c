@@ -109,7 +109,7 @@ void pfPollPower(RobotGlobalStructure *sys)
 * State machine that handles the charging cycle of the battery
 *
 * Inputs:
-* struct SystemStates *state
+* struct SystemStatesGroup *state
 *   Pointer to the sys.states data structure
 * RobotGlobalStructure *sys:
 *   Pointer to the sys->pos. data structure
@@ -140,7 +140,7 @@ uint8_t pfChargeCycleHandler(RobotGlobalStructure *sys)
 	{
 		case CCS_CHECK_POWER:
 			sys->power.pollChargingStateEnabled = 1;
-			sys->power.pollChargingStateInterval = 10;
+			sys->power.pollChargingStateInterval = 100;
 			if(sys->power.fcChipStatus == FC_BATTERY_CHARGING 
 			|| sys->power.fcChipStatus == FC_POWER_CONNECTED)
 				sys->states.chargeCycle = CCS_CHARGING;
@@ -167,7 +167,8 @@ uint8_t pfChargeCycleHandler(RobotGlobalStructure *sys)
 			break;
 		
 		case CCS_RECONNECT:
-			mfAdvancedMove(currentHeading, currentHeading, 100, 70, sys);	//Charge Forward
+			//mfAdvancedMove(currentHeading, currentHeading, 100, 70, sys);	//Charge Forward
+			mfTrackLight(70, sys);
 			if(sys->power.fcChipStatus == FC_BATTERY_CHARGING
 			|| sys->power.fcChipStatus == FC_POWER_CONNECTED)
 			{

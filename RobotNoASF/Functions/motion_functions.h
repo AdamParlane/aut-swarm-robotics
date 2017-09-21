@@ -115,7 +115,7 @@ float mfMoveToHeading(float heading, uint8_t speed, RobotGlobalStructure *sys);
 *   Percentage of max speed to move at (0-100%)
 * float distance:
 *   Distance to travel before stopping.
-* struct SystemStates *state
+* struct SystemStatesGroup *state
 *   Pointer to the sys.states data structure
 * RobotGlobalStructure *sys:
 *   Pointer to the sys->pos. global structure.
@@ -141,7 +141,7 @@ float mfMoveToHeadingByDistance(float heading, uint8_t speed, float distance,
 * 0 if equilibrium is reached, otherwise will return the proportional error value
 *
 */
-float mfTrackLight(RobotGlobalStructure *sys);
+float mfTrackLight(uint8_t speed, RobotGlobalStructure *sys);
 
 /*
 * Function:

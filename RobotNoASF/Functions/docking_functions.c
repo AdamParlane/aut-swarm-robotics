@@ -14,8 +14,6 @@
 *
 * Functions:
 * void dfDockRobot(void)
-* void dfUpdateLineSensorStates(void)
-* int8_t dfGetLineDirection(RobotGlobalStructure *sys)
 * uint8_t dfFollowLine(uint8_t speed, float *lineHeading, RobotGlobalStructure *sys)
 * uint8_t dfScanBrightestLightSource(int16_t *brightestHeading)
 *
@@ -34,6 +32,7 @@
 #include "../Interfaces/fc_interface.h"
 #include "../Interfaces/timer_interface.h"
 #include "../Interfaces/motor_driver.h"
+#include "../Interfaces/pio_interface.h"
 #include <stdlib.h>				//abs() function in dfFollowLine()
 
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
@@ -61,19 +60,32 @@
 uint8_t dfDockRobot( RobotGlobalStructure *sys)
 {
 	static float bHeading = 0;			//Brightest Heading
-	static float lineHeading = 0.0;		//Heading of line
 	static uint8_t lineFound = 0;		//Whether or not we have found the line
+	static uint32_t lineLastSeen = 0;	//Time at which line was last detected
+	
+	uint16_t forwardProxSens = proxSensRead(MUX_PROXSENS_A);//Will use obstacle data structure once
+															//implemented.
 	
 	switch(sys->states.docking)
 	{
 		//Begin by scanning for the brightest light source
 		case DS_START:
-			if(!dfScanBrightestLightSource(&bHeading, 359, sys))
-				sys->states.docking = DS_FACE_BRIGHTEST;
+			//pioLedNumber(1);
+			if(lineFound)
+			{
+				lineLastSeen = sys->timeStamp;
+				if(!dfScanBrightestLightSource(&bHeading, 200, sys))
+					sys->states.docking = DS_FACE_BRIGHTEST;
+			} else {
+				if(!dfScanBrightestLightSource(&bHeading, 359, sys))
+					sys->states.docking = DS_FACE_BRIGHTEST;			
+			}
+			
 			break;
 		
 		//Turn to face brightest light source seen
 		case DS_FACE_BRIGHTEST:
+			//pioLedNumber(2);
 			if(!mfRotateToHeading(bHeading, sys))
 			{
 				if(lineFound)
@@ -85,48 +97,47 @@ uint8_t dfDockRobot( RobotGlobalStructure *sys)
 		
 		//Move towards brightestes light source
 		case DS_MOVE_FORWARD:
-			mfTrackLight(sys);
-			if(!fdelay_ms(3500))			//After 3.7 seconds, look for LEDs again
+			//pioLedNumber(3);
+			mfTrackLight(70, sys);
+			if(!fdelay_ms(3400))			//After 3.7 seconds, look for LEDs again
 			{
-				mfStopRobot(sys);
 				sys->states.docking = DS_RESCAN_BRIGHTEST;
 			}
-			if(dfUpdateLineSensorStates(sys))	//If line found then follow it
+			if(sys->sensors.line.detected)
 			{
-				mfStopRobot(sys);
+				fdelay_ms(0);	//reset fdelay
 				lineFound = 1;
-				sys->states.docking = DS_START;	//Determine which way to move down the line by
-												//doing 360 deg scan for brightest light source
-												//again
+				sys->states.docking = DS_START;
 			}
 			break;
-		
+			
 		//Check again for brightest light source by scanning a 180 degree arc left to right to see
 		//if we are still on track to find brightest light source
 		case DS_RESCAN_BRIGHTEST:
+			//pioLedNumber(4);
 			//Only look in front, because we should still be roughly in the right direction
-			if(!dfScanBrightestLightSource(&bHeading, 180, sys))
+			if(!dfScanBrightestLightSource(&bHeading, 270, sys))
 				sys->states.docking = DS_FACE_BRIGHTEST;
 			break;
 		
 		//Follow the line until an obstacle is encountered
 		case DS_FOLLOW_LINE:
+			//pioLedNumber(5);
 			//Enable fast scharge chip polling
 			sys->power.pollChargingStateEnabled = 1;
-			sys->power.pollChargingStateInterval = 10;
-			switch(dfFollowLine(40, &lineHeading, sys))
-			{
-				case 0:
-					//We have followed the line until the forward obstacle sensor has reached full
-					//value. Now we charge forward to mate with the charging contacts
-					sys->states.docking = DS_CHRG_CONNECT;
-					break;
-					
-				case FLS_GIVE_UP:
-					//Line was lost, Start over
-					lineFound = 0;
-					sys->states.docking = DS_START;
-					break;
+			sys->power.pollChargingStateInterval = 100;
+			
+			mfTrackLight(45, sys);
+			if(forwardProxSens >= PS_CLOSEST)
+				sys->states.docking = DS_CHRG_CONNECT;
+
+			if(!sys->sensors.line.detected)
+				lineLastSeen = sys->timeStamp;
+				
+			if((sys->timeStamp - lineLastSeen) > 2500) //If line hasn't been detected for 2 seconds,
+			{	
+				lineFound = 0;									
+				sys->states.docking = DS_MOVE_FORWARD;
 			}
 			break;
 		
@@ -134,15 +145,16 @@ uint8_t dfDockRobot( RobotGlobalStructure *sys)
 		//is established, exit with a FINISH state. Still need to include a timeout, incase the
 		//in front of the robot isn't the charger
 		case DS_CHRG_CONNECT:
+			pioLedNumber(7);
 			//If power connected to fc chip
 			if(sys->power.fcChipStatus == FC_STATUS_BF_STAT_INRDY 
 			|| sys->power.fcChipStatus == FC_STATUS_BF_STAT_CHRGIN)
 			{
 				sys->states.docking = DS_FINISHED;	//Docking is complete
 				mfStopRobot(sys);					//Stop moving
-			} else {
-				mfMoveToHeading(lineHeading, 100, sys);
-			}
+			} else
+				moveRobot(0, 100, 0);
+
 			break;
 		
 		//If charger hasn't been found after time period, we enter this state. The resulting
@@ -154,146 +166,12 @@ uint8_t dfDockRobot( RobotGlobalStructure *sys)
 			break;
 		
 		case DS_FINISHED:
+			//pioLedNumber(7);
 			lineFound = 0;
 			sys->states.docking = DS_START;
 			break;
 	}
 	return sys->states.docking;
-}
-
-/*
-* Function:
-* void dfUpdateLineSensorStates(RobotGlobalStructure *sys)
-*
-* Sees if any sensors have made a definite state change and loads the states into the line sensor
-* state structure for use by other functions in this module.
-*
-* Inputs:
-* none
-*
-* Returns:
-* 1 if line state change detected, otherwise 0
-* 2 if wrong robot selected
-*
-* Implementation:
-* - Read state value of sensor.
-* - if a state other than NO_CHANGE is returned then update the value stored in the line sensor
-*   data structure for the given sensor.
-* - Repeat until all four sensors have been read.
-*
-*/
-uint8_t dfUpdateLineSensorStates(RobotGlobalStructure *sys)
-{
-	uint8_t sensorValue;						//Temporarily stores state of a single sensor
-	uint8_t returnVal = 0;						//Returns non 0 if any sensor has changed state
-	
-	sensorValue = lfLineDetected(LF_OUTER_L);		//Look for line on outer left sensor
-	if (sensorValue != NO_CHANGE)					//If this sensor has changed state
-		sys->sensors.line.outerLeft = sensorValue;	//Update line follower data structure with new 
-													//data
-	if(sensorValue == LINE)
-		returnVal = 1;
-	
-	sensorValue = lfLineDetected(LF_INNER_L);		//Look for line on inner left sensor
-	if (sensorValue != NO_CHANGE)					//If this sensor has changed state
-		sys->sensors.line.innerLeft = sensorValue;	//Update line follower data structure with new 
-													//data
-	if(sensorValue == LINE)
-		returnVal = 1;
-	
-	sensorValue = lfLineDetected(LF_OUTER_R);		//Look for line on outer right sensor
-	if (sensorValue != NO_CHANGE)					//If this sensor has changed state
-		sys->sensors.line.outerRight = sensorValue;	//Update line follower data structure with new
-													//data
-	if(sensorValue == LINE)
-		returnVal = 1;
-	
-	sensorValue = lfLineDetected(LF_INNER_R);		//Look for line on inner right sensor
-	if (sensorValue != NO_CHANGE)					//If this sensor has changed state
-		sys->sensors.line.innerRight = sensorValue;	//Update line follower data structure with new 
-													//data
-	if(sensorValue == LINE)
-		returnVal = 1;
-	return returnVal;
-}
-
-/*
-* Function:
-* int8_t dfGetLineDirection(RobotGlobalStructure *sys)
-*
-* This function examines the states of the line follower sensors and determines the direction and
-* urgency factor by which the robot should move to find its way to the centre of the line.
-*
-* Inputs:
-* none
-*
-* Returns:
-* returns a signed integer between -3 and 3 that determines the direction and speed magnitude that 
-* the robot should move to find the centre of the line.
-* A negative output means that the robot should move left to find the line and a positive output
-* means that the robot should move right. 0 means keep going straight because no direction data is
-* able to be derived from sensor array.
-*
-* Implementation:
-* All the line sensor states are loaded into a single byte so that they can easily managed by a
-* switch statement rather than a series of unwieldy if statements. A table describing the states
-* and there digital values can be seen below:
-*
-* Sensor array state descriptions:
-* _______________________________________________________________________________________
-*| State  | Outer left | Inner left | Inner right | Outer right | Function Output value: |
-*|________|_____8______|_____4______|______2______|______1______|________________________|
-*|__0x0___|____________|____________|_____________|_____________|__________0_____________|
-*|__0x8___|_____X______|____________|_____________|_____________|_________-3_____________|
-*|__0xC___|_____X______|_____X______|_____________|_____________|_________-2_____________|
-*|__0xE___|_____X______|_____X______|______X______|_____________|_________-1_____________|
-*|__0xF___|_____X______|_____X______|______X______|______X______|__________0_____________|
-*|__0x7___|____________|_____X______|______X______|______X______|__________1_____________|
-*|__0x3___|____________|____________|______X______|______X______|__________2_____________|
-*|__0x1___|____________|____________|_____________|______X______|__________3_____________|
-*|__0x2___|____________|____________|______X______|_____________|__________1_____________|
-*|__0x4___|____________|_____X______|_____________|_____________|_________-1_____________|
-*|__0x6___|____________|_____X______|______X______|_____________|__________0_____________|     
-*
-*/
-int8_t dfGetLineDirection(RobotGlobalStructure *sys)
-{
-	//Get updated sensor data
-	dfUpdateLineSensorStates(sys);
-	//Combine sensor states from sensor structure into single byte that can be used by a switch
-	//statement. See above for description of each state.
-	uint8_t sensorStates
-	=	(sys->sensors.line.outerLeft<<3)	//Outer left has binary weighting 8
-	|	(sys->sensors.line.innerLeft<<2)	//Inner left has binary weighting 4
-	|	(sys->sensors.line.innerRight<<1)	//Inner right has binary weighting 2
-	|	(sys->sensors.line.outerRight<<0);	//Outer right has binary weighting 1
-	
-	switch(sensorStates)
-	{
-		case 0x0:
-			return 4;		//Straight, no line
-		case 0x8:
-			return -3;		//Move left by factor 3
-		case 0xC:
-			return -2;		//Move left by factor 2
-		case 0xE:
-			return -1;		//Move left by factor 1
-		case 0xF:
-			return 0;		//Straight, line
-		case 0x7:
-			return 1;		//Move right by factor 1
-		case 0x3:
-			return 2;		//Move right by factor 2
-		case 0x1:
-			return 3;		//Move right by factor 3
-		case 0x2:
-			return 1;		//Move right by factor 1
-		case 0x4:
-			return -1;		//Move left by factor 1
-		case 0x6:
-			return 0;		//Straight, line
-	}
-	return 0;
 }
 
 /*
@@ -326,18 +204,21 @@ uint8_t dfFollowLine(uint8_t speed, float *lineHeading,	RobotGlobalStructure *sy
 {
 	sys->flags.obaMoving = 1;
 	
-	int8_t lineDirection = dfGetLineDirection(sys);			//Get directional data from LF sensors
 	uint16_t forwardProxSens = proxSensRead(MUX_PROXSENS_A);//Will use obstacle data structure once
 															//implemented.
 	static uint8_t lineJustFound = 1;
 	
-	if(lineDirection == 4)				//Line has been lost, give up
+	if(!sys->sensors.line.detected)			//Line has been lost, give up (will return FLS_GIVE_UP)
+	{
 		sys->states.followLine = FLS_GIVE_UP;
+		return sys->states.followLine;
+	}
 		
 	switch(sys->states.followLine)
 	{
 		//Starting state. Has value of 0 so when line following is finished will return 0
 		case FLS_START:
+			pioLedNumber(1);
 			sys->states.followLine = FLS_FIRST_CONTACT;
 			break;
 		
@@ -345,10 +226,11 @@ uint8_t dfFollowLine(uint8_t speed, float *lineHeading,	RobotGlobalStructure *sy
 		//Once that is the case, then we must be over the line properly, so move to the FOLLOW
 		//state.
 		case FLS_FIRST_CONTACT:
+			pioLedNumber(2);
 			lineJustFound = 1;
-			if(!lineDirection)
+			if(!sys->sensors.line.direction)
 				sys->states.followLine = FLS_FOLLOW;	//If sufficiently over line, begin following
-			else 
+			else
 				moveRobot(0, 35, 0);	//Creep forward some more to straddle line
 			break;
 		
@@ -359,12 +241,12 @@ uint8_t dfFollowLine(uint8_t speed, float *lineHeading,	RobotGlobalStructure *sy
 		//detected as being directly underneath the robot, then that heading is recorded and the
 		//function switches to the FOLLOW state.
 		case FLS_ALIGN:
-			if(lineDirection)
+			if(sys->sensors.line.direction)
 			{
-				if(lineDirection < 0)
-					moveRobot(0, -15 + lineDirection*2, 100);
-				if(lineDirection > 0)
-					moveRobot(0, 15 + lineDirection*2, 100);
+				if(sys->sensors.line.direction < 0)
+					moveRobot(0, -15 + sys->sensors.line.direction*2, 100);
+				if(sys->sensors.line.direction > 0)
+					moveRobot(0, 15 + sys->sensors.line.direction*2, 100);
 			}
 			else 
 			{
@@ -385,7 +267,7 @@ uint8_t dfFollowLine(uint8_t speed, float *lineHeading,	RobotGlobalStructure *sy
 		//sensor has been triggered, then slow the robot down proportional to the value of the
 		//sensor, and if maximum value is reached on the proximity sensor, then stop line following.
 		case FLS_FOLLOW:
-			if(abs(lineDirection) < 2)
+			if(abs(sys->sensors.line.direction) < 2)
 				//Speed is inversely proportional to the reading from the forward prox sensor
 				mfMoveToHeading(*lineHeading, speed - (forwardProxSens*speed/1023) + 10, sys);
 			else
@@ -396,7 +278,9 @@ uint8_t dfFollowLine(uint8_t speed, float *lineHeading,	RobotGlobalStructure *sy
 			break;
 		
 		case FLS_GIVE_UP:						//If the line has been lost
+			mfStopRobot(sys);
 			sys->states.followLine = FLS_START;
+			lineJustFound = 1;
 			break;
 		
 		//If finished, reset the state machine for next time and return a 0.
@@ -454,6 +338,7 @@ uint8_t dfScanBrightestLightSource(float *brightestHeading, uint16_t sweepAngle,
 	static uint32_t brightestVal;
 	float rotateError;
 	uint32_t avgBrightness = 0;
+	uint32_t avgBrightnessOld = 0;
 	
 	switch(sys->states.scanBrightest)
 	{
@@ -469,7 +354,7 @@ uint8_t dfScanBrightestLightSource(float *brightestHeading, uint16_t sweepAngle,
 
 		case SBS_GOTO_START_POSITION:
 			if(!mfRotateToHeading(startHeading, sys))
-				sys->states.scanBrightest = SBS_SWEEP;						//In position, now perform sweep
+				sys->states.scanBrightest = SBS_SWEEP;			//In position, now perform sweep
 			return 1;
 			break;
 		
@@ -487,13 +372,14 @@ uint8_t dfScanBrightestLightSource(float *brightestHeading, uint16_t sweepAngle,
 				sys->states.scanBrightest = SBS_END;
 			else
 			{
-				avgBrightness = (lightSensRead(MUX_LIGHTSENS_L, LS_WHITE_REG) +
-										lightSensRead(MUX_LIGHTSENS_R, LS_WHITE_REG))/2;
-				if(avgBrightness > brightestVal)
+				avgBrightness = (lightSensRead(MUX_LIGHTSENS_L, LS_BLUE_REG) +
+										lightSensRead(MUX_LIGHTSENS_R, LS_BLUE_REG))/2;
+				if((avgBrightness - avgBrightnessOld) > brightestVal)
 				{
-					brightestVal = avgBrightness;
+					brightestVal = avgBrightness - avgBrightnessOld;
 					*brightestHeading = sys->pos.facing;
 				}
+				avgBrightnessOld = avgBrightness;
 			}
 			return 1;
 			break;

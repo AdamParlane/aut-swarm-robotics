@@ -27,7 +27,7 @@
 #include "Functions/power_functions.h"
 #include "Functions/comm_functions.h"
 #include "Functions/docking_functions.h"
-#include "Functions/light_colour_functions.h"
+#include "Functions/sensor_functions.h"
 #include "Functions/manual_mode.h"
 #include "Functions/motion_functions.h"
 #include "Functions/navigation_functions.h"
@@ -146,7 +146,7 @@ int main(void)
 					
 			case M_LIGHT_FOLLOW:
 			//Entered when light follow command received from PC
-				mfTrackLight(&sys);
+				mfTrackLight(50, &sys);
 				break;
 				
 			case M_FORMATION:
@@ -186,6 +186,7 @@ int main(void)
 				if(!fdelay_ms(1000))					//Blink LED 3 in Idle mode
 					led3Tog;		
 				break;
+				
 		}
 		
 		commGetNew(&sys);				//Checks for and interprets new communications
@@ -193,6 +194,8 @@ int main(void)
 		nfRetrieveNavData(&sys);	//checks if there is new navigation data and updates sys->pos
 		
 		pfPollPower(&sys);			//Poll battery and charging status
+		
+		sfPollSensors(&sys);		//Poll prox, colour, line
 		
 		//check to see if obstacle avoidance is enabled AND the robot is moving
 		if(sys.flags.obaEnabled && sys.flags.obaMoving && sys.states.mainf != M_OBSTACLE_AVOIDANCE)

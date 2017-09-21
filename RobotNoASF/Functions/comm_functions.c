@@ -98,7 +98,7 @@ void commInterpretSwarmMessage(RobotGlobalStructure *sys)
 
 	switch(sys->comms.messageData.command & 0xF0)	//Look at upper nibble only
 	{
-		//Position commands
+		//PositionGroup commands
 		case 0xA0:
 			switch(sys->comms.messageData.command & 0x0F)
 			{

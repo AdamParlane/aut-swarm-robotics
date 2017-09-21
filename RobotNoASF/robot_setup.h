@@ -141,7 +141,7 @@ typedef struct IMUSensor
 //this will be written to by getMouseXY, nfGetEulerAngles, and another navigation function which
 //combines them. The structure will store the relevant info from both key sensors and fuse them in
 //an additional function (84bytes i think)
-typedef struct Position
+typedef struct PositionGroup
 {
 	OpticalSensor Optical;		//Optical sensor raw data
 	IMUSensor IMU;				//IMU raw and converted data
@@ -161,7 +161,7 @@ typedef struct Position
 								//time as the IMU
 	unsigned short deltaTime;	//Time between last IMU reading and IMU previous reading
 	float facingOffset;			//Used to offset facing value (when corrected by PC)
-} Position;
+} PositionGroup;
 
 //Stores information about the battery and charging
 typedef struct BatteryChargeData
@@ -203,28 +203,39 @@ typedef struct LineSensorArray
 	uint8_t innerLeft;
 	uint8_t innerRight;
 	uint8_t outerRight;
+	uint16_t pollInterval;
+	uint8_t pollEnabled;
+	uint8_t direction;
+	uint8_t detected;
 } LineSensorArray;
 
-typedef struct CommunicationData
+typedef struct CommunicationDataGroup
 {
 	uint8_t pollEnabled;				//Whether or not to poll for new messages in main()
 	uint16_t pollInterval;				//Interval at which to poll at (ms)
 	struct MessageInfo messageData;		//Next message data
 	uint16_t testModeStreamInterval;	//Interval between sending test data packets (ms)
-} CommunicationData;
+} CommunicationDataGroup;
+
+//Proximity sensor sub-structure
+typedef struct ProximitySensorGroup
+{
+	uint16_t sensor[6];
+	uint8_t pollEnabled;	//Bitmask of the sensors being polled
+	uint16_t pollInterval;
+}ProximitySensorGroup;
 
 //Structure that will store all system flags for global use
-typedef struct SystemFlags
+typedef struct SystemFlagsGroup
 {
 	char xbeeNewData;	//New data from Xbee interface
 	char imuCheckFifo;	//IMU ext interrupt has been triggered
 	char obaMoving;		//Robot is in motion
 	char obaEnabled;	//Obstacle avoidance enabled
-	char tfStream;		//Test function stream time flag
-} SystemFlags;
+} SystemFlagsGroup;
 
 //Structure that will store the state of every state machine in the system
-typedef struct SystemStates
+typedef struct SystemStatesGroup
 {
 	//Main function state machine state
 	MainStates mainf;
@@ -244,26 +255,36 @@ typedef struct SystemStates
 	
 	//mfMoveToHeadingByDistance() states
 	MTHByDistanceStates moveHeadingDistance;
-} SystemStates;
+} SystemStatesGroup;
+
+//Colour sensor sub structure
+typedef struct ColourSensorGroup
+{
+	ColourSensorData left;
+	ColourSensorData right;
+	uint16_t pollInterval;		//Poll rate
+	uint8_t pollEnabled;		//Contains a bitmask indicating which sensors are updated
+	uint8_t getHSV;				//Whether or not to convert to HSV when retrieving
+} ColourSensorGroup;
 
 //Sensors sub-structure
-typedef struct SensorData
+typedef struct SensorDataGroup
 {
 	LineSensorArray line;
-	ColourSensorData colourLeft;
-	ColourSensorData colourRight;
-} SensorData;
+	ColourSensorGroup colour;
+	ProximitySensorGroup prox;
+} SensorDataGroup;
 
 //Structure to combine all system globals
 typedef struct RobotGlobalStructure
 {
-	SystemStates states;			//System states
-	SystemFlags flags;				//System global flags
-	SensorData sensors;				//Sensor data
-	CommunicationData comms;		//Communication system control and data
-	Position pos;					//Position information
-	BatteryChargeData power;		//Battery/Charging info and control
-	uint32_t timeStamp;				//System timestamp (millisecs since power on)
+	SystemStatesGroup states;				//System states
+	SystemFlagsGroup flags;					//System global flags
+	SensorDataGroup sensors;				//Sensor data
+	CommunicationDataGroup comms;			//Communication system control and data
+	PositionGroup pos;						//Position information
+	BatteryChargeData power;				//Battery/Charging info and control
+	uint32_t timeStamp;						//System timestamp (millisecs since power on)
 } RobotGlobalStructure;
 
 //////////////[Defines]/////////////////////////////////////////////////////////////////////////////
@@ -272,8 +293,6 @@ typedef struct RobotGlobalStructure
 //Global variables should be initialised in robot_setup.c, then an extern to them should be placed
 //here, otherwise we end up with multiple definition errors.
 extern RobotGlobalStructure sys;
-//TODO: add these to the sys structure
-extern volatile char streamDelayCounter;
 
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*
