@@ -32,11 +32,11 @@
 
 ////Proximity sensor array elements (NEEDS CORRECTION)
 #define SF_PROX_FRONT		0
-#define SF_PROX_FRONTR		1
-#define SF_PROX_REARR		2
+#define SF_PROX_FRONTL		1
+#define SF_PROX_REARL		2
 #define SF_PROX_REAR		3
-#define SF_PROX_REARL		4
-#define SF_PROX_FRONTL		5
+#define SF_PROX_REARR		4
+#define SF_PROX_FRONTR		5
 
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*
