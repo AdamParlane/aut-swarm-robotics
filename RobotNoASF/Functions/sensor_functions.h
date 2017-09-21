@@ -22,13 +22,13 @@
 
 //////////////[Defines]/////////////////////////////////////////////////////////////////////////////
 //Parameter definitions for lcfRetrieveLightData()
-#define LCF_RGB_ONLY		0
-#define LCF_RGB_AND_HSV		1
+#define SF_RGB_ONLY		0
+#define SF_RGB_AND_HSV		1
 
 ////Hue angle constants (Should help speed up maths)
-#define LCF_MAX_HUE_ANGLE	360
-#define LCF_HUE_ANGLE_DIV3	120
-#define LCF_HUE_ANGLE_DIV6	60
+#define SF_MAX_HUE_ANGLE	360
+#define SF_HUE_ANGLE_DIV3	120
+#define SF_HUE_ANGLE_DIV6	60
 
 ////Proximity sensor array elements (NEEDS CORRECTION)
 #define SF_PROX_FRONT		0

@@ -21,18 +21,18 @@
 
 //////////////[Includes]////////////////////////////////////////////////////////////////////////////
 #include "../robot_setup.h"
-#include "docking_functions.h"
-#include "motion_functions.h"
-#include "navigation_functions.h"
-#include "../Interfaces/line_sens_interface.h"
-#include "../Interfaces/adc_interface.h"
-#include "../Interfaces/light_sens_interface.h"
-#include "../Interfaces/twimux_interface.h"
+
 #include "../Interfaces/prox_sens_interface.h"
 #include "../Interfaces/fc_interface.h"
 #include "../Interfaces/timer_interface.h"
 #include "../Interfaces/motor_driver.h"
 #include "../Interfaces/pio_interface.h"
+
+#include "motion_functions.h"
+#include "navigation_functions.h"
+#include "sensor_functions.h"
+#include "docking_functions.h"
+
 #include <stdlib.h>				//abs() function in dfFollowLine()
 
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
@@ -63,14 +63,10 @@ uint8_t dfDockRobot( RobotGlobalStructure *sys)
 	static uint8_t lineFound = 0;		//Whether or not we have found the line
 	static uint32_t lineLastSeen = 0;	//Time at which line was last detected
 	
-	uint16_t forwardProxSens = proxSensRead(MUX_PROXSENS_A);//Will use obstacle data structure once
-															//implemented.
-	
 	switch(sys->states.docking)
 	{
 		//Begin by scanning for the brightest light source
 		case DS_START:
-			//pioLedNumber(1);
 			if(lineFound)
 			{
 				lineLastSeen = sys->timeStamp;
@@ -85,7 +81,6 @@ uint8_t dfDockRobot( RobotGlobalStructure *sys)
 		
 		//Turn to face brightest light source seen
 		case DS_FACE_BRIGHTEST:
-			//pioLedNumber(2);
 			if(!mfRotateToHeading(bHeading, sys))
 			{
 				if(lineFound)
@@ -97,15 +92,12 @@ uint8_t dfDockRobot( RobotGlobalStructure *sys)
 		
 		//Move towards brightestes light source
 		case DS_MOVE_FORWARD:
-			//pioLedNumber(3);
 			mfTrackLight(70, sys);
 			if(!fdelay_ms(3400))			//After 3.7 seconds, look for LEDs again
-			{
 				sys->states.docking = DS_RESCAN_BRIGHTEST;
-			}
+
 			if(sys->sensors.line.detected)
 			{
-				fdelay_ms(0);	//reset fdelay
 				lineFound = 1;
 				sys->states.docking = DS_START;
 			}
@@ -114,7 +106,6 @@ uint8_t dfDockRobot( RobotGlobalStructure *sys)
 		//Check again for brightest light source by scanning a 180 degree arc left to right to see
 		//if we are still on track to find brightest light source
 		case DS_RESCAN_BRIGHTEST:
-			//pioLedNumber(4);
 			//Only look in front, because we should still be roughly in the right direction
 			if(!dfScanBrightestLightSource(&bHeading, 270, sys))
 				sys->states.docking = DS_FACE_BRIGHTEST;
@@ -122,13 +113,12 @@ uint8_t dfDockRobot( RobotGlobalStructure *sys)
 		
 		//Follow the line until an obstacle is encountered
 		case DS_FOLLOW_LINE:
-			//pioLedNumber(5);
 			//Enable fast scharge chip polling
 			sys->power.pollChargingStateEnabled = 1;
 			sys->power.pollChargingStateInterval = 100;
 			
 			mfTrackLight(45, sys);
-			if(forwardProxSens >= PS_CLOSEST)
+			if(sys->sensors.prox.sensor[SF_PROX_FRONT] >= PS_CLOSEST)
 				sys->states.docking = DS_CHRG_CONNECT;
 
 			if(!sys->sensors.line.detected)
@@ -145,7 +135,6 @@ uint8_t dfDockRobot( RobotGlobalStructure *sys)
 		//is established, exit with a FINISH state. Still need to include a timeout, incase the
 		//in front of the robot isn't the charger
 		case DS_CHRG_CONNECT:
-			pioLedNumber(7);
 			//If power connected to fc chip
 			if(sys->power.fcChipStatus == FC_STATUS_BF_STAT_INRDY 
 			|| sys->power.fcChipStatus == FC_STATUS_BF_STAT_CHRGIN)
@@ -166,7 +155,6 @@ uint8_t dfDockRobot( RobotGlobalStructure *sys)
 			break;
 		
 		case DS_FINISHED:
-			//pioLedNumber(7);
 			lineFound = 0;
 			sys->states.docking = DS_START;
 			break;
@@ -203,9 +191,6 @@ uint8_t dfDockRobot( RobotGlobalStructure *sys)
 uint8_t dfFollowLine(uint8_t speed, float *lineHeading,	RobotGlobalStructure *sys)
 {
 	sys->flags.obaMoving = 1;
-	
-	uint16_t forwardProxSens = proxSensRead(MUX_PROXSENS_A);//Will use obstacle data structure once
-															//implemented.
 	static uint8_t lineJustFound = 1;
 	
 	if(!sys->sensors.line.detected)			//Line has been lost, give up (will return FLS_GIVE_UP)
@@ -269,10 +254,11 @@ uint8_t dfFollowLine(uint8_t speed, float *lineHeading,	RobotGlobalStructure *sy
 		case FLS_FOLLOW:
 			if(abs(sys->sensors.line.direction) < 2)
 				//Speed is inversely proportional to the reading from the forward prox sensor
-				mfMoveToHeading(*lineHeading, speed - (forwardProxSens*speed/1023) + 10, sys);
+				mfMoveToHeading(*lineHeading, 
+						speed - (sys->sensors.prox.sensor[SF_PROX_FRONT]*speed/1023) + 10, sys);
 			else
 				sys->states.followLine = FLS_ALIGN;
-			if(forwardProxSens >= PS_CLOSEST)	//If forward prox is at maximum, then we've 
+			if(sys->sensors.prox.sensor[SF_PROX_FRONT] >= PS_CLOSEST)	//If forward prox is at maximum, then we've 
 												//encountered an obstacle, so finish
 				sys->states.followLine = FLS_FINISH;
 			break;
@@ -338,7 +324,9 @@ uint8_t dfScanBrightestLightSource(float *brightestHeading, uint16_t sweepAngle,
 	static uint32_t brightestVal;
 	float rotateError;
 	uint32_t avgBrightness = 0;
-	uint32_t avgBrightnessOld = 0;
+	uint32_t avgBrightnessOld = 0xFFFF;	//Only looks for positive delta, so by making the first
+										//value high, the first delta reading will be negative,
+										//preventing a false positive
 	
 	switch(sys->states.scanBrightest)
 	{
@@ -372,8 +360,7 @@ uint8_t dfScanBrightestLightSource(float *brightestHeading, uint16_t sweepAngle,
 				sys->states.scanBrightest = SBS_END;
 			else
 			{
-				avgBrightness = (lightSensRead(MUX_LIGHTSENS_L, LS_BLUE_REG) +
-										lightSensRead(MUX_LIGHTSENS_R, LS_BLUE_REG))/2;
+				avgBrightness = (sys->sensors.colour.left.blue + sys->sensors.colour.right.blue)/2;
 				if((avgBrightness - avgBrightnessOld) > brightestVal)
 				{
 					brightestVal = avgBrightness - avgBrightnessOld;
@@ -418,33 +405,33 @@ uint8_t dfScanBrightestLightSource(float *brightestHeading, uint16_t sweepAngle,
 * the delay function that waits 50ms for data to be ready. Need to do more experimentation. -Matt
 *
 */
-float dfScanBrightestLightSourceProx(void)
-{
-	uint16_t sensor[6];
-	uint16_t brightestVal;
-	int brightestSensor = 0;
-	//Enable Ambient light mode on the prox sensors
-	proxAmbModeEnabled();
-
-	//Read light sensor values
-	sensor[0] = proxAmbRead(MUX_PROXSENS_A);		//0
-	sensor[1] = proxAmbRead(MUX_PROXSENS_B);		//60
-	sensor[3] = proxAmbRead(MUX_PROXSENS_C);		//120
-	sensor[4] = proxAmbRead(MUX_PROXSENS_D);		//180
-	sensor[5] = proxAmbRead(MUX_PROXSENS_E);		//-120
-	sensor[6] = proxAmbRead(MUX_PROXSENS_F);		//-60
-	//Revert to proximity mode
-	proxModeEnabled();
-	
-	//Find largest
-	for (int i = 0; i < 6; i++)
-	{
-		if(sensor[i] > brightestVal)
-		{
-			brightestVal = sensor[i];
-			brightestSensor = i;
-		}
-	}
-	
-	return nfWrapAngle(60*brightestSensor);
-}
+//float dfScanBrightestLightSourceProx(void)
+//{
+	//uint16_t sensor[6];
+	//uint16_t brightestVal;
+	//int brightestSensor = 0;
+	////Enable Ambient light mode on the prox sensors
+	//proxAmbModeEnabled();
+//
+	////Read light sensor values
+	//sensor[0] = proxAmbRead(MUX_PROXSENS_A);		//0
+	//sensor[1] = proxAmbRead(MUX_PROXSENS_B);		//60
+	//sensor[2] = proxAmbRead(MUX_PROXSENS_C);		//120
+	//sensor[3] = proxAmbRead(MUX_PROXSENS_D);		//180
+	//sensor[4] = proxAmbRead(MUX_PROXSENS_E);		//-120
+	//sensor[5] = proxAmbRead(MUX_PROXSENS_F);		//-60
+	////Revert to proximity mode
+	//proxModeEnabled();
+	//
+	////Find largest
+	//for (int i = 0; i < 6; i++)
+	//{
+		//if(sensor[i] > brightestVal)
+		//{
+			//brightestVal = sensor[i];
+			//brightestSensor = i;
+		//}
+	//}
+	//
+	//return nfWrapAngle(60*brightestSensor);
+//}

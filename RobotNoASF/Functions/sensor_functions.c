@@ -377,12 +377,12 @@ void sfRGB2HSV(struct ColourSensorData *colours)
 
 	//Calculate Hue angle
 	if (rgbMax == colours->red)
-		rawHue = 0 + LCF_HUE_ANGLE_DIV6*(colours->green - colours->blue)/(rgbMax - rgbMin);
+		rawHue = 0 + SF_HUE_ANGLE_DIV6*(colours->green - colours->blue)/(rgbMax - rgbMin);
 	else if (rgbMax == colours->green)
-		rawHue = LCF_HUE_ANGLE_DIV3 + LCF_HUE_ANGLE_DIV6
+		rawHue = SF_HUE_ANGLE_DIV3 + SF_HUE_ANGLE_DIV6
 					*(colours->blue - colours->red)/(rgbMax - rgbMin);
 	else
-		rawHue = 2*LCF_HUE_ANGLE_DIV3 + LCF_HUE_ANGLE_DIV6
+		rawHue = 2*SF_HUE_ANGLE_DIV3 + SF_HUE_ANGLE_DIV6
 					*(colours->red - colours->green)/(rgbMax - rgbMin);
 
 	//Wrap rawHue to the range 0-360 and store in colours.hue
