@@ -30,7 +30,7 @@
 #define SF_HUE_ANGLE_DIV3	120
 #define SF_HUE_ANGLE_DIV6	60
 
-////Proximity sensor array elements (NEEDS CORRECTION)
+////Proximity sensor array elements
 #define SF_PROX_FRONT		0
 #define SF_PROX_FRONTL		1
 #define SF_PROX_REARL		2

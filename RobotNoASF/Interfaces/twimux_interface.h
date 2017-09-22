@@ -125,7 +125,7 @@
 #define TWI0_FCHARGE_ADDR			0x6B		//Battery Charger (Fast Charge Controller)
 #define TWI0_IMU_ADDR				0x68		//IMU
 #define TWI2_IMU_ADDR				0x68		//IMU
-#define TWI2_SLAVE_ADDR				0xA1		//This devices' slave address
+#define TWI2_SLAVE_ADDR				0x44		//This devices' slave address
 
 ////TWI Mux channels
 //Only one active at a time

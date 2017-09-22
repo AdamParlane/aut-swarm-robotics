@@ -105,7 +105,7 @@ RobotGlobalStructure sys =
 	//System States
 	.states =
 	{
-		.mainf						= M_IDLE,
+		.mainf						= M_DOCKING,
 		.mainfPrev					= M_IDLE,
 		.docking					= DS_START,
 		.chargeCycle				= CCS_CHECK_POWER,
@@ -118,6 +118,7 @@ RobotGlobalStructure sys =
 	.comms =
 	{
 		.pollEnabled				= 1,
+		.twi2SlavePollEnabled		= 0,
 		.pollInterval				= 0,
 		.testModeStreamInterval		= 100
 	},
@@ -233,7 +234,7 @@ void robotSetup(void)
 	
 	if(!sys.pos.IMU.gyroCalEnabled)		//If gyro cal no enabled (because it introduces its own
 										//delay
-		delay_ms(2500);					//Stops robot running away while programming
+		delay_ms(0);					//Stops robot running away while programming
 	srand(sys.timeStamp);				//Seed rand() to give unique random numbers
 	return;
 }

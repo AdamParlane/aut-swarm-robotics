@@ -21,6 +21,17 @@
 #ifndef COMM_FUNCTIONS_H_
 #define COMM_FUNCTIONS_H_
 
+//////////////[Defines]/////////////////////////////////////////////////////////////////////////////
+//TWI slave internal register addresses
+
+#define COMM_TWI2_ROBOT_NAME	0x11
+#define COMM_TWI2_XBEE_ADDR		0x12
+#define COMM_TWI2_BATTERY_LVL	0x21
+#define COMM_TWI2_HEADING		0x31
+#define COMM_TWI2_ROLL			0x32
+#define COMM_TWI2_PITCH			0x33
+#define COMM_TWI2_YAW			0x34
+
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*
 * Function:
@@ -66,6 +77,6 @@ void commInterpretSwarmMessage(RobotGlobalStructure *sys);
 * 0 on success
 *
 */
-char commTwi2SlaveRequest(void);
+char commTwi2SlaveRequest(RobotGlobalStructure *sys);
 
 #endif /* COMM_FUNCTIONS_H_ */

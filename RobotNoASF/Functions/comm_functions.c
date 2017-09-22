@@ -65,7 +65,14 @@ void commGetNew(RobotGlobalStructure *sys)
 				commInterpretSwarmMessage(sys);					//Interpret the message
 		}
 		
+		if(sys->comms.twi2SlavePollEnabled)					//If polling TWI2 Slave reqs is enabled
+		{
+			if(twi2SlaveAccessPoll())
+				while(commTwi2SlaveRequest(sys));
+		}
 	}
+	
+	
 }
 
 /*
@@ -214,39 +221,68 @@ void commInterpretSwarmMessage(RobotGlobalStructure *sys)
 * [Ideas for improvements that are yet to be made](optional)
 *
 */
-char commTwi2SlaveRequest(void)
+char commTwi2SlaveRequest(RobotGlobalStructure *sys)
 {
 	enum TwiSlaveStates {IDLE, GET_CMD, SEND_DATA, FINISH};
-	uint8_t twiSlaveState = IDLE;
+	uint8_t twiSlaveState = GET_CMD;
 	uint8_t comInProgress = 0;
 	uint8_t command = 0;
+	uint8_t outputBuffer = 0;
 	
 	do 
 	{
 		switch (twiSlaveState)
 		{
-			case IDLE:
-				if(twi2SlaveAccessPoll() & 0x01)	//If ReadMode
-						twiSlaveState = GET_CMD;
-				break;
-			
 			case GET_CMD:
-				twi2SlaveRead(&command, &comInProgress);
-				twiSlaveState = SEND_DATA;
+				if(twi2SlaveAccessPoll() & 0x01)	//If ReadMode
+				{
+					twi2SlaveRead(&command, &comInProgress);
+					twiSlaveState = SEND_DATA;
+				}
 				break;
 				
 			case SEND_DATA:
 				switch(command)
 				{
-					case 1:				//Commands go here
+					case COMM_TWI2_ROBOT_NAME:				//Commands go here
+						//twi2SlaveWrite(data, &comInProgress);
+						break;
+
+					case COMM_TWI2_XBEE_ADDR:				//Commands go here
+						//twi2SlaveWrite(data, &comInProgress);
+						break;
+
+					case COMM_TWI2_BATTERY_LVL:				//Commands go here
+						//twi2SlaveWrite(data, &comInProgress);
+						break;
+
+					case COMM_TWI2_HEADING:				//Commands go here
+						outputBuffer = ((uint16_t)sys->pos.heading >> 2 );
+						twi2SlaveWrite(outputBuffer, &comInProgress);
+						twiSlaveState = FINISH;
+						break;
+
+					case COMM_TWI2_ROLL:				//Commands go here
+						//twi2SlaveWrite(data, &comInProgress);
+						break;
+
+					case COMM_TWI2_PITCH:				//Commands go here
+						//twi2SlaveWrite(data, &comInProgress);
+						break;
+
+					case COMM_TWI2_YAW:				//Commands go here
 						//twi2SlaveWrite(data, &comInProgress);
 						break;
 				}
 				twiSlaveState = FINISH;
-					break;
+				break;
 				
 			case FINISH:
-				twiSlaveState = IDLE;
+				if(twi2SlaveAccess)
+					if(twi2EndSlaveAccess)
+						if(twi2TxComplete)
+							comInProgress = 0;
+				twiSlaveState = GET_CMD;
 				break;
 		}
 	} while (comInProgress);
