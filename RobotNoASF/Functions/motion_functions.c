@@ -287,13 +287,11 @@ float mfTrackLight(uint8_t speed, RobotGlobalStructure *sys)
 	static float pErr;			//Proportional error
 	static float iErr = 0;		//Integral error
 	float dHeading;				//Delta heading to adjust by
-	//Read light sensor values
-	uint16_t leftSensor = lightSensRead(MUX_LIGHTSENS_L, LS_WHITE_REG);
-	uint16_t rightSensor = lightSensRead(MUX_LIGHTSENS_R, LS_WHITE_REG);
 	
 	//Calculate errors
 	//Proportional error is normalised by the average value of both sensors
-	pErr = (float)(rightSensor - leftSensor)/((float)(leftSensor + rightSensor)/2.0);
+	pErr = (float)(sys->sensors.colour.right.green - sys->sensors.colour.left.green)/
+			((float)(sys->sensors.colour.left.green + sys->sensors.colour.right.green)/2.0);
 	iErr += pErr;
 			
 	//If dHeading ends up being out of range, then dial it back

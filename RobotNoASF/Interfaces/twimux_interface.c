@@ -516,7 +516,7 @@ char twi2SlaveWrite(unsigned char dataByte, unsigned char *more)
 {
 	if(twi2SlaveAccess)
 	{
-		if(!twi2SlaveReadMode)
+		if(twi2SlaveReadMode)
 		{
 			if(twi2TxReady)
 				twi2Send(dataByte);

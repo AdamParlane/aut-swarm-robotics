@@ -212,6 +212,7 @@ typedef struct LineSensorArray
 typedef struct CommunicationDataGroup
 {
 	uint8_t pollEnabled;				//Whether or not to poll for new messages in main()
+	uint8_t twi2SlavePollEnabled;		//Whether to look for slave requests on twi2 (From LCD)
 	uint16_t pollInterval;				//Interval at which to poll at (ms)
 	struct MessageInfo messageData;		//Next message data
 	uint16_t testModeStreamInterval;	//Interval between sending test data packets (ms)

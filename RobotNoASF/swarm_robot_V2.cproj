@@ -264,6 +264,12 @@
     <Compile Include="Interfaces\adc_interface.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="Interfaces\rgbled_driver.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="Interfaces\rgbled_driver.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="Interfaces\xbee_driver.c">
       <SubType>compile</SubType>
     </Compile>

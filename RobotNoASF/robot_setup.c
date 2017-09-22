@@ -32,6 +32,7 @@
 #include "Interfaces/opt_interface.h"
 #include "Interfaces/pio_interface.h"
 #include "Interfaces/prox_sens_interface.h"
+#include "Interfaces/rgbled_driver.h"
 #include "Interfaces/timer_interface.h"
 #include "Interfaces/twimux_interface.h"
 #include "Interfaces/uart_interface.h"
@@ -105,7 +106,7 @@ RobotGlobalStructure sys =
 	//System States
 	.states =
 	{
-		.mainf						= M_IDLE,
+		.mainf						= M_DOCKING,
 		.mainfPrev					= M_IDLE,
 		.docking					= DS_START,
 		.chargeCycle				= CCS_CHECK_POWER,
@@ -118,6 +119,7 @@ RobotGlobalStructure sys =
 	.comms =
 	{
 		.pollEnabled				= 1,
+		.twi2SlavePollEnabled		= 0,
 		.pollInterval				= 0,
 		.testModeStreamInterval		= 100
 	},
