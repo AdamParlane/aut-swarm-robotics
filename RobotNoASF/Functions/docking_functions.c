@@ -117,11 +117,11 @@ uint8_t dfDockRobot( RobotGlobalStructure *sys)
 			sys->power.pollChargingStateEnabled = 1;
 			sys->power.pollChargingStateInterval = 100;
 			
-			mfTrackLight(45, sys);
+			mfTrackLight(45 - (sys->sensors.prox.sensor[SF_PROX_FRONT]*45/1023) + 10, sys);
 			if(sys->sensors.prox.sensor[SF_PROX_FRONT] >= PS_CLOSEST)
 				sys->states.docking = DS_CHRG_CONNECT;
 
-			if(!sys->sensors.line.detected)
+			if(sys->sensors.line.detected)
 				lineLastSeen = sys->timeStamp;
 				
 			if((sys->timeStamp - lineLastSeen) > 2500) //If line hasn't been detected for 2 seconds,
@@ -360,7 +360,7 @@ uint8_t dfScanBrightestLightSource(float *brightestHeading, uint16_t sweepAngle,
 				sys->states.scanBrightest = SBS_END;
 			else
 			{
-				avgBrightness = (sys->sensors.colour.left.blue + sys->sensors.colour.right.blue)/2;
+				avgBrightness = (sys->sensors.colour.left.green + sys->sensors.colour.right.green)/2;
 				if((avgBrightness - avgBrightnessOld) > brightestVal)
 				{
 					brightestVal = avgBrightness - avgBrightnessOld;

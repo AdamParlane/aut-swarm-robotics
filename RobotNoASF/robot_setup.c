@@ -32,6 +32,7 @@
 #include "Interfaces/opt_interface.h"
 #include "Interfaces/pio_interface.h"
 #include "Interfaces/prox_sens_interface.h"
+#include "Interfaces/rgbled_driver.h"
 #include "Interfaces/timer_interface.h"
 #include "Interfaces/twimux_interface.h"
 #include "Interfaces/uart_interface.h"
@@ -234,7 +235,7 @@ void robotSetup(void)
 	
 	if(!sys.pos.IMU.gyroCalEnabled)		//If gyro cal no enabled (because it introduces its own
 										//delay
-		delay_ms(0);					//Stops robot running away while programming
+		delay_ms(2500);					//Stops robot running away while programming
 	srand(sys.timeStamp);				//Seed rand() to give unique random numbers
 	return;
 }

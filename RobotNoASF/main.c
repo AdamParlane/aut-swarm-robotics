@@ -34,14 +34,10 @@
 #include "Functions/obstacle_avoidance.h"
 #include "Functions/test_functions.h"
 
-//////////////[Defines]/////////////////////////////////////////////////////////////////////////////
-
 //////////////[Global variables]////////////////////////////////////////////////////////////////////
 extern RobotGlobalStructure sys;		//System data structure
-extern struct MessageInfo message;		//Incoming message structure
 
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
-
 /*
 * Function:
 * int main(void)
@@ -189,7 +185,7 @@ int main(void)
 				
 		}
 		
-		commGetNew(&sys);				//Checks for and interprets new communications
+		commGetNew(&sys);			//Checks for and interprets new communications
 		
 		nfRetrieveNavData(&sys);	//checks if there is new navigation data and updates sys->pos
 		
