@@ -27,21 +27,17 @@
 #include "Functions/power_functions.h"
 #include "Functions/comm_functions.h"
 #include "Functions/docking_functions.h"
-#include "Functions/light_colour_functions.h"
+#include "Functions/sensor_functions.h"
 #include "Functions/manual_mode.h"
 #include "Functions/motion_functions.h"
 #include "Functions/navigation_functions.h"
 #include "Functions/obstacle_avoidance.h"
 #include "Functions/test_functions.h"
 
-//////////////[Defines]/////////////////////////////////////////////////////////////////////////////
-
 //////////////[Global variables]////////////////////////////////////////////////////////////////////
 extern RobotGlobalStructure sys;		//System data structure
-extern struct MessageInfo message;		//Incoming message structure
 
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
-
 /*
 * Function:
 * int main(void)
@@ -105,10 +101,7 @@ int main(void)
 {
 	robotSetup(); //Set up the system and peripherals
 	//Battery voltage stored in sys.power.batteryVoltage
-	//Initial main function state is set in robot_setup.c
-	//Return variables. Not ideal, but not sure what else to do right now.
-	uint8_t chargeCycleReturn = 0;
-	uint8_t dockingReturn = 0;
+	//Initial main function state is set in robot_setup.c (sys.states.mainf)
 	float lineHeading = 0;
 	uint8_t obstacleFlag;
 	sys.states.mainf = M_IDLE;
@@ -131,11 +124,16 @@ int main(void)
 			
 			case M_DOCKING:
 			//if battery low or manual docking command sent from PC
-				dockingReturn = dfDockRobot(&sys);
-				if(!dockingReturn)	//Execute docking procedure state machine
-					sys.states.mainf = M_CHARGING;		//If finished docking, switch to charging
-				else if(dockingReturn == DS_CHRG_NOT_FOUND)
-					sys.states.mainf = M_IDLE;			//If charger connection failed
+				switch(dfDockRobot(&sys))				//Execute docking procedure state machine
+				{
+					case DS_FINISHED:
+						sys.states.mainf = M_CHARGING;	//If finished docking, switch to charging
+						break;
+						
+					case DS_CHRG_NOT_FOUND:
+						sys.states.mainf = M_IDLE;		//If charger connection failed
+						break;
+				}	
 				break;
 			
 			case M_LINE_FOLLOW:
@@ -146,7 +144,7 @@ int main(void)
 					
 			case M_LIGHT_FOLLOW:
 			//Entered when light follow command received from PC
-				mfTrackLight(&sys);
+				mfTrackLight(50, &sys);
 				break;
 				
 			case M_RANDOM:
@@ -167,16 +165,20 @@ int main(void)
 				break;
 
 			case M_CHARGING:
-				mfStopRobot(&sys);
-				chargeCycleReturn = pfChargeCycleHandler(&sys);
-				if(chargeCycleReturn > 0xEF)
-					sys.states.mainf = M_IDLE;			//Charging fault occurred
-				if(!chargeCycleReturn)
-					sys.states.mainf = sys.states.mainfPrev;	//Charge finished successfully
+				switch(pfChargeCycleHandler(&sys))
+				{
+					case 0xFF:
+						sys.states.mainf = M_IDLE;			//Charging fault occurred
+						break;
+						
+					case CCS_FINISHED:
+						sys.states.mainf = sys.states.mainfPrev;	//Charge finished successfully
+						break;	
+				}
 				break;
 				
 			case M_TEST_ALL:
-			//Something
+				//Something
 				break;
 				
 			case M_IDLE:					
@@ -184,12 +186,16 @@ int main(void)
 				if(!fdelay_ms(1000))					//Blink LED 3 in Idle mode
 					led3Tog;				
 				break;
+				
 		}
-		commGetNew(&sys);				//Checks for and interprets new communications
 		
-		nfRetrieveNavData(&sys);	//checks if there is new navigation data and updates sys->pos.
+		commGetNew(&sys);			//Checks for and interprets new communications
+		
+		nfRetrieveNavData(&sys);	//checks if there is new navigation data and updates sys->pos
 		
 		pfPollPower(&sys);			//Poll battery and charging status
+		
+		sfPollSensors(&sys);		//Poll prox, colour, line
 		
 		//check to see if obstacle avoidance is enabled AND the robot is moving
 		if(sys.flags.obaEnabled && sys.flags.obaMoving && sys.states.mainf != M_OBSTACLE_AVOIDANCE)

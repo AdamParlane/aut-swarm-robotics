@@ -286,7 +286,7 @@ unsigned short invRow2Scale(const signed char *row)
 * Function:
 * void imuReadFifo(void)
 *
-* Will read data from the IMU's FIFO buffer and store data in the given Position structure
+* Will read data from the IMU's FIFO buffer and store data in the given PositionGroup structure
 *
 * Inputs:
 * RobotGlobalStructure *sys:
@@ -299,7 +299,7 @@ unsigned short invRow2Scale(const signed char *row)
 * Sets up variables required as parameters for dmp_read_fifo() (see below for descriptions).
 * Calls dmp_read_fifo() which will attempt to read the data from the FIFO buffer. If this fails, 
 * this function will exit with non zero value. On success, the sensors parameter is checked against
-* bit masks to determine what data was stored in the FIFO so it can be stored in the Position
+* bit masks to determine what data was stored in the FIFO so it can be stored in the PositionGroup
 * structure. This should save a little bit of time if only some of the data has been sent.
 * Next the more parameter is checked. If it is non-zero then there is more data in the FIFO buffer
 * still so dmp_read_fifo is called again. When more is finally zero, the timer between the last FIFO

@@ -173,7 +173,7 @@ unsigned short invRow2Scale(const signed char *row);
 * Function:
 * void imuReadFifo(void)
 *
-* Will read data from the IMU's FIFO buffer and store data in the given Position structure
+* Will read data from the IMU's FIFO buffer and store data in the given PositionGroup structure
 *
 * Inputs:
 * RobotGlobalStructure *sys:

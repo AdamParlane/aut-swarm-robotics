@@ -41,12 +41,12 @@
 #define LS_DETECT			0x06		//Lower nibble settings Trigger one time/ force mode
 #define LS_AUTO				0x00		//Auto mode, no triggering
 ////Upper nibble settings (Light sensitivity)
-#define LS_40MS				0x06		//40ms integration time (High sensitivity)
+#define LS_40MS				0x00		//40ms integration time (Low sensitivity, High range)
 #define LS_80MS				0x10		//80ms integration time
 #define LS_160MS			0x20		//160ms integration time
 #define LS_320MS			0x30		//3200ms integration time
 #define LS_640MS			0x40		//640ms integration time
-#define LS_1280MS			0x50		//1280ms integration time, (Low sensitivity)
+#define LS_1280MS			0x50		//1280ms integration time, (High sensitivity, Low Range)
 ////Maximum light sensor value
 #define MAX_LIGHT_CHANNEL_VAL	65535
 

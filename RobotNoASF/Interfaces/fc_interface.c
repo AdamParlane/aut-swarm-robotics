@@ -55,11 +55,6 @@ void fcInit(void)
 	REG_PIOB_CODR |= PIO_CODR_P2;	//Set PB2 to low
 	
 	uint8_t writeBuffer;
-	//NOT SURE IF THIS LINE IS NEEDED BE CAUSE ACCORDING TO DATASHEET CE IS INVERTED, THEREFORE THE
-	//DEFAULT VALUE 0 WOULD MEAN THAT CHARGING IS ENABLED NOT 1. TESTING REQUIRED.
-	//Ensures that CE bit is clear in case safety timer has gone off in previous charge.
-	//writeBuffer = FC_CONTROL_CHARGE_DISABLE;
-	//twi0Write(TWI0_FCHARGE_ADDR, FC_CONTROL_REG, 1, &writeBuffer);
 	
 	//Vreg = 3.98v, input current = 2.5A
 	writeBuffer = FC_BATTVOL_INIT;
@@ -68,6 +63,9 @@ void fcInit(void)
 	//Charge current set to max Ic=2875mA, termination current Iterm=100mA (default)
 	writeBuffer = FC_CHARGE_INIT;
 	twi0Write(TWI0_FCHARGE_ADDR, FC_CHARGE_REG, 1, &writeBuffer);
+		
+	writeBuffer = FC_NTCMON_INIT;
+	twi0Write(TWI0_FCHARGE_ADDR, FC_NTCMON_REG, 1, &writeBuffer);
 	
 	fcEnableCharging(1);
 }

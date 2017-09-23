@@ -32,6 +32,7 @@
 #include "Interfaces/opt_interface.h"
 #include "Interfaces/pio_interface.h"
 #include "Interfaces/prox_sens_interface.h"
+#include "Interfaces/rgbled_driver.h"
 #include "Interfaces/timer_interface.h"
 #include "Interfaces/twimux_interface.h"
 #include "Interfaces/uart_interface.h"
@@ -105,7 +106,7 @@ RobotGlobalStructure sys =
 	//System States
 	.states =
 	{
-		.mainf						= M_FORMATION,
+		.mainf						= M_DOCKING,
 		.mainfPrev					= M_IDLE,
 		.docking					= DS_START,
 		.chargeCycle				= CCS_CHECK_POWER,
@@ -118,19 +119,36 @@ RobotGlobalStructure sys =
 	.comms =
 	{
 		.pollEnabled				= 1,
+		.twi2SlavePollEnabled		= 0,
 		.pollInterval				= 0,
 		.testModeStreamInterval		= 100
 	},
 	
-	//Proximity Sensors
-	.prox = 
+	//Sensor polling setup
+	.sensors =
 	{
-		.errorCount					= 0,
-		.pollEnabled				= 1,
-		.pollInterval				= 20
-	}, 
+		.line =
+		{
+			.pollEnabled			= 1,
+			.pollInterval			= 40
+		},
+		
+		.colour =
+		{
+			.pollEnabled			= 0x03,		//Bitmask to enable specific sensors.
+			.pollInterval			= 40,
+			.getHSV					= 1
+		},
+		
+		.prox =
+		{
+      .errorCount       = 0,
+			.pollEnabled			= 0x3F,		//Bitmask to enable specific sensors
+			.pollInterval			= 40
+		}
+	},
 	
-	//Robot Position
+	//Robot PositionGroup
 	.pos =
 	{
 		.x							= 0,		//Resets robot position
@@ -143,7 +161,7 @@ RobotGlobalStructure sys =
 		.IMU =
 		{
 			.pollEnabled			= 1,		//Enable IMU polling
-			.gyroCalEnabled			= 1			//Enables gyro calibration at start up. Takes 8sec,
+			.gyroCalEnabled			= 0			//Enables gyro calibration at start up. Takes 8sec,
 												//so best to disable while debugging
 		},
 		.Optical =
@@ -162,7 +180,9 @@ RobotGlobalStructure sys =
 		.pollBatteryEnabled			= 1,		//Battery polling enabled
 		.pollChargingStateEnabled	= 0,		//Charge status polling disabled
 		.pollChargingStateInterval	= 100,		//Poll charging status as fast as possible
-		.pollBatteryInterval		= 30000		//Poll battery every thirty seconds
+		.pollBatteryInterval		= 30000,	//Poll battery every thirty seconds
+		.chargeWatchDogEnabled		= 0,		//Watchdog enabled
+		.chargeWatchDogInterval		= 1000		//How often to send watchdog pulse to FC chip
 	},
 	
 	.timeStamp = 0								//millisecs since power on
@@ -198,11 +218,12 @@ void robotSetup(void)
 	pioInit();							//Initialise the PIO controllers
 	adcSingleConvInit();				//Initialise ADC for single conversion mode
 	pioLedInit();						//Initialise the LEDs on the mid board
-	motorInit();						//Initialise the motor driver chips
 	SPI_Init();							//Initialise SPI for talking with optical sensor
 	twi0Init();							//Initialise TWI0 interface
 	twi2Init();							//Initialise TWI2 interface
 	timer0Init();						//Initialise timer0
+	mouseInit();						//Initialise mouse sensor
+	motorInit();						//Initialise the motor driver chips
 	lightSensInit(MUX_LIGHTSENS_R);		//Initialise Right Light/Colour sensor
 	lightSensInit(MUX_LIGHTSENS_L);		//Initialise Left Light/Colour sensor
 	proxSensInit();						//Initialise proximity sensors
@@ -211,7 +232,6 @@ void robotSetup(void)
 	imuInit();							//Initialise IMU.
 	extIntInit();						//Initialise external interrupts.
 	imuDmpInit(sys.pos.IMU.gyroCalEnabled);	//Initialise DMP system
-	mouseInit();						//Initialise mouse sensor
 	lfInit();							//Initialise line follow sensors. Only on V2.
 	
 	if(!sys.pos.IMU.gyroCalEnabled)		//If gyro cal no enabled (because it introduces its own

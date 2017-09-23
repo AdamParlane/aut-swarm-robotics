@@ -41,19 +41,6 @@
 #define LFC_PORT		(PIOA)			//PIO Port def for the line follower LED control
 #define LFC				(PIO_PA8)		//PIO pin def for the line follower LED control
 
-//////////////[Structure Definitions]///////////////////////////////////////////////////////////////
-struct LineSensorArray
-//Will store states of the line sensors for use by functions in this modules. This is necessary
-//because there is a gray area when the sensor is half on and half off the line, so by establishing
-//hysteresis and only changing the stored states when an upper and lower threshold is crossed,
-//jitter should be reduced.
-{
-	uint8_t outerLeft;
-	uint8_t innerLeft;
-	uint8_t innerRight;
-	uint8_t outerRight;
-};
-
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*
 * Function:

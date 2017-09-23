@@ -205,7 +205,7 @@ float mfMoveToHeading(float heading, uint8_t speed, RobotGlobalStructure *sys)
 *   Percentage of max speed to move at (0-100%)
 * float distance:
 *   Distance to travel before stopping.
-* struct SystemStates *state
+* struct SystemStatesGroup *state
 *   Pointer to the sys.states data structure
 * RobotGlobalStructure *sys:
 *   Pointer to the sys->pos. global structure.
@@ -281,24 +281,22 @@ float mfMoveToHeadingByDistance(float heading, uint8_t speed, float distance,
 * Add speed parameter
 *
 */
-float mfTrackLight(RobotGlobalStructure *sys)
+float mfTrackLight(uint8_t speed, RobotGlobalStructure *sys)
 {
 	sys->flags.obaMoving = 1;	
 	static float pErr;			//Proportional error
 	static float iErr = 0;		//Integral error
 	float dHeading;				//Delta heading to adjust by
-	//Read light sensor values
-	uint16_t leftSensor = lightSensRead(MUX_LIGHTSENS_L, LS_WHITE_REG);
-	uint16_t rightSensor = lightSensRead(MUX_LIGHTSENS_R, LS_WHITE_REG);
 	
 	//Calculate errors
 	//Proportional error is normalised by the average value of both sensors
-	pErr = (float)(rightSensor - leftSensor)/((float)(leftSensor + rightSensor)/2.0);
+	pErr = (float)(sys->sensors.colour.right.green - sys->sensors.colour.left.green)/
+			((float)(sys->sensors.colour.left.green + sys->sensors.colour.right.green)/2.0);
 	iErr += pErr;
 			
 	//If dHeading ends up being out of range, then dial it back
 	dHeading = TL_KP*pErr + TL_KI*iErr;
-	dHeading = capToRangeInt(dHeading, -45, 45);
+	dHeading = capToRangeInt(dHeading, -60, 60);
 	
 	mfMoveToHeading(sys->pos.facing + dHeading, 60, sys);
 	
@@ -311,6 +309,7 @@ float mfTrackLight(RobotGlobalStructure *sys)
 		iErr = 0;
 		return 0;
 	} else {
+		mfMoveToHeading(sys->pos.facing + dHeading, speed, sys);
 		return pErr;		//If not, return pErr
 	}
 }
@@ -584,19 +583,17 @@ int32_t mfMoveToPosition(int32_t x, int32_t y, uint8_t speed, float facing,
 	enum {START, CALC_HEADING, MOVE_TO_POS, FINISHED};
 	static uint8_t state = START;
 	static float currentHeading = 0;
-	static uint32_t initialDistance;
-	static uint32_t distTravelled = 0;
 	
 	switch(state)
 	{
 		case START:
-			initialDistance = sqrt((x - sys->pos.x)*(x - sys->pos.x) + 
-									(y - sys->pos.y)*(y - sys->pos.y));
+			//initialDistance = sqrt((x - sys->pos.x)*(x - sys->pos.x) + 
+			//						(y - sys->pos.y)*(y - sys->pos.y));
 			state = CALC_HEADING;
 			break;
 		
 		case CALC_HEADING:
-			distTravelled = 0;
+			//distTravelled = 0;
 			
 			state = MOVE_TO_POS;
 			break;

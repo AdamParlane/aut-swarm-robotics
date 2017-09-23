@@ -37,9 +37,9 @@
 
 //////////////[Defines]/////////////////////////////////////////////////////////////////////////////
 ////TWI status register timeout values (ms)
-#define TWI_RXRDY_TIMEOUT	5
-#define TWI_TXRDY_TIMEOUT	2
-#define TWI_TXCOMP_TIMEOUT	2
+#define TWI_RXRDY_TIMEOUT	100
+#define TWI_TXRDY_TIMEOUT	100
+#define TWI_TXCOMP_TIMEOUT	100
 
 ////General Commands
 //if returns 1, then the receive holding register has a new byte to be read
@@ -125,7 +125,7 @@
 #define TWI0_FCHARGE_ADDR			0x6B		//Battery Charger (Fast Charge Controller)
 #define TWI0_IMU_ADDR				0x68		//IMU
 #define TWI2_IMU_ADDR				0x68		//IMU
-#define TWI2_SLAVE_ADDR				0xA1		//This devices' slave address
+#define TWI2_SLAVE_ADDR				0x44		//This devices' slave address
 
 ////TWI Mux channels
 //Only one active at a time

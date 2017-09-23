@@ -72,10 +72,18 @@ void twi0Init(void)
 	twi0Reset;								//Software reset
 
 	//TWI0 Clock Waveform Setup
+	//REG_TWI0_CWGR
+	//|=	TWI_CWGR_CKDIV(2)					//Clock speed 230000, fast mode
+	//|	TWI_CWGR_CLDIV(63)					//Clock low period 1.3uSec
+	//|	TWI_CWGR_CHDIV(28);					//Clock high period  0.6uSec
+
+	//TWI0 Clock Waveform Setup
 	REG_TWI0_CWGR
-	|=	TWI_CWGR_CKDIV(2)					//Clock speed 400000, fast mode
-	|	TWI_CWGR_CLDIV(63)					//Clock low period 1.3uSec
-	|	TWI_CWGR_CHDIV(28);					//Clock high period  0.6uSec
+	|=	TWI_CWGR_CKDIV(2)					//Clock speed 100000, fast mode
+	|	TWI_CWGR_CLDIV(124)					//Clock low period 1.3uSec
+	|	TWI_CWGR_CHDIV(124);				//Clock high period  0.6uSec
+
+
 	twi0MasterMode;							//Master mode enabled, slave disabled
 }
 
@@ -435,17 +443,11 @@ char twi2SlaveAccessPoll(void)
 {
 	if(twi2SlaveAccess)
 	{
-		switch(twi2SlaveReadMode)
-		{
-			case 0:
-				return 0x10;
-				break;
-					
-			case 1:
-				return 0x11;
-				break;
-		}
-	}		
+		if(twi2SlaveReadMode)
+			return 0x11;
+		else
+			return 0x10;
+	}
 	return 0;
 }
 
@@ -514,7 +516,7 @@ char twi2SlaveWrite(unsigned char dataByte, unsigned char *more)
 {
 	if(twi2SlaveAccess)
 	{
-		if(!twi2SlaveReadMode)
+		if(twi2SlaveReadMode)
 		{
 			if(twi2TxReady)
 				twi2Send(dataByte);

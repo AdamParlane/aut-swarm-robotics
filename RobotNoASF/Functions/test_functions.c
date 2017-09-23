@@ -220,7 +220,7 @@ void testManager(RobotGlobalStructure *sys)
 	static uint8_t testMode = 0x00;
 	static uint32_t nextSendTime = 0;	//Time at which next packet will be streamed
 	
-	if(sys->flags.xbeeNewData)
+	//if(sys->flags.xbeeNewData)
 	{
 		//get the new test data
 		testMode = getTestData(&transmitMessage, sys);
@@ -269,7 +269,7 @@ void testAll(struct transmitDataStructure *transmit, RobotGlobalStructure *sys)
 	//Can only be used once comms test is performed
 	//[WIP] needs consultation with Mansel -AP
 	//Order will be
-	//Position testPosition;
+	//PositionGroup testPosition;
 	uint16_t doubleByteData; //used as an intermediate
 	transmit->Data[0] = TEST_ALL_RETURN; //0xEF
 	doubleByteData = proxSensRead(MUX_PROXSENS_A);
@@ -290,10 +290,10 @@ void testAll(struct transmitDataStructure *transmit, RobotGlobalStructure *sys)
 	doubleByteData = proxSensRead(MUX_PROXSENS_F);
 	transmit->Data[11] = doubleByteData >> 8;
 	transmit->Data[12] = doubleByteData & 0xFF;
-	doubleByteData = lightSensRead(MUX_LIGHTSENS_L, LS_WHITE_REG);
+	doubleByteData = lightSensRead(MUX_LIGHTSENS_L, LS_BLUE_REG);
 	transmit->Data[13] = doubleByteData >> 8;
 	transmit->Data[14] = doubleByteData & 0xFF;
-	doubleByteData = lightSensRead(MUX_LIGHTSENS_R, LS_WHITE_REG);
+	doubleByteData = lightSensRead(MUX_LIGHTSENS_R, LS_BLUE_REG);
 	transmit->Data[15] = doubleByteData >> 8;
 	transmit->Data[16] = doubleByteData & 0xFF;
 	getMouseXY(sys);

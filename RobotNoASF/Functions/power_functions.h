@@ -48,7 +48,7 @@ void pfPollPower(RobotGlobalStructure *sys);
 * State machine that handles the charging cycle of the battery
 *
 * Inputs:
-* struct SystemStates *state
+* struct SystemStatesGroup *state
 *   Pointer to the sys.states data structure
 * RobotGlobalStructure *sys:
 *   Pointer to the sys->pos. data structure

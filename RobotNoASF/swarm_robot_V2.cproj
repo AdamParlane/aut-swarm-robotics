@@ -204,12 +204,6 @@
     <Compile Include="Functions\docking_functions.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="Functions\light_colour_functions.c">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="Functions\light_colour_functions.h">
-      <SubType>compile</SubType>
-    </Compile>
     <Compile Include="Functions\manual_mode.c">
       <SubType>compile</SubType>
     </Compile>
@@ -232,6 +226,12 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="Functions\obstacle_avoidance.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="Functions\sensor_functions.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="Functions\sensor_functions.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="Functions\test_functions.c">
@@ -262,6 +262,12 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="Interfaces\adc_interface.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="Interfaces\rgbled_driver.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="Interfaces\rgbled_driver.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="Interfaces\xbee_driver.c">

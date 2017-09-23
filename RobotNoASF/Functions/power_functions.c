@@ -93,7 +93,7 @@ void pfPollPower(RobotGlobalStructure *sys)
 	}
 	
 	//If Charger Watchdog is enabled and chargeWatchDogEnabled flag has just been set, or 
-	//chargeWatchDagTime has elapsed then poll
+	//chargeWatchDogTime has elapsed then poll
 	if(sys->power.pollChargingStateEnabled && chargerWatchDogTime <= sys->timeStamp)
 	{
 		//Set time at which watchdog will next be triggered
@@ -109,7 +109,7 @@ void pfPollPower(RobotGlobalStructure *sys)
 * State machine that handles the charging cycle of the battery
 *
 * Inputs:
-* struct SystemStates *state
+* struct SystemStatesGroup *state
 *   Pointer to the sys.states data structure
 * RobotGlobalStructure *sys:
 *   Pointer to the sys->pos. data structure
@@ -135,32 +135,56 @@ void pfPollPower(RobotGlobalStructure *sys)
 uint8_t pfChargeCycleHandler(RobotGlobalStructure *sys)
 {
 	static float currentHeading = 0;
-	uint8_t chipState = 0;
-	fcWatchdogReset();							//Reset watchdog timer on fc chip
-	chipState = fcState();
 	
 	switch(sys->states.chargeCycle)
 	{
 		case CCS_CHECK_POWER:
-			if(chipState == FC_BATTERY_CHARGING || chipState == FC_POWER_CONNECTED)
+			sys->power.pollChargingStateEnabled = 1;
+			sys->power.pollChargingStateInterval = 100;
+			if(sys->power.fcChipStatus == FC_BATTERY_CHARGING 
+			|| sys->power.fcChipStatus == FC_POWER_CONNECTED)
+			{
+				sys->sensors.prox.pollEnabled = 0x00;
 				sys->states.chargeCycle = CCS_CHARGING;
+			}
 			break;
 		
 		case CCS_CHARGING:
 			//Blink LED
 			if(!fdelay_ms(250))
 				led3Tog;
-			if(chipState == FC_BATTERY_CHARGED)	//If finished charging
+			sys->power.chargeWatchDogEnabled = 1;
+			if(sys->power.fcChipStatus == FC_BATTERY_CHARGED)	//If finished charging
 				sys->states.chargeCycle = CCS_DISMOUNT;
 
-			if((chipState & 0xF0) == 0xF0)		//If fault (Upper nibble = F)
+			if(sys->power.fcChipFaultFlag)						//If fault (Upper nibble = F)
+			{
 				sys->states.chargeCycle = CCS_FAULT;
+			}
+			
+			if(sys->power.fcChipStatus == 0)					//If connection broken
+			{
+				currentHeading = sys->pos.facing;
+				sys->states.chargeCycle = CCS_RECONNECT;
+			}
+			break;
+		
+		case CCS_RECONNECT:
+			//mfAdvancedMove(currentHeading, currentHeading, 100, 70, sys);	//Charge Forward
+			mfTrackLight(70, sys);
+			if(sys->power.fcChipStatus == FC_BATTERY_CHARGING
+			|| sys->power.fcChipStatus == FC_POWER_CONNECTED)
+			{
+				sys->states.chargeCycle = CCS_CHARGING;						//If reconnected
+				mfStopRobot(sys);	
+			}
+			
 			break;
 		
 		case CCS_FAULT:
-			fcEnableCharging(0);				//Stop charging
+			sys->power.fcChipFaultFlag = 0;
 			sys->states.chargeCycle = CCS_DISMOUNT;
-			return 0xFF;						//Indicate that a fault occurred
+			return 0xFF;										//Indicate that a fault occurred
 		
 		//See which direction we are facing right now, then switch to CCS_TURN_AWAY
 		case CCS_DISMOUNT:
@@ -170,10 +194,18 @@ uint8_t pfChargeCycleHandler(RobotGlobalStructure *sys)
 		
 		//Rotate 180 degrees, then switch to CCS_FINISHED STATE
 		case CCS_TURN_AWAY:
-			if(!mfMoveToHeadingByDistance(currentHeading - 180, 35, 10, sys))
-				sys->states.chargeCycle = CCS_FINISHED;
+			if(!mfRotateToHeading(currentHeading + 180, sys))
+				sys->states.chargeCycle = CCS_STOP_POLLING;
 			break;
 		
+		case CCS_STOP_POLLING:
+			sys->sensors.prox.pollEnabled = 0x3F;
+			sys->power.pollChargingStateInterval = 100;
+			sys->power.pollChargingStateEnabled = 0;
+			sys->power.chargeWatchDogEnabled = 0;
+			sys->states.chargeCycle = CCS_FINISHED;
+			break;
+			
 		case CCS_FINISHED:
 			sys->states.chargeCycle = CCS_CHECK_POWER;
 			break;
