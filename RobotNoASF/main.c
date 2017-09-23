@@ -111,7 +111,7 @@ int main(void)
 	uint8_t dockingReturn = 0;
 	float lineHeading = 0;
 	uint8_t obstacleFlag;
-	sys.states.mainf = M_RANDOM;
+	sys.states.mainf = M_IDLE;
 	sys.flags.obaEnabled = 1;
 	sys.flags.obaMoving	= 1;
 	while(1)
@@ -150,23 +150,20 @@ int main(void)
 				break;
 				
 			case M_RANDOM:
-				mfRandomMovementGenerator();
+				mfRandomMovementGenerator(&sys);
 				break;
 				
 			case M_FORMATION:
 			//placeholder
-				mfAdvancedMove(0, 0, 50, 25, &sys);
-				sys.pos.targetHeading = 0;
+				mfAdvancedMove(180, 0, 50, 25, &sys);
+				sys.pos.targetHeading = 180;
 				sys.pos.targetSpeed = 50;
 				break;
 						
 			case M_OBSTACLE_AVOIDANCE:
-				obstacleFlag = dodgeObstacle(&sys);
-				if(!obstacleFlag)//avoid obstacles using proximity sensors
-				{
-					//returning 1 means obstacles have been avoided
+				obstacleFlag = dodgeObstacle(&sys);//avoid obstacles using proximity sensors
+				if(!obstacleFlag)//returning 0 means obstacles have been avoided
 					sys.states.mainf = sys.states.mainfPrev; //reset the state to what it was
-				}
 				break;
 
 			case M_CHARGING:

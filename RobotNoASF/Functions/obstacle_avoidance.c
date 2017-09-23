@@ -135,33 +135,46 @@ uint8_t dodgeObstacle(RobotGlobalStructure *sys)
 		indexLeft = 0;
 		if(indexRight > 5)
 		indexRight = 5;
-		//TO DO 
 		if(sys->pos.targetHeading > proxRangeLow && sys->pos.targetHeading <= proxRangeHigh) // if the prox is on the FACE we care about
 		{
 			if((proximity[index] > OBSTACLE_THRESHOLD) || (proximity[indexLeft] > 1000) || (proximity[indexRight] > 1000))
 			{
 				if(firstLoop) //choose a direction to dodge on first attempt
 				{
+					//if((proximity[indexLeft] > OBSTACLE_THRESHOLD))
+					//{
+						//sys->pos.targetHeading += 45;
+					//}
+					//else if((proximity[indexRight] > OBSTACLE_THRESHOLD))
+					//{
+						//sys->pos.targetHeading -= 45;
+					//}
 					if((proximity[indexLeft] > proximity[indexRight]))
 					{
 						sys->pos.targetHeading +=90;
 						direction = RIGHT;
-						firstLoop = 0;
-						obs = 1;
 					}
 					else if ((proximity[indexLeft] < proximity[indexRight]))
 					{
 						sys->pos.targetHeading -= 90;
 						direction = LEFT;
-						firstLoop = 0;
-						obs = 1;
 					}
+					firstLoop = 0;
+					obs = 1;					
 				}
 				//stuck in a corner
 				else if((proximity[index] > OBSTACLE_THRESHOLD) && (proximity[indexLeft] > 500) && (proximity[indexRight] > 500))
 				{
 					sys->pos.targetHeading -= 120;
 				}
+				//else if((proximity[indexLeft] > OBSTACLE_THRESHOLD))
+				//{
+					//sys->pos.targetHeading += 45;
+				//}
+				//else if((proximity[indexRight] > OBSTACLE_THRESHOLD))
+				//{
+					//sys->pos.targetHeading -= 45;
+				//}
 				//moving left but its getting worse
 				else if ((direction == LEFT) && (proximity[indexLeft] > (proximity[indexRight] + 100)) && (proximity[indexLeft] > 600 || obs))
 				{
@@ -181,10 +194,11 @@ uint8_t dodgeObstacle(RobotGlobalStructure *sys)
 					obs = 0;
 				}
 			}
-			else if (proximity[original] < OBSTACLE_THRESHOLD) //obstacle has been avoided
+			else if (proximity[original] < (OBSTACLE_THRESHOLD-100)) //obstacle has been avoided
 			{
 				firstLoop = 1;
 				obs = 0;
+				delay_ms(250);
 				return 0;
 			}
 		}

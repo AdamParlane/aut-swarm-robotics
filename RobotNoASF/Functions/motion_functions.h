@@ -172,7 +172,7 @@ float mfTrackLightProx(RobotGlobalStructure *sys);
 * No return values
 *
 */
-char mfRandomMovementGenerator(void);
+char mfRandomMovementGenerator(RobotGlobalStructure *sys);
 
 /*
 * Function:

@@ -22,7 +22,7 @@
 #define OBSTACLE_AVOIDANCE_H_
 
 //////////////[Defines]/////////////////////////////////////////////////////////////////////////////
-#define OBSTACLE_THRESHOLD 0x0100 //Subject to change on testing but seems reasonable
+#define OBSTACLE_THRESHOLD 0x0150 //Subject to change on testing but seems reasonable
 //////////////[Global Variables]///////////////////////////////////////////////////////////////////////////
 uint16_t proximity[6];
 
