@@ -140,7 +140,8 @@ void commInterpretSwarmMessage(RobotGlobalStructure *sys)
 
 				case 0x04:
 					//move robot randomly
-					mfRandomMovementGenerator();
+					sys->states.mainf = M_RANDOM;
+
 					break;
 					
 				case 0x05:

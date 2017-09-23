@@ -418,14 +418,21 @@ float mfTrackLightProx(RobotGlobalStructure *sys)
 * each time the function is called
 *
 */
-char mfRandomMovementGenerator(void)
+char mfRandomMovementGenerator(RobotGlobalStructure *sys)
 {
+	static char restart = 1;
 	int direction = rand() % 360;	//get random direction range: 0 - 360 degrees
 	char speed = rand() % 100;		//get random speed:up to 100%
 	char runTime = rand() % 5;		//get random delay time: up to 5 seconds
-	moveRobot(direction, speed, 0);	//moveRobot at random speed and direction
-	delay_ms(runTime * 1000);		//Delay for random milliseconds
-	return 0;
+	if(restart)
+	{
+		sys->pos.targetHeading = direction;
+		moveRobot(direction, speed, 0);	//moveRobot at random speed and direction
+	}
+	if(!fdelay_ms(5000))				//Delay for 5 secondss
+		restart = 1;
+	else
+		restart = 0;	
 }
 
 /*
