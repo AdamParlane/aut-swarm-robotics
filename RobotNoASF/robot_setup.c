@@ -142,7 +142,7 @@ RobotGlobalStructure sys =
 		
 		.prox =
 		{
-      .errorCount       = 0,
+			.errorCount				= 0,
 			.pollEnabled			= 0x3F,		//Bitmask to enable specific sensors
 			.pollInterval			= 40
 		}

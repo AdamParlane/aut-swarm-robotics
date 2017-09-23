@@ -233,6 +233,7 @@ typedef struct ProximitySensorGroup
 	uint16_t sensor[6];
 	uint8_t pollEnabled;	//Bitmask of the sensors being polled
 	uint16_t pollInterval;
+	uint8_t errorCount;
 }ProximitySensorGroup;
 
 //Structure that will store all system flags for global use

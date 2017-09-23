@@ -53,10 +53,10 @@ void scanProximity(RobotGlobalStructure *sys)
 	uint8_t index = 0;
 	static uint32_t pollProxTime = 0;
 	//If fast charge chip polling is enabled
-	if(sys->prox.pollEnabled && pollProxTime <= sys->timeStamp)
+	if(sys->sensors.prox.pollEnabled && pollProxTime <= sys->timeStamp)
 	{
 		//Store the time at which the charger status will next be polled
-		pollProxTime = sys->timeStamp + sys->prox.pollInterval;
+		pollProxTime = sys->timeStamp + sys->sensors.prox.pollInterval;
 		for(uint16_t i = MUX_PROXSENS_A; i <= MUX_PROXSENS_B; i++)
 		{
 			proximity[index] = proxSensRead(i);
@@ -68,12 +68,12 @@ void scanProximity(RobotGlobalStructure *sys)
 			//error so reset sensors
 			proxSensInit();		//Initialise proximity sensors
 			//delay_ms(50);
-			sys->prox.errorCount ++;
-			if(sys->prox.errorCount < 2)
+			sys->sensors.prox.errorCount ++;
+			if(sys->sensors.prox.errorCount < 2)
 				scanProximity(sys);	//rescan the sensors
 		}
 		else
-			sys->prox.errorCount = 0;
+			sys->sensors.prox.errorCount = 0;
 	}	
 }
 
