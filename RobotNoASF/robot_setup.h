@@ -46,7 +46,8 @@ typedef enum MainStates
 	M_IDLE, 
 	M_CHARGING,
 	M_LINE_FOLLOW,
-	M_LIGHT_FOLLOW
+	M_LIGHT_FOLLOW, 
+	M_RANDOM
 } MainStates;
 
 typedef enum DockingStates

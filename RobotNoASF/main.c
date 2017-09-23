@@ -111,7 +111,7 @@ int main(void)
 	uint8_t dockingReturn = 0;
 	float lineHeading = 0;
 	uint8_t obstacleFlag;
-	sys.states.mainf = M_FORMATION;
+	sys.states.mainf = M_RANDOM;
 	sys.flags.obaEnabled = 1;
 	sys.flags.obaMoving	= 1;
 	while(1)
@@ -149,15 +149,15 @@ int main(void)
 				mfTrackLight(&sys);
 				break;
 				
+			case M_RANDOM:
+				mfRandomMovementGenerator();
+				break;
+				
 			case M_FORMATION:
 			//placeholder
-				//mfAdvancedMove(0, 90, 50, 100, &sys);
 				mfAdvancedMove(0, 0, 50, 25, &sys);
 				sys.pos.targetHeading = 0;
 				sys.pos.targetSpeed = 50;
-				//if(!mfMoveToHeadingByDistance(0, 100, 200, &sys))
-					//sys.states.mainf = M_IDLE;
-
 				break;
 						
 			case M_OBSTACLE_AVOIDANCE:
