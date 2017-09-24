@@ -104,7 +104,9 @@ int main(void)
 	//Initial main function state is set in robot_setup.c (sys.states.mainf)
 	float lineHeading = 0;
 	uint8_t obstacleFlag;
-		
+	sys.states.mainf = M_IDLE;
+	sys.flags.obaEnabled = 1;
+	sys.flags.obaMoving	= 1;
 	while(1)
 	{
 		switch (sys.states.mainf)
@@ -145,19 +147,21 @@ int main(void)
 				mfTrackLight(50, &sys);
 				break;
 				
+			case M_RANDOM:
+				mfRandomMovementGenerator(&sys);
+				break;
+				
 			case M_FORMATION:
-				if(!mfMoveToPosition(200, 200, 50, 0, 40, &sys))
-				//mfAdvancedMove(0, 0, 100, 25, &sys);
-					sys.states.mainf = M_IDLE;
+			//placeholder
+				mfAdvancedMove(180, 0, 50, 25, &sys);
+				sys.pos.targetHeading = 180;
+				sys.pos.targetSpeed = 50;
 				break;
 						
 			case M_OBSTACLE_AVOIDANCE:
-				obstacleFlag = dodgeObstacle(&sys);
-				if(!obstacleFlag)//avoid obstacles using proximity sensors
-				{
-					//returning 1 means obstacles have been avoided
+				obstacleFlag = dodgeObstacle(&sys);//avoid obstacles using proximity sensors
+				if(!obstacleFlag)//returning 0 means obstacles have been avoided
 					sys.states.mainf = sys.states.mainfPrev; //reset the state to what it was
-				}
 				break;
 
 			case M_CHARGING:
@@ -180,7 +184,7 @@ int main(void)
 			case M_IDLE:					
 				mfStopRobot(&sys);
 				if(!fdelay_ms(1000))					//Blink LED 3 in Idle mode
-					led3Tog;		
+					led3Tog;				
 				break;
 				
 		}

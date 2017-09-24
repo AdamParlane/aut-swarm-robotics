@@ -134,10 +134,10 @@ uint8_t getTestData(struct transmitDataStructure *transmit, RobotGlobalStructure
 		case TEST_MOUSE_SENSOR:
 			//Only 1 mouse sensor just trying to attain dx & dy
 			transmit->Data[1] = DATA_RETURN; //sending data out
-			transmit->Data[2] = sys->pos.Optical.dx >> 8; //upper byte
-			transmit->Data[3] = sys->pos.Optical.dx & 0xFF; //lower byte
-			transmit->Data[4] = sys->pos.Optical.dy >> 8; //upper byte
-			transmit->Data[5] = sys->pos.Optical.dy & 0xFF; //lower byte
+			transmit->Data[2] = sys->pos.Optical.x >> 8; //upper byte
+			transmit->Data[3] = sys->pos.Optical.x & 0xFF; //lower byte
+			transmit->Data[4] = sys->pos.Optical.y >> 8; //upper byte
+			transmit->Data[5] = sys->pos.Optical.y & 0xFF; //lower byte
 			transmit->DataSize = 6;
 			break;
 		
