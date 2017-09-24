@@ -72,6 +72,12 @@ void pfPollPower(RobotGlobalStructure *sys)
 		//maximum battery voltage value.
 		if(sys->power.batteryVoltage > sys->power.batteryMaxVoltage)
 			sys->power.batteryMaxVoltage = sys->power.batteryVoltage;
+		
+		//Calculate remaining battery percentage
+		sys->power.batteryPercentage 
+		=	100*(sys->power.batteryVoltage - sys->power.batteryMinVoltage)
+		/	(sys->power.batteryMaxVoltage - sys->power.batteryMinVoltage);
+		
 		//Read battery temp
 		//TODO: Read battery temp
 	}

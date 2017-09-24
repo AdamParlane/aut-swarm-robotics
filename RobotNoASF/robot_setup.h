@@ -172,6 +172,7 @@ typedef struct BatteryChargeData
 	uint16_t batteryMaxVoltage;			//Fully charged voltage of battery (will calibrate onthefly)
 	uint16_t batteryDockingVoltage;		//Voltage below which the robot should seek dock
 	uint16_t batteryMinVoltage;			//Voltage at which robot is considered completely dead
+	uint8_t batteryPercentage;			//Percentage of battery remaining
 	uint8_t fcChipStatus;				//Status or fault code reported by Charge chip
 	uint8_t fcChipFaultFlag;			//Fault detected by charge chip, see Status for code
 	uint8_t pollBatteryEnabled;			//Enable battery voltage polling

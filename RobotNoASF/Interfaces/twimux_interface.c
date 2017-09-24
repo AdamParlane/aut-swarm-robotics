@@ -80,9 +80,8 @@ void twi0Init(void)
 	//TWI0 Clock Waveform Setup
 	REG_TWI0_CWGR
 	|=	TWI_CWGR_CKDIV(2)					//Clock speed 100000, fast mode
-	|	TWI_CWGR_CLDIV(124)					//Clock low period 1.3uSec
-	|	TWI_CWGR_CHDIV(124);				//Clock high period  0.6uSec
-
+	|	TWI_CWGR_CLDIV(124)					//Clock low period 
+	|	TWI_CWGR_CHDIV(124);				//Clock high period
 
 	twi0MasterMode;							//Master mode enabled, slave disabled
 }
