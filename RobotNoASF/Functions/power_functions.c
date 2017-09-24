@@ -170,8 +170,8 @@ uint8_t pfChargeCycleHandler(RobotGlobalStructure *sys)
 			break;
 		
 		case CCS_RECONNECT:
-			//mfAdvancedMove(currentHeading, currentHeading, 100, 70, sys);	//Charge Forward
-			mfTrackLight(70, sys);
+			mfAdvancedMove(currentHeading, currentHeading, 100, 70, sys);	//Charge Forward
+			//mfTrackLight(70, sys);
 			if(sys->power.fcChipStatus == FC_BATTERY_CHARGING
 			|| sys->power.fcChipStatus == FC_POWER_CONNECTED)
 			{
