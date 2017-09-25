@@ -74,11 +74,31 @@
 */
 uint8_t nfRetrieveNavData(RobotGlobalStructure *sys)
 {
+	static uint32_t opticalNextPollTime = 0;
+	//static int32_t opticalDxSum = 0;
+	//static int32_t opticalDySum = 0;
+	//static uint16_t opticalReadCount = 0;
+	
+	//Fetch Optical Data
+	if(opticalNextPollTime < sys->timeStamp && sys->pos.Optical.pollEnabled)
+	{
+		opticalNextPollTime = sys->timeStamp + sys->pos.Optical.pollInterval;
+		getMouseXY(sys);						//Update mouse sensor data
+	}
+	
+	
 	if(sys->flags.imuCheckFifo)
 	{
 		if(sys->pos.Optical.pollEnabled)
 		{
-			getMouseXY(sys);						//Update mouse sensor data
+			//Calculate averages
+			sys->pos.Optical.dx = sys->pos.Optical.dxSum/sys->pos.Optical.sampleCount;
+			sys->pos.Optical.dy = sys->pos.Optical.dySum/sys->pos.Optical.sampleCount;
+			sys->pos.Optical.x += sys->pos.Optical.dx;
+			sys->pos.Optical.y += sys->pos.Optical.dy;
+			sys->pos.Optical.dxSum = 0;
+			sys->pos.Optical.dySum = 0;
+			sys->pos.Optical.sampleCount = 0;
 			nfProcessOpticalData(sys);
 		}
 			

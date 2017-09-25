@@ -32,6 +32,9 @@
 //////////////[Includes]////////////////////////////////////////////////////////////////////////////
 #include "twimux_interface.h"
 
+//////////////[Global Variables]////////////////////////////////////////////////////////////////////
+extern RobotGlobalStructure sys;	//Gives TWI2 interrupt handler access
+
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*
 * Function:
@@ -80,9 +83,8 @@ void twi0Init(void)
 	//TWI0 Clock Waveform Setup
 	REG_TWI0_CWGR
 	|=	TWI_CWGR_CKDIV(2)					//Clock speed 100000, fast mode
-	|	TWI_CWGR_CLDIV(124)					//Clock low period 1.3uSec
-	|	TWI_CWGR_CHDIV(124);				//Clock high period  0.6uSec
-
+	|	TWI_CWGR_CLDIV(124)					//Clock low period 
+	|	TWI_CWGR_CHDIV(124);				//Clock high period
 
 	twi0MasterMode;							//Master mode enabled, slave disabled
 }
@@ -132,7 +134,12 @@ void twi2Init(void)
 	|	TWI_CWGR_CLDIV(63)					//Clock low period 1.3uSec
 	|	TWI_CWGR_CHDIV(28);					//Clock high period  0.6uSec
 	
+	REG_TWI2_IER
+	=	TWI_IMR_RXRDY;						//Enable the RXRDY interrupt
+	
 	twi2SlaveMode;							//Slave mode enabled
+	
+	NVIC_EnableIRQ(ID_TWI2);				//Enable interrupts
 }
 
 /*
@@ -419,112 +426,11 @@ char twi2Read(unsigned char slave_addr, unsigned char reg_addr,
 	return 0;
 }
 
-/*
-* Function:
-* char twi2SlaveAccessPoll(void)
-*
-* Polls TWI2 (when in slave mode) for message from a Master
-*
-* Inputs:
-* None
-*
-* Returns:
-* 0 if no message, 0x10 if message requesting data and 0x11 if message containing data
-*
-* Implementation:
-* Will check the SlaveAccess flag on TWI2. If set to one, then a master is trying to communicate.
-* Check if SVREAD flag is set and return the appropriate value.
-*
-* Improvements:
-* [Ideas for improvements that are yet to be made](optional)
-*
-*/
-char twi2SlaveAccessPoll(void)
+void TWI2_Handler()
 {
-	if(twi2SlaveAccess)
+	if(REG_TWI2_IMR & TWI_IMR_RXRDY)		//If RXRDY interrupt
 	{
-		if(twi2SlaveReadMode)
-			return 0x11;
-		else
-			return 0x10;
+		sys.comms.twi2ReceivedDataByte = twi2Receive;
+		sys.flags.twi2NewData = 1;
 	}
-	return 0;
-}
-
-/*
-* Function:
-* char twi2SlaveRead(unsigned char *dataByte, unsigned char *more)
-*
-* Allows the caller to read data from TWI2 when in slave mode.
-*
-* Inputs:
-* unsigned char *dataByte:
-*   Pointer to a char where the data received from the interface will be stored
-* unsigned char *more
-*   Indicates that communication with the master is not finished (1 = not finished)
-*
-* Returns:
-* 0 on success or 1 on failure
-*
-* Implementation:
-* TODO: Implementation of twi2SlaveRead()
-*
-* Improvements:
-* [Ideas for improvements that are yet to be made](optional)
-*
-*/
-char twi2SlaveRead(unsigned char *dataByte, unsigned char *more)
-{
-	if(twi2SlaveAccess)
-	{
-		if(twi2SlaveReadMode)
-		{
-			if(!twi2RxReady)
-				*dataByte = twi2Receive;
-		} else
-			return 1;
-	} else
-		return 1;
-	
-	*more = !twi2EndSlaveAccess;
-	return 0;
-}
-
-/*
-* Function:
-* char twi2SlaveWrite(unsigned char dataByte, unsigned char *more)
-*
-* Allows the caller to send data to TWI2 master when in slave mode.
-*
-* Inputs:
-* unsigned char dataByte:
-*   Byte to send
-* unsigned char *more
-*   Indicates that communication with the master is not finished (1 = not finished)
-*
-* Returns:
-* 0 on success or 1 on failure
-*
-* Implementation:
-* TODO: Implementation of twi2SlaveWrite()
-*
-* Improvements:
-* [Ideas for improvements that are yet to be made](optional)
-*
-*/
-char twi2SlaveWrite(unsigned char dataByte, unsigned char *more)
-{
-	if(twi2SlaveAccess)
-	{
-		if(twi2SlaveReadMode)
-		{
-			if(twi2TxReady)
-				twi2Send(dataByte);
-		} else
-			return 1;
-	} else
-		return 1;
-
-	*more = !twi2EndSlaveAccess;
-	return 0;
 }

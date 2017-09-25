@@ -423,7 +423,7 @@ char mfRandomMovementGenerator(RobotGlobalStructure *sys)
 	static char restart = 1;
 	int direction = rand() % 360;	//get random direction range: 0 - 360 degrees
 	char speed = rand() % 100;		//get random speed:up to 100%
-	char runTime = rand() % 5;		//get random delay time: up to 5 seconds
+	//char runTime = rand() % 5;		//get random delay time: up to 5 seconds
 	if(restart)
 	{
 		sys->pos.targetHeading = direction;
@@ -432,7 +432,8 @@ char mfRandomMovementGenerator(RobotGlobalStructure *sys)
 	if(!fdelay_ms(5000))				//Delay for 5 secondss
 		restart = 1;
 	else
-		restart = 0;	
+		restart = 0;
+	return 0;
 }
 
 /*
@@ -583,6 +584,7 @@ int32_t mfMoveToPosition(int32_t x, int32_t y, uint8_t speed, float facing,
 	enum {START, CALC_HEADING, MOVE_TO_POS, FINISHED};
 	static uint8_t state = START;
 	static float currentHeading = 0;
+	//static uint32_t distTravelled = 0;
 	
 	switch(state)
 	{
@@ -594,14 +596,15 @@ int32_t mfMoveToPosition(int32_t x, int32_t y, uint8_t speed, float facing,
 		
 		case CALC_HEADING:
 			//distTravelled = 0;
-			
+			currentHeading = atan2((x - sys->pos.x), (y - sys->pos.y))*180/M_PI;
 			state = MOVE_TO_POS;
 			break;
 			
 		case MOVE_TO_POS:
-			
+			if(!fdelay_ms(1000))
+				state = CALC_HEADING;
 			//distTravelled += sqrt(sys->pos.dx*sys->pos.dx + sys->pos.dy*sys->pos.dy);
-			currentHeading = atan2((x - sys->pos.x), (y - sys->pos.y))*180/M_PI;
+			
 			mfAdvancedMove(currentHeading, facing, speed, maxTurnRatio, sys);
 			if((abs(x - sys->pos.x) < 10) && (abs(y - sys->pos.y) < 10))
 				state = FINISHED;

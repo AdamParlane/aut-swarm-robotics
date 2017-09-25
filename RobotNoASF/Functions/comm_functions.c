@@ -67,8 +67,7 @@ void commGetNew(RobotGlobalStructure *sys)
 		
 		if(sys->comms.twi2SlavePollEnabled)					//If polling TWI2 Slave reqs is enabled
 		{
-			if(twi2SlaveAccessPoll())
-				while(commTwi2SlaveRequest(sys));
+			commTwi2SlaveRequest(sys);
 		}
 	}
 	
@@ -224,69 +223,80 @@ void commInterpretSwarmMessage(RobotGlobalStructure *sys)
 */
 char commTwi2SlaveRequest(RobotGlobalStructure *sys)
 {
-	enum TwiSlaveStates {IDLE, GET_CMD, SEND_DATA, FINISH};
-	uint8_t twiSlaveState = GET_CMD;
-	uint8_t comInProgress = 0;
-	uint8_t command = 0;
 	uint8_t outputBuffer = 0;
-	
-	do 
+	if(sys->flags.twi2NewData && twi2SlaveAccess)
 	{
-		switch (twiSlaveState)
+		if(twi2SlaveReadMode)
 		{
-			case GET_CMD:
-				if(twi2SlaveAccessPoll() & 0x01)	//If ReadMode
-				{
-					twi2SlaveRead(&command, &comInProgress);
-					twiSlaveState = SEND_DATA;
-				}
-				break;
+			sys->flags.twi2NewData = 0;
+
+			switch(sys->comms.twi2ReceivedDataByte)
+			{
+				case COMM_TWI2_ROBOT_NAME:				//Commands go here
+					outputBuffer = 0;				
+					break;
+								
+				case COMM_TWI2_BATTERY_LVL:				//Commands go here
+					outputBuffer = sys->power.batteryPercentage;				
+					break;
 				
-			case SEND_DATA:
-				switch(command)
-				{
-					case COMM_TWI2_ROBOT_NAME:				//Commands go here
-						//twi2SlaveWrite(data, &comInProgress);
-						break;
-
-					case COMM_TWI2_XBEE_ADDR:				//Commands go here
-						//twi2SlaveWrite(data, &comInProgress);
-						break;
-
-					case COMM_TWI2_BATTERY_LVL:				//Commands go here
-						//twi2SlaveWrite(data, &comInProgress);
-						break;
-
-					case COMM_TWI2_HEADING:				//Commands go here
-						outputBuffer = ((uint16_t)sys->pos.heading >> 2 );
-						twi2SlaveWrite(outputBuffer, &comInProgress);
-						twiSlaveState = FINISH;
-						break;
-
-					case COMM_TWI2_ROLL:				//Commands go here
-						//twi2SlaveWrite(data, &comInProgress);
-						break;
-
-					case COMM_TWI2_PITCH:				//Commands go here
-						//twi2SlaveWrite(data, &comInProgress);
-						break;
-
-					case COMM_TWI2_YAW:				//Commands go here
-						//twi2SlaveWrite(data, &comInProgress);
-						break;
-				}
-				twiSlaveState = FINISH;
-				break;
+				case COMM_TWI2_HEADING:				//Commands go here
+					outputBuffer = (uint8_t)((sys->pos.relHeading + 180)/2);
+					//outputBuffer = (((uint16_t)sys->pos.heading) >> 2);
+					break;
 				
-			case FINISH:
-				if(twi2SlaveAccess)
-					if(twi2EndSlaveAccess)
-						if(twi2TxComplete)
-							comInProgress = 0;
-				twiSlaveState = GET_CMD;
-				break;
+				case COMM_TWI2_OPTX:				//Commands go here
+					outputBuffer = (uint8_t)((sys->pos.Optical.x & 0xFF00) >> 8);
+					break;
+				
+				case COMM_TWI2_OPTY:				//Commands go here
+					outputBuffer = (uint8_t)((sys->pos.Optical.y & 0xFF00) >> 8);
+					break;
+				
+				case COMM_TWI2_FACING:				//Commands go here
+					outputBuffer = (uint8_t)((sys->pos.facing + 180)/2);				
+					break;
+				
+				case COMM_TWI2_COLOUR:
+					outputBuffer = (uint8_t)((sys->sensors.colour.left.hue + 180)/2);
+					break;
+				
+				default:
+					outputBuffer = 0;
+					break;
+
+			}
+			twi2Send(outputBuffer);
+			while(!twi2TxReady);			//Wait for flag
+			while(!twi2TxComplete);
+
 		}
-	} while (comInProgress);
-	
+	}
 	return 0;
-}
+} 
+	
+	
+	//while();
+	
+	
+	//enum TwiSlaveStates {GET_CMD = 0x10, SEND_DATA = 0x11};
+	//uint8_t command = 0;
+	//uint8_t outputBuffer = 0;
+	//
+	//do 
+	//{
+		//switch (twi2SlaveAccessPoll())
+		//{
+			//case GET_CMD:
+				//while(!twi2RxReady);			//Wait for flag?
+				//command = twi2Receive;
+				//while(twi2SlaveAccess);
+				//break;
+				//
+			//case SEND_DATA:
+				//
+				//break;
+		//}
+	//} while (twi2SlaveAccess || !twi2TxComplete);
+	//
+	//return 0;

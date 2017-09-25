@@ -106,7 +106,7 @@ RobotGlobalStructure sys =
 	//System States
 	.states =
 	{
-		.mainf						= M_DOCKING,
+		.mainf						= M_IDLE,
 		.mainfPrev					= M_IDLE,
 		.docking					= DS_START,
 		.chargeCycle				= CCS_CHECK_POWER,
@@ -119,7 +119,7 @@ RobotGlobalStructure sys =
 	.comms =
 	{
 		.pollEnabled				= 1,
-		.twi2SlavePollEnabled		= 0,
+		.twi2SlavePollEnabled		= 1,
 		.pollInterval				= 0,
 		.testModeStreamInterval		= 100
 	},
@@ -143,7 +143,7 @@ RobotGlobalStructure sys =
 		.prox =
 		{
 			.errorCount				= 0,
-			.pollEnabled			= 0x3F,		//Bitmask to enable specific sensors
+			.pollEnabled			= 0x00,		//Bitmask to enable specific sensors
 			.pollInterval			= 40
 		}
 	},
@@ -166,7 +166,8 @@ RobotGlobalStructure sys =
 		},
 		.Optical =
 		{
-			.pollEnabled			= 1			//Enable Optical Polling
+			.pollEnabled			= 1,			//Enable Optical Polling
+			.pollInterval			= 0
 		}
 	},
 	
