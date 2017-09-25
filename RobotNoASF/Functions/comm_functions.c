@@ -223,25 +223,57 @@ void commInterpretSwarmMessage(RobotGlobalStructure *sys)
 */
 char commTwi2SlaveRequest(RobotGlobalStructure *sys)
 {
-	uint8_t command = 0;
 	uint8_t outputBuffer = 0;
-	while (twi2SlaveAccess || !twi2TxComplete) 
+	if(sys->flags.twi2NewData && twi2SlaveAccess)
 	{
-		if(twi2SlaveAccess)
+		if(twi2SlaveReadMode)
 		{
-			if(twi2SlaveReadMode)
+			sys->flags.twi2NewData = 0;
+
+			switch(sys->comms.twi2ReceivedDataByte)
 			{
-				outputBuffer = (uint8_t)(sys->timeStamp & 0xFF);
-				twi2Send(outputBuffer);
-				while(!twi2TxReady);			//Wait for flag
-				while(!twi2TxComplete);
+				case COMM_TWI2_ROBOT_NAME:				//Commands go here
+					outputBuffer = 0;				
+					break;
 				
-			} else {
-				while(!twi2RxReady);
-				command = twi2Receive;
+				case COMM_TWI2_XBEE_ADDR:				//Commands go here
+					outputBuffer = 0;
+					break;
+				
+				case COMM_TWI2_BATTERY_LVL:				//Commands go here
+					outputBuffer = sys->power.batteryPercentage;				
+					break;
+				
+				case COMM_TWI2_HEADING:				//Commands go here
+					outputBuffer = (uint8_t)((sys->pos.facing + 180)/2);
+					//outputBuffer = (((uint16_t)sys->pos.heading) >> 2);
+					break;
+				
+				case COMM_TWI2_ROLL:				//Commands go here
+					outputBuffer = 0;				
+					break;
+				
+				case COMM_TWI2_PITCH:				//Commands go here
+					outputBuffer = 0;				
+					break;
+				
+				case COMM_TWI2_YAW:				//Commands go here
+					outputBuffer = 0;				
+					break;
+					
+				default:
+					outputBuffer = 0;
+					break;
+
 			}
+			twi2Send(outputBuffer);
+			while(!twi2TxReady);			//Wait for flag
+			while(!twi2TxComplete);
+
 		}
-	} 
+	}
+	return 0;
+} 
 	
 	
 	//while();
@@ -262,62 +294,9 @@ char commTwi2SlaveRequest(RobotGlobalStructure *sys)
 				//break;
 				//
 			//case SEND_DATA:
-				//switch(command)
-				//{
-					//case COMM_TWI2_ROBOT_NAME:				//Commands go here
-						//outputBuffer = 0;
-						//twi2Send(outputBuffer);
-						//while(!twi2TxReady);			//Wait for flag
-//
-						//break;
-//
-					//case COMM_TWI2_XBEE_ADDR:				//Commands go here
-						//outputBuffer = 0;
-//
-						//twi2Send(outputBuffer);
-						//while(!twi2TxReady);			//Wait for flag
-						//break;
-//
-					//case COMM_TWI2_BATTERY_LVL:				//Commands go here
-						//outputBuffer = sys->power.batteryPercentage;
-						//twi2Send(outputBuffer);
-						//while(!twi2TxReady);			//Wait for flag
-//
-						//break;
-//
-					//case COMM_TWI2_HEADING:				//Commands go here
-						//outputBuffer = 64;
-						////outputBuffer = (((uint16_t)sys->pos.heading) >> 2);
-						//twi2Send(outputBuffer);
-						//while(!twi2TxReady);			//Wait for flag
-						//while(!twi2TxComplete);
-						//break;
-//
-					//case COMM_TWI2_ROLL:				//Commands go here
-						//outputBuffer = 0;
-						//twi2Send(outputBuffer);
-						//while(!twi2TxReady);			//Wait for flag
-//
-						//break;
-//
-					//case COMM_TWI2_PITCH:				//Commands go here
-						//outputBuffer = 0;
-						//twi2Send(outputBuffer);
-						//while(!twi2TxReady);			//Wait for flag
-//
-						//break;
-//
-					//case COMM_TWI2_YAW:				//Commands go here
-						//outputBuffer = 0;
-						//twi2Send(outputBuffer);
-						//while(!twi2TxReady);			//Wait for flag
-//
-						//break;
-				//}
 				//
 				//break;
 		//}
 	//} while (twi2SlaveAccess || !twi2TxComplete);
 	//
 	//return 0;
-}

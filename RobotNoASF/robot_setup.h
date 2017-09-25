@@ -227,6 +227,7 @@ typedef struct CommunicationDataGroup
 {
 	uint8_t pollEnabled;				//Whether or not to poll for new messages in main()
 	uint8_t twi2SlavePollEnabled;		//Whether to look for slave requests on twi2 (From LCD)
+	uint8_t twi2ReceivedDataByte;		//Stores the last received data byte from TWI2 slave
 	uint16_t pollInterval;				//Interval at which to poll at (ms)
 	struct MessageInfo messageData;		//Next message data
 	uint16_t testModeStreamInterval;	//Interval between sending test data packets (ms)
@@ -246,6 +247,7 @@ typedef struct SystemFlagsGroup
 {
 	char xbeeNewData;	//New data from Xbee interface
 	char imuCheckFifo;	//IMU ext interrupt has been triggered
+	char twi2NewData;	//New data received on twi2 (Slave interface)
 	char obaMoving;		//Robot is in motion
 	char obaEnabled;	//Obstacle avoidance enabled
 } SystemFlagsGroup;
