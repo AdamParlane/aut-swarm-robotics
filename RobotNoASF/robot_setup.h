@@ -110,9 +110,13 @@ typedef struct OpticalSensor
 {
 	int dx;				//Rate of change from optical sensor (X axis is left to right)
 	int dy;				//Rate of change from optical sensor (Y axis is fwd/bckwd)
+	int dxSum;			//Sum of samples between updates from optical sensor (for rolling average)
+	int dySum;			//Sum of samples between updates from optical sensor (for rolling average)
+	uint16_t sampleCount;	//Number of samples between updates (for rolling average)
 	int x;				//Count sum on x axis
 	int y;				//Count sum on y axis
 	char pollEnabled;	//Enable polling the optical sensor
+	char pollInterval;	//Rate at which to poll Mouse
 	char overflowFlag;	//1 if data has overflowed on optical sensor
 	uint8_t surfaceQuality;	//A value signifying quality of the surface (242 = max quality)
 } OpticalSensor;

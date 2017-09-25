@@ -584,6 +584,7 @@ int32_t mfMoveToPosition(int32_t x, int32_t y, uint8_t speed, float facing,
 	enum {START, CALC_HEADING, MOVE_TO_POS, FINISHED};
 	static uint8_t state = START;
 	static float currentHeading = 0;
+	//static uint32_t distTravelled = 0;
 	
 	switch(state)
 	{
@@ -595,14 +596,15 @@ int32_t mfMoveToPosition(int32_t x, int32_t y, uint8_t speed, float facing,
 		
 		case CALC_HEADING:
 			//distTravelled = 0;
-			
+			currentHeading = atan2((x - sys->pos.x), (y - sys->pos.y))*180/M_PI;
 			state = MOVE_TO_POS;
 			break;
 			
 		case MOVE_TO_POS:
-			
+			if(!fdelay_ms(1000))
+				state = CALC_HEADING;
 			//distTravelled += sqrt(sys->pos.dx*sys->pos.dx + sys->pos.dy*sys->pos.dy);
-			currentHeading = atan2((x - sys->pos.x), (y - sys->pos.y))*180/M_PI;
+			
 			mfAdvancedMove(currentHeading, facing, speed, maxTurnRatio, sys);
 			if((abs(x - sys->pos.x) < 10) && (abs(y - sys->pos.y) < 10))
 				state = FINISHED;

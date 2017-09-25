@@ -101,10 +101,9 @@ int main(void)
 {
 	robotSetup(); //Set up the system and peripherals
 	//Battery voltage stored in sys.power.batteryVoltage
-	//Initial main function state is set in robot_setup.c (sys.states.mainf)
+	//Initial main function state is SET IN robot_setup.c (sys.states.mainf) (NOT here)
 	float lineHeading = 0;
 	uint8_t obstacleFlag;
-	sys.states.mainf = M_IDLE;
 	sys.flags.obaEnabled = 1;
 	sys.flags.obaMoving	= 1;
 	while(1)
@@ -153,9 +152,11 @@ int main(void)
 				
 			case M_FORMATION:
 			//placeholder
-				mfAdvancedMove(180, 0, 50, 25, &sys);
-				sys.pos.targetHeading = 180;
-				sys.pos.targetSpeed = 50;
+				mfAdvancedMove(45, 0, 50, 50, &sys);
+				//sys.pos.targetHeading = 180;
+				//sys.pos.targetSpeed = 50;
+				//if(!mfMoveToPosition(300, 300, 50, 0, 50, &sys))
+				//	sys.states.mainf = M_IDLE;
 				break;
 						
 			case M_OBSTACLE_AVOIDANCE:
@@ -195,7 +196,7 @@ int main(void)
 		
 		pfPollPower(&sys);			//Poll battery and charging status
 		
-		sfPollSensors(&sys);		//Poll prox, colour, line
+		sfPollSensors(&sys);		//Poll prox, colour, line 
 		
 		//check to see if obstacle avoidance is enabled AND the robot is moving
 		if(sys.flags.obaEnabled && sys.flags.obaMoving && sys.states.mainf != M_OBSTACLE_AVOIDANCE)
