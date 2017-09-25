@@ -25,12 +25,12 @@
 //TWI slave internal register addresses
 
 #define COMM_TWI2_ROBOT_NAME	0x11
-#define COMM_TWI2_XBEE_ADDR		0x12
 #define COMM_TWI2_BATTERY_LVL	0x21
 #define COMM_TWI2_HEADING		0x31
-#define COMM_TWI2_ROLL			0x32
-#define COMM_TWI2_PITCH			0x33
-#define COMM_TWI2_YAW			0x34
+#define COMM_TWI2_OPTX			0x32
+#define COMM_TWI2_OPTY			0x33
+#define COMM_TWI2_FACING		0x34
+#define COMM_TWI2_COLOUR			0x41
 
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*

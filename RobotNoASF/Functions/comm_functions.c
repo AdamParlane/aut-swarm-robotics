@@ -235,32 +235,32 @@ char commTwi2SlaveRequest(RobotGlobalStructure *sys)
 				case COMM_TWI2_ROBOT_NAME:				//Commands go here
 					outputBuffer = 0;				
 					break;
-				
-				case COMM_TWI2_XBEE_ADDR:				//Commands go here
-					outputBuffer = 0;
-					break;
-				
+								
 				case COMM_TWI2_BATTERY_LVL:				//Commands go here
 					outputBuffer = sys->power.batteryPercentage;				
 					break;
 				
 				case COMM_TWI2_HEADING:				//Commands go here
-					outputBuffer = (uint8_t)((sys->pos.facing + 180)/2);
+					outputBuffer = (uint8_t)((sys->pos.relHeading + 180)/2);
 					//outputBuffer = (((uint16_t)sys->pos.heading) >> 2);
 					break;
 				
-				case COMM_TWI2_ROLL:				//Commands go here
-					outputBuffer = 0;				
+				case COMM_TWI2_OPTX:				//Commands go here
+					outputBuffer = (uint8_t)((sys->pos.Optical.x & 0xFF00) >> 8);
 					break;
 				
-				case COMM_TWI2_PITCH:				//Commands go here
-					outputBuffer = 0;				
+				case COMM_TWI2_OPTY:				//Commands go here
+					outputBuffer = (uint8_t)((sys->pos.Optical.y & 0xFF00) >> 8);
 					break;
 				
-				case COMM_TWI2_YAW:				//Commands go here
-					outputBuffer = 0;				
+				case COMM_TWI2_FACING:				//Commands go here
+					outputBuffer = (uint8_t)((sys->pos.facing + 180)/2);				
 					break;
-					
+				
+				case COMM_TWI2_COLOUR:
+					outputBuffer = (uint8_t)((sys->sensors.colour.left.hue + 180)/2);
+					break;
+				
 				default:
 					outputBuffer = 0;
 					break;
