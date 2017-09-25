@@ -528,11 +528,11 @@ char mfAdvancedMove(float heading, float facing, uint8_t speed,
 	headingCorrection = AMH_KP*pErrH;
 	facingCorrection = AMF_KP*pErrF;
 	//If the correction values end up being out of range, then dial them back
-	facingCorrection = capToRangeFlt(facingCorrection, -maxTurnRatio, maxTurnRatio);
+	facingCorrection = capToRangeFlt(facingCorrection, -1*(int8_t)maxTurnRatio, maxTurnRatio);
 	headingCorrection = capToRangeFlt(headingCorrection, -180, 180);
 	
 	//Get the robot moving to correct the errors.
-	moveRobot(heading - sys->pos.facing + headingCorrection , speed, facingCorrection);
+	moveRobot((heading - sys->pos.facing + headingCorrection) , speed, facingCorrection);
 	
 	//If error is less than 0.5 deg and delta yaw is less than 0.5 degrees per second then we can
 	//return 0 (ie robot is more or less on correct heading)

@@ -97,16 +97,20 @@ extern RobotGlobalStructure sys;		//System data structure
 * More functionality incoming (formations, smarter obstacle avoidance, high level error codes etc)
 *
 */
+
+
+
 int main(void)
 {
 	robotSetup(); //Set up the system and peripherals
 	//Battery voltage stored in sys.power.batteryVoltage
 	//Initial main function state is set in robot_setup.c (sys.states.mainf)
 	float lineHeading = 0;
-	uint8_t obstacleFlag;
-	sys.states.mainf = M_IDLE;
+	uint8_t obstacleFlag = 0;
+	sys.states.mainf = M_FORMATION;
 	sys.flags.obaEnabled = 1;
 	sys.flags.obaMoving	= 1;
+	//delay_ms(5000);
 	while(1)
 	{
 		switch (sys.states.mainf)
@@ -153,9 +157,24 @@ int main(void)
 				
 			case M_FORMATION:
 			//placeholder
-				mfAdvancedMove(180, 0, 50, 25, &sys);
-				sys.pos.targetHeading = 180;
-				sys.pos.targetSpeed = 50;
+				//moveRobot(0, 50, 0);
+				//delay_ms(2000);
+				//moveRobot(180, 50, 0);
+				//delay_ms(2000);
+				//if(!obstacleFlag)
+				//{
+					//sys.pos.
+					//moveRobot(180, 50, 50);
+					mfAdvancedMove(180, 0, 50, 100, &sys);
+					//sys.pos.targetHeading = 0;
+					//sys.pos.targetSpeed = 50;					
+				//}
+				//if(sys.flags.cornerFlag == 2)
+				//{
+					//mfAdvancedMove(180, 180, 50, 25, &sys);
+					//sys.pos.targetHeading = 180;
+					//sys.pos.targetSpeed = 50;
+				//}
 				break;
 						
 			case M_OBSTACLE_AVOIDANCE:
@@ -198,7 +217,7 @@ int main(void)
 		sfPollSensors(&sys);		//Poll prox, colour, line
 		
 		//check to see if obstacle avoidance is enabled AND the robot is moving
-		if(sys.flags.obaEnabled && sys.flags.obaMoving && sys.states.mainf != M_OBSTACLE_AVOIDANCE)
-			checkForObstacles(&sys); //avoid obstacles using proximity sensors
+		//if(sys.flags.obaEnabled && sys.flags.obaMoving && sys.states.mainf != M_OBSTACLE_AVOIDANCE)
+			//checkForObstacles(&sys); //avoid obstacles using proximity sensors
 	}
 }

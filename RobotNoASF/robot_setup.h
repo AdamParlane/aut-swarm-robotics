@@ -243,6 +243,7 @@ typedef struct SystemFlagsGroup
 	char imuCheckFifo;	//IMU ext interrupt has been triggered
 	char obaMoving;		//Robot is in motion
 	char obaEnabled;	//Obstacle avoidance enabled
+	char cornerFlag;
 } SystemFlagsGroup;
 
 //Structure that will store the state of every state machine in the system
@@ -387,5 +388,7 @@ int32_t capToRangeInt(int32_t valueToCap, int32_t minimumVal, int32_t maximumVal
 uint32_t capToRangeUint(uint32_t valueToCap, uint32_t minimumVal, uint32_t maximumVal);
 
 float capToRangeFlt(float valueToCap, float minimumVal, float maximumVal);
+
+
 
 #endif /* ROBOTDEFINES_H_ */
