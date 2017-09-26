@@ -274,29 +274,4 @@ char commTwi2SlaveRequest(RobotGlobalStructure *sys)
 	}
 	return 0;
 } 
-	
-	
-	//while();
-	
-	
-	//enum TwiSlaveStates {GET_CMD = 0x10, SEND_DATA = 0x11};
-	//uint8_t command = 0;
-	//uint8_t outputBuffer = 0;
-	//
-	//do 
-	//{
-		//switch (twi2SlaveAccessPoll())
-		//{
-			//case GET_CMD:
-				//while(!twi2RxReady);			//Wait for flag?
-				//command = twi2Receive;
-				//while(twi2SlaveAccess);
-				//break;
-				//
-			//case SEND_DATA:
-				//
-				//break;
-		//}
-	//} while (twi2SlaveAccess || !twi2TxComplete);
-	//
-	//return 0;
+
