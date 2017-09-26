@@ -32,6 +32,26 @@
 #define COMM_TWI2_PITCH			0x33
 #define COMM_TWI2_YAW			0x34
 
+//defines for received modes
+#define RX_UPDATE_POSITION		0xA0
+#define RX_TEST_MODE			0xE0
+#define RX_MANUAL_MODE			0xD0
+
+//defines for received manual command states
+#define RX_M_STOP					0x00
+#define RX_M_MOVE					0x01
+#define RX_M_ROTATE_CW				0x02
+#define RX_M_ROTATE_CCW				0x03
+#define RX_M_RANDOM					0x04
+//0x05 and 0x06 are reserved for other docking methods
+#define RX_M_DOCKING				0x07
+#define RX_M_OBSTACLE_AVOIDANCE_DIS	0x08
+#define RX_M_OBSTACLE_AVOIDANCE_EN	0x09
+#define RX_M_LIGHT_FOLLOW			0x0A
+#define RX_M_LINE_FOLLOW			0x0B
+
+
+
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*
 * Function:

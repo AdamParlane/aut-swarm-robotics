@@ -106,7 +106,7 @@ void commInterpretSwarmMessage(RobotGlobalStructure *sys)
 	switch(sys->comms.messageData.command & 0xF0)	//Look at upper nibble only
 	{
 		//PositionGroup commands
-		case 0xA0:
+		case RX_UPDATE_POSITION:
 			switch(sys->comms.messageData.command & 0x0F)
 			{
 				//X, Y position from PC
@@ -118,27 +118,31 @@ void commInterpretSwarmMessage(RobotGlobalStructure *sys)
 			break;
 		
 		//Test commands
-		case 0xE0:
+		case RX_TEST_MODE:
 			sys->states.mainf = M_TEST;
 			break;
 
 		//Manual control
-		case 0xD0:
+		case RX_MANUAL_MODE:
 			switch(sys->comms.messageData.command & 0x0F)
 			{
-				case 0x01:
+				case RX_M_STOP:
+					sys->states.mainf = M_MANUAL;
+					break;
+					
+				case RX_M_MOVE:
 					sys->states.mainf = M_MANUAL;
 					break;
 
-				case 0x02:
+				case RX_M_ROTATE_CW:
 					sys->states.mainf = M_MANUAL;
 					break;
 
-				case 0x03:
+				case RX_M_ROTATE_CCW:
 					sys->states.mainf = M_MANUAL;
 					break;
 
-				case 0x04:
+				case RX_M_RANDOM:
 					//move robot randomly
 					sys->states.mainf = M_RANDOM;
 
@@ -152,23 +156,25 @@ void commInterpretSwarmMessage(RobotGlobalStructure *sys)
 				case 0x06:
 					break; 
 					
-				case 0x07:
+				case RX_M_DOCKING:
 					sys->states.mainf = M_DOCKING;
 					break;
 
-				case 0x08:
+				case RX_M_OBSTACLE_AVOIDANCE_DIS:
 					sys->flags.obaEnabled = 0;
+					sys->states.mainf.M_IDLE;
 					break;
 
-				case 0x09:
+				case RX_M_OBSTACLE_AVOIDANCE_EN:
 					sys->flags.obaEnabled = 1;
+					sys->states.mainf.M_OBSTACLE_AVOIDANCE_DEMO;
 					break;
 
-				case 0x0A:
+				case RX_M_LIGHT_FOLLOW:
 					sys->states.mainf = M_LIGHT_FOLLOW;
 					break;
 
-				case 0x0B:
+				case RX_M_LINE_FOLLOW:
 					sys->states.mainf = M_LINE_FOLLOW;
 					break;				
 			}

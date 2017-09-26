@@ -157,30 +157,19 @@ int main(void)
 				
 			case M_FORMATION:
 			//placeholder
-				//moveRobot(0, 50, 0);
-				//delay_ms(2000);
-				//moveRobot(180, 50, 0);
-				//delay_ms(2000);
-				//if(!obstacleFlag)
-				//{
-					//sys.pos.
-					//moveRobot(180, 50, 50);
-					mfAdvancedMove(180, 0, 50, 100, &sys);
-					//sys.pos.targetHeading = 0;
-					//sys.pos.targetSpeed = 50;					
-				//}
-				//if(sys.flags.cornerFlag == 2)
-				//{
-					//mfAdvancedMove(180, 180, 50, 25, &sys);
-					//sys.pos.targetHeading = 180;
-					//sys.pos.targetSpeed = 50;
-				//}
 				break;
 						
 			case M_OBSTACLE_AVOIDANCE:
 				obstacleFlag = dodgeObstacle(&sys);//avoid obstacles using proximity sensors
 				if(!obstacleFlag)//returning 0 means obstacles have been avoided
 					sys.states.mainf = sys.states.mainfPrev; //reset the state to what it was
+				break;
+				
+			case M_OBSTACLE_AVOIDANCE_DEMO:
+				//will act like a function requiring OA for sake of demo'ing
+				mfAdvancedMove(0, 0, 50, 25, &sys);
+				sys.pos.targetHeading = 180;
+				sys.pos.targetSpeed = 50;
 				break;
 
 			case M_CHARGING:
