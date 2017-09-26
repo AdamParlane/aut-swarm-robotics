@@ -109,6 +109,7 @@ int main(void)
 	uint8_t obstacleFlag = 0;
 	sys.states.mainf = M_FORMATION;
 	sys.flags.obaEnabled = 1;
+	sys.states.mainf = M_OBSTACLE_AVOIDANCE_DEMO;
 	sys.flags.obaMoving	= 1;
 	//delay_ms(5000);
 	while(1)
@@ -167,8 +168,9 @@ int main(void)
 				
 			case M_OBSTACLE_AVOIDANCE_DEMO:
 				//will act like a function requiring OA for sake of demo'ing
-				mfAdvancedMove(0, 0, 50, 25, &sys);
-				sys.pos.targetHeading = 180;
+				//mfAdvancedMove(0, 0, 50, 25, &sys);
+				moveRobot(0, 50, 0);
+				sys.pos.targetHeading = 0;
 				sys.pos.targetSpeed = 50;
 				break;
 
@@ -206,7 +208,7 @@ int main(void)
 		sfPollSensors(&sys);		//Poll prox, colour, line
 		
 		//check to see if obstacle avoidance is enabled AND the robot is moving
-		//if(sys.flags.obaEnabled && sys.flags.obaMoving && sys.states.mainf != M_OBSTACLE_AVOIDANCE)
-			//checkForObstacles(&sys); //avoid obstacles using proximity sensors
+		if(sys.flags.obaEnabled && sys.flags.obaMoving && sys.states.mainf != M_OBSTACLE_AVOIDANCE)
+			checkForObstacles(&sys); //avoid obstacles using proximity sensors
 	}
 }

@@ -162,12 +162,12 @@ void commInterpretSwarmMessage(RobotGlobalStructure *sys)
 
 				case RX_M_OBSTACLE_AVOIDANCE_DIS:
 					sys->flags.obaEnabled = 0;
-					sys->states.mainf.M_IDLE;
+					sys->states.mainf = M_IDLE;
 					break;
 
 				case RX_M_OBSTACLE_AVOIDANCE_EN:
 					sys->flags.obaEnabled = 1;
-					sys->states.mainf.M_OBSTACLE_AVOIDANCE_DEMO;
+					sys->states.mainf = M_OBSTACLE_AVOIDANCE_DEMO;
 					break;
 
 				case RX_M_LIGHT_FOLLOW:
