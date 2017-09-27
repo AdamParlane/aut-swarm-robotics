@@ -58,7 +58,7 @@
 
 //Motion function success conditions
 #define MF_FACING_ERR		0.1
-#define MF_DELTA_GYRO_ERR	0.5
+#define MF_DELTA_GYRO_ERR	2.0
 
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*

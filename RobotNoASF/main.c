@@ -100,12 +100,10 @@ extern RobotGlobalStructure sys;		//System data structure
 int main(void)
 {
 	robotSetup(); //Set up the system and peripherals
-	//Battery voltage stored in sys.power.batteryVoltage
-	//Initial main function state is SET IN robot_setup.c (sys.states.mainf) (NOT here)
+	//////    all sys structure initialisation is done in robot_setup.c (NOT here)   //////
 	float lineHeading = 0;
 	uint8_t obstacleFlag;
-	sys.flags.obaEnabled = 1;
-	sys.flags.obaMoving	= 1;
+	uint8_t tempState = 0;
 	while(1)
 	{
 		switch (sys.states.mainf)
@@ -183,9 +181,24 @@ int main(void)
 				break;
 				
 			case M_IDLE:					
-				mfStopRobot(&sys);
+				//mfStopRobot(&sys);
 				if(!fdelay_ms(1000))					//Blink LED 3 in Idle mode
 					led3Tog;				
+				
+				switch(tempState)	
+				{
+					case 0:
+						if(!mfRotateToHeading(90, &sys))
+							tempState = 1;
+						break;
+						
+					case 1:
+						if(!mfRotateToHeading(-90, &sys))
+							tempState = 0;
+						break;		
+				}
+					
+				
 				break;
 				
 		}

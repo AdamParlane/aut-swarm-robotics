@@ -137,9 +137,9 @@ int imuDmpInit(char calibrateGyro)
 	result += mpu_set_dmp_state(1);						//Start DMP (also starts IMU interrupt)
 	
 	if(calibrateGyro)
-	{
-		delay_ms(8000);
+	{	
 		result += dmp_enable_gyro_cal(1);				//Enable gyro calibration
+		delay_ms(8000);
 	}
 	
 	return result;

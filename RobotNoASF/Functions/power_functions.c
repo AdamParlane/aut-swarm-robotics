@@ -96,6 +96,16 @@ void pfPollPower(RobotGlobalStructure *sys)
 													//function that reads it, otherwise charging
 													//can't resume.
 		}
+				
+		if((sys->power.fcChipStatus == FC_BATTERY_CHARGING//If the chip has external power or is
+		|| sys->power.fcChipStatus == FC_POWER_CONNECTED)//charging battery
+		&& sys->states.mainf != M_DOCKING)				
+		{
+			//Don't do this if already in docking state, because docking state needs to be reset
+			//when its found the charger, otherwise it won't work right the next time around.
+			sys->states.mainfPrev = sys->states.mainf;	//Save last state
+			sys->states.mainf = M_CHARGING;				//Switch to charging state
+		}
 	}
 	
 	//If Charger Watchdog is enabled and chargeWatchDogEnabled flag has just been set, or 

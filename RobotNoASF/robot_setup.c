@@ -143,7 +143,7 @@ RobotGlobalStructure sys =
 		.prox =
 		{
 			.errorCount				= 0,
-			.pollEnabled			= 0x00,		//Bitmask to enable specific sensors
+			.pollEnabled			= 0x3F,		//Bitmask to enable specific sensors
 			.pollInterval			= 40
 		}
 	},
@@ -179,8 +179,8 @@ RobotGlobalStructure sys =
 		.batteryMinVoltage			= 3300,		//Dead flat battery voltage
 		.fcChipFaultFlag			= 0,		//Fast charge fault flag
 		.pollBatteryEnabled			= 1,		//Battery polling enabled
-		.pollChargingStateEnabled	= 0,		//Charge status polling disabled
-		.pollChargingStateInterval	= 100,		//Poll charging status as fast as possible
+		.pollChargingStateEnabled	= 1,		//Charge status polling disabled
+		.pollChargingStateInterval	= 10,		//Poll charging status as fast as possible
 		.pollBatteryInterval		= 30000,	//Poll battery every thirty seconds
 		.chargeWatchDogEnabled		= 0,		//Watchdog enabled
 		.chargeWatchDogInterval		= 1000		//How often to send watchdog pulse to FC chip

@@ -30,6 +30,7 @@
 */
 
 //////////////[Includes]////////////////////////////////////////////////////////////////////////////
+#include "pio_interface.h"			//For LED control while debugging TWI
 #include "twimux_interface.h"
 
 //////////////[Global Variables]////////////////////////////////////////////////////////////////////
@@ -75,16 +76,16 @@ void twi0Init(void)
 	twi0Reset;								//Software reset
 
 	//TWI0 Clock Waveform Setup
-	//REG_TWI0_CWGR
-	//|=	TWI_CWGR_CKDIV(2)					//Clock speed 230000, fast mode
-	//|	TWI_CWGR_CLDIV(63)					//Clock low period 1.3uSec
-	//|	TWI_CWGR_CHDIV(28);					//Clock high period  0.6uSec
+	REG_TWI0_CWGR
+	|=	TWI_CWGR_CKDIV(1)					//Clock speed 230000, fast mode
+	|	TWI_CWGR_CLDIV(63)					//Clock low period 1.3uSec
+	|	TWI_CWGR_CHDIV(28);					//Clock high period  0.6uSec
 
 	//TWI0 Clock Waveform Setup
-	REG_TWI0_CWGR
-	|=	TWI_CWGR_CKDIV(2)					//Clock speed 100000, fast mode
-	|	TWI_CWGR_CLDIV(124)					//Clock low period 
-	|	TWI_CWGR_CHDIV(124);				//Clock high period
+	//REG_TWI0_CWGR
+	//|=	TWI_CWGR_CKDIV(2)					//Clock speed 100000, fast mode
+	//|	TWI_CWGR_CLDIV(124)					//Clock low period 
+	//|	TWI_CWGR_CHDIV(124);				//Clock high period
 
 	twi0MasterMode;							//Master mode enabled, slave disabled
 }
@@ -278,8 +279,12 @@ char twi0Write(unsigned char slave_addr, unsigned char reg_addr,
 	}
 	//while transmit not complete. wait.
 	if(waitForFlag((uint32_t*)&REG_TWI0_SR, TWI_SR_TXCOMP, TWI_TXCOMP_TIMEOUT))
+	{
+		led2Tog;
+		twi0Stop;
+		twi0Send(0x00);
 		return 1;
-	else
+	} else
 		return 0;
 }
 
@@ -380,7 +385,12 @@ char twi0Read(unsigned char slave_addr, unsigned char reg_addr,
 		}
 		//while transmit not complete. wait.
 		if(waitForFlag((uint32_t*)&REG_TWI0_SR, TWI_SR_TXCOMP, TWI_TXCOMP_TIMEOUT))
+		{
+			led1Tog;
+			twi0Stop;
+			twi0Receive;
 			return 1;
+		}
 	}
 	return 0;
 }
