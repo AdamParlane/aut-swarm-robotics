@@ -60,9 +60,9 @@ void commGetNew(RobotGlobalStructure *sys)
 		nextPollTime = sys->timeStamp + sys->comms.pollInterval;
 		if(!xbeeFrameBufferInfoGetFull(&commFrame))			//Check for a received XBee Message
 		{
-			xbeeInterpretAPIFrame(commFrame);					//Interpret the received XBee Message
-			if(!xbeeMessageBufferInfoGetFull(&sys->comms.messageData))//Check for a message from the swarm
-				commInterpretSwarmMessage(sys);					//Interpret the message
+			xbeeInterpretAPIFrame(commFrame);				//Interpret the received XBee Message
+			if(!xbeeMessageBufferInfoGetFull(&sys->comms.messageData))//if message from the swarm
+				commInterpretSwarmMessage(sys);				//Interpret the message
 		}
 		
 		if(sys->comms.twi2SlavePollEnabled)					//If polling TWI2 Slave reqs is enabled
@@ -137,10 +137,8 @@ void commInterpretSwarmMessage(RobotGlobalStructure *sys)
 					sys->states.mainf = M_MANUAL;
 					break;
 
-				case 0x04:
-					//move robot randomly
+				case 0x04:		//move robot randomly
 					sys->states.mainf = M_RANDOM;
-
 					break;
 					
 				case 0x05:
@@ -151,7 +149,8 @@ void commInterpretSwarmMessage(RobotGlobalStructure *sys)
 				case 0x06:
 					break; 
 					
-				case 0x07:
+				case 0x07:		//Docking mode
+					sys->states.docking = DS_START;
 					sys->states.mainf = M_DOCKING;
 					break;
 
@@ -163,43 +162,22 @@ void commInterpretSwarmMessage(RobotGlobalStructure *sys)
 					sys->flags.obaEnabled = 1;
 					break;
 
-				case 0x0A:
+				case 0x0A:		//Follow light
 					sys->states.mainf = M_LIGHT_FOLLOW;
 					break;
 
-				case 0x0B:
+				case 0x0B:		//Follow Line
 					sys->states.mainf = M_LINE_FOLLOW;
-					break;				
+					break;
+					
+				case 0x0C:		//Dismount charger
+					if(sys->states.mainf == M_CHARGING)
+					{
+						sys->states.chargeCycle = CCS_DISMOUNT;
+					}			
 			}
 			break;
-
-
-
 	}
-
-	//if(sys->comms.messageData.command >= 0xE0) //test command range 0xE0-0xEF
-		//sys->states.mainf = M_TEST;
-	//else if (sys->comms.messageData.command == 0xD0)
-	//{
-		//mfStopRobot(sys);
-	//}
-	////Manual command range 0xD1-0xD3
-	//else if(sys->comms.messageData.command >= 0xD1 && sys->comms.messageData.command <= 0xD3) 
-		//sys->states.mainf = M_MANUAL;
-	//else if (sys->comms.messageData.command == 0xD4)
-		////move robot randomly
-		//mfRandomMovementGenerator();
-	//else if (sys->comms.messageData.command == 0xD7)
-		//sys->states.mainf = M_DOCKING;
-//
-	//else if (sys->comms.messageData.command == 0xD8)
-		//sys->flags.obaEnabled = 0;
-	//else if (sys->comms.messageData.command == 0xD9)
-		//sys->flags.obaEnabled = 1;
-	//else if (sys->comms.messageData.command == 0xDA)
-		//sys->states.mainf = M_LIGHT_FOLLOW;
-	//else if (sys->comms.messageData.command == 0xDB)
-		//sys->states.mainf = M_LINE_FOLLOW;
 }
 
 /*

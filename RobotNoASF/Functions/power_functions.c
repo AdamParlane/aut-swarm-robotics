@@ -160,7 +160,7 @@ uint8_t pfChargeCycleHandler(RobotGlobalStructure *sys)
 			if(sys->power.fcChipStatus == FC_BATTERY_CHARGING 
 			|| sys->power.fcChipStatus == FC_POWER_CONNECTED)
 			{
-				sys->sensors.prox.pollEnabled = 0x00;
+				//sys->sensors.prox.pollEnabled = 0x00;
 				sys->states.chargeCycle = CCS_CHARGING;
 			}
 			break;
@@ -215,9 +215,9 @@ uint8_t pfChargeCycleHandler(RobotGlobalStructure *sys)
 			break;
 		
 		case CCS_STOP_POLLING:
-			sys->sensors.prox.pollEnabled = 0x3F;
+			//sys->sensors.prox.pollEnabled = 0x3F;
 			sys->power.pollChargingStateInterval = 100;
-			sys->power.pollChargingStateEnabled = 0;
+			sys->power.pollChargingStateEnabled = 1;
 			sys->power.chargeWatchDogEnabled = 0;
 			sys->states.chargeCycle = CCS_FINISHED;
 			break;
