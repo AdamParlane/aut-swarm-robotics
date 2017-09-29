@@ -110,7 +110,7 @@ RobotGlobalStructure sys =
 		.mainfPrev					= M_IDLE,
 		.docking					= DS_START,
 		.chargeCycle				= CCS_CHECK_POWER,
-		.followLine					= FLS_FIRST_CONTACT,
+		.followLine					= FLS_START,
 		.scanBrightest				= SBS_FUNCTION_INIT,
 		.moveHeadingDistance		= MHD_START
 	},

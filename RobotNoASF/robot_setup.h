@@ -67,10 +67,7 @@ typedef enum FollowLineStates
 //dfFollowLine() function states
 {
 	FLS_START,
-	FLS_FIRST_CONTACT,
 	FLS_ALIGN,
-	FLS_FOLLOW,
-	FLS_GIVE_UP,
 	FLS_FINISH
 } FollowLineStates;
 

@@ -65,7 +65,7 @@ void manualControl(RobotGlobalStructure *sys)
 	switch(sys->comms.messageData.command)
 	{
 		case MC_STRAIGHT:
-			moveRobot(straightDirection, receivedTestData[2], 0);
+			moveRobot(straightDirection, receivedTestData[2], 12);
 			sys->pos.targetHeading = straightDirection;
 			sys->pos.targetSpeed = receivedTestData[2];
 			sys->flags.obaMoving = 1;

@@ -191,30 +191,17 @@ uint8_t dfDockRobot( RobotGlobalStructure *sys)
 uint8_t dfFollowLine(uint8_t speed,	RobotGlobalStructure *sys)
 {
 	sys->flags.obaMoving = 1;
-	static uint8_t lineJustFound = 1;
 	
-		
 	switch(sys->states.followLine)
 	{
 		//Starting state. Has value of 0 so when line following is finished will return 0
 		case FLS_START:
 			sys->states.followLine = FLS_ALIGN;
-			sys->sensors.line.pollInterval = 100;
-			sys->sensors.prox.pollEnabled = 0;
-			sys->sensors.colour.pollEnabled = 0;
-			sys->power.pollChargingStateEnabled = 0;
-			break;
-		
-		//On first contact, drive forward slowly until line is detected on the middle two sensors.
-		//Once that is the case, then we must be over the line properly, so move to the FOLLOW
-		//state.
-		case FLS_FIRST_CONTACT:
-			pioLedNumber(2);
-			lineJustFound = 1;
-			if(!sys->sensors.line.direction)
-				sys->states.followLine = FLS_ALIGN;	//If sufficiently over line, begin following
-			else
-				moveRobot(0, 35, 0);	//Creep forward some more to straddle line
+			sys->sensors.line.pollInterval = 100;		//Poll line sensors every 100ms
+			sys->sensors.prox.pollInterval = 100;
+			sys->sensors.prox.pollEnabled = 0x01;		//Poll front sensor
+			sys->sensors.colour.pollEnabled = 0;		//Don't poll colour
+			sys->power.pollChargingStateEnabled = 0;	//Stop polling FC chip
 			break;
 		
 		//Given the position of the line sensors relative to the wheels on the underside of the 
@@ -228,33 +215,24 @@ uint8_t dfFollowLine(uint8_t speed,	RobotGlobalStructure *sys)
 			{
 				if(sys->sensors.line.direction < 0)
 					{
-						moveRobot(0,  -30 + sys->sensors.line.direction*5, 80);
-						pioLedNumber(3);
+						moveRobot(0,  -15 + sys->sensors.line.direction*5, 80);
 					}
 				if(sys->sensors.line.direction > 0)
 				{
-						moveRobot(0, 30 + sys->sensors.line.direction*5 , 80);
-						pioLedNumber(2);
+						moveRobot(0, 15 + sys->sensors.line.direction*5 , 80);
 				}
 				if(sys->sensors.line.direction == 0)
 				{
-					pioLedNumber(1);
 					moveRobot(0, speed, 0);
 				}
 			} else {
-				pioLedNumber(0);
 				mfStopRobot(sys);
 			}
 			
-			break;
-		
-		case FLS_FOLLOW:
-			break;
-		
-		case FLS_GIVE_UP:						//If the line has been lost
-			mfStopRobot(sys);
-			sys->states.followLine = FLS_START;
-			lineJustFound = 1;
+			//If obstacle in front of us then stop.
+			if(sys->sensors.prox.sensor[0] == PS_CLOSEST)
+				sys->states.docking = FLS_FINISH;
+			
 			break;
 		
 		//If finished, reset the state machine for next time and return a 0.

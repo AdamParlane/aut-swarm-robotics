@@ -70,8 +70,6 @@ void commGetNew(RobotGlobalStructure *sys)
 			commTwi2SlaveRequest(sys);
 		}
 	}
-	
-	
 }
 
 /*
