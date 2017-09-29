@@ -60,9 +60,9 @@ void commGetNew(RobotGlobalStructure *sys)
 		nextPollTime = sys->timeStamp + sys->comms.pollInterval;
 		if(!xbeeFrameBufferInfoGetFull(&commFrame))			//Check for a received XBee Message
 		{
-			xbeeInterpretAPIFrame(commFrame);					//Interpret the received XBee Message
-			if(!xbeeMessageBufferInfoGetFull(&sys->comms.messageData))//Check for a message from the swarm
-				commInterpretSwarmMessage(sys);					//Interpret the message
+			xbeeInterpretAPIFrame(commFrame);				//Interpret the received XBee Message
+			if(!xbeeMessageBufferInfoGetFull(&sys->comms.messageData))//if message from the swarm
+				commInterpretSwarmMessage(sys);				//Interpret the message
 		}
 		
 		if(sys->comms.twi2SlavePollEnabled)					//If polling TWI2 Slave reqs is enabled
@@ -144,7 +144,6 @@ void commInterpretSwarmMessage(RobotGlobalStructure *sys)
 				case RX_M_RANDOM:
 					//move robot randomly
 					sys->states.mainf = M_RANDOM;
-
 					break;
 					
 				case 0x05:
@@ -152,10 +151,15 @@ void commInterpretSwarmMessage(RobotGlobalStructure *sys)
 					//at a later date for different methods if required
 					break;
 					
-				case 0x06:
+				case 0x06:		//Dismount charger
+					if(sys->states.mainf == M_CHARGING)
+					{
+						sys->states.chargeCycle = CCS_DISMOUNT;
+					}
 					break; 
 					
 				case RX_M_DOCKING:
+					sys->states.docking = DS_START;
 					sys->states.mainf = M_DOCKING;
 					break;
 
@@ -175,37 +179,14 @@ void commInterpretSwarmMessage(RobotGlobalStructure *sys)
 
 				case RX_M_LINE_FOLLOW:
 					sys->states.mainf = M_LINE_FOLLOW;
-					break;				
+					break;
+					
+				case 0x0C:		//Rotate to heading
+							
+					break;
 			}
 			break;
-
-
-
 	}
-
-	//if(sys->comms.messageData.command >= 0xE0) //test command range 0xE0-0xEF
-		//sys->states.mainf = M_TEST;
-	//else if (sys->comms.messageData.command == 0xD0)
-	//{
-		//mfStopRobot(sys);
-	//}
-	////Manual command range 0xD1-0xD3
-	//else if(sys->comms.messageData.command >= 0xD1 && sys->comms.messageData.command <= 0xD3) 
-		//sys->states.mainf = M_MANUAL;
-	//else if (sys->comms.messageData.command == 0xD4)
-		////move robot randomly
-		//mfRandomMovementGenerator();
-	//else if (sys->comms.messageData.command == 0xD7)
-		//sys->states.mainf = M_DOCKING;
-//
-	//else if (sys->comms.messageData.command == 0xD8)
-		//sys->flags.obaEnabled = 0;
-	//else if (sys->comms.messageData.command == 0xD9)
-		//sys->flags.obaEnabled = 1;
-	//else if (sys->comms.messageData.command == 0xDA)
-		//sys->states.mainf = M_LIGHT_FOLLOW;
-	//else if (sys->comms.messageData.command == 0xDB)
-		//sys->states.mainf = M_LINE_FOLLOW;
 }
 
 /*
@@ -264,7 +245,7 @@ char commTwi2SlaveRequest(RobotGlobalStructure *sys)
 					break;
 				
 				case COMM_TWI2_COLOUR:
-					outputBuffer = (uint8_t)((sys->sensors.colour.left.hue + 180)/2);
+					outputBuffer = (uint8_t)((sys->sensors.colour.left.hue)/2);
 					break;
 				
 				default:

@@ -30,6 +30,7 @@
 */
 
 //////////////[Includes]////////////////////////////////////////////////////////////////////////////
+#include "pio_interface.h"			//For LED control while debugging TWI
 #include "twimux_interface.h"
 
 //////////////[Global Variables]////////////////////////////////////////////////////////////////////
@@ -176,7 +177,13 @@ uint8_t twi0MuxSwitch(uint8_t channel)
 		return 1;
 	//Communication complete, holding and shifting registers empty, Stop sent
 	if(waitForFlag((uint32_t*)&REG_TWI0_SR, TWI_SR_TXCOMP, TWI_TXCOMP_TIMEOUT))
+	{
+		led2Tog;
+		twi0Stop;
+		twi0Send(0x00);
 		return 1;
+	}
+
 	else
 	{
 		return 0;
@@ -221,7 +228,12 @@ uint8_t twi0ReadMuxChannel(void)
 	returnVal = twi0Receive;		//Store data received 
 	//Wait for transmission complete
 	if(waitForFlag((uint32_t*)&REG_TWI0_SR, TWI_SR_TXCOMP, TWI_TXCOMP_TIMEOUT))
+	{
+		led1Tog;
+		twi0Stop;
+		twi0Receive;
 		return 1;
+	}
 	return returnVal;
 }
 
@@ -278,8 +290,12 @@ char twi0Write(unsigned char slave_addr, unsigned char reg_addr,
 	}
 	//while transmit not complete. wait.
 	if(waitForFlag((uint32_t*)&REG_TWI0_SR, TWI_SR_TXCOMP, TWI_TXCOMP_TIMEOUT))
+	{
+		led2Tog;
+		twi0Stop;
+		twi0Send(0x00);
 		return 1;
-	else
+	} else
 		return 0;
 }
 
@@ -380,7 +396,12 @@ char twi0Read(unsigned char slave_addr, unsigned char reg_addr,
 		}
 		//while transmit not complete. wait.
 		if(waitForFlag((uint32_t*)&REG_TWI0_SR, TWI_SR_TXCOMP, TWI_TXCOMP_TIMEOUT))
+		{
+			led1Tog;
+			twi0Stop;
+			twi0Receive;
 			return 1;
+		}
 	}
 	return 0;
 }

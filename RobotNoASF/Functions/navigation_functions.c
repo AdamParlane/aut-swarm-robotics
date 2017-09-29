@@ -74,34 +74,8 @@
 */
 uint8_t nfRetrieveNavData(RobotGlobalStructure *sys)
 {
-	static uint32_t opticalNextPollTime = 0;
-	//static int32_t opticalDxSum = 0;
-	//static int32_t opticalDySum = 0;
-	//static uint16_t opticalReadCount = 0;
-	
-	//Fetch Optical Data
-	if(opticalNextPollTime < sys->timeStamp && sys->pos.Optical.pollEnabled)
-	{
-		opticalNextPollTime = sys->timeStamp + sys->pos.Optical.pollInterval;
-		getMouseXY(sys);						//Update mouse sensor data
-	}
-	
-	
 	if(sys->flags.imuCheckFifo)
 	{
-		if(sys->pos.Optical.pollEnabled)
-		{
-			//Calculate averages
-			sys->pos.Optical.dx = sys->pos.Optical.dxSum/sys->pos.Optical.sampleCount;
-			sys->pos.Optical.dy = sys->pos.Optical.dySum/sys->pos.Optical.sampleCount;
-			sys->pos.Optical.x += sys->pos.Optical.dx;
-			sys->pos.Optical.y += sys->pos.Optical.dy;
-			sys->pos.Optical.dxSum = 0;
-			sys->pos.Optical.dySum = 0;
-			sys->pos.Optical.sampleCount = 0;
-			nfProcessOpticalData(sys);
-		}
-			
 		if(sys->pos.IMU.pollEnabled)				//If polling enabled for IMU
 		{
 			if(!sys->pos.IMU.dmpEnabled)			//If DMP was disabled then enable it
@@ -113,6 +87,14 @@ uint8_t nfRetrieveNavData(RobotGlobalStructure *sys)
 				nfDMPEnable(0, sys);
 		}
 		sys->flags.imuCheckFifo = 0;				//Reset interrupt flag
+
+		if(sys->pos.Optical.pollEnabled)
+		{
+			getMouseXY(sys);						//Update mouse sensor data
+			sys->pos.Optical.x += sys->pos.Optical.dx;
+			sys->pos.Optical.y += sys->pos.Optical.dy;
+			nfProcessOpticalData(sys);
+		}
 		return 0;
 	} else
 		return 1;
@@ -196,7 +178,7 @@ void nfGetEulerAngles(RobotGlobalStructure *sys)
 void nfProcessOpticalData(RobotGlobalStructure *sys)
 {
 	//Calculate headings (deg) if there is fresh data from the optical sensor
-	if(sys->pos.Optical.dx || sys->pos.Optical.dy)
+	if(abs(sys->pos.Optical.dx) > 100 || abs(sys->pos.Optical.dy) > 100)
 	{
 		//Relative heading
 		sys->pos.relHeading = atan2(sys->pos.Optical.dx, sys->pos.Optical.dy)*180/M_PI;
