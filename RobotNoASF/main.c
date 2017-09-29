@@ -139,8 +139,11 @@ int main(void)
 			//Entered when line follow command received from PC
 				//if(!dfFollowLine(100, &sys))//Line follower will return 0 when complete
 					//sys.states.mainf = M_IDLE;
-				//mfMoveToHeading(90, 40, &sys);	
-				nfOpticalTesting(40, 100, &sys);
+				if(!mfMoveToPosition(200, 200, 40, 0, 75, &sys))
+					sys.states.mainf = M_IDLE;
+				//nfOpticalTesting(40, 100, &sys);
+				
+				
 				break;
 					
 			case M_LIGHT_FOLLOW:
@@ -186,6 +189,13 @@ int main(void)
 			case M_TEST_ALL:
 				//Something
 				break;
+			
+			case M_STARTUP_DELAY:
+				//Added this non blocking startup delay to see if it is more friendly.
+				//Please set initial state in mainfPrev
+				if(!fdelay_ms(sys.startupDelay))
+					sys.states.mainf = sys.states.mainfPrev;
+				break;
 				
 			case M_IDLE:					
 				mfStopRobot(&sys);
@@ -193,13 +203,15 @@ int main(void)
 					led3Tog;				
 				break;
 				
+			
+				
 		}
+		
+		nfRetrieveNavData(&sys);	//checks if there is new navigation data and updates sys->pos
 		
 		commGetNew(&sys);			//Checks for and interprets new communications
 		
 		commPCStatusUpdate(&sys);	//Updates PC with battery and state (every 5 seconds)
-		
-		nfRetrieveNavData(&sys);	//checks if there is new navigation data and updates sys->pos
 		
 		pfPollPower(&sys);			//Poll battery and charging status
 		

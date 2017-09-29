@@ -48,7 +48,8 @@ typedef enum MainStates
 	M_CHARGING,
 	M_LINE_FOLLOW,
 	M_LIGHT_FOLLOW, 
-	M_RANDOM
+	M_RANDOM,
+	M_STARTUP_DELAY
 } MainStates;
 
 typedef enum DockingStates
@@ -119,7 +120,8 @@ typedef struct OpticalSensor
 	char pollInterval;	//Rate at which to poll Mouse
 	char overflowFlag;	//1 if data has overflowed on optical sensor
 	uint8_t surfaceQuality;	//A value signifying quality of the surface (242 = max quality)
-	float convCoefficient;	//A coefficient to convert to mm
+	float convFactorX;	//A coefficient to convert to mm
+	float convFactorY;	//A coefficient to convert to mm
 } OpticalSensor;
 
 //Stores IMU sensor raw and converted data
@@ -228,7 +230,7 @@ typedef struct LineSensorArray
 
 struct transmitDataStructure
 {
-	uint8_t Data[50];//array for data to be transmitted to PC BEFORE XBee framing has been added
+	char Data[50];//array for data to be transmitted to PC BEFORE XBee framing has been added
 	uint8_t DataSize;//size of the transmit array
 };
 
@@ -317,7 +319,7 @@ typedef struct RobotGlobalStructure
 	PositionGroup pos;						//Position information
 	BatteryChargeData power;				//Battery/Charging info and control
 	uint32_t timeStamp;						//System timestamp (millisecs since power on)
-
+	uint16_t startupDelay;					//Time to wait between sys setup and execution
 } RobotGlobalStructure;
 
 //////////////[Defines]/////////////////////////////////////////////////////////////////////////////
@@ -408,6 +410,7 @@ uint32_t capToRangeUint(uint32_t valueToCap, uint32_t minimumVal, uint32_t maxim
 
 float capToRangeFlt(float valueToCap, float minimumVal, float maximumVal);
 
-
+//Convert double to string
+char * dtoa(char *s, double n);
 
 #endif /* ROBOTDEFINES_H_ */

@@ -178,7 +178,8 @@ RobotGlobalStructure sys =
 		{
 			.pollEnabled			= 1,			//Enable Optical Polling
 			.pollInterval			= 0,
-			.convCoefficient		= OPT_CONV_FACTOR
+			.convFactorX			= 1,
+			.convFactorY			= 1,
 		}
 	},
 	
@@ -197,7 +198,8 @@ RobotGlobalStructure sys =
 		.chargeWatchDogInterval		= 1000		//How often to send watchdog pulse to FC chip
 	},
 	
-	.timeStamp = 0								//millisecs since power on
+	.timeStamp						= 0,		//millisecs since power on
+	.startupDelay					= 2500		//Time to wait at startup.
 };
 
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
@@ -246,9 +248,9 @@ void robotSetup(void)
 	imuDmpInit(sys.pos.IMU.gyroCalEnabled);	//Initialise DMP system
 	lfInit();							//Initialise line follow sensors. Only on V2.
 	
-	if(!sys.pos.IMU.gyroCalEnabled)		//If gyro cal no enabled (because it introduces its own
-										//delay
-		delay_ms(2500);					//Stops robot running away while programming
+	sys.states.mainfPrev = sys.states.mainf;
+	sys.states.mainf = M_STARTUP_DELAY;	//DO NOT CHANGE
+	
 	srand(sys.timeStamp);				//Seed rand() to give unique random numbers
 	return;
 }
