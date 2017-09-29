@@ -111,9 +111,13 @@ typedef struct OpticalSensor
 {
 	int dx;				//Rate of change from optical sensor (X axis is left to right)
 	int dy;				//Rate of change from optical sensor (Y axis is fwd/bckwd)
+	int dxSum;			//Sum of samples between updates from optical sensor (for rolling average)
+	int dySum;			//Sum of samples between updates from optical sensor (for rolling average)
+	uint16_t sampleCount;	//Number of samples between updates (for rolling average)
 	int x;				//Count sum on x axis
 	int y;				//Count sum on y axis
 	char pollEnabled;	//Enable polling the optical sensor
+	char pollInterval;	//Rate at which to poll Mouse
 	char overflowFlag;	//1 if data has overflowed on optical sensor
 	uint8_t surfaceQuality;	//A value signifying quality of the surface (242 = max quality)
 } OpticalSensor;
@@ -173,6 +177,7 @@ typedef struct BatteryChargeData
 	uint16_t batteryMaxVoltage;			//Fully charged voltage of battery (will calibrate onthefly)
 	uint16_t batteryDockingVoltage;		//Voltage below which the robot should seek dock
 	uint16_t batteryMinVoltage;			//Voltage at which robot is considered completely dead
+	uint8_t batteryPercentage;			//Percentage of battery remaining
 	uint8_t fcChipStatus;				//Status or fault code reported by Charge chip
 	uint8_t fcChipFaultFlag;			//Fault detected by charge chip, see Status for code
 	uint8_t pollBatteryEnabled;			//Enable battery voltage polling
@@ -223,6 +228,7 @@ typedef struct CommunicationDataGroup
 {
 	uint8_t pollEnabled;				//Whether or not to poll for new messages in main()
 	uint8_t twi2SlavePollEnabled;		//Whether to look for slave requests on twi2 (From LCD)
+	uint8_t twi2ReceivedDataByte;		//Stores the last received data byte from TWI2 slave
 	uint16_t pollInterval;				//Interval at which to poll at (ms)
 	struct MessageInfo messageData;		//Next message data
 	uint16_t testModeStreamInterval;	//Interval between sending test data packets (ms)
@@ -242,6 +248,7 @@ typedef struct SystemFlagsGroup
 {
 	char xbeeNewData;	//New data from Xbee interface
 	char imuCheckFifo;	//IMU ext interrupt has been triggered
+	char twi2NewData;	//New data received on twi2 (Slave interface)
 	char obaMoving;		//Robot is in motion
 	char obaEnabled;	//Obstacle avoidance enabled
 	char cornerFlag;

@@ -104,10 +104,9 @@ int main(void)
 {
 	robotSetup(); //Set up the system and peripherals
 	//Battery voltage stored in sys.power.batteryVoltage
-	//Initial main function state is set in robot_setup.c (sys.states.mainf)
+	//Initial main function state is SET IN robot_setup.c (sys.states.mainf) (NOT here)
 	float lineHeading = 0;
 	uint8_t obstacleFlag = 0;
-	sys.states.mainf = M_FORMATION;
 	sys.flags.obaEnabled = 1;
 	sys.states.mainf = M_OBSTACLE_AVOIDANCE_DEMO;
 	sys.flags.obaMoving	= 1;
@@ -205,7 +204,7 @@ int main(void)
 		
 		pfPollPower(&sys);			//Poll battery and charging status
 		
-		sfPollSensors(&sys);		//Poll prox, colour, line
+		sfPollSensors(&sys);		//Poll prox, colour, line 
 		
 		//check to see if obstacle avoidance is enabled AND the robot is moving
 		if(sys.flags.obaEnabled && sys.flags.obaMoving && sys.states.mainf != M_OBSTACLE_AVOIDANCE)

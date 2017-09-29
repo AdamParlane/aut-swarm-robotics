@@ -72,6 +72,12 @@ void pfPollPower(RobotGlobalStructure *sys)
 		//maximum battery voltage value.
 		if(sys->power.batteryVoltage > sys->power.batteryMaxVoltage)
 			sys->power.batteryMaxVoltage = sys->power.batteryVoltage;
+		
+		//Calculate remaining battery percentage
+		sys->power.batteryPercentage 
+		=	100*(sys->power.batteryVoltage - sys->power.batteryMinVoltage)
+		/	(sys->power.batteryMaxVoltage - sys->power.batteryMinVoltage);
+		
 		//Read battery temp
 		//TODO: Read battery temp
 	}
@@ -170,8 +176,8 @@ uint8_t pfChargeCycleHandler(RobotGlobalStructure *sys)
 			break;
 		
 		case CCS_RECONNECT:
-			//mfAdvancedMove(currentHeading, currentHeading, 100, 70, sys);	//Charge Forward
-			mfTrackLight(70, sys);
+			mfAdvancedMove(currentHeading, currentHeading, 100, 70, sys);	//Charge Forward
+			//mfTrackLight(70, sys);
 			if(sys->power.fcChipStatus == FC_BATTERY_CHARGING
 			|| sys->power.fcChipStatus == FC_POWER_CONNECTED)
 			{
