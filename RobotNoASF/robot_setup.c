@@ -121,6 +121,8 @@ RobotGlobalStructure sys =
 		.pollEnabled				= 1,
 		.twi2SlavePollEnabled		= 1,
 		.pollInterval				= 0,
+		.updateEnable				= 1,
+		.updateInterval				= 5000,
 		.testModeStreamInterval		= 100
 	},
 	
@@ -135,7 +137,7 @@ RobotGlobalStructure sys =
 		
 		.colour =
 		{
-			.pollEnabled			= 0x03,		//Bitmask to enable specific sensors.
+			.pollEnabled			= 0,//0x03,		//Bitmask to enable specific sensors.
 			.pollInterval			= 40,
 			.getHSV					= 1
 		},
@@ -143,7 +145,9 @@ RobotGlobalStructure sys =
 		.prox =
 		{
 			.errorCount				= 0,
+
 			.pollEnabled			= 0x3F,		//Bitmask to enable specific sensors
+
 			.pollInterval			= 40
 		}
 	},

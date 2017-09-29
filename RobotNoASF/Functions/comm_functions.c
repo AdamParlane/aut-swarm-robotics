@@ -103,7 +103,7 @@ void commInterpretSwarmMessage(RobotGlobalStructure *sys)
 	switch(sys->comms.messageData.command & 0xF0)	//Look at upper nibble only
 	{
 		//PositionGroup commands
-		case 0xA0:
+		case RX_UPDATE_POSITION:
 			switch(sys->comms.messageData.command & 0x0F)
 			{
 				//X, Y position from PC
@@ -115,27 +115,32 @@ void commInterpretSwarmMessage(RobotGlobalStructure *sys)
 			break;
 		
 		//Test commands
-		case 0xE0:
+		case RX_TEST_MODE:
 			sys->states.mainf = M_TEST;
 			break;
 
 		//Manual control
-		case 0xD0:
+		case RX_MANUAL_MODE:
 			switch(sys->comms.messageData.command & 0x0F)
 			{
-				case 0x01:
+				case RX_M_STOP:
+					sys->states.mainf = M_MANUAL;
+					break;
+					
+				case RX_M_MOVE:
 					sys->states.mainf = M_MANUAL;
 					break;
 
-				case 0x02:
+				case RX_M_ROTATE_CW:
 					sys->states.mainf = M_MANUAL;
 					break;
 
-				case 0x03:
+				case RX_M_ROTATE_CCW:
 					sys->states.mainf = M_MANUAL;
 					break;
 
-				case 0x04:		//move robot randomly
+				case RX_M_RANDOM:
+					//move robot randomly
 					sys->states.mainf = M_RANDOM;
 					break;
 					
@@ -151,24 +156,26 @@ void commInterpretSwarmMessage(RobotGlobalStructure *sys)
 					}
 					break; 
 					
-				case 0x07:		//Docking mode
+				case RX_M_DOCKING:
 					sys->states.docking = DS_START;
 					sys->states.mainf = M_DOCKING;
 					break;
 
-				case 0x08:
+				case RX_M_OBSTACLE_AVOIDANCE_DIS:
 					sys->flags.obaEnabled = 0;
+					sys->states.mainf = M_IDLE;
 					break;
 
-				case 0x09:
+				case RX_M_OBSTACLE_AVOIDANCE_EN:
 					sys->flags.obaEnabled = 1;
+					sys->states.mainf = M_OBSTACLE_AVOIDANCE_DEMO;
 					break;
 
-				case 0x0A:		//Follow light
+				case RX_M_LIGHT_FOLLOW:
 					sys->states.mainf = M_LIGHT_FOLLOW;
 					break;
 
-				case 0x0B:		//Follow Line
+				case RX_M_LINE_FOLLOW:
 					sys->states.mainf = M_LINE_FOLLOW;
 					break;
 					
@@ -253,3 +260,22 @@ char commTwi2SlaveRequest(RobotGlobalStructure *sys)
 	return 0;
 } 
 
+
+//send battery and task to PC
+void commPCStatusUpdate(RobotGlobalStructure *sys)
+{
+	//When to next send update
+	static uint32_t updateNextTime = 0;
+
+	if((sys->timeStamp > updateNextTime) && sys->comms.updateEnable)
+	{
+		updateNextTime = sys->timeStamp + sys->comms.updateInterval;
+		sys->comms.transmitData.Data[0] = 0xA1; //Command letting PC know of update
+		sys->comms.transmitData.Data[1] = sys->states.mainf; //Robot State
+		sys->comms.transmitData.Data[2] = sys->power.batteryVoltage >> 8; //Upper byte
+		sys->comms.transmitData.Data[3] = sys->power.batteryVoltage & 0xFF; //Lower byte
+		sys->comms.transmitData.DataSize = 4;
+		xbeeSendAPITransmitRequest(COORDINATOR_64,UNKNOWN_16, sys->comms.transmitData.Data, 
+		sys->comms.transmitData.DataSize);  //Send the Message
+	}
+}

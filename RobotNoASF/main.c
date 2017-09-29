@@ -97,10 +97,20 @@ extern RobotGlobalStructure sys;		//System data structure
 * More functionality incoming (formations, smarter obstacle avoidance, high level error codes etc)
 *
 */
+
+
+
 int main(void)
 {
 	robotSetup(); //Set up the system and peripherals
-	//////    all sys structure initialisation is done in robot_setup.c (NOT here)   //////
+
+	//Battery voltage stored in sys.power.batteryVoltage
+	//Initial main function state is SET IN robot_setup.c (sys.states.mainf) (NOT here)
+	uint8_t obstacleFlag = 0;
+	sys.flags.obaEnabled = 1;
+	sys.states.mainf = M_IDLE;
+	sys.flags.obaMoving	= 1;
+
 	while(1)
 	{
 		switch (sys.states.mainf)
@@ -146,12 +156,20 @@ int main(void)
 				break;
 				
 			case M_FORMATION:
+			//placeholder
 				break;
 						
 			case M_OBSTACLE_AVOIDANCE:
 				//avoid obstacles using proximity sensors
 				if(!dodgeObstacle(&sys))//returning 0 means obstacles have been avoided
 					sys.states.mainf = sys.states.mainfPrev; //reset the state to what it was
+				break;
+				
+			case M_OBSTACLE_AVOIDANCE_DEMO:
+				//will act like a function requiring OA for sake of demo'ing
+				mfAdvancedMove(180, 0, 50, 25, &sys);
+				sys.pos.targetHeading = 180;
+				sys.pos.targetSpeed = 50;
 				break;
 
 			case M_CHARGING:
@@ -180,6 +198,8 @@ int main(void)
 		}
 		
 		commGetNew(&sys);			//Checks for and interprets new communications
+		
+		commPCStatusUpdate(&sys);	//Updates PC with battery and state (every 5 seconds)
 		
 		nfRetrieveNavData(&sys);	//checks if there is new navigation data and updates sys->pos
 		

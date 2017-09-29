@@ -43,6 +43,7 @@ typedef enum MainStates
 	M_FORMATION,
 	M_DOCKING,
 	M_OBSTACLE_AVOIDANCE,
+	M_OBSTACLE_AVOIDANCE_DEMO,
 	M_IDLE, 
 	M_CHARGING,
 	M_LINE_FOLLOW,
@@ -220,12 +221,21 @@ typedef struct LineSensorArray
 	uint8_t detected;
 } LineSensorArray;
 
+struct transmitDataStructure
+{
+	uint8_t Data[50];//array for data to be transmitted to PC BEFORE XBee framing has been added
+	uint8_t DataSize;//size of the transmit array
+};
+
 typedef struct CommunicationDataGroup
 {
 	uint8_t pollEnabled;				//Whether or not to poll for new messages in main()
 	uint8_t twi2SlavePollEnabled;		//Whether to look for slave requests on twi2 (From LCD)
 	uint8_t twi2ReceivedDataByte;		//Stores the last received data byte from TWI2 slave
 	uint16_t pollInterval;				//Interval at which to poll at (ms)
+	uint16_t updateInterval;			//Interval at which the PC is updated with the robots status
+	uint8_t updateEnable;
+	struct transmitDataStructure transmitData;
 	struct MessageInfo messageData;		//Next message data
 	uint16_t testModeStreamInterval;	//Interval between sending test data packets (ms)
 } CommunicationDataGroup;
@@ -247,6 +257,7 @@ typedef struct SystemFlagsGroup
 	char twi2NewData;	//New data received on twi2 (Slave interface)
 	char obaMoving;		//Robot is in motion
 	char obaEnabled;	//Obstacle avoidance enabled
+	char cornerFlag;
 } SystemFlagsGroup;
 
 //Structure that will store the state of every state machine in the system
@@ -391,5 +402,7 @@ int32_t capToRangeInt(int32_t valueToCap, int32_t minimumVal, int32_t maximumVal
 uint32_t capToRangeUint(uint32_t valueToCap, uint32_t minimumVal, uint32_t maximumVal);
 
 float capToRangeFlt(float valueToCap, float minimumVal, float maximumVal);
+
+
 
 #endif /* ROBOTDEFINES_H_ */
