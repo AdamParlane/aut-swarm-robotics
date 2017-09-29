@@ -21,6 +21,7 @@
 *
 * Functions:
 * void motorInit(void);
+* void findMotorMinSpeeds(void);
 * char rearMotorDrive(signed char speed)
 * char frontRightMotorDrive(signed char speed)
 * char frontLeftMotorDrive(signed char speed)
@@ -34,12 +35,14 @@
 #include "../robot_setup.h"
 #include "motor_driver.h"
 #include "../Functions/test_functions.h"
+#include "../Functions/navigation_functions.h"	//nfWrapAngle in moveRobot()
+#include "opt_interface.h"					//detectMouseMove() for findMinSpeed
 #include "timer_interface.h"				//delay_ms()
 #include <stdlib.h>							//abs()
 #include <tgmath.h>							//Trigonometry
 
 //////////////[Global Variables]////////////////////////////////////////////////////////////////////
-extern RobotGlobalStructure sys;
+uint8_t motorMinSpeed[3] = {0, 0, 0};	//Stores the minimum speeds for the motors
 
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*
@@ -139,6 +142,85 @@ void motorInit(void)
 	REG_PWM_ENA |= PWM_ENA_CHID1;	//Enable PWM on channel 1
 	REG_PWM_ENA |= PWM_ENA_CHID2;	//Enable PWM on channel 2
 	REG_PWM_ENA |= PWM_ENA_CHID3;	//Enable PWM on channel 3
+	
+	//delay_ms(5000);	//Robot needs to be still for this
+	//findMotorMinSpeeds();
+}
+
+/*
+* Function:
+* void findMotorMinSpeeds(void)
+*
+* Finds the minimum PWM duty needed to start each motor moving
+*
+* Inputs:
+* none
+*
+* Returns:
+* none
+*
+* Implementation:
+* - Resets the PWM of each motor to 0 duty
+* - Sets Cloclwise direction
+* - Starts a for loop that will iterate once for each motor
+* - Waits 100ms, then checks that there has been no movement on the mouse. If there has then wait
+*   another 100ms
+* - Slowly increase the PWM duty of the current motor until movement is detected by the mouse. When
+*   movement is detected then store that PWM number is the minimum and move on to the next motor
+*
+*/
+void findMotorMinSpeeds(void)
+{
+	frontRightPwm = 0;
+	frontLeftPwm = 0;
+	rearPwm = 0;
+	
+	frontRightMotorCW;
+	frontLeftMotorCW;
+	rearMotorCW;
+
+	for(uint8_t motor = 0; motor < 3; motor++)
+	{	
+		//Clear mouse buffer of residual data
+		do 
+		{
+			delay_ms(100);
+		} while (detectMouseMove(1));
+		for(uint8_t i = 0; i < 100; i++)
+		{
+			switch(motor)
+			{
+				case FR_MOTOR:
+					frontRightPwm = i;
+					frontLeftPwm = 0;
+					rearPwm = 0;
+					break;
+					
+				case FL_MOTOR:
+					frontLeftPwm = i;
+					frontRightPwm = 0;
+					rearPwm = 0;
+					break;
+					
+				case R_MOTOR:
+					rearPwm = i;
+					frontRightPwm = 0;
+					frontLeftPwm = 0;
+					break;
+			}
+			detectMouseMove(10);
+			delay_ms(100);
+			if(detectMouseMove(10))
+			{
+				motorMinSpeed[motor] = i;
+				i = 100;
+				frontRightPwm = 0;
+				frontLeftPwm = 0;
+				rearPwm = 0;
+			}
+		}
+	}
+
 }
 
 /*
@@ -165,6 +247,7 @@ void motorInit(void)
 char rearMotorDrive(signed char speed)
 {
 	speed = capToRangeInt(speed, -100, 100);	//Make sure speed is in range
+	//rearPwm = abs((int)((100 - motorMinSpeed[R_MOTOR])/100.0*speed)) + motorMinSpeed[R_MOTOR];
 	rearPwm = abs(speed);
 	if(speed > 0)		//Forwards
 		rearMotorCW;
@@ -199,6 +282,8 @@ char rearMotorDrive(signed char speed)
 char frontRightMotorDrive(signed char speed)
 {
 	speed = capToRangeInt(speed, -100, 100);	//Make sure speed is in range
+	//frontRightPwm 
+	//=	abs((int)((100 - motorMinSpeed[FR_MOTOR])/100.0*speed)) + motorMinSpeed[FR_MOTOR];
 	frontRightPwm = abs(speed);
 	if(speed > 0)		//Forwards
 		frontRightMotorCW;
@@ -233,6 +318,8 @@ char frontRightMotorDrive(signed char speed)
 char frontLeftMotorDrive(signed char speed)
 {
 	speed = capToRangeInt(speed, -100, 100);	//Make sure speed is in range
+	//frontLeftPwm 
+	//=	abs((int)((100 - motorMinSpeed[FL_MOTOR])/100.0*speed)) + motorMinSpeed[FL_MOTOR];
 	frontLeftPwm = abs(speed);
 	if(speed > 0)	//Forwards
 		frontLeftMotorCW;
@@ -435,6 +522,8 @@ uint8_t moveRobot(float heading, float speed, float turnRatio)
 {
 	int8_t rearMotorSpeed, frontRightMotorSpeed, frontLeftMotorSpeed;
 	
+	heading = nfWrapAngle(heading);
+	
 	//If speed is set to 0, then save processor cycles
 	if(speed == 0.0)
 	{
@@ -450,7 +539,7 @@ uint8_t moveRobot(float heading, float speed, float turnRatio)
 	
 	//Calculate speed ratios
 	float rotationalSpeed = speed*(turnRatio/100.0);
-	float straightSpeed = abs(speed) - (abs(rotationalSpeed));
+	float straightSpeed = abs(speed)-(abs(rotationalSpeed));
 	
 	//Calculate individual motor speeds
 	rearMotorSpeed			= -straightSpeed*cos(RM_ANGLE_RAD - headingRad) + rotationalSpeed;

@@ -15,16 +15,22 @@
 * Functions:
 * float mfRotateToHeading(float heading, RobotGlobalStructure *sys)
 * float mfMoveToHeading(float heading, uint8_t speed, RobotGlobalStructure *sys)
-* float mfMoveToHeadingByDistance(float heading, uint8_t speed, uint32_t distance,
+* float mfMoveToHeadingByDistance(float heading, uint8_t speed, float distance,
 *                                  RobotGlobalStructure *sys)
 * float mfTrackLight(RobotGlobalStructure *sys)
 * float mfTrackLightProx(RobotGlobalStructure *sys)
 * char mfRandomMovementGenerator(void)
 * void mfStopRobot(RobotGlobalStructure *sys)
+* char mfAdvancedMove(float heading, float facing, uint8_t speed,
+* 							uint8_t maxTurnRatio, RobotGlobalStructure *sys)
+* int32_t mfMoveToPosition(int32_t x, int32_t y, uint8_t speed, float facing,
+*							uint8_t maxTurnRatio, RobotGlobalStructure *sys)
 *
 */
 //////////////[Includes]////////////////////////////////////////////////////////////////////////////
 #include "../robot_setup.h"
+
+#include <math.h>		//For round()
 
 #include "../Interfaces/motor_driver.h"
 #include "../Interfaces/light_sens_interface.h"
@@ -100,7 +106,7 @@ float mfRotateToHeading(float heading, RobotGlobalStructure *sys)
 
 	//If error is less than 0.5 deg and delta yaw is less than 0.5 degrees per second then we can
 	//stop
-	if((abs(pErr) < 0.5) && (abs(sys->pos.IMU.gyroZ) < 0.5))	
+	if((abs(pErr) < MF_FACING_ERR) && (abs(sys->pos.IMU.gyroZ) < MF_DELTA_GYRO_ERR))	
 	{
 		mfStopRobot(sys);
 		pErr = 0;			//Clear the static vars so they don't interfere next time we call this
@@ -179,7 +185,7 @@ float mfMoveToHeading(float heading, uint8_t speed, RobotGlobalStructure *sys)
 	
 	//If error is less than 0.5 deg and delta yaw is less than 0.5 degrees per second then we can
 	//return 0 (ie robot is more or less on correct heading)
-	if((abs(pErr) < 0.5) && (abs(sys->pos.IMU.gyroZ) < 0.5))
+	if((abs(pErr) < MF_FACING_ERR) && (abs(sys->pos.IMU.gyroZ) < MF_DELTA_GYRO_ERR))
 		return 0;
 	else
 		return pErr;	//If not, return pErr	
@@ -187,7 +193,7 @@ float mfMoveToHeading(float heading, uint8_t speed, RobotGlobalStructure *sys)
 
 /*
 * Function:
-* float mfMoveToHeadingByDistance(float heading, uint8_t speed, uint32_t distance,
+* float mfMoveToHeadingByDistance(float heading, uint8_t speed, float distance,
 *									 RobotGlobalStructure *sys);
 *
 * Will allow robot to move along the given heading a given distance.
@@ -197,9 +203,9 @@ float mfMoveToHeading(float heading, uint8_t speed, RobotGlobalStructure *sys)
 *   Heading to move along (-180 to 180 degrees)
 * uint8_t speed:
 *   Percentage of max speed to move at (0-100%)
-* uint32_t distance:
+* float distance:
 *   Distance to travel before stopping.
-* struct SystemStates *state
+* struct SystemStatesGroup *state
 *   Pointer to the sys.states data structure
 * RobotGlobalStructure *sys:
 *   Pointer to the sys->pos. global structure.
@@ -220,29 +226,32 @@ float mfMoveToHeading(float heading, uint8_t speed, RobotGlobalStructure *sys)
 * desired distance then the function returns the distance remaining to be traveled.
 *
 */
-float mfMoveToHeadingByDistance(float heading, uint8_t speed, uint32_t distance, RobotGlobalStructure *sys)
+float mfMoveToHeadingByDistance(float heading, uint8_t speed, float distance, 
+									RobotGlobalStructure *sys)
 {
 	static float distanceTravelled = 0;
 	
 	switch(sys->states.moveHeadingDistance)
 	{
 		case MHD_START:
-			if(!mfRotateToHeading(heading, sys))//Face the right direction
+			if(!mfRotateToHeading(heading, sys) && sys->pos.dy == 0)//Face the right direction
 				sys->states.moveHeadingDistance = MHD_MOVING;
 		break;
 		
 		case MHD_MOVING:
+			//Once we are facing the right direction we can start keeping track of the distance 
+			//traveled.
+			speed = capToRangeUint(round((distance - distanceTravelled)*MTHD_KP + 25), 0, 100);
 			mfMoveToHeading(heading, speed, sys);
-			distanceTravelled += sys->pos.Optical.dy;//Once we are facing the right direction we can
-													//start keeping track of the distance traveled.
+			distanceTravelled += sqrt(sys->pos.dy*sys->pos.dy + sys->pos.dx*sys->pos.dx);
 			if(distanceTravelled > distance)		//If we have gone the distance
 				sys->states.moveHeadingDistance = MHD_STOP;//Time to stop.
 		break;
 						
 		case MHD_STOP:
-			mfStopRobot(sys);							//Stop robot
+			mfStopRobot(sys);						//Stop robot
 			distanceTravelled = 0;					//Reset static distance variable
-			sys->states.moveHeadingDistance = MHD_START;	//Reset function state.
+			sys->states.moveHeadingDistance = MHD_START;//Reset function state.
 			return 0;								//Indicate that maneuver is complete
 		break;
 	}
@@ -272,36 +281,35 @@ float mfMoveToHeadingByDistance(float heading, uint8_t speed, uint32_t distance,
 * Add speed parameter
 *
 */
-float mfTrackLight(RobotGlobalStructure *sys)
+float mfTrackLight(uint8_t speed, RobotGlobalStructure *sys)
 {
 	sys->flags.obaMoving = 1;	
 	static float pErr;			//Proportional error
 	static float iErr = 0;		//Integral error
 	float dHeading;				//Delta heading to adjust by
-	//Read light sensor values
-	uint16_t leftSensor = lightSensRead(MUX_LIGHTSENS_L, LS_WHITE_REG);
-	uint16_t rightSensor = lightSensRead(MUX_LIGHTSENS_R, LS_WHITE_REG);
 	
 	//Calculate errors
 	//Proportional error is normalised by the average value of both sensors
-	pErr = (float)(rightSensor - leftSensor)/((float)(leftSensor + rightSensor)/2.0);
+	pErr = (float)(sys->sensors.colour.right.green - sys->sensors.colour.left.green)/
+			((float)(sys->sensors.colour.left.green + sys->sensors.colour.right.green)/2.0);
 	iErr += pErr;
 			
 	//If dHeading ends up being out of range, then dial it back
 	dHeading = TL_KP*pErr + TL_KI*iErr;
-	dHeading = capToRangeInt(dHeading, -45, 45);
+	dHeading = capToRangeInt(dHeading, -60, 60);
+	
+	mfMoveToHeading(sys->pos.facing + dHeading, 60, sys);
 	
 	//If error is less than 0.5 deg and delta yaw is less than 0.5 degrees per second then we can
 	//stop
-	if((abs(dHeading) < 0.5) && (abs(sys->pos.IMU.gyroZ) < 0.5))
+	if((abs(dHeading) < MF_FACING_ERR) && (abs(sys->pos.IMU.gyroZ) < MF_DELTA_GYRO_ERR))
 	{
-		mfStopRobot(sys);
 		pErr = 0;			//Clear the static vars so they don't interfere next time we call this
 							//function
 		iErr = 0;
 		return 0;
 	} else {
-		mfMoveToHeading(sys->pos.facing + dHeading, 60, sys);
+		mfMoveToHeading(sys->pos.facing + dHeading, speed, sys);
 		return pErr;		//If not, return pErr
 	}
 }
@@ -359,7 +367,7 @@ float mfTrackLightProx(RobotGlobalStructure *sys)
 	
 	//If error is less than 0.5 deg and delta yaw is less than 0.5 degrees per second then we can
 	//stop
-	if((abs(dHeading) < 0.5) && (abs(sys->pos.IMU.gyroZ) < 0.5))
+	if((abs(dHeading) < MF_FACING_ERR) && (abs(sys->pos.IMU.gyroZ) < MF_DELTA_GYRO_ERR))
 	{
 		mfStopRobot(sys);
 		pErr = 0;			//Clear the static vars so they don't interfere next time we call this
@@ -410,23 +418,85 @@ float mfTrackLightProx(RobotGlobalStructure *sys)
 * each time the function is called
 *
 */
-char mfRandomMovementGenerator(void)
+char mfRandomMovementGenerator(RobotGlobalStructure *sys)
 {
+	static char restart = 1;
 	int direction = rand() % 360;	//get random direction range: 0 - 360 degrees
 	char speed = rand() % 100;		//get random speed:up to 100%
-	char runTime = rand() % 5;		//get random delay time: up to 5 seconds
-	moveRobot(direction, speed, 0);	//moveRobot at random speed and direction
-	delay_ms(runTime * 1000);		//Delay for random milliseconds
+	//char runTime = rand() % 5;		//get random delay time: up to 5 seconds
+	if(restart)
+	{
+		sys->pos.targetHeading = direction;
+		moveRobot(direction, speed, 0);	//moveRobot at random speed and direction
+	}
+	if(!fdelay_ms(5000))				//Delay for 5 secondss
+		restart = 1;
+	else
+		restart = 0;
 	return 0;
 }
 
-
+/*
+* Function:
+* void mfStopRobot(RobotGlobalStructure *sys)
+*
+* Stops the robot (High level function to avoid direct access to the motor_driver from other 
+* high level functions
+*
+* Inputs:
+* RobotGlobalStructure *sys
+*   Pointer to the global robot data structure
+*
+* Returns:
+* none
+*
+* Implementation:
+*   Stops all the motors and sets the obstacle avoidances system moving flag to 0
+*
+*/
 void mfStopRobot(RobotGlobalStructure *sys)
 {
 	mdStopMotors();
 	sys->flags.obaMoving = 0;
 }
 
+/*
+* Function:
+* char mfAdvancedMove(float heading, float facing, uint8_t speed,
+* 							uint8_t maxTurnRatio, RobotGlobalStructure *sys)
+*
+* Will move the robot along a heading, and also rotate the robot to face the given facing, 
+* using closed loop control from the mouse and IMU to achieve it.
+*
+* Inputs:
+* float heading:
+*   The absolute (arena) heading that the robot should travel along
+* float facing:
+*   The absolute (arena) facing that the robot should face
+* uint8_t speed:
+*   The maximum motor speed (0-100%)
+* uint8_t maxTurnRatio:
+*   The percentage of rotational speed to be applied to the motors (ie how fast the robot will
+*   rotate towards the desired facing). 0% means the robot will not rotate at all. %100 means that
+*   The robot will only rotate on the spot until the desired facing is achieve before setting off
+*   on the desired heading. Anything in between will have the robot gradually rotate while
+*   travelling along the desired heading.
+* RobotGlobalStructure *sys:
+*   Pointer to the global robot data structure
+*
+* Returns:
+* 0 when the robot has achieved the desired facing, otherwise the proportional error between the
+* desired facing and the current facing of the robot.
+*
+* Implementation:
+* See mfMoveToHeading() above as this function is based on that. The difference is that this
+* two control mechanisms, one from the IMU and one from the optical sensor for the facing control
+* and heading control respectively.
+*
+* Improvements:
+* [Ideas for improvements that are yet to be made](optional)
+*
+*/
 char mfAdvancedMove(float heading, float facing, uint8_t speed,
 						uint8_t maxTurnRatio, RobotGlobalStructure *sys)
 {	
@@ -450,11 +520,6 @@ char mfAdvancedMove(float heading, float facing, uint8_t speed,
 	//Force the P controller to always take the shortest path to the destination.
 	//For example if the robot was currently facing at -120 degrees and the target was 130 degrees,
 	//instead of going right around from -120 to 130, it will go to -180 and down to 130.
-	if(pErrH > 180)
-		pErrH -= 360;
-	if(pErrH < -180)
-		pErrH += 360;
-
 	if(pErrF > 180)
 		pErrF -= 360;
 	if(pErrF < -180)
@@ -467,13 +532,89 @@ char mfAdvancedMove(float heading, float facing, uint8_t speed,
 	facingCorrection = capToRangeFlt(facingCorrection, -maxTurnRatio, maxTurnRatio);
 	headingCorrection = capToRangeFlt(headingCorrection, -180, 180);
 	
-	//Get the robot moving to correct the errors
+	//Get the robot moving to correct the errors.
 	moveRobot(heading - sys->pos.facing + headingCorrection , speed, facingCorrection);
 	
 	//If error is less than 0.5 deg and delta yaw is less than 0.5 degrees per second then we can
 	//return 0 (ie robot is more or less on correct heading)
-	if((abs(sys->pos.IMU.gyroZ) < 0.5) && (abs(pErrF) < 0.5))
+	if((abs(sys->pos.IMU.gyroZ) < MF_DELTA_GYRO_ERR) && (abs(pErrF) < MF_FACING_ERR))
 		return 0;
 	else
 		return pErrF;	//If not, return pErrF
+}
+
+/*
+* Function:
+* int32_t mfMoveToPosition(int32_t x, int32_t y, uint8_t speed, float facing,
+*							uint8_t maxTurnRatio, RobotGlobalStructure *sys)
+*
+* Will move the robot to the given position in the arena
+*
+* Inputs:
+* int32_t x:
+*   The absolute (arena) x position (mm) that the robot should drive to
+* int32_t y:
+*   The absolute (arena) y position (mm) that the robot should drive to
+* uint8_t speed:
+*   The maximum motor speed (0-100%)
+* float facing:
+*   The absolute (arena) facing that the robot should face
+* uint8_t maxTurnRatio:
+*   The percentage of rotational speed to be applied to the motors (ie how fast the robot will
+*   rotate towards the desired facing). 0% means the robot will not rotate at all. %100 means that
+*   The robot will only rotate on the spot until the desired facing is achieve before setting off
+*   on the desired heading. Anything in between will have the robot gradually rotate while
+*   travelling along the desired heading.
+* RobotGlobalStructure *sys:
+*   Pointer to the global robot data structure
+*
+* Returns:
+* current state
+*
+* Implementation:
+* [[[[WIP]]]]
+*
+* Improvements:
+* [Ideas for improvements that are yet to be made](optional)
+*
+*/
+int32_t mfMoveToPosition(int32_t x, int32_t y, uint8_t speed, float facing, 
+						uint8_t maxTurnRatio, RobotGlobalStructure *sys)
+{
+	enum {START, CALC_HEADING, MOVE_TO_POS, FINISHED};
+	static uint8_t state = START;
+	static float currentHeading = 0;
+	//static uint32_t distTravelled = 0;
+	
+	switch(state)
+	{
+		case START:
+			//initialDistance = sqrt((x - sys->pos.x)*(x - sys->pos.x) + 
+			//						(y - sys->pos.y)*(y - sys->pos.y));
+			state = CALC_HEADING;
+			break;
+		
+		case CALC_HEADING:
+			//distTravelled = 0;
+			currentHeading = atan2((x - sys->pos.x), (y - sys->pos.y))*180/M_PI;
+			state = MOVE_TO_POS;
+			break;
+			
+		case MOVE_TO_POS:
+			if(!fdelay_ms(1000))
+				state = CALC_HEADING;
+			//distTravelled += sqrt(sys->pos.dx*sys->pos.dx + sys->pos.dy*sys->pos.dy);
+			
+			mfAdvancedMove(currentHeading, facing, speed, maxTurnRatio, sys);
+			if((abs(x - sys->pos.x) < 10) && (abs(y - sys->pos.y) < 10))
+				state = FINISHED;
+			break;
+			
+		case FINISHED:
+			mfStopRobot(sys);
+			state = START;
+			break;
+	}
+	
+	return state;
 }

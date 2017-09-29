@@ -17,7 +17,8 @@
 * void SPI_Init(void);
 * void mouseInit(void);
 * int mouseTestBasic(void);
-* void Get_Mouse_XY(Position *sys);
+* void getMouseXY(PositionGroup *sys);
+* uint8_t detectMouseMove(uint16_t threshold);
 *
 * Functionality of each function is explained before each function
 * In the this file that is a summary of purpose, input and return values
@@ -56,10 +57,11 @@
 #define OPT_CONV_400CPI2MM	0.063500000
 #define OPT_CONV_800CPI2MM	0.031750000
 #define OPT_CONV_1200CPI2MM	0.021166667
-#define OPT_CONV_1600CPI2MM	0.015875000
+#define OPT_CONV_1600CPI2MM	0.015875000		//OLD
+//#define OPT_CONV_1600CPI2MM	0.000237
 #define OPT_CONV_2000CPI2MM	0.012700000
 
-#define OPT_CONV_FACTOR		OPT_CONV_1600CPI2MM	//Using 800CPI resolution
+#define OPT_CONV_FACTOR		OPT_CONV_1600CPI2MM	//Using 1600CPI resolution
 
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*
@@ -131,6 +133,7 @@ char mouseTestBasic(void);
 */
 void getMouseXY(RobotGlobalStructure *sys);
 
+uint8_t detectMouseMove(uint16_t threshold);
 
 /*
 * Function: void getMouseSQUAL(void)

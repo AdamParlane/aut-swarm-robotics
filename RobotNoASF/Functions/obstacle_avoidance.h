@@ -22,8 +22,7 @@
 #define OBSTACLE_AVOIDANCE_H_
 
 //////////////[Defines]/////////////////////////////////////////////////////////////////////////////
-#define OBSTACLE_THRESHOLD 0x0100 //Subject to change on testing but seems reasonable
-
+#define OBSTACLE_THRESHOLD 0x0150 //Subject to change on testing but seems reasonable
 //////////////[Global Variables]///////////////////////////////////////////////////////////////////////////
 uint16_t proximity[6];
 
@@ -42,7 +41,7 @@ uint16_t proximity[6];
 * No return values
 *
 */
-void scanProximity(void);
+void scanProximity(RobotGlobalStructure *sys);
 
 /*
 * Function:
@@ -62,6 +61,8 @@ void scanProximity(void);
 uint8_t dodgeObstacle(RobotGlobalStructure *sys);
 
 void checkForObstacles(RobotGlobalStructure *sys);
+
+uint8_t checkProximity(void);
 
 #define LEFT	0
 #define RIGHT	1

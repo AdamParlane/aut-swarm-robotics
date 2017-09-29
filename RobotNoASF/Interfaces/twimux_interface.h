@@ -37,9 +37,9 @@
 
 //////////////[Defines]/////////////////////////////////////////////////////////////////////////////
 ////TWI status register timeout values (ms)
-#define TWI_RXRDY_TIMEOUT	5
-#define TWI_TXRDY_TIMEOUT	2
-#define TWI_TXCOMP_TIMEOUT	2
+#define TWI_RXRDY_TIMEOUT	100
+#define TWI_TXRDY_TIMEOUT	100
+#define TWI_TXCOMP_TIMEOUT	100
 
 ////General Commands
 //if returns 1, then the receive holding register has a new byte to be read
@@ -62,9 +62,25 @@
 #define twi0MasterMode		(REG_TWI0_CR |= TWI_CR_MSEN|TWI_CR_SVDIS)
 #define twi2MasterMode		(REG_TWI2_CR |= TWI_CR_MSEN|TWI_CR_SVDIS)
 
+//Enable slave mode (disable master mode)
+#define twi0SlaveMode		(REG_TWI0_CR |= TWI_CR_MSDIS|TWI_CR_SVEN)
+#define twi2SlaveMode		(REG_TWI2_CR |= TWI_CR_MSDIS|TWI_CR_SVEN)
+
 //Set address of desired slave device to talk to
 #define twi0SetSlave(value)	(REG_TWI0_MMR = TWI_MMR_DADR(value))
 #define twi2SetSlave(value)	(REG_TWI2_MMR = TWI_MMR_DADR(value))
+
+//Slave access flags (1 when master is trying to access this device as slave)
+#define twi0SlaveAccess		(REG_TWI0_SR & TWI_SR_SVACC)
+#define twi2SlaveAccess		(REG_TWI2_SR & TWI_SR_SVACC)
+
+//Is master trying to read from us?
+#define twi0SlaveReadMode	(REG_TWI0_SR & TWI_SR_SVREAD)
+#define twi2SlaveReadMode	(REG_TWI2_SR & TWI_SR_SVREAD)
+
+//End of slave access flag
+#define twi0EndSlaveAccess	(REG_TWI0_SR & TWI_SR_EOSACC)
+#define twi2EndSlaveAccess	(REG_TWI2_SR & TWI_SR_EOSACC)
 
 //Transmit holding register
 #define twi0Send(value)		(REG_TWI0_THR = value)
@@ -109,6 +125,7 @@
 #define TWI0_FCHARGE_ADDR			0x6B		//Battery Charger (Fast Charge Controller)
 #define TWI0_IMU_ADDR				0x68		//IMU
 #define TWI2_IMU_ADDR				0x68		//IMU
+#define TWI2_SLAVE_ADDR				0x44		//This devices' slave address
 
 ////TWI Mux channels
 //Only one active at a time
@@ -231,5 +248,56 @@ char twi0Read(unsigned char slave_addr, unsigned char reg_addr,
 					unsigned char length, unsigned char *data);
 char twi2Read(unsigned char slave_addr, unsigned char reg_addr,
 					unsigned char length, unsigned char *data);
+
+/*
+* Function:
+* char twi2SlaveAccessPoll(void)
+*
+* Polls TWI2 (when in slave mode) for message from a Master
+*
+* Inputs:
+* None
+*
+* Returns:
+* 0 if no message, 0x10 if message requesting data and 0x11 if message containing data
+*
+*/					
+char twi2SlaveAccessPoll(void);
+
+/*
+* Function:
+* char twi2SlaveRead(unsigned char *dataByte, unsigned char *more)
+*
+* Allows the caller to read data from TWI2 when in slave mode.
+*
+* Inputs:
+* unsigned char *dataByte:
+*   Pointer to a char where the data received from the interface will be stored
+* unsigned char *more
+*   Indicates that communication with the master is not finished (1 = not finished)
+*
+* Returns:
+* 0 on success or 1 on failure
+*
+*/
+char twi2SlaveRead(unsigned char *dataByte, unsigned char *more);
+
+/*
+* Function:
+* char twi2SlaveWrite(unsigned char dataByte, unsigned char *more)
+*
+* Allows the caller to send data to TWI2 master when in slave mode.
+*
+* Inputs:
+* unsigned char dataByte:
+*   Byte to send
+* unsigned char *more
+*   Indicates that communication with the master is not finished (1 = not finished)
+*
+* Returns:
+* 0 on success or 1 on failure
+*
+*/
+char twi2SlaveWrite(unsigned char dataByte, unsigned char *more);
 
 #endif /* TWIMUX_INTERFACE_H_ */

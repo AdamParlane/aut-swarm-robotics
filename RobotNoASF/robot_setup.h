@@ -46,7 +46,8 @@ typedef enum MainStates
 	M_IDLE, 
 	M_CHARGING,
 	M_LINE_FOLLOW,
-	M_LIGHT_FOLLOW
+	M_LIGHT_FOLLOW, 
+	M_RANDOM
 } MainStates;
 
 typedef enum DockingStates
@@ -69,6 +70,7 @@ typedef enum FollowLineStates
 	FLS_FIRST_CONTACT,
 	FLS_ALIGN,
 	FLS_FOLLOW,
+	FLS_GIVE_UP,
 	FLS_FINISH
 } FollowLineStates;
 
@@ -87,9 +89,11 @@ typedef enum ChargeCycleStates
 	CCS_FINISHED,
 	CCS_CHECK_POWER,
 	CCS_CHARGING,
+	CCS_RECONNECT,
 	CCS_FAULT,
 	CCS_DISMOUNT,
-	CCS_TURN_AWAY
+	CCS_TURN_AWAY,
+	CCS_STOP_POLLING
 } ChargeCycleStates;
 
 typedef enum MTHByDistanceStates
@@ -106,9 +110,13 @@ typedef struct OpticalSensor
 {
 	int dx;				//Rate of change from optical sensor (X axis is left to right)
 	int dy;				//Rate of change from optical sensor (Y axis is fwd/bckwd)
+	int dxSum;			//Sum of samples between updates from optical sensor (for rolling average)
+	int dySum;			//Sum of samples between updates from optical sensor (for rolling average)
+	uint16_t sampleCount;	//Number of samples between updates (for rolling average)
 	int x;				//Count sum on x axis
 	int y;				//Count sum on y axis
 	char pollEnabled;	//Enable polling the optical sensor
+	char pollInterval;	//Rate at which to poll Mouse
 	char overflowFlag;	//1 if data has overflowed on optical sensor
 	uint8_t surfaceQuality;	//A value signifying quality of the surface (242 = max quality)
 } OpticalSensor;
@@ -138,14 +146,14 @@ typedef struct IMUSensor
 //this will be written to by getMouseXY, nfGetEulerAngles, and another navigation function which
 //combines them. The structure will store the relevant info from both key sensors and fuse them in
 //an additional function (84bytes i think)
-typedef struct Position
+typedef struct PositionGroup
 {
 	OpticalSensor Optical;		//Optical sensor raw data
 	IMUSensor IMU;				//IMU raw and converted data
-	float x;					//Absolute X position in arena (mm)
-	float y;					//Absolute Y position in arena (mm)
-	float dx;					//delta x in mm
-	float dy;					//delta y in mm
+	int32_t x;					//Absolute X position in arena (mm)
+	int32_t y;					//Absolute Y position in arena (mm)
+	int32_t dx;					//delta x in mm
+	int32_t dy;					//delta y in mm
 	float speed;				//Speed in mm per second
 	float heading;				//Absolute direction of travel (deg)
 	float relHeading;			//Relative heading of travel (to front of robot)
@@ -158,7 +166,7 @@ typedef struct Position
 								//time as the IMU
 	unsigned short deltaTime;	//Time between last IMU reading and IMU previous reading
 	float facingOffset;			//Used to offset facing value (when corrected by PC)
-} Position;
+} PositionGroup;
 
 //Stores information about the battery and charging
 typedef struct BatteryChargeData
@@ -168,6 +176,7 @@ typedef struct BatteryChargeData
 	uint16_t batteryMaxVoltage;			//Fully charged voltage of battery (will calibrate onthefly)
 	uint16_t batteryDockingVoltage;		//Voltage below which the robot should seek dock
 	uint16_t batteryMinVoltage;			//Voltage at which robot is considered completely dead
+	uint8_t batteryPercentage;			//Percentage of battery remaining
 	uint8_t fcChipStatus;				//Status or fault code reported by Charge chip
 	uint8_t fcChipFaultFlag;			//Fault detected by charge chip, see Status for code
 	uint8_t pollBatteryEnabled;			//Enable battery voltage polling
@@ -190,26 +199,61 @@ typedef struct ColourSensorData
 	unsigned short value;
 } ColourSensorData;
 
-typedef struct CommunicationData
+//Stores proximity data
+typedef struct ProximityData
+{
+	uint8_t errorCount;					//Counts the number of times proximity sensors have failed
+	uint8_t pollEnabled;				//Whether or not to poll for new messages in main()
+	uint16_t pollInterval;				//Interval at which to poll at (ms)
+} ProximityData;
+
+//Will store states of the line sensors. This is necessary
+//because there is a gray area when the sensor is half on and half off the line, so by establishing
+//hysteresis and only changing the stored states when an upper and lower threshold is crossed,
+//jitter should be reduced.
+typedef struct LineSensorArray
+{
+	uint8_t outerLeft;
+	uint8_t innerLeft;
+	uint8_t innerRight;
+	uint8_t outerRight;
+	uint16_t pollInterval;
+	uint8_t pollEnabled;
+	uint8_t direction;
+	uint8_t detected;
+} LineSensorArray;
+
+typedef struct CommunicationDataGroup
 {
 	uint8_t pollEnabled;				//Whether or not to poll for new messages in main()
+	uint8_t twi2SlavePollEnabled;		//Whether to look for slave requests on twi2 (From LCD)
+	uint8_t twi2ReceivedDataByte;		//Stores the last received data byte from TWI2 slave
 	uint16_t pollInterval;				//Interval at which to poll at (ms)
 	struct MessageInfo messageData;		//Next message data
 	uint16_t testModeStreamInterval;	//Interval between sending test data packets (ms)
-} CommunicationData;
+} CommunicationDataGroup;
+
+//Proximity sensor sub-structure
+typedef struct ProximitySensorGroup
+{
+	uint16_t sensor[6];
+	uint8_t pollEnabled;	//Bitmask of the sensors being polled
+	uint16_t pollInterval;
+	uint8_t errorCount;
+}ProximitySensorGroup;
 
 //Structure that will store all system flags for global use
-typedef struct SystemFlags
+typedef struct SystemFlagsGroup
 {
 	char xbeeNewData;	//New data from Xbee interface
 	char imuCheckFifo;	//IMU ext interrupt has been triggered
+	char twi2NewData;	//New data received on twi2 (Slave interface)
 	char obaMoving;		//Robot is in motion
 	char obaEnabled;	//Obstacle avoidance enabled
-	char tfStream;		//Test function stream time flag
-} SystemFlags;
+} SystemFlagsGroup;
 
 //Structure that will store the state of every state machine in the system
-typedef struct SystemStates
+typedef struct SystemStatesGroup
 {
 	//Main function state machine state
 	MainStates mainf;
@@ -229,17 +273,38 @@ typedef struct SystemStates
 	
 	//mfMoveToHeadingByDistance() states
 	MTHByDistanceStates moveHeadingDistance;
-} SystemStates;
+} SystemStatesGroup;
+
+//Colour sensor sub structure
+typedef struct ColourSensorGroup
+{
+	ColourSensorData left;
+	ColourSensorData right;
+	uint16_t pollInterval;		//Poll rate
+	uint8_t pollEnabled;		//Contains a bitmask indicating which sensors are updated
+	uint8_t getHSV;				//Whether or not to convert to HSV when retrieving
+} ColourSensorGroup;
+
+//Sensors sub-structure
+typedef struct SensorDataGroup
+{
+	LineSensorArray line;
+	ColourSensorGroup colour;
+	ProximitySensorGroup prox;
+} SensorDataGroup;
 
 //Structure to combine all system globals
 typedef struct RobotGlobalStructure
 {
-	SystemStates states;			//System states
-	SystemFlags flags;				//System global flags
-	CommunicationData comms;		//Communication system control and data
-	Position pos;					//Position information
-	BatteryChargeData power;		//Battery/Charging info and control
-	uint32_t timeStamp;				//System timestamp (millisecs since power on)
+
+	SystemStatesGroup states;				//System states
+	SystemFlagsGroup flags;					//System global flags
+	SensorDataGroup sensors;				//Sensor data
+	CommunicationDataGroup comms;			//Communication system control and data
+	PositionGroup pos;						//Position information
+	BatteryChargeData power;				//Battery/Charging info and control
+	uint32_t timeStamp;						//System timestamp (millisecs since power on)
+
 } RobotGlobalStructure;
 
 //////////////[Defines]/////////////////////////////////////////////////////////////////////////////
@@ -248,8 +313,6 @@ typedef struct RobotGlobalStructure
 //Global variables should be initialised in robot_setup.c, then an extern to them should be placed
 //here, otherwise we end up with multiple definition errors.
 extern RobotGlobalStructure sys;
-//TODO: add these to the sys structure
-extern volatile char streamDelayCounter;
 
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*

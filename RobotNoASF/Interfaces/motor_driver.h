@@ -14,6 +14,7 @@
 *
 * Functions:
 * void motorInit(void);
+* void findMotorMinSpeeds(void);
 * char rearMotorDrive(signed char speed)
 * char frontRightMotorDrive(signed char speed)
 * char frontLeftMotorDrive(signed char speed)
@@ -73,6 +74,10 @@
 #define FRM_ANGLE_RAD			0.523598775		//30*PI/180
 #define FLM_ANGLE_RAD			2.617993877		//150*PI/180
 
+#define FR_MOTOR				0
+#define FL_MOTOR				1
+#define R_MOTOR					2
+
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*
 * Function:
@@ -88,6 +93,21 @@
 *
 */
 void motorInit(void);
+
+/*
+* Function:
+* void findMotorMinSpeeds(void)
+*
+* Finds the minimum PWM duty needed to start each motor moving
+*
+* Inputs:
+* none
+*
+* Returns:
+* none
+*
+*/
+void findMotorMinSpeeds(void);
 
 /*
 *

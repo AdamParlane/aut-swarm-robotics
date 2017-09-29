@@ -32,6 +32,7 @@
 #include "Interfaces/opt_interface.h"
 #include "Interfaces/pio_interface.h"
 #include "Interfaces/prox_sens_interface.h"
+#include "Interfaces/rgbled_driver.h"
 #include "Interfaces/timer_interface.h"
 #include "Interfaces/twimux_interface.h"
 #include "Interfaces/uart_interface.h"
@@ -118,15 +119,41 @@ RobotGlobalStructure sys =
 	.comms =
 	{
 		.pollEnabled				= 1,
+		.twi2SlavePollEnabled		= 1,
 		.pollInterval				= 0,
 		.testModeStreamInterval		= 100
 	},
 	
-	//Robot Position
+	//Sensor polling setup
+	.sensors =
+	{
+		.line =
+		{
+			.pollEnabled			= 1,
+			.pollInterval			= 40
+		},
+		
+		.colour =
+		{
+			.pollEnabled			= 0x03,		//Bitmask to enable specific sensors.
+			.pollInterval			= 40,
+			.getHSV					= 1
+		},
+		
+		.prox =
+		{
+			.errorCount				= 0,
+			.pollEnabled			= 0x00,		//Bitmask to enable specific sensors
+			.pollInterval			= 40
+		}
+	},
+	
+	//Robot PositionGroup
 	.pos =
 	{
-		.x							= 0.0,		//Resets robot position
-		.y							= 0.0,		//Resets robot position
+		.x							= 0,		//Resets robot position
+		.y							= 0,		//Resets robot position
+		.heading					= 0.0,		//Reset heading
 		.facingOffset				= 180,		//Ensures that whatever way the robot is facing when
 												//powered on is 0 degrees heading.
 		.targetHeading				= 0,		//Default heading is 0 degrees
@@ -134,26 +161,29 @@ RobotGlobalStructure sys =
 		.IMU =
 		{
 			.pollEnabled			= 1,		//Enable IMU polling
-			.gyroCalEnabled			= 1			//Enables gyro calibration at start up. Takes 8sec,
+			.gyroCalEnabled			= 0			//Enables gyro calibration at start up. Takes 8sec,
 												//so best to disable while debugging
 		},
 		.Optical =
 		{
-			.pollEnabled			= 1			//Enable Optical Polling
+			.pollEnabled			= 1,			//Enable Optical Polling
+			.pollInterval			= 0
 		}
 	},
 	
 	//Power/Battery/Charge
 	.power =
 	{
-		.batteryDockingVoltage		= 3500,		//Battery voltage at which its time to find charger
-		.batteryMaxVoltage			= 3800,		//Maximum battery voltage (full charge)
+		.batteryDockingVoltage		= 3550,		//Battery voltage at which its time to find charger
+		.batteryMaxVoltage			= 3900,		//Maximum battery voltage (full charge)
 		.batteryMinVoltage			= 3300,		//Dead flat battery voltage
 		.fcChipFaultFlag			= 0,		//Fast charge fault flag
 		.pollBatteryEnabled			= 1,		//Battery polling enabled
 		.pollChargingStateEnabled	= 0,		//Charge status polling disabled
-		.pollChargingStateInterval	= 0,		//Poll charging status as fast as possible
-		.pollBatteryInterval		= 30000		//Poll battery every thirty seconds
+		.pollChargingStateInterval	= 100,		//Poll charging status as fast as possible
+		.pollBatteryInterval		= 30000,	//Poll battery every thirty seconds
+		.chargeWatchDogEnabled		= 0,		//Watchdog enabled
+		.chargeWatchDogInterval		= 1000		//How often to send watchdog pulse to FC chip
 	},
 	
 	.timeStamp = 0								//millisecs since power on
@@ -189,11 +219,12 @@ void robotSetup(void)
 	pioInit();							//Initialise the PIO controllers
 	adcSingleConvInit();				//Initialise ADC for single conversion mode
 	pioLedInit();						//Initialise the LEDs on the mid board
-	motorInit();						//Initialise the motor driver chips
 	SPI_Init();							//Initialise SPI for talking with optical sensor
 	twi0Init();							//Initialise TWI0 interface
 	twi2Init();							//Initialise TWI2 interface
 	timer0Init();						//Initialise timer0
+	mouseInit();						//Initialise mouse sensor
+	motorInit();						//Initialise the motor driver chips
 	lightSensInit(MUX_LIGHTSENS_R);		//Initialise Right Light/Colour sensor
 	lightSensInit(MUX_LIGHTSENS_L);		//Initialise Left Light/Colour sensor
 	proxSensInit();						//Initialise proximity sensors
@@ -202,10 +233,11 @@ void robotSetup(void)
 	imuInit();							//Initialise IMU.
 	extIntInit();						//Initialise external interrupts.
 	imuDmpInit(sys.pos.IMU.gyroCalEnabled);	//Initialise DMP system
-	mouseInit();						//Initialise mouse sensor
 	lfInit();							//Initialise line follow sensors. Only on V2.
 	
-	delay_ms(2500);						//Stops robot running away while programming
+	if(!sys.pos.IMU.gyroCalEnabled)		//If gyro cal no enabled (because it introduces its own
+										//delay
+		delay_ms(2500);					//Stops robot running away while programming
 	srand(sys.timeStamp);				//Seed rand() to give unique random numbers
 	return;
 }

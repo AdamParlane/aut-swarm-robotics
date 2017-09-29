@@ -15,18 +15,14 @@
 * Functions:
 * void dfDockRobot(void)
 * void dfUpdateLineSensorStates(void)
-* int8_t dfGetLineDirection(void)
-* uint8_t dfFollowLine(void)
+* int8_t dfGetLineDirection(RobotGlobalStructure *sys)
+* uint8_t dfFollowLine(uint8_t speed, float *lineHeading, RobotGlobalStructure *sys)
 * uint8_t dfScanBrightestLightSource(int16_t *brightestHeading)
 *
 */
 
 #ifndef DOCKING_FUNCTIONS_H_
 #define DOCKING_FUNCTIONS_H_
-
-//////////////[Includes]////////////////////////////////////////////////////////////////////////////
-
-//////////////[Defines]/////////////////////////////////////////////////////////////////////////////
 
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*
@@ -43,42 +39,6 @@
 *
 */
 uint8_t dfDockRobot(RobotGlobalStructure *sys);
-
-/*
-* Function:
-* void dfUpdateLineSensorStates(void)
-*
-* Sees if any sensors have made a definite state change and loads the states into the line sensor
-* state structure for use by other functions in this module.
-*
-* Inputs:
-* none
-*
-* Returns:
-* 1 if line state change detected, otherwise 0
-*
-*/
-uint8_t dfUpdateLineSensorStates(void);
-
-/*
-* Function:
-* int8_t dfGetLineDirection(void)
-*
-* This function examines the states of the line follower sensors and determines the direction and
-* urgency factor by which the robot should move to find its way to the centre of the line.
-*
-* Inputs:
-* none
-*
-* Returns:
-* returns a signed integer between -3 and 3 that determines the direction and speed magnitude that
-* the robot should move to find the centre of the line.
-* A negative output means that the robot should move left to find the line and a positive output
-* means that the robot should move right. 0 means keep going straight because no direction data is
-* able to be derived from sensor array.
-*
-*/
-int8_t dfGetLineDirection(void);
 
 /*
 * Function:
@@ -110,6 +70,10 @@ uint8_t dfFollowLine(uint8_t speed, float *lineHeading, RobotGlobalStructure *sy
 * Inputs:
 * int16_t *brightestHeading
 *   A pointer to a variable that contains a heading to the brightest detected light source so far.
+* uint16_t sweepAngle:
+*   The size of the arc to scan (360 would be a complete rotation)
+* RobotGlobalStructure *sys
+*   Pointer to the global robot data structure.
 *
 * Returns:
 * Returns a 1 if the function hasn't completed yet, or a 0 if it has. When the function returns a 0

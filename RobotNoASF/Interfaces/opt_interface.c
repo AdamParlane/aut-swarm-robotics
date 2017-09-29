@@ -17,7 +17,8 @@
 * void SPI_Init(void);
 * void mouseInit(void);
 * int mouseTestBasic(void);
-* void Get_Mouse_XY(Position *sys);
+* void getMouseXY(PositionGroup *sys);
+* uint8_t detectMouseMove(uint16_t threshold);
 * 
 *
 * Functionality of each function is explained before each function
@@ -30,6 +31,7 @@
 #include "opt_interface.h"
 #include "timer_interface.h"
 #include <math.h>
+#include <stdlib.h>		//abs()
 
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*
@@ -197,20 +199,64 @@ void getMouseXY(RobotGlobalStructure *sys)
 		//if(Xtemp & (1<<12))					//if MSB of X is set (for 2s complement)
 			//Xtemp ^= 0b1000100000000000;	//Make the 2s complement bit be MSB of short
 		
-		sys->pos.Optical.dx = Xx;
-		sys->pos.Optical.x += sys->pos.Optical.dx;
+		sys->pos.Optical.dxSum += Xx;
+		//sys->pos.Optical.x += sys->pos.Optical.dx;
 		//if(Ytemp & (1<<12))					//if MSB of Y is set (for 2s complement)
 			//Ytemp ^= 0b1000100000000000;	//Make the 2s complement bit be MSB of short
-		sys->pos.Optical.dy = Yy;
-		sys->pos.Optical.y += sys->pos.Optical.dy;
+		sys->pos.Optical.dySum += Yy;
+		//sys->pos.Optical.y += sys->pos.Optical.dy;
+		sys->pos.Optical.sampleCount++;
+		
 		
 		sys->pos.Optical.surfaceQuality = getMouseSQUAL();
 	}
 	else
 	{
-		sys->pos.Optical.dx = 0;
-		sys->pos.Optical.dy = 0;
+		//sys->pos.Optical.dx = 0;
+		//sys->pos.Optical.dy = 0;
 	}
+}
+
+/*
+* Function:
+* uint8_t detectMouseMove(uint16_t threshold)
+*
+* Determines if the mouse sensor has detected movement
+*
+* Inputs:
+* uint8_t threshold:
+*   The amount of delta x or delta y that the mouse has to detect before a 1 is returned
+*
+* Returns:
+* 1 if delta x or y is greater than threshold, otherwise 0
+*
+* Implementation:
+* Reads dx and dy from the mouse sensor, then sees if the absolute value is greater than threshold
+*
+*/
+uint8_t detectMouseMove(uint16_t threshold)
+{
+	uint16_t Xtemp = 0, Ytemp = 0;
+	int16_t Xx, Yy;
+	char topX, topY, data2, data3, data4, data5;
+	data2 = SPI_Read(OPT_MOTION);
+	
+	if(data2 & (1<<7))
+	{
+		data3 = SPI_Read(OPT_DELTA_X_L);	//delta x low
+		data4 = SPI_Read(OPT_DELTA_Y_L);	//delta y low
+		data5 = SPI_Read(OPT_DELTA_XY_H);	//delta xy high
+		topX = (data5 & (0xF0)) >> 4;		//only read the 4 MSB of data5
+		topY = data5 & (0x0F);				//only read the 4 LSB of data5
+		Xtemp = data3 | (topX << 8);
+		Ytemp = data4 | (topY << 8);
+		Xx = Xtemp << 4;
+		Yy = Ytemp << 4;		
+
+		if(abs(Xx) > threshold || abs(Yy) > threshold)
+			return 1;
+	}
+	return 0;
 }
 
 /*
@@ -247,7 +293,7 @@ char mouseTestBasic(void)
 	invsProdID = SPI_Read(OPT_INVS_PROD_ID);//should be 0xCE
 	revID = SPI_Read(OPT_REVISION_ID);		//should be 0x03
 	invsRevID = SPI_Read(OPT_INVS_REV_ID);	//should be 0xFC
-	if(prodID == 0x31 && invsProdID == 0xCE && revID == 0x03 && invsRevID == 0xFE)
+	if(prodID == 0x31 && invsProdID == 0xCE && revID == 0x03 && invsRevID == 0xFC)
 		return 1;
 	else
 		return 0;

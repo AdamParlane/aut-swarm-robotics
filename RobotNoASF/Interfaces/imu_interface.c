@@ -35,8 +35,9 @@
 //////////////[Includes]////////////////////////////////////////////////////////////////////////////
 #include "../robot_setup.h"
 #include "twimux_interface.h"	//twi and multiplexer
-#include "../Functions/navigation_functions.h"
+#include "timer_interface.h"
 #include "imu_interface.h"
+#include "../Functions/navigation_functions.h"
 
 //Invensense Direct Motion Processing Driver Files
 #include "../IMU-DMP/inv_mpu_dmp_motion_driver_CUSTOM.h"//Direct Motion Processing setup functions
@@ -136,7 +137,10 @@ int imuDmpInit(char calibrateGyro)
 	result += mpu_set_dmp_state(1);						//Start DMP (also starts IMU interrupt)
 	
 	if(calibrateGyro)
-		result += dmp_enable_gyro_cal(1);					//Enable gyro calibration
+	{
+		delay_ms(8000);
+		result += dmp_enable_gyro_cal(1);				//Enable gyro calibration
+	}
 	
 	return result;
 }
@@ -282,7 +286,7 @@ unsigned short invRow2Scale(const signed char *row)
 * Function:
 * void imuReadFifo(void)
 *
-* Will read data from the IMU's FIFO buffer and store data in the given Position structure
+* Will read data from the IMU's FIFO buffer and store data in the given PositionGroup structure
 *
 * Inputs:
 * RobotGlobalStructure *sys:
@@ -295,7 +299,7 @@ unsigned short invRow2Scale(const signed char *row)
 * Sets up variables required as parameters for dmp_read_fifo() (see below for descriptions).
 * Calls dmp_read_fifo() which will attempt to read the data from the FIFO buffer. If this fails, 
 * this function will exit with non zero value. On success, the sensors parameter is checked against
-* bit masks to determine what data was stored in the FIFO so it can be stored in the Position
+* bit masks to determine what data was stored in the FIFO so it can be stored in the PositionGroup
 * structure. This should save a little bit of time if only some of the data has been sent.
 * Next the more parameter is checked. If it is non-zero then there is more data in the FIFO buffer
 * still so dmp_read_fifo is called again. When more is finally zero, the timer between the last FIFO
@@ -402,12 +406,12 @@ uint8_t imuCommTest(void)
 * Will most likely move this from imu_interface to the Navigation module when its created.
 *
 */
-void imuApplyYawCorrection(float correctHeading, RobotGlobalStructure *sys)
+void imuApplyYawCorrection(int16_t correctHeading, RobotGlobalStructure *sys)
 {
 	//Make sure correctHeading is in range
 	correctHeading = nfWrapAngle(correctHeading);
 	//Take difference and apply it to pos.facingOffset.
-	sys->pos.facingOffset += correctHeading - sys->pos.IMU.yaw;
+	sys->pos.facingOffset = correctHeading - sys->pos.IMU.yaw;
 	//Wrap pos.facingOffset so its always between -180 and 180 degrees
 	sys->pos.facingOffset = nfWrapAngle(sys->pos.facingOffset);
 }

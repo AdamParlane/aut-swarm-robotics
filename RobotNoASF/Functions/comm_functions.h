@@ -22,8 +22,15 @@
 #define COMM_FUNCTIONS_H_
 
 //////////////[Defines]/////////////////////////////////////////////////////////////////////////////
+//TWI slave internal register addresses
 
-//////////////[Type Definitions]////////////////////////////////////////////////////////////////////
+#define COMM_TWI2_ROBOT_NAME	0x11
+#define COMM_TWI2_BATTERY_LVL	0x21
+#define COMM_TWI2_HEADING		0x31
+#define COMM_TWI2_OPTX			0x32
+#define COMM_TWI2_OPTY			0x33
+#define COMM_TWI2_FACING		0x34
+#define COMM_TWI2_COLOUR			0x41
 
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*
@@ -54,10 +61,22 @@ void commGetNew(RobotGlobalStructure *sys);
 * Returns:
 * none
 *
-* Implementation:
-* TODO: Adam implementation description
-*
 */
 void commInterpretSwarmMessage(RobotGlobalStructure *sys);
+
+/*
+* Function:
+* char commTwi2SlaveRequest()
+*
+* Checks for a request from a master on TWI2 and acts on it (for the LCD interface)
+*
+* Inputs:
+* none
+*
+* Returns:
+* 0 on success
+*
+*/
+char commTwi2SlaveRequest(RobotGlobalStructure *sys);
 
 #endif /* COMM_FUNCTIONS_H_ */

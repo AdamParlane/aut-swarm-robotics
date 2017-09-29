@@ -32,6 +32,9 @@
 //////////////[Includes]////////////////////////////////////////////////////////////////////////////
 #include "twimux_interface.h"
 
+//////////////[Global Variables]////////////////////////////////////////////////////////////////////
+extern RobotGlobalStructure sys;	//Gives TWI2 interrupt handler access
+
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*
 * Function:
@@ -72,10 +75,17 @@ void twi0Init(void)
 	twi0Reset;								//Software reset
 
 	//TWI0 Clock Waveform Setup
+	//REG_TWI0_CWGR
+	//|=	TWI_CWGR_CKDIV(2)					//Clock speed 230000, fast mode
+	//|	TWI_CWGR_CLDIV(63)					//Clock low period 1.3uSec
+	//|	TWI_CWGR_CHDIV(28);					//Clock high period  0.6uSec
+
+	//TWI0 Clock Waveform Setup
 	REG_TWI0_CWGR
-	|=	TWI_CWGR_CKDIV(2)					//Clock speed 400000, fast mode
-	|	TWI_CWGR_CLDIV(63)					//Clock low period 1.3uSec
-	|	TWI_CWGR_CHDIV(28);					//Clock high period  0.6uSec
+	|=	TWI_CWGR_CKDIV(2)					//Clock speed 100000, fast mode
+	|	TWI_CWGR_CLDIV(124)					//Clock low period 
+	|	TWI_CWGR_CHDIV(124);				//Clock high period
+
 	twi0MasterMode;							//Master mode enabled, slave disabled
 }
 
@@ -83,7 +93,8 @@ void twi0Init(void)
 * Function:
 * void twi2Init(void);
 *
-* Initialises TWI2. Master clock should be setup first.
+* Initialises TWI2. Master clock should be setup first. TWI2 is initialised to Slave mode so that
+* the LCD interface can requested data from the robot
 *
 * Inputs:
 * none
@@ -113,12 +124,22 @@ void twi2Init(void)
 	|	PIO_ABCDSR_P1;
 	twi2Reset;								//Software Reset
 	
-	//TWI2 Clock Waveform Setup.
+	REG_TWI2_SMR
+	=	TWI_SMR_SADR(TWI2_SLAVE_ADDR);		//Set TWI2 slave address
+	
+	//TWI2 Clock Waveform Setup. (Ignored for Slave mode, but left in incase Master mode is ever
+	//needed)
 	REG_TWI2_CWGR
 	|=	TWI_CWGR_CKDIV(2)					//Clock speed 400000, fast mode
 	|	TWI_CWGR_CLDIV(63)					//Clock low period 1.3uSec
 	|	TWI_CWGR_CHDIV(28);					//Clock high period  0.6uSec
-	twi2MasterMode;							//Master mode enabled, slave disabled
+	
+	REG_TWI2_IER
+	=	TWI_IMR_RXRDY;						//Enable the RXRDY interrupt
+	
+	twi2SlaveMode;							//Slave mode enabled
+	
+	NVIC_EnableIRQ(ID_TWI2);				//Enable interrupts
 }
 
 /*
@@ -403,4 +424,13 @@ char twi2Read(unsigned char slave_addr, unsigned char reg_addr,
 			return 1;
 	}
 	return 0;
+}
+
+void TWI2_Handler()
+{
+	if(REG_TWI2_IMR & TWI_IMR_RXRDY)		//If RXRDY interrupt
+	{
+		sys.comms.twi2ReceivedDataByte = twi2Receive;
+		sys.flags.twi2NewData = 1;
+	}
 }
