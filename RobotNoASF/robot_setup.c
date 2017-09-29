@@ -132,12 +132,12 @@ RobotGlobalStructure sys =
 		.line =
 		{
 			.pollEnabled			= 1,
-			.pollInterval			= 40
+			.pollInterval			= 100
 		},
 		
 		.colour =
 		{
-			.pollEnabled			= 0,//0x03,		//Bitmask to enable specific sensors.
+			.pollEnabled			= 0x00,//0x03,		//Bitmask to enable specific sensors.
 			.pollInterval			= 40,
 			.getHSV					= 1
 		},
@@ -146,9 +146,9 @@ RobotGlobalStructure sys =
 		{
 			.errorCount				= 0,
 
-			.pollEnabled			= 0x3F,		//Bitmask to enable specific sensors
+			.pollEnabled			= 0x00,		//Bitmask to enable specific sensors 0x3F
 
-			.pollInterval			= 40
+			.pollInterval			= 150
 		}
 	},
 	
@@ -157,6 +157,8 @@ RobotGlobalStructure sys =
 	{
 		.x							= 0,		//Resets robot position
 		.y							= 0,		//Resets robot position
+		.oldPCX						= 0,		//Used for providing correction to optical data
+		.oldPCY						= 0,
 		.heading					= 0.0,		//Reset heading
 		.facingOffset				= 180,		//Ensures that whatever way the robot is facing when
 												//powered on is 0 degrees heading.
@@ -171,7 +173,8 @@ RobotGlobalStructure sys =
 		.Optical =
 		{
 			.pollEnabled			= 1,			//Enable Optical Polling
-			.pollInterval			= 0
+			.pollInterval			= 0,
+			.convCoefficient		= OPT_CONV_FACTOR
 		}
 	},
 	

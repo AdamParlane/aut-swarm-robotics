@@ -28,6 +28,12 @@
 #include "motion_functions.h"
 #include "comm_functions.h"
 
+
+#include <stdlib.h>
+#include <stdio.h>						//sprintf
+#include <string.h>						//strcpy
+
+
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*
 * Function:
@@ -157,7 +163,7 @@ void commInterpretSwarmMessage(RobotGlobalStructure *sys)
 					break; 
 					
 				case RX_M_DOCKING:
-					sys->states.docking = DS_START;
+					sys->states.docking = DS_FINISHED;
 					sys->states.mainf = M_DOCKING;
 					break;
 
@@ -231,11 +237,11 @@ char commTwi2SlaveRequest(RobotGlobalStructure *sys)
 					break;
 				
 				case COMM_TWI2_OPTX:				//Commands go here
-					outputBuffer = (uint8_t)((sys->pos.Optical.x & 0xFF00) >> 8);
+					outputBuffer = (uint8_t)((sys->pos.Optical.x & 0xFF0000) >> 16);
 					break;
 				
 				case COMM_TWI2_OPTY:				//Commands go here
-					outputBuffer = (uint8_t)((sys->pos.Optical.y & 0xFF00) >> 8);
+					outputBuffer = (uint8_t)((sys->pos.Optical.y & 0xFF0000) >> 16);
 					break;
 				
 				case COMM_TWI2_FACING:				//Commands go here
@@ -276,6 +282,20 @@ void commPCStatusUpdate(RobotGlobalStructure *sys)
 		sys->comms.transmitData.Data[3] = sys->power.batteryVoltage & 0xFF; //Lower byte
 		sys->comms.transmitData.DataSize = 4;
 		xbeeSendAPITransmitRequest(COORDINATOR_64,UNKNOWN_16, sys->comms.transmitData.Data, 
-		sys->comms.transmitData.DataSize);  //Send the Message
+									sys->comms.transmitData.DataSize);  //Send the Message
+		
+		
+		//char stringBuffer[49];
+								
+		//DEBUG MESSAGE:
+		//sys->comms.transmitData.Data[0] = 0x00;
+		//sprintf(stringBuffer, "Facing");
+		////sprintf(stringBuffer, "Facing %3.1f", sys->pos.facing);
+		//
+		//strcpy(sys->comms.transmitData.Data + 1, stringBuffer);
+		//
+		//sys->comms.transmitData.DataSize = strlen(stringBuffer) + 2;
+		//xbeeSendAPITransmitRequest(COORDINATOR_64,UNKNOWN_16, sys->comms.transmitData.Data,
+									//sys->comms.transmitData.DataSize);  //Send the Message
 	}
 }

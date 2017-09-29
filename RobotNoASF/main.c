@@ -99,17 +99,12 @@ extern RobotGlobalStructure sys;		//System data structure
 */
 
 
-
 int main(void)
 {
 	robotSetup(); //Set up the system and peripherals
 
 	//Battery voltage stored in sys.power.batteryVoltage
 	//Initial main function state is SET IN robot_setup.c (sys.states.mainf) (NOT here)
-	uint8_t obstacleFlag = 0;
-	sys.flags.obaEnabled = 1;
-	sys.states.mainf = M_IDLE;
-	sys.flags.obaMoving	= 1;
 
 	while(1)
 	{
@@ -142,8 +137,10 @@ int main(void)
 			
 			case M_LINE_FOLLOW:
 			//Entered when line follow command received from PC
-				if(!dfFollowLine(100, &sys))//Line follower will return 0 when complete
-					sys.states.mainf = M_IDLE;
+				//if(!dfFollowLine(100, &sys))//Line follower will return 0 when complete
+					//sys.states.mainf = M_IDLE;
+				//mfMoveToHeading(90, 40, &sys);	
+				nfOpticalTesting(40, 100, &sys);
 				break;
 					
 			case M_LIGHT_FOLLOW:
@@ -157,6 +154,7 @@ int main(void)
 				
 			case M_FORMATION:
 			//placeholder
+				
 				break;
 						
 			case M_OBSTACLE_AVOIDANCE:

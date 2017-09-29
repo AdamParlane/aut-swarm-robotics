@@ -170,7 +170,7 @@ uint8_t pfChargeCycleHandler(RobotGlobalStructure *sys)
 			break;
 		
 		case CCS_CHARGING:
-			sys->power.pollChargingStateInterval = 1000;
+			sys->power.pollChargingStateInterval = 2000;
 			mfStopRobot(sys);
 			//Blink LED
 			if(!fdelay_ms(250))

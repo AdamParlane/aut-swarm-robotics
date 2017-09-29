@@ -178,7 +178,7 @@ uint8_t twi0MuxSwitch(uint8_t channel)
 	//Communication complete, holding and shifting registers empty, Stop sent
 	if(waitForFlag((uint32_t*)&REG_TWI0_SR, TWI_SR_TXCOMP, TWI_TXCOMP_TIMEOUT))
 	{
-		led2Tog;
+	//	led2Tog;
 		twi0Stop;
 		twi0Send(0x00);
 		return 1;
@@ -229,7 +229,7 @@ uint8_t twi0ReadMuxChannel(void)
 	//Wait for transmission complete
 	if(waitForFlag((uint32_t*)&REG_TWI0_SR, TWI_SR_TXCOMP, TWI_TXCOMP_TIMEOUT))
 	{
-		led1Tog;
+	//	led1Tog;
 		twi0Stop;
 		twi0Receive;
 		return 1;
@@ -291,7 +291,7 @@ char twi0Write(unsigned char slave_addr, unsigned char reg_addr,
 	//while transmit not complete. wait.
 	if(waitForFlag((uint32_t*)&REG_TWI0_SR, TWI_SR_TXCOMP, TWI_TXCOMP_TIMEOUT))
 	{
-		led2Tog;
+	//	led2Tog;
 		twi0Stop;
 		twi0Send(0x00);
 		return 1;
@@ -397,7 +397,7 @@ char twi0Read(unsigned char slave_addr, unsigned char reg_addr,
 		//while transmit not complete. wait.
 		if(waitForFlag((uint32_t*)&REG_TWI0_SR, TWI_SR_TXCOMP, TWI_TXCOMP_TIMEOUT))
 		{
-			led1Tog;
+		//	led1Tog;
 			twi0Stop;
 			twi0Receive;
 			return 1;

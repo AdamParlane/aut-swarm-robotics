@@ -67,6 +67,14 @@ uint8_t dfDockRobot( RobotGlobalStructure *sys)
 	{
 		//Begin by scanning for the brightest light source
 		case DS_START:
+			//Initialise the required sensors
+			sys->sensors.prox.pollEnabled = 0x3F;	//All prox
+			sys->sensors.prox.pollInterval = 100;
+			sys->sensors.colour.pollEnabled = 0x03;	//All colour
+			sys->sensors.colour.pollInterval = 40;
+			sys->sensors.line.pollEnabled = 1;		//Line sensors
+			sys->sensors.line.pollInterval = 100;	
+			
 			if(lineFound)
 			{
 				lineLastSeen = sys->timeStamp;
@@ -115,7 +123,7 @@ uint8_t dfDockRobot( RobotGlobalStructure *sys)
 		case DS_FOLLOW_LINE:
 			//Enable fast scharge chip polling
 			sys->power.pollChargingStateEnabled = 1;
-			sys->power.pollChargingStateInterval = 100;
+			sys->power.pollChargingStateInterval = 150;
 			
 			mfTrackLight(45 - (sys->sensors.prox.sensor[SF_PROX_FRONT]*45/1023) + 10, sys);
 			if(sys->sensors.prox.sensor[SF_PROX_FRONT] >= PS_CLOSEST)
@@ -143,7 +151,6 @@ uint8_t dfDockRobot( RobotGlobalStructure *sys)
 				mfStopRobot(sys);					//Stop moving
 			} else
 				moveRobot(0, 100, 0);
-
 			break;
 		
 		//If charger hasn't been found after time period, we enter this state. The resulting

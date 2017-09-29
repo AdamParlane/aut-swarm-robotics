@@ -113,10 +113,13 @@ typedef struct OpticalSensor
 	uint16_t sampleCount;	//Number of samples between updates (for rolling average)
 	int x;				//Count sum on x axis
 	int y;				//Count sum on y axis
+	int xOld;			//x value at the last PC update
+	int yOld;			//y value at the last PC update
 	char pollEnabled;	//Enable polling the optical sensor
 	char pollInterval;	//Rate at which to poll Mouse
 	char overflowFlag;	//1 if data has overflowed on optical sensor
 	uint8_t surfaceQuality;	//A value signifying quality of the surface (242 = max quality)
+	float convCoefficient;	//A coefficient to convert to mm
 } OpticalSensor;
 
 //Stores IMU sensor raw and converted data
@@ -164,6 +167,8 @@ typedef struct PositionGroup
 								//time as the IMU
 	unsigned short deltaTime;	//Time between last IMU reading and IMU previous reading
 	float facingOffset;			//Used to offset facing value (when corrected by PC)
+	int32_t oldPCX;				//The last X position from the PC
+	int32_t oldPCY;				//The last Y position from the PC
 } PositionGroup;
 
 //Stores information about the battery and charging
