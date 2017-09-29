@@ -108,7 +108,7 @@ int main(void)
 	//Initial main function state is SET IN robot_setup.c (sys.states.mainf) (NOT here)
 	uint8_t obstacleFlag = 0;
 	sys.flags.obaEnabled = 1;
-	sys.states.mainf = M_IDLE;
+	sys.states.mainf = M_OBSTACLE_AVOIDANCE_DEMO;
 	sys.flags.obaMoving	= 1;
 
 	while(1)
@@ -167,8 +167,8 @@ int main(void)
 				
 			case M_OBSTACLE_AVOIDANCE_DEMO:
 				//will act like a function requiring OA for sake of demo'ing
-				mfAdvancedMove(180, 0, 50, 25, &sys);
-				sys.pos.targetHeading = 180;
+				mfAdvancedMove(0, 0, 50, 100, &sys);
+				sys.pos.targetHeading = 0;
 				sys.pos.targetSpeed = 50;
 				break;
 
@@ -199,7 +199,7 @@ int main(void)
 		
 		commGetNew(&sys);			//Checks for and interprets new communications
 		
-		commPCStatusUpdate(&sys);	//Updates PC with battery and state (every 5 seconds)
+		//commPCStatusUpdate(&sys);	//Updates PC with battery and state (every 5 seconds)
 		
 		nfRetrieveNavData(&sys);	//checks if there is new navigation data and updates sys->pos
 		
