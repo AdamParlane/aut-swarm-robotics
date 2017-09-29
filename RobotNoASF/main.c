@@ -101,9 +101,6 @@ int main(void)
 {
 	robotSetup(); //Set up the system and peripherals
 	//////    all sys structure initialisation is done in robot_setup.c (NOT here)   //////
-	float lineHeading = 0;
-	uint8_t obstacleFlag;
-	uint8_t tempState = 0;
 	while(1)
 	{
 		switch (sys.states.mainf)
@@ -135,7 +132,7 @@ int main(void)
 			
 			case M_LINE_FOLLOW:
 			//Entered when line follow command received from PC
-				if(!dfFollowLine(35, &lineHeading, &sys))//Line follower will return 0 when complete
+				if(!dfFollowLine(100, &sys))//Line follower will return 0 when complete
 					sys.states.mainf = M_IDLE;
 				break;
 					
@@ -149,17 +146,11 @@ int main(void)
 				break;
 				
 			case M_FORMATION:
-			//placeholder
-				mfAdvancedMove(45, 0, 50, 50, &sys);
-				//sys.pos.targetHeading = 180;
-				//sys.pos.targetSpeed = 50;
-				//if(!mfMoveToPosition(300, 300, 50, 0, 50, &sys))
-				//	sys.states.mainf = M_IDLE;
 				break;
 						
 			case M_OBSTACLE_AVOIDANCE:
-				obstacleFlag = dodgeObstacle(&sys);//avoid obstacles using proximity sensors
-				if(!obstacleFlag)//returning 0 means obstacles have been avoided
+				//avoid obstacles using proximity sensors
+				if(!dodgeObstacle(&sys))//returning 0 means obstacles have been avoided
 					sys.states.mainf = sys.states.mainfPrev; //reset the state to what it was
 				break;
 
@@ -181,24 +172,9 @@ int main(void)
 				break;
 				
 			case M_IDLE:					
-				//mfStopRobot(&sys);
+				mfStopRobot(&sys);
 				if(!fdelay_ms(1000))					//Blink LED 3 in Idle mode
 					led3Tog;				
-				
-				switch(tempState)	
-				{
-					case 0:
-						if(!mfRotateToHeading(90, &sys))
-							tempState = 1;
-						break;
-						
-					case 1:
-						if(!mfRotateToHeading(-90, &sys))
-							tempState = 0;
-						break;		
-				}
-					
-				
 				break;
 				
 		}

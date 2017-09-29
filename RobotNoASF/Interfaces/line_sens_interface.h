@@ -32,8 +32,8 @@
 //#define LF_THRESHOLD_H	545				//Upper Threshold above which line is no longer detected
 //#define LF_THRESHOLD_L	235				//Lower threshold below which line is detected
 //Thresholds for insensitive sensor on Red V2
-#define LF_THRESHOLD_H	475				//Upper Threshold above which line is no longer detected
-#define LF_THRESHOLD_L	375				//Lower threshold below which line is detected
+#define LF_THRESHOLD_H	450				//Upper Threshold above which line is no longer detected
+#define LF_THRESHOLD_L	350				//Lower threshold below which line is detected
 #define LF_OUTER_L		(LF0_ADC_CH)	//Line follower 0 ADC channel
 #define LF_INNER_L		(LF1_ADC_CH)	//Line follower 1 ADC channel
 #define LF_INNER_R		(LF2_ADC_CH)	//Line follower 2 ADC channel

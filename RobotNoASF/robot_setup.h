@@ -219,7 +219,7 @@ typedef struct LineSensorArray
 	uint8_t outerRight;
 	uint16_t pollInterval;
 	uint8_t pollEnabled;
-	uint8_t direction;
+	int8_t direction;
 	uint8_t detected;
 } LineSensorArray;
 

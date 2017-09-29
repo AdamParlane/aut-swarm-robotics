@@ -146,7 +146,11 @@ void commInterpretSwarmMessage(RobotGlobalStructure *sys)
 					//at a later date for different methods if required
 					break;
 					
-				case 0x06:
+				case 0x06:		//Dismount charger
+					if(sys->states.mainf == M_CHARGING)
+					{
+						sys->states.chargeCycle = CCS_DISMOUNT;
+					}
 					break; 
 					
 				case 0x07:		//Docking mode
@@ -170,11 +174,9 @@ void commInterpretSwarmMessage(RobotGlobalStructure *sys)
 					sys->states.mainf = M_LINE_FOLLOW;
 					break;
 					
-				case 0x0C:		//Dismount charger
-					if(sys->states.mainf == M_CHARGING)
-					{
-						sys->states.chargeCycle = CCS_DISMOUNT;
-					}			
+				case 0x0C:		//Rotate to heading
+							
+					break;
 			}
 			break;
 	}
@@ -236,7 +238,7 @@ char commTwi2SlaveRequest(RobotGlobalStructure *sys)
 					break;
 				
 				case COMM_TWI2_COLOUR:
-					outputBuffer = (uint8_t)((sys->sensors.colour.left.hue + 180)/2);
+					outputBuffer = (uint8_t)((sys->sensors.colour.left.hue)/2);
 					break;
 				
 				default:

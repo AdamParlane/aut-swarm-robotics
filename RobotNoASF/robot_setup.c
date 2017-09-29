@@ -175,12 +175,12 @@ RobotGlobalStructure sys =
 	.power =
 	{
 		.batteryDockingVoltage		= 3550,		//Battery voltage at which its time to find charger
-		.batteryMaxVoltage			= 3900,		//Maximum battery voltage (full charge)
+		.batteryMaxVoltage			= 4050,		//Maximum battery voltage (full charge)
 		.batteryMinVoltage			= 3300,		//Dead flat battery voltage
 		.fcChipFaultFlag			= 0,		//Fast charge fault flag
 		.pollBatteryEnabled			= 1,		//Battery polling enabled
 		.pollChargingStateEnabled	= 1,		//Charge status polling disabled
-		.pollChargingStateInterval	= 10,		//Poll charging status as fast as possible
+		.pollChargingStateInterval	= 1000,		//Poll charging status as fast as possible
 		.pollBatteryInterval		= 30000,	//Poll battery every thirty seconds
 		.chargeWatchDogEnabled		= 0,		//Watchdog enabled
 		.chargeWatchDogInterval		= 1000		//How often to send watchdog pulse to FC chip

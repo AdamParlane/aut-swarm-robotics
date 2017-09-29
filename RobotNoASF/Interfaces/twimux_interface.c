@@ -76,16 +76,16 @@ void twi0Init(void)
 	twi0Reset;								//Software reset
 
 	//TWI0 Clock Waveform Setup
-	REG_TWI0_CWGR
-	|=	TWI_CWGR_CKDIV(1)					//Clock speed 230000, fast mode
-	|	TWI_CWGR_CLDIV(63)					//Clock low period 1.3uSec
-	|	TWI_CWGR_CHDIV(28);					//Clock high period  0.6uSec
+	//REG_TWI0_CWGR
+	//|=	TWI_CWGR_CKDIV(2)					//Clock speed 230000, fast mode
+	//|	TWI_CWGR_CLDIV(63)					//Clock low period 1.3uSec
+	//|	TWI_CWGR_CHDIV(28);					//Clock high period  0.6uSec
 
 	//TWI0 Clock Waveform Setup
-	//REG_TWI0_CWGR
-	//|=	TWI_CWGR_CKDIV(2)					//Clock speed 100000, fast mode
-	//|	TWI_CWGR_CLDIV(124)					//Clock low period 
-	//|	TWI_CWGR_CHDIV(124);				//Clock high period
+	REG_TWI0_CWGR
+	|=	TWI_CWGR_CKDIV(2)					//Clock speed 100000, fast mode
+	|	TWI_CWGR_CLDIV(124)					//Clock low period 
+	|	TWI_CWGR_CHDIV(124);				//Clock high period
 
 	twi0MasterMode;							//Master mode enabled, slave disabled
 }
@@ -177,7 +177,13 @@ uint8_t twi0MuxSwitch(uint8_t channel)
 		return 1;
 	//Communication complete, holding and shifting registers empty, Stop sent
 	if(waitForFlag((uint32_t*)&REG_TWI0_SR, TWI_SR_TXCOMP, TWI_TXCOMP_TIMEOUT))
+	{
+		led2Tog;
+		twi0Stop;
+		twi0Send(0x00);
 		return 1;
+	}
+
 	else
 	{
 		return 0;
@@ -222,7 +228,12 @@ uint8_t twi0ReadMuxChannel(void)
 	returnVal = twi0Receive;		//Store data received 
 	//Wait for transmission complete
 	if(waitForFlag((uint32_t*)&REG_TWI0_SR, TWI_SR_TXCOMP, TWI_TXCOMP_TIMEOUT))
+	{
+		led1Tog;
+		twi0Stop;
+		twi0Receive;
 		return 1;
+	}
 	return returnVal;
 }
 
