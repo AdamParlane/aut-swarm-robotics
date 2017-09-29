@@ -99,4 +99,7 @@ void commInterpretSwarmMessage(RobotGlobalStructure *sys);
 */
 char commTwi2SlaveRequest(RobotGlobalStructure *sys);
 
+//send battery and task to PC
+void commPCStatusUpdate(RobotGlobalStructure *sys);
+
 #endif /* COMM_FUNCTIONS_H_ */

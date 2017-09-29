@@ -157,11 +157,10 @@ uint8_t dodgeObstacle(RobotGlobalStructure *sys)
 				//stuck in a corner
 				else if((proximity[index] > OBSTACLE_THRESHOLD) && (proximity[indexLeft] > 500) && (proximity[indexRight] > 500))
 				{
-					sys->flags.cornerFlag = 2;
-					//sys->pos.targetHeading += 120;
-					//original = sys->pos.targetHeading % 60; 
-					//firstLoop = 1;
-					//facing +=120;
+					sys->pos.targetHeading += 120;
+					original = sys->pos.targetHeading % 60; 
+					firstLoop = 1;
+					facing +=120;
 				}
 				//moving left but its getting worse
 				else if ((direction == LEFT) && (proximity[indexLeft] > (proximity[indexRight] + 100)) && (proximity[indexLeft] > 600 || obs))
@@ -193,13 +192,11 @@ uint8_t dodgeObstacle(RobotGlobalStructure *sys)
 	}
 	if(firstLoop)
 		facing = sys->pos.facing;
-	//sys->pos.targetHeading = nfWrapAngle(sys->pos.targetHeading) + 180;
 	while(sys->pos.targetHeading >= 360)
 		sys->pos.targetHeading -= 360;
 	while(sys->pos.targetHeading < 0)
 		sys->pos.targetHeading +=360;
-	moveRobot(sys->pos.targetHeading, sys->pos.targetSpeed, 0);
-	//mfAdvancedMove( sys->pos.targetHeading + facing, facing, sys->pos.targetSpeed, 0, sys);
+	mfAdvancedMove( sys->pos.targetHeading + facing, facing, sys->pos.targetSpeed, 0, sys);
 	return 1;
 }
 

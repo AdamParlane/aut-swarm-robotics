@@ -121,6 +121,8 @@ RobotGlobalStructure sys =
 		.pollEnabled				= 1,
 		.twi2SlavePollEnabled		= 1,
 		.pollInterval				= 0,
+		.updateEnable				= 1,
+		.updateInterval				= 5000,
 		.testModeStreamInterval		= 100
 	},
 	

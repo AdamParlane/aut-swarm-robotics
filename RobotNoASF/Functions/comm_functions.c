@@ -262,3 +262,22 @@ char commTwi2SlaveRequest(RobotGlobalStructure *sys)
 	return 0;
 } 
 
+
+//send battery and task to PC
+void commPCStatusUpdate(RobotGlobalStructure *sys)
+{
+	//When to next send update
+	static uint32_t updateNextTime = 0;
+
+	if((sys->timeStamp > updateNextTime) && sys->comms.updateEnable)
+	{
+		updateNextTime = sys->timeStamp + sys->comms.updateInterval;
+		sys->comms.transmitData.Data[0] = 0xA1; //Command letting PC know of update
+		sys->comms.transmitData.Data[1] = sys->states.mainf; //Robot State
+		sys->comms.transmitData.Data[2] = sys->power.batteryVoltage >> 8; //Upper byte
+		sys->comms.transmitData.Data[3] = sys->power.batteryVoltage & 0xFF; //Lower byte
+		sys->comms.transmitData.DataSize = 4;
+		xbeeSendAPITransmitRequest(COORDINATOR_64,UNKNOWN_16, sys->comms.transmitData.Data, 
+		sys->comms.transmitData.DataSize);  //Send the Message
+	}
+}
