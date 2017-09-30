@@ -162,15 +162,16 @@ uint8_t pfChargeCycleHandler(RobotGlobalStructure *sys)
 			|| sys->power.fcChipStatus == FC_POWER_CONNECTED)
 			{
 				//Disable prox
-				sys->sensors.prox.pollEnabled = 0x00;
+				//sys->sensors.prox.pollEnabled = 0x00;
 				//Disable light
-				sys->sensors.colour.pollEnabled = 0;
+				//sys->sensors.colour.pollEnabled = 0;
 				sys->states.chargeCycle = CCS_CHARGING;
 			}
 			break;
 		
 		case CCS_CHARGING:
-			sys->power.pollChargingStateInterval = 2000;
+			//sys->power.pollChargingStateInterval = 2000;
+			sys->power.pollChargingStateInterval = 100;
 			mfStopRobot(sys);
 			//Blink LED
 			if(!fdelay_ms(250))
