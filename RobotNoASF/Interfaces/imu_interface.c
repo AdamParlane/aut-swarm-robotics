@@ -122,26 +122,25 @@ int imuDmpInit(char calibrateGyro)
 	};
 	//Both X and Z axis are inverted because the chip is mounted upside down.
 	
-	result += dmp_load_motion_driver_firmware();		// Load the DMP firmware
+	//Load the DMP firmware
+	result += dmp_load_motion_driver_firmware();		
 	//Send the orientation correction matrix
 	result += dmp_set_orientation(invOrientationMatrixToScalar(gyro_orientation));
+	//Set which DMP features to enable.
 	result += dmp_enable_feature(DMP_FEATURE_6X_LP_QUAT | DMP_FEATURE_SEND_RAW_ACCEL |
 									DMP_FEATURE_SEND_CAL_GYRO);
-	
-	result += dmp_enable_6x_lp_quat(1);
-	
-	result += dmp_set_fifo_rate(200);			//200Hz update rate from the FIFO as per
-												//datasheet (improves accuracy)
-	result += dmp_set_interrupt_mode(DMP_INT_CONTINUOUS);//Use continuous interrupts rather than
-														//gesture based (pg10 in DMP manual)
-	result += mpu_set_dmp_state(1);						//Start DMP (also starts IMU interrupt)
-	
+	//200Hz update rate from the FIFO as per datasheet (improves accuracy)
+	result += dmp_set_fifo_rate(200);
+	//Use continuous interrupts rather than gesture based (pg10 in DMP manual)
+	result += dmp_set_interrupt_mode(DMP_INT_CONTINUOUS);
+	//Start DMP (also starts IMU interrupt)
+	result += mpu_set_dmp_state(1);
+	//If gyro calibration feature should be enabled.
 	if(calibrateGyro)
 	{	
-		result += dmp_enable_gyro_cal(1);				//Enable gyro calibration
+		result += dmp_enable_gyro_cal(1);		//Enable gyro calibration
 		delay_ms(8000);
 	}
-	
 	return result;
 }
 
