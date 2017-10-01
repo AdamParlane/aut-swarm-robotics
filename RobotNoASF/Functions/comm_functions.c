@@ -291,7 +291,7 @@ void commPCStatusUpdate(RobotGlobalStructure *sys)
 		//sys->comms.transmitData.Data[0] = 0x00;
 		//dtoa(stringBuffer, (double)sys->pos.facing);
 		////sprintf(stringBuffer, "Facing");
-		////sprintf(stringBuffer, "Facing %3.1f", sys->pos.facing);
+		//sprintf(stringBuffer, "Facing %3.1f", sys->pos.facing);
 		//
 		//strcpy(sys->comms.transmitData.Data + 1, stringBuffer);
 		//

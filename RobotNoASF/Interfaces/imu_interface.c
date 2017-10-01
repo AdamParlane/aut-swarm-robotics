@@ -3,7 +3,7 @@
 *
 * Author : Matthew Witt (pxf5695@autuni.ac.nz)
 * Created: 28/04/2017
-*void nfGetEulerAngles(RobotGlobalStructure *sys)
+*
 * Project Repository: https://github.com/AdamParlane/aut-swarm-robotics
 *
 * Description:
@@ -120,7 +120,7 @@ int imuDmpInit(char calibrateGyro)
 		0,	 1,	 0,  //Y
 		0,	 0,	 -1  //Z
 	};
-	//Both Y and Z axis are inverted because the chip is mounted upside down.
+	//Both X and Z axis are inverted because the chip is mounted upside down.
 	
 	result += dmp_load_motion_driver_firmware();		// Load the DMP firmware
 	//Send the orientation correction matrix

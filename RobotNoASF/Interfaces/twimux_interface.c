@@ -172,7 +172,7 @@ uint8_t twi0MuxSwitch(uint8_t channel)
 	TwiEvent thisEvent;
 	thisEvent.readOp = 0;
 	thisEvent.slaveAddress = TWI0_MUX_ADDR;
-	thisEvent.regAddress = 0x00;
+	thisEvent.regAddress = channel;
 	thisEvent.transferLen = 1;
 	thisEvent.twiBusNumber = 0;
 	thisEvent.timeStamp = sys.timeStamp;

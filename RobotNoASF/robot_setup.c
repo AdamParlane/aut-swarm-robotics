@@ -348,8 +348,10 @@ void masterClockInit(void)
 */
 uint8_t waitForFlag(const volatile uint32_t *regAddr, uint32_t regMask, uint16_t timeOutMs)
 {
-	uint32_t startTime = sys.timeStamp;
+	uint32_t startTime = sys.timeStamp;				//The time at which the function began
+	//Wait until the desired flag is set, or until the time out period has elapsed
 	while(!((*regAddr) & regMask) && (sys.timeStamp < (startTime + timeOutMs)));
+	//If the flag was set (didn't time out)
 	if((*regAddr) & regMask)
 		return 0;
 	else
