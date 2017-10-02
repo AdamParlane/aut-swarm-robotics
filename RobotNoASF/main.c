@@ -110,6 +110,7 @@ int main(void)
 	sys.flags.obaEnabled = 1;
 	sys.states.mainf = M_OBSTACLE_AVOIDANCE_DEMO;
 	sys.flags.obaMoving	= 1;
+	sys.pos.targetSpeed = 50;
 
 	while(1)
 	{
@@ -167,9 +168,7 @@ int main(void)
 				
 			case M_OBSTACLE_AVOIDANCE_DEMO:
 				//will act like a function requiring OA for sake of demo'ing
-				mfAdvancedMove(0, 0, 50, 100, &sys);
-				sys.pos.targetHeading = 0;
-				sys.pos.targetSpeed = 50;
+				dodgeObstacleByFacing(&sys);
 				break;
 
 			case M_CHARGING:
@@ -199,7 +198,7 @@ int main(void)
 		
 		commGetNew(&sys);			//Checks for and interprets new communications
 		
-		//commPCStatusUpdate(&sys);	//Updates PC with battery and state (every 5 seconds)
+		commPCStatusUpdate(&sys);	//Updates PC with battery and state (every 5 seconds)
 		
 		nfRetrieveNavData(&sys);	//checks if there is new navigation data and updates sys->pos
 		
@@ -208,7 +207,7 @@ int main(void)
 		sfPollSensors(&sys);		//Poll prox, colour, line 
 		
 		//check to see if obstacle avoidance is enabled AND the robot is moving
-		if(sys.flags.obaEnabled && sys.flags.obaMoving && sys.states.mainf != M_OBSTACLE_AVOIDANCE)
-			checkForObstacles(&sys); //avoid obstacles using proximity sensors
+		//if(sys.flags.obaEnabled && sys.flags.obaMoving && sys.states.mainf != M_OBSTACLE_AVOIDANCE)
+			//checkForObstacles(&sys); //avoid obstacles using proximity sensors
 	}
 }

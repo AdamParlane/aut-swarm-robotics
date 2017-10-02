@@ -22,7 +22,7 @@
 #define OBSTACLE_AVOIDANCE_H_
 
 //////////////[Defines]/////////////////////////////////////////////////////////////////////////////
-#define OBSTACLE_THRESHOLD 0x0150 //Subject to change on testing but seems reasonable
+#define OBSTACLE_THRESHOLD 0x0200 //Subject to change on testing but seems reasonable
 //////////////[Global Variables]///////////////////////////////////////////////////////////////////////////
 uint16_t proximity[6];
 
@@ -67,7 +67,7 @@ uint8_t checkProximity(void);
 #define LEFT	0
 #define RIGHT	1
 
-
+uint8_t dodgeObstacleByFacing(RobotGlobalStructure *sys);
 
 
 #endif /* OBSTACLE_AVOIDANCE_H_ */
