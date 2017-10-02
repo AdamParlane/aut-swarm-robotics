@@ -99,19 +99,12 @@ extern RobotGlobalStructure sys;		//System data structure
 */
 
 
-
 int main(void)
 {
 	robotSetup(); //Set up the system and peripherals
 
 	//Battery voltage stored in sys.power.batteryVoltage
 	//Initial main function state is SET IN robot_setup.c (sys.states.mainf) (NOT here)
-	uint8_t obstacleFlag = 0;
-	sys.flags.obaEnabled = 1;
-	sys.states.mainf = M_OBSTACLE_AVOIDANCE_DEMO;
-	sys.flags.obaMoving	= 1;
-	sys.pos.targetSpeed = 50;
-
 	while(1)
 	{
 		switch (sys.states.mainf)
@@ -158,6 +151,7 @@ int main(void)
 				
 			case M_FORMATION:
 			//placeholder
+				
 				break;
 						
 			case M_OBSTACLE_AVOIDANCE:
@@ -174,10 +168,6 @@ int main(void)
 			case M_CHARGING:
 				switch(pfChargeCycleHandler(&sys))
 				{
-					case 0xFF:
-						sys.states.mainf = M_IDLE;			//Charging fault occurred
-						break;
-						
 					case CCS_FINISHED:
 						sys.states.mainf = sys.states.mainfPrev;	//Charge finished successfully
 						break;	
@@ -187,20 +177,26 @@ int main(void)
 			case M_TEST_ALL:
 				//Something
 				break;
+			
+			case M_STARTUP_DELAY:
+				//Added this non blocking startup delay to see if it is more friendly.
+				//Please set initial state in mainfPrev
+				if(!fdelay_ms(sys.startupDelay))
+					sys.states.mainf = sys.states.mainfPrev;
+				break;
 				
 			case M_IDLE:					
 				mfStopRobot(&sys);
 				if(!fdelay_ms(1000))					//Blink LED 3 in Idle mode
 					led3Tog;				
 				break;
-				
 		}
+		
+		nfRetrieveNavData(&sys);	//checks if there is new navigation data and updates sys->pos
 		
 		commGetNew(&sys);			//Checks for and interprets new communications
 		
 		commPCStatusUpdate(&sys);	//Updates PC with battery and state (every 5 seconds)
-		
-		nfRetrieveNavData(&sys);	//checks if there is new navigation data and updates sys->pos
 		
 		pfPollPower(&sys);			//Poll battery and charging status
 		

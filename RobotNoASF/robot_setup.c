@@ -39,9 +39,13 @@
 #include "Interfaces/xbee_driver.h"
 
 #include <stdlib.h>				//srand()
+#include <math.h>
+#include <string.h>
+// For printf
+#include <stdio.h>
 
 //////////////[Global variables]////////////////////////////////////////////////////////////////////
-
+static double PRECISION = 0.00000000000001;
 
 //////////////[Global variables]////////////////////////////////////////////////////////////////////
 /*Global Data Structure Initialisation. These are the initial settings for the robot
@@ -110,7 +114,7 @@ RobotGlobalStructure sys =
 		.mainfPrev					= M_IDLE,
 		.docking					= DS_START,
 		.chargeCycle				= CCS_CHECK_POWER,
-		.followLine					= FLS_FIRST_CONTACT,
+		.followLine					= FLS_START,
 		.scanBrightest				= SBS_FUNCTION_INIT,
 		.moveHeadingDistance		= MHD_START
 	},
@@ -132,12 +136,12 @@ RobotGlobalStructure sys =
 		.line =
 		{
 			.pollEnabled			= 1,
-			.pollInterval			= 40
+			.pollInterval			= 100
 		},
 		
 		.colour =
 		{
-			.pollEnabled			= 0,//0x03,		//Bitmask to enable specific sensors.
+			.pollEnabled			= 0x03,//0x03,		//Bitmask to enable specific sensors.
 			.pollInterval			= 40,
 			.getHSV					= 1
 		},
@@ -146,9 +150,9 @@ RobotGlobalStructure sys =
 		{
 			.errorCount				= 0,
 
-			.pollEnabled			= 0x3F,		//Bitmask to enable specific sensors
+			.pollEnabled			= 0x3F,		//Bitmask to enable specific sensors 0x3F
 
-			.pollInterval			= 40
+			.pollInterval			= 150
 		}
 	},
 	
@@ -157,6 +161,8 @@ RobotGlobalStructure sys =
 	{
 		.x							= 0,		//Resets robot position
 		.y							= 0,		//Resets robot position
+		.oldPCX						= 0,		//Used for providing correction to optical data
+		.oldPCY						= 0,
 		.heading					= 0.0,		//Reset heading
 		.facingOffset				= 180,		//Ensures that whatever way the robot is facing when
 												//powered on is 0 degrees heading.
@@ -171,7 +177,9 @@ RobotGlobalStructure sys =
 		.Optical =
 		{
 			.pollEnabled			= 1,			//Enable Optical Polling
-			.pollInterval			= 0
+			.pollInterval			= 0,
+			.convFactorX			= 1,
+			.convFactorY			= 1,
 		}
 	},
 	
@@ -190,7 +198,8 @@ RobotGlobalStructure sys =
 		.chargeWatchDogInterval		= 1000		//How often to send watchdog pulse to FC chip
 	},
 	
-	.timeStamp = 0								//millisecs since power on
+	.timeStamp						= 0,		//millisecs since power on
+	.startupDelay					= 2500		//Time to wait at startup.
 };
 
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
@@ -239,9 +248,9 @@ void robotSetup(void)
 	imuDmpInit(sys.pos.IMU.gyroCalEnabled);	//Initialise DMP system
 	lfInit();							//Initialise line follow sensors. Only on V2.
 	
-	if(!sys.pos.IMU.gyroCalEnabled)		//If gyro cal no enabled (because it introduces its own
-										//delay
-		delay_ms(2500);					//Stops robot running away while programming
+	sys.states.mainfPrev = sys.states.mainf;
+	sys.states.mainf = M_STARTUP_DELAY;	//DO NOT CHANGE
+	
 	srand(sys.timeStamp);				//Seed rand() to give unique random numbers
 	return;
 }
@@ -339,8 +348,10 @@ void masterClockInit(void)
 */
 uint8_t waitForFlag(const volatile uint32_t *regAddr, uint32_t regMask, uint16_t timeOutMs)
 {
-	uint32_t startTime = sys.timeStamp;
+	uint32_t startTime = sys.timeStamp;				//The time at which the function began
+	//Wait until the desired flag is set, or until the time out period has elapsed
 	while(!((*regAddr) & regMask) && (sys.timeStamp < (startTime + timeOutMs)));
+	//If the flag was set (didn't time out)
 	if((*regAddr) & regMask)
 		return 0;
 	else
@@ -398,4 +409,79 @@ float capToRangeFlt(float valueToCap, float minimumVal, float maximumVal)
 	if(valueToCap < minimumVal)
 		valueToCap = minimumVal;
 	return valueToCap;
+}
+
+/**
+ * Double to ASCII
+ */
+char * dtoa(char *s, double n) {
+    // handle special cases
+    if (isnan(n)) {
+        strcpy(s, "nan");
+    } else if (isinf(n)) {
+        strcpy(s, "inf");
+    } else if (n == 0.0) {
+        strcpy(s, "0");
+    } else {
+        int digit, m, m1;
+        char *c = s;
+        int neg = (n < 0);
+        if (neg)
+            n = -n;
+        // calculate magnitude
+        m = log10(n);
+        int useExp = (m >= 14 || (neg && m >= 9) || m <= -9);
+        if (neg)
+            *(c++) = '-';
+        // set up for scientific notation
+        if (useExp) {
+            if (m < 0)
+               m -= 1.0;
+            n = n / pow(10.0, m);
+            m1 = m;
+            m = 0;
+        }
+        if (m < 1.0) {
+            m = 0;
+        }
+        // convert the number
+        while (n > PRECISION || m >= 0) {
+            double weight = pow(10.0, m);
+            if (weight > 0 && !isinf(weight)) {
+                digit = floor(n / weight);
+                n -= (digit * weight);
+                *(c++) = '0' + digit;
+            }
+            if (m == 0 && n > 0)
+                *(c++) = '.';
+            m--;
+        }
+        if (useExp) {
+            // convert the exponent
+            int i, j;
+            *(c++) = 'e';
+            if (m1 > 0) {
+                *(c++) = '+';
+            } else {
+                *(c++) = '-';
+                m1 = -m1;
+            }
+            m = 0;
+            while (m1 > 0) {
+                *(c++) = '0' + m1 % 10;
+                m1 /= 10;
+                m++;
+            }
+            c -= m;
+            for (i = 0, j = m-1; i<j; i++, j--) {
+                // swap without temporary
+                c[i] ^= c[j];
+                c[j] ^= c[i];
+                c[i] ^= c[j];
+            }
+            c += m;
+        }
+        *(c) = '\0';
+    }
+    return s;
 }

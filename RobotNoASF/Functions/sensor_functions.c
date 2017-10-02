@@ -103,7 +103,7 @@ void sfPollSensors(RobotGlobalStructure *sys)
 */
 void sfGetProxSensorData(RobotGlobalStructure *sys)
 {
-	for(uint8_t sensor = MUX_PROXSENS_A; sensor < MUX_PROXSENS_B; sensor++)
+	for(uint8_t sensor = MUX_PROXSENS_A; sensor > 0; sensor++)
 	{
 		if(sys->sensors.prox.pollEnabled & (1<<(sensor - 0xFA)))
 			sys->sensors.prox.sensor[sensor - 0xFA] = proxSensRead(sensor);//Adam, you might like to

@@ -37,9 +37,10 @@
 
 //////////////[Defines]/////////////////////////////////////////////////////////////////////////////
 ////TWI status register timeout values (ms)
-#define TWI_RXRDY_TIMEOUT	50
-#define TWI_TXRDY_TIMEOUT	50
-#define TWI_TXCOMP_TIMEOUT	50
+#define TWI_RXRDY_TIMEOUT	100
+#define TWI_TXRDY_TIMEOUT	100
+#define TWI_TXCOMP_TIMEOUT	100
+#define TWI_RXRDY_RETRY		3
 
 ////General Commands
 //if returns 1, then the receive holding register has a new byte to be read
@@ -137,6 +138,36 @@
 #define MUX_PROXSENS_D				0xFD		//Mux Channel 5, Side Panel D
 #define MUX_PROXSENS_E				0xFC		//Mux Channel 4, Side Panel E
 #define MUX_PROXSENS_F				0xFB		//Mux Channel 3, Side Panel F
+
+
+//TWI logging
+#define TWI_LOG_NUM_ENTRIES			10			//Number of entries to log in the TWI event log.
+
+//////////////[Type Definitions]////////////////////////////////////////////////////////////////////
+
+//Operation results for TWI operations
+typedef enum TwiErrorFlags
+{
+	TWIERR_NONE,		//Successful
+	TWIERR_TXRDY,		//Timed out waiting for TXRDY
+	TWIERR_RXRDY,		//Timed out waiting for RXRDY
+	TWIERR_TXCOMP		//Timed out waiting for TXCOMP
+} TwiErrorFlags;
+
+
+typedef struct TwiEvent
+{
+	uint32_t timeStamp;					//Time of operation
+	uint8_t twiBusNumber;				//TWI peripheral number (0, 1, 2)
+	uint8_t slaveAddress;				//Slave device address
+	uint8_t regAddress;					//Internal address
+	uint8_t readOp;						//Direction, 1 = read 0 = write
+	uint8_t transferLen;				//Number of bytes being transferred
+	uint8_t bytesTransferred;			//Number of bytes successfully transferred.
+	TwiErrorFlags operationResult;		//Outcome of operation.
+} TwiEvent;
+
+
 
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*
@@ -249,55 +280,7 @@ char twi0Read(unsigned char slave_addr, unsigned char reg_addr,
 char twi2Read(unsigned char slave_addr, unsigned char reg_addr,
 					unsigned char length, unsigned char *data);
 
-/*
-* Function:
-* char twi2SlaveAccessPoll(void)
-*
-* Polls TWI2 (when in slave mode) for message from a Master
-*
-* Inputs:
-* None
-*
-* Returns:
-* 0 if no message, 0x10 if message requesting data and 0x11 if message containing data
-*
-*/					
-char twi2SlaveAccessPoll(void);
-
-/*
-* Function:
-* char twi2SlaveRead(unsigned char *dataByte, unsigned char *more)
-*
-* Allows the caller to read data from TWI2 when in slave mode.
-*
-* Inputs:
-* unsigned char *dataByte:
-*   Pointer to a char where the data received from the interface will be stored
-* unsigned char *more
-*   Indicates that communication with the master is not finished (1 = not finished)
-*
-* Returns:
-* 0 on success or 1 on failure
-*
-*/
-char twi2SlaveRead(unsigned char *dataByte, unsigned char *more);
-
-/*
-* Function:
-* char twi2SlaveWrite(unsigned char dataByte, unsigned char *more)
-*
-* Allows the caller to send data to TWI2 master when in slave mode.
-*
-* Inputs:
-* unsigned char dataByte:
-*   Byte to send
-* unsigned char *more
-*   Indicates that communication with the master is not finished (1 = not finished)
-*
-* Returns:
-* 0 on success or 1 on failure
-*
-*/
-char twi2SlaveWrite(unsigned char dataByte, unsigned char *more);
+//Logs TWI0 transfer events
+uint8_t twi0LogEvent(TwiEvent event);
 
 #endif /* TWIMUX_INTERFACE_H_ */
