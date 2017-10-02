@@ -105,7 +105,6 @@ int main(void)
 
 	//Battery voltage stored in sys.power.batteryVoltage
 	//Initial main function state is SET IN robot_setup.c (sys.states.mainf) (NOT here)
-
 	while(1)
 	{
 		switch (sys.states.mainf)
@@ -163,9 +162,7 @@ int main(void)
 				
 			case M_OBSTACLE_AVOIDANCE_DEMO:
 				//will act like a function requiring OA for sake of demo'ing
-				mfAdvancedMove(180, 0, 50, 25, &sys);
-				sys.pos.targetHeading = 180;
-				sys.pos.targetSpeed = 50;
+				dodgeObstacleByFacing(&sys);
 				break;
 
 			case M_CHARGING:
@@ -193,9 +190,6 @@ int main(void)
 				if(!fdelay_ms(1000))					//Blink LED 3 in Idle mode
 					led3Tog;				
 				break;
-				
-			
-				
 		}
 		
 		nfRetrieveNavData(&sys);	//checks if there is new navigation data and updates sys->pos
@@ -209,7 +203,7 @@ int main(void)
 		sfPollSensors(&sys);		//Poll prox, colour, line 
 		
 		//check to see if obstacle avoidance is enabled AND the robot is moving
-		if(sys.flags.obaEnabled && sys.flags.obaMoving && sys.states.mainf != M_OBSTACLE_AVOIDANCE)
-			checkForObstacles(&sys); //avoid obstacles using proximity sensors
+		//if(sys.flags.obaEnabled && sys.flags.obaMoving && sys.states.mainf != M_OBSTACLE_AVOIDANCE)
+			//checkForObstacles(&sys); //avoid obstacles using proximity sensors
 	}
 }

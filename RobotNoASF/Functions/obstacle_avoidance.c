@@ -70,11 +70,11 @@ void scanProximity(RobotGlobalStructure *sys)
 			//delay_ms(50);
 			sys->sensors.prox.errorCount ++;
 			if(sys->sensors.prox.errorCount < 2)
-				scanProximity(sys);	//rescan the sensors
+			scanProximity(sys);	//rescan the sensors
 		}
 		else
-			sys->sensors.prox.errorCount = 0;
-	}	
+		sys->sensors.prox.errorCount = 0;
+	}
 }
 
 uint8_t checkProximity(void)
@@ -83,12 +83,12 @@ uint8_t checkProximity(void)
 	for(uint8_t i = 0; i < 5; i++)
 	{
 		if(proximity[i] == proximity[i+1])//compare each proximity sensor with the one after it
-			matches ++; //count the number of matches
+		matches ++; //count the number of matches
 	}
 	if(matches <= 4)//if they are not all the same
-		return 1;//return 1 sensors are okay
+	return 1;//return 1 sensors are okay
 	else
-		return 0;//return 0 problem with sensors
+	return 0;//return 0 problem with sensors
 }
 
 
@@ -121,82 +121,91 @@ uint8_t dodgeObstacle(RobotGlobalStructure *sys)
 	static uint8_t original;
 	static float facing = 0;
 	if(firstLoop)
-		original = sys->pos.targetHeading % 60;
+	original = sys->pos.targetHeading % 60;
 	uint8_t indexLeft, indexRight;//follows and leads index for the sake of checking proximity of nearby sensors
-	for(uint8_t index = 0; index <= 5 ; index++)//0, 1, 2, 3, 4, 5
+	//When to next send update
+	static uint32_t updateNextTime = 0;
+	if((sys->timeStamp > updateNextTime))
 	{
-		proxRange = index * 60; //convert angle to degrees
-		proxRangeHigh = proxRange + 30;
-		proxRangeLow = proxRange - 30;
-		indexLeft = index + 1;
-		indexRight = index - 1;
-		//keep left and right indexes in range
-		if(indexLeft > 5)
-		indexLeft = 0;
-		if(indexRight > 5)
-		indexRight = 5;
-		if(sys->pos.targetHeading > proxRangeLow && sys->pos.targetHeading <= proxRangeHigh) // if the prox is on the FACE we care about
+		updateNextTime = sys->timeStamp + 100;
+		for(uint8_t index = 0; index <= 5 ; index++)//0, 1, 2, 3, 4, 5
 		{
-			if((proximity[index] > OBSTACLE_THRESHOLD) || (proximity[indexLeft] > 1000) || (proximity[indexRight] > 1000))
+			proxRange = index * 60; //convert angle to degrees
+			proxRangeHigh = proxRange + 30;
+			proxRangeLow = proxRange - 30;
+			indexLeft = index + 1;
+			indexRight = index - 1;
+			//keep left and right indexes in range
+			if(indexLeft > 5)
+			indexLeft = 0;
+			if(indexRight > 5)
+			indexRight = 5;
+			if(sys->pos.targetHeading > proxRangeLow && sys->pos.targetHeading <= proxRangeHigh) // if the prox is on the FACE we care about
 			{
-				if(firstLoop) //choose a direction to dodge on first attempt
+				if((proximity[index] > OBSTACLE_THRESHOLD) || (proximity[indexLeft] > 1000) || (proximity[indexRight] > 1000))
 				{
-					if((proximity[indexLeft] > proximity[indexRight]))
+					if(firstLoop) //choose a direction to dodge on first attempt
 					{
-						sys->pos.targetHeading +=90;
-						direction = RIGHT;
+						if((proximity[indexLeft] > proximity[indexRight]))
+						{
+							sys->pos.targetHeading +=90;
+							direction = RIGHT;
+						}
+						else if ((proximity[indexLeft] < proximity[indexRight]))
+						{
+							sys->pos.targetHeading -= 90;
+							direction = LEFT;
+						}
+						firstLoop = 0;
+						obs = 1;
 					}
-					else if ((proximity[indexLeft] < proximity[indexRight]))
+					//stuck in a corner
+					else if((proximity[index] > OBSTACLE_THRESHOLD) && (proximity[indexLeft] > OBSTACLE_THRESHOLD) && (proximity[indexRight] > OBSTACLE_THRESHOLD))
 					{
+						sys->pos.targetHeading += 120;
+						original = sys->pos.targetHeading % 60;
+						firstLoop = 1;
+						//facing +=120;
+					}
+					//moving left but its getting worse
+					else if ((direction == LEFT) && (proximity[indexLeft] > (proximity[indexRight] + 100)) && (proximity[indexLeft] > 600 || obs))
+					{
+						sys->pos.targetHeading += 90;
+						if((abs(sys->pos.targetHeading) - 5) <= 5)
+						sys->pos.targetHeading += 90;
+						direction = RIGHT;
+						obs = 0;
+					}
+					//moving right but its getting worse
+					else if ((direction == RIGHT) && (proximity[indexRight] > (proximity[indexLeft] + 100)) && (proximity[indexRight] > 600 || obs))
+					{
+						sys->pos.targetHeading -= 90;
+						if((abs(sys->pos.targetHeading) - 5) <= 5)
 						sys->pos.targetHeading -= 90;
 						direction = LEFT;
+						obs = 0;
 					}
-					firstLoop = 0;
-					obs = 1;					
 				}
-				//stuck in a corner
-				else if((proximity[index] > OBSTACLE_THRESHOLD) && (proximity[indexLeft] > 500) && (proximity[indexRight] > 500))
+				else if (proximity[original] < (OBSTACLE_THRESHOLD-100)) //obstacle has been avoided
 				{
-					sys->pos.targetHeading += 120;
-					original = sys->pos.targetHeading % 60; 
 					firstLoop = 1;
-					facing +=120;
-				}
-				//moving left but its getting worse
-				else if ((direction == LEFT) && (proximity[indexLeft] > (proximity[indexRight] + 100)) && (proximity[indexLeft] > 600 || obs))
-				{
-					sys->pos.targetHeading += 90;
-					if((abs(sys->pos.targetHeading) - 5) <= 5)
-						sys->pos.targetHeading += 90;
-					direction = RIGHT;
 					obs = 0;
+					delay_ms(250);
+					return 0;
 				}
-				//moving right but its getting worse
-				else if ((direction == RIGHT) && (proximity[indexRight] > (proximity[indexLeft] + 100)) && (proximity[indexRight] > 600 || obs))
-				{
-					sys->pos.targetHeading -= 90;
-					if((abs(sys->pos.targetHeading) - 5) <= 5)
-						sys->pos.targetHeading -= 90;
-					direction = LEFT;
-					obs = 0;
-				}
-			}
-			else if (proximity[original] < (OBSTACLE_THRESHOLD-100)) //obstacle has been avoided
-			{
-				firstLoop = 1;
-				obs = 0;
-				delay_ms(250);
-				return 0;
 			}
 		}
-	}
-	if(firstLoop)
+		if(firstLoop)
 		facing = sys->pos.facing;
-	while(sys->pos.targetHeading >= 360)
+		while(sys->pos.targetHeading >= 360)
 		sys->pos.targetHeading -= 360;
-	while(sys->pos.targetHeading < 0)
+		while(sys->pos.targetHeading < 0)
 		sys->pos.targetHeading +=360;
-	mfAdvancedMove( sys->pos.targetHeading + facing, facing, sys->pos.targetSpeed, 0, sys);
+	}
+
+	mfAdvancedMove( sys->pos.targetHeading + facing, facing, sys->pos.targetSpeed, 100, sys);
+	//moveRobot(sys->pos.targetHeading, sys->pos.targetSpeed, 0);
+	//mfAdvancedMove( sys->pos.targetHeading, facing, sys->pos.targetSpeed, 100, sys);
 	return 1;
 }
 
@@ -214,17 +223,48 @@ void checkForObstacles(RobotGlobalStructure *sys)
 		indexRight = index - 1;
 		//keep left and right indexes in range
 		if(indexLeft > 5)
-			indexLeft = 0;
+		indexLeft = 0;
 		if(indexRight > 5)
-			indexRight = 5;
+		indexRight = 5;
 		if(sys->pos.targetHeading > proxRangeLow && sys->pos.targetHeading <= proxRangeHigh) // if the prox is on the FACE we care about
 		{
 			if((proximity[index] > OBSTACLE_THRESHOLD) || (proximity[indexLeft] > 1000) || (proximity[indexRight] > 1000))
 			{
 				//if there is obstacles
 				sys->states.mainfPrev = sys->states.mainf;
-				sys->states.mainf = M_OBSTACLE_AVOIDANCE;
+				sys->states.mainf = M_TEST_ALL;
 			}
 		}
+	}
+}
+
+uint8_t dodgeObstacleByFacing(RobotGlobalStructure *sys)
+{
+	static uint8_t firstTime = 1;
+	scanProximity(sys);// updates proximity sensors
+	static float facing = 0;
+	if(sys->flags.obaEnabled)
+	{
+		facing = sys->pos.facing;
+		sys->flags.obaEnabled = 0;
+	}
+	if(abs(mfMoveToHeading(facing, sys->pos.targetSpeed, sys)) < 10)
+	{
+		if(proximity[0] > OBSTACLE_THRESHOLD)
+		{
+			if((proximity[5] >= proximity[1]) && (proximity[5] < OBSTACLE_THRESHOLD && proximity[1] < OBSTACLE_THRESHOLD))
+				facing +=90;
+			else if ((proximity[5] < proximity[1]) && (proximity[5] < OBSTACLE_THRESHOLD && proximity[1] < OBSTACLE_THRESHOLD))
+				facing -= 90;
+			else if(abs(proximity[5] - proximity[1]) < 50)	//side are relatively the same so stuck in corner
+				facing += 180;
+		}
+		else if((abs(proximity[5] - proximity[1]) < 100) && (proximity[5] > OBSTACLE_THRESHOLD) && (proximity[1] > OBSTACLE_THRESHOLD))
+			//side are relatively the same so in a "tunnel"
+			facing += 0;
+		else if(proximity[5] > OBSTACLE_THRESHOLD)
+			facing -= 45;
+		else if(proximity[1] > OBSTACLE_THRESHOLD)
+			facing += 45;
 	}
 }
