@@ -70,4 +70,5 @@ uint8_t checkProximity(void);
 uint8_t dodgeObstacleByFacing(RobotGlobalStructure *sys);
 
 
+
 #endif /* OBSTACLE_AVOIDANCE_H_ */

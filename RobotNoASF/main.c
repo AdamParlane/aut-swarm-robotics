@@ -102,7 +102,6 @@ extern RobotGlobalStructure sys;		//System data structure
 int main(void)
 {
 	robotSetup(); //Set up the system and peripherals
-
 	//Battery voltage stored in sys.power.batteryVoltage
 	//Initial main function state is SET IN robot_setup.c (sys.states.mainf) (NOT here)
 	while(1)
@@ -151,7 +150,7 @@ int main(void)
 				
 			case M_FORMATION:
 			//placeholder
-				
+				followTheLeader(&sys);
 				break;
 						
 			case M_OBSTACLE_AVOIDANCE:
