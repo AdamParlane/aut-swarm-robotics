@@ -110,7 +110,7 @@ RobotGlobalStructure sys =
 	//System States
 	.states =
 	{
-		.mainf						= M_FORMATION,
+		.mainf						= M_IDLE,
 		.mainfPrev					= M_IDLE,
 		.docking					= DS_START,
 		.chargeCycle				= CCS_CHECK_POWER,
