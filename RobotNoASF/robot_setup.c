@@ -114,7 +114,7 @@ RobotGlobalStructure sys =
 		.mainfPrev					= M_IDLE,
 		.docking					= DS_START,
 		.chargeCycle				= CCS_CHECK_POWER,
-		.followLine					= FLS_FIRST_CONTACT,
+		.followLine					= FLS_START,
 		.scanBrightest				= SBS_FUNCTION_INIT,
 		.moveHeadingDistance		= MHD_START
 	},
@@ -125,6 +125,8 @@ RobotGlobalStructure sys =
 		.pollEnabled				= 1,
 		.twi2SlavePollEnabled		= 1,
 		.pollInterval				= 0,
+		.updateEnable				= 1,
+		.updateInterval				= 5000,
 		.testModeStreamInterval		= 100
 	},
 	
@@ -134,12 +136,12 @@ RobotGlobalStructure sys =
 		.line =
 		{
 			.pollEnabled			= 1,
-			.pollInterval			= 40
+			.pollInterval			= 100
 		},
 		
 		.colour =
 		{
-			.pollEnabled			= 0x03,		//Bitmask to enable specific sensors.
+			.pollEnabled			= 0x03,//0x03,		//Bitmask to enable specific sensors.
 			.pollInterval			= 40,
 			.getHSV					= 1
 		},
@@ -147,8 +149,10 @@ RobotGlobalStructure sys =
 		.prox =
 		{
 			.errorCount				= 0,
-			.pollEnabled			= 0x00,		//Bitmask to enable specific sensors
-			.pollInterval			= 40
+
+			.pollEnabled			= 0x3F,		//Bitmask to enable specific sensors 0x3F
+
+			.pollInterval			= 150
 		}
 	},
 	
@@ -157,6 +161,8 @@ RobotGlobalStructure sys =
 	{
 		.x							= 0,		//Resets robot position
 		.y							= 0,		//Resets robot position
+		.oldPCX						= 0,		//Used for providing correction to optical data
+		.oldPCY						= 0,
 		.heading					= 0.0,		//Reset heading
 		.facingOffset				= 180,		//Ensures that whatever way the robot is facing when
 												//powered on is 0 degrees heading.
@@ -171,7 +177,9 @@ RobotGlobalStructure sys =
 		.Optical =
 		{
 			.pollEnabled			= 1,			//Enable Optical Polling
-			.pollInterval			= 0
+			.pollInterval			= 0,
+			.convFactorX			= 1,
+			.convFactorY			= 1,
 		}
 	},
 	
@@ -179,18 +187,19 @@ RobotGlobalStructure sys =
 	.power =
 	{
 		.batteryDockingVoltage		= 3550,		//Battery voltage at which its time to find charger
-		.batteryMaxVoltage			= 3900,		//Maximum battery voltage (full charge)
+		.batteryMaxVoltage			= 4050,		//Maximum battery voltage (full charge)
 		.batteryMinVoltage			= 3300,		//Dead flat battery voltage
 		.fcChipFaultFlag			= 0,		//Fast charge fault flag
 		.pollBatteryEnabled			= 1,		//Battery polling enabled
-		.pollChargingStateEnabled	= 0,		//Charge status polling disabled
-		.pollChargingStateInterval	= 100,		//Poll charging status as fast as possible
+		.pollChargingStateEnabled	= 1,		//Charge status polling disabled
+		.pollChargingStateInterval	= 1000,		//Poll charging status as fast as possible
 		.pollBatteryInterval		= 30000,	//Poll battery every thirty seconds
 		.chargeWatchDogEnabled		= 0,		//Watchdog enabled
 		.chargeWatchDogInterval		= 1000		//How often to send watchdog pulse to FC chip
 	},
 	
-	.timeStamp = 0								//millisecs since power on
+	.timeStamp						= 0,		//millisecs since power on
+	.startupDelay					= 2500		//Time to wait at startup.
 };
 
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
@@ -239,9 +248,9 @@ void robotSetup(void)
 	imuDmpInit(sys.pos.IMU.gyroCalEnabled);	//Initialise DMP system
 	lfInit();							//Initialise line follow sensors. Only on V2.
 	
-	if(!sys.pos.IMU.gyroCalEnabled)		//If gyro cal no enabled (because it introduces its own
-										//delay
-		delay_ms(2500);					//Stops robot running away while programming
+	sys.states.mainfPrev = sys.states.mainf;
+	sys.states.mainf = M_STARTUP_DELAY;	//DO NOT CHANGE
+	
 	srand(sys.timeStamp);				//Seed rand() to give unique random numbers
 	return;
 }
@@ -339,8 +348,10 @@ void masterClockInit(void)
 */
 uint8_t waitForFlag(const volatile uint32_t *regAddr, uint32_t regMask, uint16_t timeOutMs)
 {
-	uint32_t startTime = sys.timeStamp;
+	uint32_t startTime = sys.timeStamp;				//The time at which the function began
+	//Wait until the desired flag is set, or until the time out period has elapsed
 	while(!((*regAddr) & regMask) && (sys.timeStamp < (startTime + timeOutMs)));
+	//If the flag was set (didn't time out)
 	if((*regAddr) & regMask)
 		return 0;
 	else

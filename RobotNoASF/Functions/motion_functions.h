@@ -53,12 +53,12 @@
 #define TLP_KI	0.001
 
 //PID constants for mfAdvancedMove
-#define AMH_KP	0.5		//Heading
-#define AMF_KP	3.0		//Facing
+#define AMH_KP	0.1		//Heading
+#define AMF_KP	6.0		//Facing
 
 //Motion function success conditions
 #define MF_FACING_ERR		0.1
-#define MF_DELTA_GYRO_ERR	0.5
+#define MF_DELTA_GYRO_ERR	1.0
 
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*

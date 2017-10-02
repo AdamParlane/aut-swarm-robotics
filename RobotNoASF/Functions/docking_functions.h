@@ -58,7 +58,7 @@ uint8_t dfDockRobot(RobotGlobalStructure *sys);
 * 0 when finished, otherwise current state
 *
 */
-uint8_t dfFollowLine(uint8_t speed, float *lineHeading, RobotGlobalStructure *sys);
+uint8_t dfFollowLine(uint8_t speed, RobotGlobalStructure *sys);
 
 /*
 * Function:

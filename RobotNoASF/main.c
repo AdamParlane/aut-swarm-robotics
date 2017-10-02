@@ -97,15 +97,15 @@ extern RobotGlobalStructure sys;		//System data structure
 * More functionality incoming (formations, smarter obstacle avoidance, high level error codes etc)
 *
 */
+
+
 int main(void)
 {
 	robotSetup(); //Set up the system and peripherals
+
 	//Battery voltage stored in sys.power.batteryVoltage
 	//Initial main function state is SET IN robot_setup.c (sys.states.mainf) (NOT here)
-	float lineHeading = 0;
-	uint8_t obstacleFlag;
-	sys.flags.obaEnabled = 1;
-	sys.flags.obaMoving	= 1;
+
 	while(1)
 	{
 		switch (sys.states.mainf)
@@ -137,7 +137,7 @@ int main(void)
 			
 			case M_LINE_FOLLOW:
 			//Entered when line follow command received from PC
-				if(!dfFollowLine(35, &lineHeading, &sys))//Line follower will return 0 when complete
+				if(!dfFollowLine(100, &sys))//Line follower will return 0 when complete
 					sys.states.mainf = M_IDLE;
 				break;
 					
@@ -152,26 +152,25 @@ int main(void)
 				
 			case M_FORMATION:
 			//placeholder
-				mfAdvancedMove(45, 0, 50, 50, &sys);
-				//sys.pos.targetHeading = 180;
-				//sys.pos.targetSpeed = 50;
-				//if(!mfMoveToPosition(300, 300, 50, 0, 50, &sys))
-				//	sys.states.mainf = M_IDLE;
+				
 				break;
 						
 			case M_OBSTACLE_AVOIDANCE:
-				obstacleFlag = dodgeObstacle(&sys);//avoid obstacles using proximity sensors
-				if(!obstacleFlag)//returning 0 means obstacles have been avoided
+				//avoid obstacles using proximity sensors
+				if(!dodgeObstacle(&sys))//returning 0 means obstacles have been avoided
 					sys.states.mainf = sys.states.mainfPrev; //reset the state to what it was
+				break;
+				
+			case M_OBSTACLE_AVOIDANCE_DEMO:
+				//will act like a function requiring OA for sake of demo'ing
+				mfAdvancedMove(180, 0, 50, 25, &sys);
+				sys.pos.targetHeading = 180;
+				sys.pos.targetSpeed = 50;
 				break;
 
 			case M_CHARGING:
 				switch(pfChargeCycleHandler(&sys))
 				{
-					case 0xFF:
-						sys.states.mainf = M_IDLE;			//Charging fault occurred
-						break;
-						
 					case CCS_FINISHED:
 						sys.states.mainf = sys.states.mainfPrev;	//Charge finished successfully
 						break;	
@@ -181,6 +180,13 @@ int main(void)
 			case M_TEST_ALL:
 				//Something
 				break;
+			
+			case M_STARTUP_DELAY:
+				//Added this non blocking startup delay to see if it is more friendly.
+				//Please set initial state in mainfPrev
+				if(!fdelay_ms(sys.startupDelay))
+					sys.states.mainf = sys.states.mainfPrev;
+				break;
 				
 			case M_IDLE:					
 				mfStopRobot(&sys);
@@ -188,11 +194,15 @@ int main(void)
 					led3Tog;				
 				break;
 				
+			
+				
 		}
+		
+		nfRetrieveNavData(&sys);	//checks if there is new navigation data and updates sys->pos
 		
 		commGetNew(&sys);			//Checks for and interprets new communications
 		
-		nfRetrieveNavData(&sys);	//checks if there is new navigation data and updates sys->pos
+		commPCStatusUpdate(&sys);	//Updates PC with battery and state (every 5 seconds)
 		
 		pfPollPower(&sys);			//Poll battery and charging status
 		

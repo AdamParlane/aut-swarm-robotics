@@ -43,11 +43,13 @@ typedef enum MainStates
 	M_FORMATION,
 	M_DOCKING,
 	M_OBSTACLE_AVOIDANCE,
+	M_OBSTACLE_AVOIDANCE_DEMO,
 	M_IDLE, 
 	M_CHARGING,
 	M_LINE_FOLLOW,
 	M_LIGHT_FOLLOW, 
-	M_RANDOM
+	M_RANDOM,
+	M_STARTUP_DELAY
 } MainStates;
 
 typedef enum DockingStates
@@ -67,10 +69,7 @@ typedef enum FollowLineStates
 //dfFollowLine() function states
 {
 	FLS_START,
-	FLS_FIRST_CONTACT,
 	FLS_ALIGN,
-	FLS_FOLLOW,
-	FLS_GIVE_UP,
 	FLS_FINISH
 } FollowLineStates;
 
@@ -115,10 +114,14 @@ typedef struct OpticalSensor
 	uint16_t sampleCount;	//Number of samples between updates (for rolling average)
 	int x;				//Count sum on x axis
 	int y;				//Count sum on y axis
+	int xOld;			//x value at the last PC update
+	int yOld;			//y value at the last PC update
 	char pollEnabled;	//Enable polling the optical sensor
 	char pollInterval;	//Rate at which to poll Mouse
 	char overflowFlag;	//1 if data has overflowed on optical sensor
 	uint8_t surfaceQuality;	//A value signifying quality of the surface (242 = max quality)
+	float convFactorX;	//A coefficient to convert to mm
+	float convFactorY;	//A coefficient to convert to mm
 } OpticalSensor;
 
 //Stores IMU sensor raw and converted data
@@ -166,6 +169,8 @@ typedef struct PositionGroup
 								//time as the IMU
 	unsigned short deltaTime;	//Time between last IMU reading and IMU previous reading
 	float facingOffset;			//Used to offset facing value (when corrected by PC)
+	int32_t oldPCX;				//The last X position from the PC
+	int32_t oldPCY;				//The last Y position from the PC
 } PositionGroup;
 
 //Stores information about the battery and charging
@@ -219,9 +224,15 @@ typedef struct LineSensorArray
 	uint8_t outerRight;
 	uint16_t pollInterval;
 	uint8_t pollEnabled;
-	uint8_t direction;
+	int8_t direction;
 	uint8_t detected;
 } LineSensorArray;
+
+struct transmitDataStructure
+{
+	char Data[50];//array for data to be transmitted to PC BEFORE XBee framing has been added
+	uint8_t DataSize;//size of the transmit array
+};
 
 typedef struct CommunicationDataGroup
 {
@@ -229,6 +240,9 @@ typedef struct CommunicationDataGroup
 	uint8_t twi2SlavePollEnabled;		//Whether to look for slave requests on twi2 (From LCD)
 	uint8_t twi2ReceivedDataByte;		//Stores the last received data byte from TWI2 slave
 	uint16_t pollInterval;				//Interval at which to poll at (ms)
+	uint16_t updateInterval;			//Interval at which the PC is updated with the robots status
+	uint8_t updateEnable;
+	struct transmitDataStructure transmitData;
 	struct MessageInfo messageData;		//Next message data
 	uint16_t testModeStreamInterval;	//Interval between sending test data packets (ms)
 } CommunicationDataGroup;
@@ -250,6 +264,7 @@ typedef struct SystemFlagsGroup
 	char twi2NewData;	//New data received on twi2 (Slave interface)
 	char obaMoving;		//Robot is in motion
 	char obaEnabled;	//Obstacle avoidance enabled
+	char cornerFlag;
 } SystemFlagsGroup;
 
 //Structure that will store the state of every state machine in the system
@@ -304,7 +319,7 @@ typedef struct RobotGlobalStructure
 	PositionGroup pos;						//Position information
 	BatteryChargeData power;				//Battery/Charging info and control
 	uint32_t timeStamp;						//System timestamp (millisecs since power on)
-
+	uint16_t startupDelay;					//Time to wait between sys setup and execution
 } RobotGlobalStructure;
 
 //////////////[Defines]/////////////////////////////////////////////////////////////////////////////
@@ -394,5 +409,8 @@ int32_t capToRangeInt(int32_t valueToCap, int32_t minimumVal, int32_t maximumVal
 uint32_t capToRangeUint(uint32_t valueToCap, uint32_t minimumVal, uint32_t maximumVal);
 
 float capToRangeFlt(float valueToCap, float minimumVal, float maximumVal);
+
+//Convert double to string
+char * dtoa(char *s, double n);
 
 #endif /* ROBOTDEFINES_H_ */

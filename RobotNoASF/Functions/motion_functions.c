@@ -236,24 +236,24 @@ float mfMoveToHeadingByDistance(float heading, uint8_t speed, float distance,
 		case MHD_START:
 			if(!mfRotateToHeading(heading, sys) && sys->pos.dy == 0)//Face the right direction
 				sys->states.moveHeadingDistance = MHD_MOVING;
-		break;
+			break;
 		
 		case MHD_MOVING:
 			//Once we are facing the right direction we can start keeping track of the distance 
 			//traveled.
-			speed = capToRangeUint(round((distance - distanceTravelled)*MTHD_KP + 25), 0, 100);
+			//speed = capToRangeUint(round((distance - distanceTravelled)*MTHD_KP + 25), 0, 100);
 			mfMoveToHeading(heading, speed, sys);
 			distanceTravelled += sqrt(sys->pos.dy*sys->pos.dy + sys->pos.dx*sys->pos.dx);
 			if(distanceTravelled > distance)		//If we have gone the distance
 				sys->states.moveHeadingDistance = MHD_STOP;//Time to stop.
-		break;
+			break;
 						
 		case MHD_STOP:
 			mfStopRobot(sys);						//Stop robot
 			distanceTravelled = 0;					//Reset static distance variable
 			sys->states.moveHeadingDistance = MHD_START;//Reset function state.
 			return 0;								//Indicate that maneuver is complete
-		break;
+			break;
 	}
 	return distance - distanceTravelled;	//If not complete return how far we have to go.
 }
@@ -500,10 +500,10 @@ void mfStopRobot(RobotGlobalStructure *sys)
 char mfAdvancedMove(float heading, float facing, uint8_t speed,
 						uint8_t maxTurnRatio, RobotGlobalStructure *sys)
 {	
-	static float pErrH;				//Proportional (signed) heading error
-	static float pErrF;				//Proportional (signed) facing error
+	//float pErrH;					//Proportional (signed) heading error
+	float pErrF;					//Proportional (signed) facing error
 	float facingCorrection = 0;		//Stores turn ratio calculated by PID sum
-	float headingCorrection = 0;	//Stores heading correction calculated by PID sum
+	//float headingCorrection = 0;	//Stores heading correction calculated by PID sum
 	
 	//Make sure heading and facing is in range (-180 to 180)
 	heading = nfWrapAngle(heading);
@@ -514,7 +514,7 @@ char mfAdvancedMove(float heading, float facing, uint8_t speed,
 	maxTurnRatio = capToRangeUint(maxTurnRatio, 0, 100);
 	
 	//Calculate proportional error values
-	pErrH = heading - sys->pos.heading;				//Signed Error (heading)
+	//pErrH = heading - sys->pos.heading;				//Signed Error (heading)
 	pErrF = facing - sys->pos.facing;				//Signed Error (facing)
 	
 	//Force the P controller to always take the shortest path to the destination.
@@ -525,15 +525,18 @@ char mfAdvancedMove(float heading, float facing, uint8_t speed,
 	if(pErrF < -180)
 		pErrF += 360;
 
+	//if(pErrH > 180 || pErrH < -180)
+	//	pErrH *= -1;
+	
 	//Calculate the correction figures
-	headingCorrection = AMH_KP*pErrH;
+	//headingCorrection = AMH_KP*pErrH;
 	facingCorrection = AMF_KP*pErrF;
 	//If the correction values end up being out of range, then dial them back
 	facingCorrection = capToRangeFlt(facingCorrection, -maxTurnRatio, maxTurnRatio);
-	headingCorrection = capToRangeFlt(headingCorrection, -180, 180);
+	//headingCorrection = capToRangeFlt(headingCorrection, -180, 180);
 	
 	//Get the robot moving to correct the errors.
-	moveRobot(heading - sys->pos.facing + headingCorrection , speed, facingCorrection);
+	moveRobot((heading - sys->pos.facing) , speed, facingCorrection);
 	
 	//If error is less than 0.5 deg and delta yaw is less than 0.5 degrees per second then we can
 	//return 0 (ie robot is more or less on correct heading)
@@ -601,12 +604,14 @@ int32_t mfMoveToPosition(int32_t x, int32_t y, uint8_t speed, float facing,
 			break;
 			
 		case MOVE_TO_POS:
-			if(!fdelay_ms(1000))
-				state = CALC_HEADING;
+			//if(!fdelay_ms(1000))
+			//	state = CALC_HEADING;
+			
+			currentHeading = atan2((x - sys->pos.x), (y - sys->pos.y))*180/M_PI;
 			//distTravelled += sqrt(sys->pos.dx*sys->pos.dx + sys->pos.dy*sys->pos.dy);
 			
 			mfAdvancedMove(currentHeading, facing, speed, maxTurnRatio, sys);
-			if((abs(x - sys->pos.x) < 10) && (abs(y - sys->pos.y) < 10))
+			if((abs(x - sys->pos.x) < 50) && (abs(y - sys->pos.y) < 50))
 				state = FINISHED;
 			break;
 			

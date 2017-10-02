@@ -67,6 +67,14 @@ uint8_t dfDockRobot( RobotGlobalStructure *sys)
 	{
 		//Begin by scanning for the brightest light source
 		case DS_START:
+			//Initialise the required sensors
+			sys->sensors.prox.pollEnabled = 0x3F;	//All prox
+			sys->sensors.prox.pollInterval = 100;
+			sys->sensors.colour.pollEnabled = 0x03;	//All colour
+			sys->sensors.colour.pollInterval = 40;
+			sys->sensors.line.pollEnabled = 1;		//Line sensors
+			sys->sensors.line.pollInterval = 100;	
+			
 			if(lineFound)
 			{
 				lineLastSeen = sys->timeStamp;
@@ -115,7 +123,7 @@ uint8_t dfDockRobot( RobotGlobalStructure *sys)
 		case DS_FOLLOW_LINE:
 			//Enable fast scharge chip polling
 			sys->power.pollChargingStateEnabled = 1;
-			sys->power.pollChargingStateInterval = 100;
+			sys->power.pollChargingStateInterval = 150;
 			
 			mfTrackLight(45 - (sys->sensors.prox.sensor[SF_PROX_FRONT]*45/1023) + 10, sys);
 			if(sys->sensors.prox.sensor[SF_PROX_FRONT] >= PS_CLOSEST)
@@ -143,7 +151,6 @@ uint8_t dfDockRobot( RobotGlobalStructure *sys)
 				mfStopRobot(sys);					//Stop moving
 			} else
 				moveRobot(0, 100, 0);
-
 			break;
 		
 		//If charger hasn't been found after time period, we enter this state. The resulting
@@ -188,35 +195,20 @@ uint8_t dfDockRobot( RobotGlobalStructure *sys)
 * Need to find a way to make it smoother.
 *
 */
-uint8_t dfFollowLine(uint8_t speed, float *lineHeading,	RobotGlobalStructure *sys)
+uint8_t dfFollowLine(uint8_t speed,	RobotGlobalStructure *sys)
 {
 	sys->flags.obaMoving = 1;
-	static uint8_t lineJustFound = 1;
 	
-	if(!sys->sensors.line.detected)			//Line has been lost, give up (will return FLS_GIVE_UP)
-	{
-		sys->states.followLine = FLS_GIVE_UP;
-		return sys->states.followLine;
-	}
-		
 	switch(sys->states.followLine)
 	{
 		//Starting state. Has value of 0 so when line following is finished will return 0
 		case FLS_START:
-			pioLedNumber(1);
-			sys->states.followLine = FLS_FIRST_CONTACT;
-			break;
-		
-		//On first contact, drive forward slowly until line is detected on the middle two sensors.
-		//Once that is the case, then we must be over the line properly, so move to the FOLLOW
-		//state.
-		case FLS_FIRST_CONTACT:
-			pioLedNumber(2);
-			lineJustFound = 1;
-			if(!sys->sensors.line.direction)
-				sys->states.followLine = FLS_FOLLOW;	//If sufficiently over line, begin following
-			else
-				moveRobot(0, 35, 0);	//Creep forward some more to straddle line
+			sys->states.followLine = FLS_ALIGN;
+			sys->sensors.line.pollInterval = 100;		//Poll line sensors every 100ms
+			sys->sensors.prox.pollInterval = 100;
+			sys->sensors.prox.pollEnabled = 0x01;		//Poll front sensor
+			sys->sensors.colour.pollEnabled = 0;		//Don't poll colour
+			sys->power.pollChargingStateEnabled = 0;	//Stop polling FC chip
 			break;
 		
 		//Given the position of the line sensors relative to the wheels on the underside of the 
@@ -226,47 +218,28 @@ uint8_t dfFollowLine(uint8_t speed, float *lineHeading,	RobotGlobalStructure *sy
 		//detected as being directly underneath the robot, then that heading is recorded and the
 		//function switches to the FOLLOW state.
 		case FLS_ALIGN:
-			if(sys->sensors.line.direction)
+			if(sys->sensors.line.detected)
 			{
 				if(sys->sensors.line.direction < 0)
-					moveRobot(0, -15 + sys->sensors.line.direction*2, 100);
+					{
+						moveRobot(0,  -15 + sys->sensors.line.direction*5, 80);
+					}
 				if(sys->sensors.line.direction > 0)
-					moveRobot(0, 15 + sys->sensors.line.direction*2, 100);
-			}
-			else 
-			{
-				if(lineJustFound)								//If first time following this line
 				{
-					*lineHeading = sys->pos.facing;				//Set initial line heading
-					lineJustFound = 0;
+						moveRobot(0, 15 + sys->sensors.line.direction*5 , 80);
 				}
-				else
-					*lineHeading = (*lineHeading + sys->pos.facing)/2;	//Running average heading
-				sys->states.followLine = FLS_FOLLOW;
+				if(sys->sensors.line.direction == 0)
+				{
+					moveRobot(0, speed, 0);
+				}
+			} else {
+				mfStopRobot(sys);
 			}
-			break;
-		
-		//If the directional data from the line sensors suggests that we are centred over the line
-		//then drive along the heading established (in the ALIGN state) as the heading of the line.
-		//Otherwise, switch to the ALIGN state and re-centre over the line. If the forward prox
-		//sensor has been triggered, then slow the robot down proportional to the value of the
-		//sensor, and if maximum value is reached on the proximity sensor, then stop line following.
-		case FLS_FOLLOW:
-			if(abs(sys->sensors.line.direction) < 2)
-				//Speed is inversely proportional to the reading from the forward prox sensor
-				mfMoveToHeading(*lineHeading, 
-						speed - (sys->sensors.prox.sensor[SF_PROX_FRONT]*speed/1023) + 10, sys);
-			else
-				sys->states.followLine = FLS_ALIGN;
-			if(sys->sensors.prox.sensor[SF_PROX_FRONT] >= PS_CLOSEST)	//If forward prox is at maximum, then we've 
-												//encountered an obstacle, so finish
-				sys->states.followLine = FLS_FINISH;
-			break;
-		
-		case FLS_GIVE_UP:						//If the line has been lost
-			mfStopRobot(sys);
-			sys->states.followLine = FLS_START;
-			lineJustFound = 1;
+			
+			//If obstacle in front of us then stop.
+			if(sys->sensors.prox.sensor[0] == PS_CLOSEST)
+				sys->states.docking = FLS_FINISH;
+			
 			break;
 		
 		//If finished, reset the state machine for next time and return a 0.

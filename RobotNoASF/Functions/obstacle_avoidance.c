@@ -141,14 +141,6 @@ uint8_t dodgeObstacle(RobotGlobalStructure *sys)
 			{
 				if(firstLoop) //choose a direction to dodge on first attempt
 				{
-					//if((proximity[indexLeft] > OBSTACLE_THRESHOLD))
-					//{
-						//sys->pos.targetHeading += 45;
-					//}
-					//else if((proximity[indexRight] > OBSTACLE_THRESHOLD))
-					//{
-						//sys->pos.targetHeading -= 45;
-					//}
 					if((proximity[indexLeft] > proximity[indexRight]))
 					{
 						sys->pos.targetHeading +=90;
@@ -165,21 +157,16 @@ uint8_t dodgeObstacle(RobotGlobalStructure *sys)
 				//stuck in a corner
 				else if((proximity[index] > OBSTACLE_THRESHOLD) && (proximity[indexLeft] > 500) && (proximity[indexRight] > 500))
 				{
-					sys->pos.targetHeading -= 120;
+					sys->pos.targetHeading += 120;
+					original = sys->pos.targetHeading % 60; 
+					firstLoop = 1;
+					facing +=120;
 				}
-				//else if((proximity[indexLeft] > OBSTACLE_THRESHOLD))
-				//{
-					//sys->pos.targetHeading += 45;
-				//}
-				//else if((proximity[indexRight] > OBSTACLE_THRESHOLD))
-				//{
-					//sys->pos.targetHeading -= 45;
-				//}
 				//moving left but its getting worse
 				else if ((direction == LEFT) && (proximity[indexLeft] > (proximity[indexRight] + 100)) && (proximity[indexLeft] > 600 || obs))
 				{
 					sys->pos.targetHeading += 90;
-					if(sys->pos.targetHeading == 0)
+					if((abs(sys->pos.targetHeading) - 5) <= 5)
 						sys->pos.targetHeading += 90;
 					direction = RIGHT;
 					obs = 0;
@@ -188,7 +175,7 @@ uint8_t dodgeObstacle(RobotGlobalStructure *sys)
 				else if ((direction == RIGHT) && (proximity[indexRight] > (proximity[indexLeft] + 100)) && (proximity[indexRight] > 600 || obs))
 				{
 					sys->pos.targetHeading -= 90;
-					if(sys->pos.targetHeading == 0)
+					if((abs(sys->pos.targetHeading) - 5) <= 5)
 						sys->pos.targetHeading -= 90;
 					direction = LEFT;
 					obs = 0;
@@ -205,7 +192,6 @@ uint8_t dodgeObstacle(RobotGlobalStructure *sys)
 	}
 	if(firstLoop)
 		facing = sys->pos.facing;
-	//sys->pos.targetHeading = nfWrapAngle(sys->pos.targetHeading) + 180;
 	while(sys->pos.targetHeading >= 360)
 		sys->pos.targetHeading -= 360;
 	while(sys->pos.targetHeading < 0)

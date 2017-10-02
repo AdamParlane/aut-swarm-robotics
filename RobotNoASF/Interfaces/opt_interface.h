@@ -54,14 +54,14 @@
 #define OPT_INVS_PROD_ID	0x3F
 
 //Mouse conversion factors (1in = 25.4mm; Conversion factor = 25.4mm/CPI_val)
-#define OPT_CONV_400CPI2MM	0.063500000
-#define OPT_CONV_800CPI2MM	0.031750000
-#define OPT_CONV_1200CPI2MM	0.021166667
-#define OPT_CONV_1600CPI2MM	0.015875000		//OLD
-//#define OPT_CONV_1600CPI2MM	0.000237
-#define OPT_CONV_2000CPI2MM	0.012700000
+#define OPT_CONV_400CPI2MM		0.063500000
+#define OPT_CONV_800CPI2MM		0.031750000
+#define OPT_CONV_1200CPI2MM		0.021166667
+//#define OPT_CONV_1600CPI2MM		0.015875000		//OLD
+#define OPT_CONV_1600CPI2MM		0.1366888414710682	//L adjust mouse data by 8 bits before using
+#define OPT_CONV_2000CPI2MM		0.012700000
 
-#define OPT_CONV_FACTOR		OPT_CONV_1600CPI2MM	//Using 1600CPI resolution
+#define OPT_CONV_FACTOR			OPT_CONV_1600CPI2MM	//Using 1600CPI resolution
 
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*

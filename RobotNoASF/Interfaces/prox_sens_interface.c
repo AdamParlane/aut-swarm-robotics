@@ -129,6 +129,7 @@ void proxSingleSensInit(uint8_t channel)
 	//Power ON, Proximity Enable
 	writeBuffer = PS_ENABLE_PROX;
 	twi0Write(TWI0_PROXSENS_ADDR, PS_CMD_1BYTE | PS_ENABLE_REG, 1, &writeBuffer);
+	twi0MuxSwitch(0x00);	//Deselect all channels
 }
 
 /*
@@ -157,6 +158,7 @@ uint16_t proxSensRead(uint8_t channel)
 	twi0Read(TWI0_PROXSENS_ADDR, (PS_CMD_INC | PS_PDATAL_REG), 2, data);
 	//NOTE: Command_REG of the ProxSensor must be written to, as part of R/W functions.
 	//Low data register is read, auto-increment occurs and high data register is read.
+	twi0MuxSwitch(0x00);	//Deselect all channels
 	return (data[1]<<8)|(data[0]);
 }
 

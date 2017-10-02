@@ -28,6 +28,12 @@
 #include "motion_functions.h"
 #include "comm_functions.h"
 
+
+#include <stdlib.h>
+#include <stdio.h>						//sprintf
+#include <string.h>						//strcpy
+
+
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*
 * Function:
@@ -60,9 +66,9 @@ void commGetNew(RobotGlobalStructure *sys)
 		nextPollTime = sys->timeStamp + sys->comms.pollInterval;
 		if(!xbeeFrameBufferInfoGetFull(&commFrame))			//Check for a received XBee Message
 		{
-			xbeeInterpretAPIFrame(commFrame);					//Interpret the received XBee Message
-			if(!xbeeMessageBufferInfoGetFull(&sys->comms.messageData))//Check for a message from the swarm
-				commInterpretSwarmMessage(sys);					//Interpret the message
+			xbeeInterpretAPIFrame(commFrame);				//Interpret the received XBee Message
+			if(!xbeeMessageBufferInfoGetFull(&sys->comms.messageData))//if message from the swarm
+				commInterpretSwarmMessage(sys);				//Interpret the message
 		}
 		
 		if(sys->comms.twi2SlavePollEnabled)					//If polling TWI2 Slave reqs is enabled
@@ -70,8 +76,6 @@ void commGetNew(RobotGlobalStructure *sys)
 			commTwi2SlaveRequest(sys);
 		}
 	}
-	
-	
 }
 
 /*
@@ -105,7 +109,7 @@ void commInterpretSwarmMessage(RobotGlobalStructure *sys)
 	switch(sys->comms.messageData.command & 0xF0)	//Look at upper nibble only
 	{
 		//PositionGroup commands
-		case 0xA0:
+		case RX_UPDATE_POSITION:
 			switch(sys->comms.messageData.command & 0x0F)
 			{
 				//X, Y position from PC
@@ -117,30 +121,33 @@ void commInterpretSwarmMessage(RobotGlobalStructure *sys)
 			break;
 		
 		//Test commands
-		case 0xE0:
+		case RX_TEST_MODE:
 			sys->states.mainf = M_TEST;
 			break;
 
 		//Manual control
-		case 0xD0:
+		case RX_MANUAL_MODE:
 			switch(sys->comms.messageData.command & 0x0F)
 			{
-				case 0x01:
+				case RX_M_STOP:
+					sys->states.mainf = M_MANUAL;
+					break;
+					
+				case RX_M_MOVE:
 					sys->states.mainf = M_MANUAL;
 					break;
 
-				case 0x02:
+				case RX_M_ROTATE_CW:
 					sys->states.mainf = M_MANUAL;
 					break;
 
-				case 0x03:
+				case RX_M_ROTATE_CCW:
 					sys->states.mainf = M_MANUAL;
 					break;
 
-				case 0x04:
+				case RX_M_RANDOM:
 					//move robot randomly
 					sys->states.mainf = M_RANDOM;
-
 					break;
 					
 				case 0x05:
@@ -148,58 +155,45 @@ void commInterpretSwarmMessage(RobotGlobalStructure *sys)
 					//at a later date for different methods if required
 					break;
 					
-				case 0x06:
+				case 0x06:		//Dismount charger
+					if(sys->states.mainf == M_CHARGING)
+					{
+						sys->states.chargeCycle = CCS_DISMOUNT;
+					}
 					break; 
 					
-				case 0x07:
+				case RX_M_DOCKING:
+					sys->states.docking = DS_FINISHED;
 					sys->states.mainf = M_DOCKING;
 					break;
 
-				case 0x08:
+				case RX_M_OBSTACLE_AVOIDANCE_DIS:
 					sys->flags.obaEnabled = 0;
+					sys->states.mainf = M_IDLE;
 					break;
 
-				case 0x09:
+				case RX_M_OBSTACLE_AVOIDANCE_EN:
 					sys->flags.obaEnabled = 1;
+					sys->states.mainf = M_OBSTACLE_AVOIDANCE_DEMO;
 					break;
 
-				case 0x0A:
+				case RX_M_LIGHT_FOLLOW:
 					sys->states.mainf = M_LIGHT_FOLLOW;
 					break;
 
-				case 0x0B:
+				case RX_M_LINE_FOLLOW:
 					sys->states.mainf = M_LINE_FOLLOW;
-					break;				
+					break;
+					
+				case 0x0C:		//Rotate to heading command
+					sys->states.mainf = M_MANUAL;
+					break;
+					
+				case 0x0D:		//Move to position command
+					sys->states.mainf = M_MANUAL;
 			}
 			break;
-
-
-
 	}
-
-	//if(sys->comms.messageData.command >= 0xE0) //test command range 0xE0-0xEF
-		//sys->states.mainf = M_TEST;
-	//else if (sys->comms.messageData.command == 0xD0)
-	//{
-		//mfStopRobot(sys);
-	//}
-	////Manual command range 0xD1-0xD3
-	//else if(sys->comms.messageData.command >= 0xD1 && sys->comms.messageData.command <= 0xD3) 
-		//sys->states.mainf = M_MANUAL;
-	//else if (sys->comms.messageData.command == 0xD4)
-		////move robot randomly
-		//mfRandomMovementGenerator();
-	//else if (sys->comms.messageData.command == 0xD7)
-		//sys->states.mainf = M_DOCKING;
-//
-	//else if (sys->comms.messageData.command == 0xD8)
-		//sys->flags.obaEnabled = 0;
-	//else if (sys->comms.messageData.command == 0xD9)
-		//sys->flags.obaEnabled = 1;
-	//else if (sys->comms.messageData.command == 0xDA)
-		//sys->states.mainf = M_LIGHT_FOLLOW;
-	//else if (sys->comms.messageData.command == 0xDB)
-		//sys->states.mainf = M_LINE_FOLLOW;
 }
 
 /*
@@ -246,11 +240,11 @@ char commTwi2SlaveRequest(RobotGlobalStructure *sys)
 					break;
 				
 				case COMM_TWI2_OPTX:				//Commands go here
-					outputBuffer = (uint8_t)((sys->pos.Optical.x & 0xFF00) >> 8);
+					outputBuffer = (uint8_t)((sys->pos.Optical.x & 0xFF0000) >> 16);
 					break;
 				
 				case COMM_TWI2_OPTY:				//Commands go here
-					outputBuffer = (uint8_t)((sys->pos.Optical.y & 0xFF00) >> 8);
+					outputBuffer = (uint8_t)((sys->pos.Optical.y & 0xFF0000) >> 16);
 					break;
 				
 				case COMM_TWI2_FACING:				//Commands go here
@@ -258,7 +252,7 @@ char commTwi2SlaveRequest(RobotGlobalStructure *sys)
 					break;
 				
 				case COMM_TWI2_COLOUR:
-					outputBuffer = (uint8_t)((sys->sensors.colour.left.hue + 180)/2);
+					outputBuffer = (uint8_t)((sys->sensors.colour.left.hue)/2);
 					break;
 				
 				default:
@@ -275,3 +269,37 @@ char commTwi2SlaveRequest(RobotGlobalStructure *sys)
 	return 0;
 } 
 
+
+//send battery and task to PC
+void commPCStatusUpdate(RobotGlobalStructure *sys)
+{
+	//When to next send update
+	static uint32_t updateNextTime = 0;
+
+	if((sys->timeStamp > updateNextTime) && sys->comms.updateEnable)
+	{
+		updateNextTime = sys->timeStamp + sys->comms.updateInterval;
+		sys->comms.transmitData.Data[0] = 0xA1; //Command letting PC know of update
+		sys->comms.transmitData.Data[1] = sys->states.mainf; //Robot State
+		sys->comms.transmitData.Data[2] = sys->power.batteryVoltage >> 8; //Upper byte
+		sys->comms.transmitData.Data[3] = sys->power.batteryVoltage & 0xFF; //Lower byte
+		sys->comms.transmitData.DataSize = 4;
+		xbeeSendAPITransmitRequest(COORDINATOR_64,UNKNOWN_16, sys->comms.transmitData.Data, 
+									sys->comms.transmitData.DataSize);  //Send the Message
+		
+		
+		//char stringBuffer[49];
+								
+		//DEBUG MESSAGE (please don't delete - Matt):
+		//sys->comms.transmitData.Data[0] = 0x00;
+		//dtoa(stringBuffer, (double)sys->pos.facing);
+		////sprintf(stringBuffer, "Facing");
+		//sprintf(stringBuffer, "Facing %3.1f", sys->pos.facing);
+		//
+		//strcpy(sys->comms.transmitData.Data + 1, stringBuffer);
+		//
+		//sys->comms.transmitData.DataSize = strlen(stringBuffer) + 2;
+		//xbeeSendAPITransmitRequest(COORDINATOR_64,UNKNOWN_16, sys->comms.transmitData.Data,
+									//sys->comms.transmitData.DataSize);  //Send the Message
+	}
+}
