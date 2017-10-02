@@ -317,8 +317,12 @@ void nfApplyPositionUpdateFromPC(uint8_t *rawData, RobotGlobalStructure *sys)
 	{
 		sys->pos.Optical.convFactorX += (distPCX/distMouseX);
 		sys->pos.Optical.convFactorY += (distPCY/distMouseY);
-		sys->pos.Optical.convFactorX /= 2;
-		sys->pos.Optical.convFactorY /= 2;
+		//If this is the first time, then don't average.
+		if(sys->pos.Optical.convFactorX != 0 && sys->pos.Optical.convFactorY != 0)
+		{
+			sys->pos.Optical.convFactorX /= 2.0;
+			sys->pos.Optical.convFactorY /= 2.0;
+		}
 	}
 	
 	sys->pos.oldPCX = sys->pos.x;
