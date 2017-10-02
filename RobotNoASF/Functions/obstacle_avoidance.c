@@ -268,3 +268,4 @@ uint8_t dodgeObstacleByFacing(RobotGlobalStructure *sys)
 			facing += 45;
 	}
 }
+
