@@ -57,15 +57,15 @@
 void manualControl(RobotGlobalStructure *sys)
 {
 	static uint8_t receivedTestData[5];
-	sys->flags.xbeeNewData = 0;
-	uint16_t straightDirection;
+	sys->flags.xbeeNewData = 1;
+	int16_t straightDirection;
 	xbeeCopyData(sys->comms.messageData, receivedTestData);
 	straightDirection = (receivedTestData[0] << 8) + (receivedTestData[1]);
 	
 	switch(sys->comms.messageData.command)
 	{
 		case MC_STRAIGHT:
-			mfAdvancedMove(sys->pos.facing + straightDirection, 0, receivedTestData[2], 0, sys);
+			mfAdvancedMove(straightDirection, 0, receivedTestData[2], 100, sys);
 			//moveRobot(straightDirection, receivedTestData[2], 12);
 			sys->pos.targetHeading = straightDirection;
 			sys->pos.targetSpeed = receivedTestData[2];
@@ -74,6 +74,7 @@ void manualControl(RobotGlobalStructure *sys)
 			
 		case MC_STOP:
 			mfStopRobot(sys);
+			sys->flags.xbeeNewData = 0;
 			sys->states.mainf = M_IDLE;
 			break;
 		
@@ -88,5 +89,22 @@ void manualControl(RobotGlobalStructure *sys)
 			moveRobot(0, receivedTestData[0], 100);
 			sys->flags.obaMoving = 1;
 			break;
+			
+		case MC_RTH:		
+			if(!mfRotateToHeading((int16_t)((receivedTestData[0]<<8)|(receivedTestData[1])), sys))
+				sys->states.mainf = M_IDLE;
+			else
+				sys->flags.xbeeNewData = 1; //Set this to keep jumping in here until we're done
+			break;
+			
+		case MC_MTP:
+			if(!mfMoveToPosition((int32_t)((receivedTestData[0]<<8)|receivedTestData[1]),
+								(int32_t)((receivedTestData[2]<<8)|receivedTestData[3]),
+								50, 0, 20, sys))
+				sys->states.mainf = M_IDLE;
+			else
+				sys->flags.xbeeNewData = 1;
+
+			break;	
 	}
 }

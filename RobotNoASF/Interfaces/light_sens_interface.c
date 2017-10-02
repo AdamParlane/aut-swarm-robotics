@@ -61,6 +61,7 @@ void lightSensInit(uint8_t channel)
 	uint8_t writeBuffer = LS_AUTO|LS_40MS;	//Auto trigger, 80ms integration time
 	twi0MuxSwitch(channel); //Set multiplexer address to correct device
 	twi0Write(TWI0_LIGHTSENS_ADDR, LS_CONFIG_REG, 1, &writeBuffer);
+	twi0MuxSwitch(0x00);	//Deselect all channels
 }
 
 /*
@@ -95,5 +96,6 @@ uint16_t lightSensRead(uint8_t channel, uint8_t colour)
 	uint8_t data[2];
 	twi0MuxSwitch(channel);	//Set multiplexer address to a light sensor device
 	twi0Read(TWI0_LIGHTSENS_ADDR, colour, 2, data);
+	twi0MuxSwitch(0x00);	//Deselect all channels
 	return (data[1]<<8)|(data[0]);
 }

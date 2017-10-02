@@ -185,9 +185,12 @@ void commInterpretSwarmMessage(RobotGlobalStructure *sys)
 					sys->states.mainf = M_LINE_FOLLOW;
 					break;
 					
-				case 0x0C:		//Rotate to heading
-							
+				case 0x0C:		//Rotate to heading command
+					sys->states.mainf = M_MANUAL;
 					break;
+					
+				case 0x0D:		//Move to position command
+					sys->states.mainf = M_MANUAL;
 			}
 			break;
 	}

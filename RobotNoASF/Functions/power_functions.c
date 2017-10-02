@@ -208,7 +208,7 @@ uint8_t pfChargeCycleHandler(RobotGlobalStructure *sys)
 		case CCS_FAULT:
 			sys->power.fcChipFaultFlag = 0;
 			sys->states.chargeCycle = CCS_DISMOUNT;
-			return 0xFF;										//Indicate that a fault occurred
+			break;
 		
 		//See which direction we are facing right now, then switch to CCS_TURN_AWAY
 		case CCS_DISMOUNT:
@@ -219,7 +219,10 @@ uint8_t pfChargeCycleHandler(RobotGlobalStructure *sys)
 		//Rotate 180 degrees, then switch to CCS_FINISHED STATE
 		case CCS_TURN_AWAY:
 			if(!mfRotateToHeading(currentHeading + 180, sys))
+			{
 				sys->states.chargeCycle = CCS_FINISHED;
+				sys->power.pollChargingStateEnabled = 1;
+			}
 			break;
 		
 		case CCS_STOP_POLLING:
@@ -228,7 +231,7 @@ uint8_t pfChargeCycleHandler(RobotGlobalStructure *sys)
 			sys->sensors.colour.pollEnabled = 0x03;
 			//Charge chip polling = 1sec
 			sys->power.pollChargingStateInterval = 1000;
-			sys->power.pollChargingStateEnabled = 1;
+			sys->power.pollChargingStateEnabled = 0;
 			//Disable charge chip watchdog
 			sys->power.chargeWatchDogEnabled = 0;
 			sys->states.chargeCycle = CCS_TURN_AWAY;

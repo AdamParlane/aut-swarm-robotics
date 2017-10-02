@@ -137,13 +137,8 @@ int main(void)
 			
 			case M_LINE_FOLLOW:
 			//Entered when line follow command received from PC
-				//if(!dfFollowLine(100, &sys))//Line follower will return 0 when complete
-					//sys.states.mainf = M_IDLE;
-				if(!mfMoveToPosition(200, 200, 40, 0, 75, &sys))
+				if(!dfFollowLine(100, &sys))//Line follower will return 0 when complete
 					sys.states.mainf = M_IDLE;
-				//nfOpticalTesting(40, 100, &sys);
-				
-				
 				break;
 					
 			case M_LIGHT_FOLLOW:
@@ -176,10 +171,6 @@ int main(void)
 			case M_CHARGING:
 				switch(pfChargeCycleHandler(&sys))
 				{
-					case 0xFF:
-						sys.states.mainf = M_IDLE;			//Charging fault occurred
-						break;
-						
 					case CCS_FINISHED:
 						sys.states.mainf = sys.states.mainfPrev;	//Charge finished successfully
 						break;	

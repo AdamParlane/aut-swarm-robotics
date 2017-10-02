@@ -78,7 +78,7 @@ void twi0Init(void)
 
 	//TWI0 Clock Waveform Setup
 	REG_TWI0_CWGR
-	|=	TWI_CWGR_CKDIV(1)					//Clock speed 230000, fast mode
+	|=	TWI_CWGR_CKDIV(2)					//Clock speed 230000, fast mode
 	|	TWI_CWGR_CLDIV(63)					//Clock low period 1.3uSec
 	|	TWI_CWGR_CHDIV(28);					//Clock high period  0.6uSec
 
@@ -179,6 +179,7 @@ uint8_t twi0MuxSwitch(uint8_t channel)
 	thisEvent.bytesTransferred = 1;
 	
 	twi0MasterMode;					//Master mode enabled, slave disabled
+	twi0RegAddrSize(0);				//Set single internal device register
 	twi0SetSlave(TWI0_MUX_ADDR);	//Slave address (eg. Mux or Fast Charge Chip)
 	//No internal address and set to master write mode by default of zero
 	twi0Send(channel);				//Load THR and writing to THR causes start to be sent
@@ -413,6 +414,8 @@ char twi0Read(unsigned char slave_addr, unsigned char reg_addr,
 	thisEvent.twiBusNumber = 0;
 	thisEvent.timeStamp = sys.timeStamp;
 	
+	uint8_t rxReadyRetries = TWI_RXRDY_RETRY;
+	
 	if(length == 0)						//Make sure length is valid
 		length = 1;
 	twi0MasterMode;						//Enable master mode
@@ -424,19 +427,28 @@ char twi0Read(unsigned char slave_addr, unsigned char reg_addr,
 	if (length == 1)					//If reading one byte, then START and STOP bits need to be
 										//set at the same time
 	{
-		twi0StartSingle;				//Send START & STOP condition as required (single byte read)
-										//while Receive Holding Register not ready. wait.
-		if(waitForFlag((uint32_t*)&REG_TWI0_SR, TWI_SR_RXRDY, TWI_RXRDY_TIMEOUT))
+//		while(rxReadyRetries)
 		{
-			//Log the error
-			thisEvent.bytesTransferred = 0;
-			thisEvent.operationResult = TWIERR_RXRDY;
-			twi0LogEvent(thisEvent);
-			return 1;
+			twi0StartSingle;			//Send START & STOP condition as required (single byte read)
+			//while Receive Holding Register not ready. wait.
+			if(waitForFlag((uint32_t*)&REG_TWI0_SR, TWI_SR_RXRDY, TWI_RXRDY_TIMEOUT))
+			{
+				//Log the error
+				thisEvent.bytesTransferred = 0;
+				thisEvent.operationResult = TWIERR_RXRDY;
+				twi0LogEvent(thisEvent);
+				return 1;
+				//rxReadyRetries--;
+				//continue;
+			}
+			data[0] = twi0Receive;			//store data received
 		}
-		data[0] = twi0Receive;			//store data received
-										//while transmission not complete. wait.
+		
+		if(!rxReadyRetries)					//If retries ran out, then give up.
+			return 1;
+		
 		thisEvent.bytesTransferred = 1;
+		//while transmission not complete. wait.
 		if(waitForFlag((uint32_t*)&REG_TWI0_SR, TWI_SR_TXCOMP, TWI_TXCOMP_TIMEOUT))
 		{
 			//Log the error
@@ -450,21 +462,29 @@ char twi0Read(unsigned char slave_addr, unsigned char reg_addr,
 			return 0;
 		}
 	} else {
-		twi0Start;						//Send start bit
-		for(unsigned char b = 0; b < length; b++)
+//		while(rxReadyRetries)
 		{
-			if(waitForFlag((uint32_t*)&REG_TWI0_SR, TWI_SR_RXRDY, TWI_RXRDY_TIMEOUT))
+			twi0Start;						//Send start bit
+			for(unsigned char b = 0; b < length; b++)
 			{
-				//Log the error
-				thisEvent.bytesTransferred = b + 1;
-				thisEvent.operationResult = TWIERR_RXRDY;
-				twi0LogEvent(thisEvent);
-				return 1;
-			}
-			data[b] = twi0Receive;
-			if(b == length - 2)
+				if(waitForFlag((uint32_t*)&REG_TWI0_SR, TWI_SR_RXRDY, TWI_RXRDY_TIMEOUT))
+				{
+					//Log the error
+					thisEvent.bytesTransferred = b + 1;
+					thisEvent.operationResult = TWIERR_RXRDY;
+					twi0LogEvent(thisEvent);
+					//rxReadyRetries--;
+					//continue;
+					return 1;
+				}
+				data[b] = twi0Receive;
+				if(b == length - 2)
 				twi0Stop;					//Send stop on reception of 2nd to last byte
+			}			
 		}
+		
+		if(!rxReadyRetries)
+			return 1;
 		
 		thisEvent.bytesTransferred = length;
 		
@@ -542,7 +562,7 @@ uint8_t twi0LogEvent(TwiEvent event)
 	
 	//Store the latest event
 	twi0Log[0] = event;
-	
+	// == TWIERR_TXCOMP || event.operationResult == TWIERR_TXRDY
 	if(event.operationResult)	//If error occurred in the last event
 		return 1;				//Put breakpoint here to see errors
 	else
