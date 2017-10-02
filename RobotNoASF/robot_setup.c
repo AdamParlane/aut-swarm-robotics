@@ -178,8 +178,8 @@ RobotGlobalStructure sys =
 		{
 			.pollEnabled			= 1,			//Enable Optical Polling
 			.pollInterval			= 0,
-			.convFactorX			= 1,
-			.convFactorY			= 1,
+			.convFactorX			= 0,
+			.convFactorY			= 0,
 		}
 	},
 	
