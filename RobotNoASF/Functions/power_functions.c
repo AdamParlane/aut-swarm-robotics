@@ -99,13 +99,14 @@ void pfPollPower(RobotGlobalStructure *sys)
 				
 		if((sys->power.fcChipStatus == FC_BATTERY_CHARGING//If the chip has external power or is
 		|| sys->power.fcChipStatus == FC_POWER_CONNECTED)//charging battery
-		&& sys->states.mainf != M_DOCKING)				
+		&& sys->states.mainf != M_DOCKING 
+		&& sys->states.mainf != M_CHARGING)				
 		{
 			//Don't do this if already in docking state, because docking state needs to be reset
 			//when its found the charger, otherwise it won't work right the next time around.
 			mfStopRobot(sys);							//Stop moving
 			sys->states.mainfPrev = sys->states.mainf;	//Save last state
-			sys->states.mainf = M_CHARGING;				//Switch to charging state
+			sys->states.mainf = M_CHARGING;				//Switch to charging state				
 		}
 	}
 	

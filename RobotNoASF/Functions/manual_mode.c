@@ -92,17 +92,21 @@ void manualControl(RobotGlobalStructure *sys)
 			
 		case MC_RTH:		
 			if(!mfRotateToHeading((int16_t)((receivedTestData[0]<<8)|(receivedTestData[1])), sys))
+			{
 				sys->states.mainf = M_IDLE;
-			else
+				sys->flags.xbeeNewData = 0;
+			} else
 				sys->flags.xbeeNewData = 1; //Set this to keep jumping in here until we're done
 			break;
 			
 		case MC_MTP:
-			if(!mfMoveToPosition((int32_t)((receivedTestData[0]<<8)|receivedTestData[1]),
-								(int32_t)((receivedTestData[2]<<8)|receivedTestData[3]),
-								50, 0, 20, sys))
-				sys->states.mainf = M_IDLE;
-			else
+			if(!mfMoveToPosition((int32_t)((receivedTestData[2]<<8)|receivedTestData[3]),
+								(int32_t)((receivedTestData[0]<<8)|receivedTestData[1]),
+								50, 0, 60, sys))
+			{
+				sys->states.mainf = M_IDLE;	
+				sys->flags.xbeeNewData = 0;
+			} else
 				sys->flags.xbeeNewData = 1;
 
 			break;	

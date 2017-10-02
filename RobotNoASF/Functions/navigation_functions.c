@@ -299,7 +299,7 @@ void nfApplyPositionUpdateFromPC(uint8_t *rawData, RobotGlobalStructure *sys)
 	sys->pos.y = (uint16_t)((rawData[0]<<8)|rawData[1]);
 	sys->pos.x = (uint16_t)((rawData[2]<<8)|rawData[3]);
 	//Update facing (only if robot isn't rotating too fast)
-	if(abs(sys->pos.IMU.gyroZ) < 15)
+	if(abs(sys->pos.IMU.gyroZ) < 10)
 		imuApplyYawCorrection((int16_t)((rawData[4]<<8)|rawData[5]), sys);
 	
 	if(sys->pos.oldPCX != 0 && sys->pos.oldPCY != 0)
