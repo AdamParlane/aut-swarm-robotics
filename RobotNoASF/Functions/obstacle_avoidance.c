@@ -238,9 +238,8 @@ void checkForObstacles(RobotGlobalStructure *sys)
 	}
 }
 
-uint8_t dodgeObstacleByFacing(RobotGlobalStructure *sys)
+void dodgeObstacleByFacing(RobotGlobalStructure *sys)
 {
-	static uint8_t firstTime = 1;
 	scanProximity(sys);// updates proximity sensors
 	static float facing = 0;
 	if(sys->flags.obaEnabled)

@@ -151,7 +151,7 @@ RobotGlobalStructure sys =
 		{
 			.errorCount				= 0,
 
-			.pollEnabled			= 0x3F,		//Bitmask to enable specific sensors 0x3F
+			.pollEnabled			= 0x23,		//Bitmask to enable specific sensors 0x3F
 
 			.pollInterval			= 150
 		}

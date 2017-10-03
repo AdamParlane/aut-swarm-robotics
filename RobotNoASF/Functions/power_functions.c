@@ -153,6 +153,7 @@ void pfPollPower(RobotGlobalStructure *sys)
 uint8_t pfChargeCycleHandler(RobotGlobalStructure *sys)
 {
 	static float currentHeading = 0;
+	static uint8_t proxState;
 	
 	switch(sys->states.chargeCycle)
 	{
@@ -166,6 +167,7 @@ uint8_t pfChargeCycleHandler(RobotGlobalStructure *sys)
 				//sys->sensors.prox.pollEnabled = 0x00;
 				//Disable light
 				//sys->sensors.colour.pollEnabled = 0;
+				proxState = sys->sensors.prox.pollEnabled;
 				sys->states.chargeCycle = CCS_CHARGING;
 			}
 			break;
@@ -228,8 +230,7 @@ uint8_t pfChargeCycleHandler(RobotGlobalStructure *sys)
 		
 		case CCS_STOP_POLLING:
 			//reenable sensors
-			sys->sensors.prox.pollEnabled = 0x3F;
-			sys->sensors.colour.pollEnabled = 0x03;
+			sys->sensors.prox.pollEnabled = proxState;
 			//Charge chip polling = 1sec
 			sys->power.pollChargingStateInterval = 1000;
 			sys->power.pollChargingStateEnabled = 0;

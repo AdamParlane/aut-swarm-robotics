@@ -19,7 +19,6 @@
 //note: CAN NOT tell difference between a leader and any other object so will hit walls etc
 void followTheLeader(RobotGlobalStructure *sys)
 {
-	static uint8_t firstTime = 1;
 	scanProximity(sys);// updates proximity sensors
 	static float facing = 0;
 	static uint8_t count = 0;

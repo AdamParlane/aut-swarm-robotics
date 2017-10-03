@@ -6,8 +6,8 @@
  */ 
 
 
-#ifndef SWARM.FUNCTIONS_H_
-#define SWARM.FUNCTIONS_H_
+#ifndef SWARM_FUNCTIONS_H_
+#define SWARM_FUNCTIONS_H_
 
 //basic follow the leader function essentially doing the opposite of obstacle avoidance
 //note: CAN NOT tell difference between a leader and any other object so will hit walls etc
