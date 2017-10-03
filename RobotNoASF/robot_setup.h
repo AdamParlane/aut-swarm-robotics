@@ -49,6 +49,7 @@ typedef enum MainStates
 	M_LINE_FOLLOW,
 	M_LIGHT_FOLLOW, 
 	M_RANDOM,
+	M_MOVE_TO_POSITION,
 	M_STARTUP_DELAY
 } MainStates;
 
@@ -120,8 +121,7 @@ typedef struct OpticalSensor
 	char pollInterval;	//Rate at which to poll Mouse
 	char overflowFlag;	//1 if data has overflowed on optical sensor
 	uint8_t surfaceQuality;	//A value signifying quality of the surface (242 = max quality)
-	float convFactorX;	//A coefficient to convert to mm
-	float convFactorY;	//A coefficient to convert to mm
+	float convFactor;	//A coefficient to convert to mm
 } OpticalSensor;
 
 //Stores IMU sensor raw and converted data
@@ -171,6 +171,8 @@ typedef struct PositionGroup
 	float facingOffset;			//Used to offset facing value (when corrected by PC)
 	int32_t oldPCX;				//The last X position from the PC
 	int32_t oldPCY;				//The last Y position from the PC
+	int32_t targetX;			//The target x position in mm from the PC
+	int32_t targetY;			//The target y position in mm from the PC
 } PositionGroup;
 
 //Stores information about the battery and charging
@@ -265,6 +267,7 @@ typedef struct SystemFlagsGroup
 	char obaMoving;		//Robot is in motion
 	char obaEnabled;	//Obstacle avoidance enabled
 	char cornerFlag;
+	char posPCNewData;	//New position information from the PC
 } SystemFlagsGroup;
 
 //Structure that will store the state of every state machine in the system

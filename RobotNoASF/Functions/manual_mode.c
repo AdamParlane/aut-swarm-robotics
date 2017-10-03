@@ -100,15 +100,14 @@ void manualControl(RobotGlobalStructure *sys)
 			break;
 			
 		case MC_MTP:
-			if(!mfMoveToPosition((int32_t)((receivedTestData[2]<<8)|receivedTestData[3]),
-								(int32_t)((receivedTestData[0]<<8)|receivedTestData[1]),
-								50, 0, 60, sys))
+			sys->pos.targetX = (receivedTestData[2]<<8)|receivedTestData[3];
+			sys->pos.targetY = (receivedTestData[0]<<8)|receivedTestData[1];
+			if(sys->states.mainf != M_MOVE_TO_POSITION)
 			{
-				sys->states.mainf = M_IDLE;	
-				sys->flags.xbeeNewData = 0;
-			} else
-				sys->flags.xbeeNewData = 1;
-
+				sys->states.mainfPrev = sys->states.mainf;
+				sys->states.mainf = M_MOVE_TO_POSITION;
+			}
+			sys->flags.xbeeNewData = 0;
 			break;	
 	}
 }

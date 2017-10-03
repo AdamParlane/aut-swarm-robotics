@@ -190,8 +190,8 @@ void nfProcessOpticalData(RobotGlobalStructure *sys)
 	}
 	
 	//Calculate dx and dy in mm
-	sys->pos.dx = round((sys->pos.Optical.dx)*sys->pos.Optical.convFactorX);
-	sys->pos.dy = round((sys->pos.Optical.dy)*sys->pos.Optical.convFactorY);
+	sys->pos.dx = (int32_t)((float)sys->pos.Optical.dx*sys->pos.Optical.convFactor);
+	sys->pos.dy = (int32_t)((float)sys->pos.Optical.dy*sys->pos.Optical.convFactor);
 	
 	//Integrate absolute x and y in mm
 	sys->pos.x += sys->pos.dx;
@@ -289,12 +289,14 @@ void nfDMPEnable(char enable, RobotGlobalStructure *sys)
 */
 void nfApplyPositionUpdateFromPC(uint8_t *rawData, RobotGlobalStructure *sys)
 {
-	float distMouseX = 0;
-	float distMouseY = 0;
-	float distPCX = 0;
-	float distPCY = 0;
+	float distMouse = 0;
+	float distPC = 0;
+	
+	int32_t deltaMouseX = 0;
+	int32_t deltaMouseY = 0;
+	int32_t deltaPCX = 0;
+	int32_t deltaPCY = 0;
 
-	led1Tog;
 	//Update position (x and y swapped to convert coord systems. Temporary fix)
 	sys->pos.y = (uint16_t)((rawData[0]<<8)|rawData[1]);
 	sys->pos.x = (uint16_t)((rawData[2]<<8)|rawData[3]);
@@ -304,32 +306,42 @@ void nfApplyPositionUpdateFromPC(uint8_t *rawData, RobotGlobalStructure *sys)
 	
 	if(sys->pos.oldPCX != 0 && sys->pos.oldPCY != 0)
 	{
+		deltaMouseX = (sys->pos.Optical.x - sys->pos.Optical.xOld);
+		deltaMouseY = (sys->pos.Optical.y - sys->pos.Optical.yOld);
+		deltaPCX = (sys->pos.x - sys->pos.oldPCX);
+		deltaPCY = (sys->pos.y - sys->pos.oldPCY);
+		
 		//Distance travelled between updates in mouse counts
-		distMouseX = sys->pos.Optical.x - sys->pos.Optical.xOld;
-		distMouseY = sys->pos.Optical.y - sys->pos.Optical.yOld;
+		distMouse = sqrt(deltaMouseX*deltaMouseX + deltaMouseY*deltaMouseY);
 	
 		//Distance travelled between updates in mm
-		distPCX = sys->pos.x - sys->pos.oldPCX;
-		distPCY = sys->pos.y - sys->pos.oldPCY;
+		distPC = sqrt(deltaPCX*deltaPCX + deltaPCY*deltaPCY);
+	} else {
+		sys->pos.oldPCX = sys->pos.x;
+		sys->pos.oldPCY = sys->pos.y;
+	
+		sys->pos.Optical.xOld = sys->pos.Optical.x;
+		sys->pos.Optical.yOld = sys->pos.Optical.y;	
 	}
 	
-	if((abs(distPCX) > 80 || abs(distPCY) > 80) && (distMouseX || distMouseY))	
+	if((distPC > 80) && (distMouse))	
 	{
-		sys->pos.Optical.convFactorX += (distPCX/distMouseX);
-		sys->pos.Optical.convFactorY += (distPCY/distMouseY);
+		sys->pos.Optical.convFactor = (distPC/distMouse);
 		//If this is the first time, then don't average.
-		if(sys->pos.Optical.convFactorX != 0 && sys->pos.Optical.convFactorY != 0)
+		if(sys->pos.Optical.convFactor != 0)
 		{
-			sys->pos.Optical.convFactorX /= 2.0;
-			sys->pos.Optical.convFactorY /= 2.0;
+			sys->pos.Optical.convFactor /= 2.0;
 		}
+		sys->pos.oldPCX = sys->pos.x;
+		sys->pos.oldPCY = sys->pos.y;
+	
+		sys->pos.Optical.xOld = sys->pos.Optical.x;
+		sys->pos.Optical.yOld = sys->pos.Optical.y;
 	}
 	
-	sys->pos.oldPCX = sys->pos.x;
-	sys->pos.oldPCY = sys->pos.y;
+
 	
-	sys->pos.Optical.xOld = sys->pos.Optical.x;
-	sys->pos.Optical.yOld = sys->pos.Optical.y;
+	sys->flags.posPCNewData = 1;
 }
 
 uint8_t nfOpticalTesting(uint8_t speed, uint8_t distance, RobotGlobalStructure *sys)

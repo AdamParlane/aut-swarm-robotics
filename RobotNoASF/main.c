@@ -167,6 +167,13 @@ int main(void)
 				sys.pos.targetHeading = 180;
 				sys.pos.targetSpeed = 50;
 				break;
+				
+			case M_MOVE_TO_POSITION:
+				//Move the robot to the position in targetX and targetY, then revert to the previous 
+				//state
+				if(!mfMoveToPosition(sys.pos.targetX, sys.pos.targetY, 50, 0, 60, &sys))
+					sys.states.mainf = sys.states.mainfPrev;
+				break;
 
 			case M_CHARGING:
 				switch(pfChargeCycleHandler(&sys))

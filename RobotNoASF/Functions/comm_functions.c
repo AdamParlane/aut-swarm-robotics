@@ -288,18 +288,16 @@ void commPCStatusUpdate(RobotGlobalStructure *sys)
 									sys->comms.transmitData.DataSize);  //Send the Message
 		
 		
-		//char stringBuffer[49];
+		char stringBuffer[49];
 								
 		//DEBUG MESSAGE (please don't delete - Matt):
-		//sys->comms.transmitData.Data[0] = 0x00;
-		//dtoa(stringBuffer, (double)sys->pos.facing);
-		////sprintf(stringBuffer, "Facing");
-		//sprintf(stringBuffer, "Facing %3.1f", sys->pos.facing);
-		//
-		//strcpy(sys->comms.transmitData.Data + 1, stringBuffer);
-		//
-		//sys->comms.transmitData.DataSize = strlen(stringBuffer) + 2;
-		//xbeeSendAPITransmitRequest(COORDINATOR_64,UNKNOWN_16, sys->comms.transmitData.Data,
-									//sys->comms.transmitData.DataSize);  //Send the Message
+		sys->comms.transmitData.Data[0] = 0x00;
+		dtoa(stringBuffer, (double)sys->pos.Optical.convFactor);
+		
+		strcpy(sys->comms.transmitData.Data + 1, stringBuffer);
+		
+		sys->comms.transmitData.DataSize = strlen(stringBuffer) + 2;
+		xbeeSendAPITransmitRequest(COORDINATOR_64,UNKNOWN_16, sys->comms.transmitData.Data,
+									sys->comms.transmitData.DataSize);  //Send the Message	
 	}
 }

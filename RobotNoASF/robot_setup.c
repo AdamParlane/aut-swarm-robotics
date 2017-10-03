@@ -104,7 +104,8 @@ RobotGlobalStructure sys =
 		.xbeeNewData				= 0,
 		.imuCheckFifo				= 0,
 		.obaMoving					= 0,
-		.obaEnabled					= 0
+		.obaEnabled					= 0,
+		.posPCNewData				= 0
 	},
 	
 	//System States
@@ -178,8 +179,7 @@ RobotGlobalStructure sys =
 		{
 			.pollEnabled			= 1,			//Enable Optical Polling
 			.pollInterval			= 0,
-			.convFactorX			= 0,
-			.convFactorY			= 0,
+			.convFactor				= 0
 		}
 	},
 	
