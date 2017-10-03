@@ -141,7 +141,7 @@
 
 
 //TWI logging
-#define TWI_LOG_NUM_ENTRIES			10			//Number of entries to log in the TWI event log.
+#define TWI_LOG_NUM_ENTRIES			20			//Number of entries to log in the TWI event log.
 
 //////////////[Type Definitions]////////////////////////////////////////////////////////////////////
 

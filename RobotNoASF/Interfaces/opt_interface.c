@@ -197,9 +197,9 @@ void getMouseXY(RobotGlobalStructure *sys)
 		Xx = Xtemp << 4;
 		Yy = Ytemp << 4;
 		
-		sys->pos.Optical.dx = Xx;
+		sys->pos.Optical.dx = (Xx>>8);
 		sys->pos.Optical.x += sys->pos.Optical.dx;
-		sys->pos.Optical.dy = Yy;
+		sys->pos.Optical.dy = (Yy>>8);
 		sys->pos.Optical.y += sys->pos.Optical.dy;
 		//sys->pos.Optical.sampleCount++;
 		
