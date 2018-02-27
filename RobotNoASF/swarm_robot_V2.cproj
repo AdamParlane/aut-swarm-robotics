@@ -52,7 +52,8 @@
       <ToolNumber>J30200015825</ToolNumber>
       <ToolName>JTAGICE3</ToolName>
     </com_atmel_avrdbg_tool_jtagice3plus>
-    <avrtoolinterface>JTAG</avrtoolinterface>
+    <avrtoolinterface>
+    </avrtoolinterface>
     <avrtoolinterfaceclock>7500000</avrtoolinterfaceclock>
     <com_atmel_avrdbg_tool_atmelice>
       <ToolOptions>
@@ -234,12 +235,6 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="Functions\sensor_functions.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="Functions\swarm.functions.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="Functions\swarm_functions.c">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="Functions\test_functions.c">

@@ -33,7 +33,6 @@
 #include "Functions/navigation_functions.h"
 #include "Functions/obstacle_avoidance.h"
 #include "Functions/test_functions.h"
-#include "Functions/swarm.functions.h"
 
 //////////////[Global variables]////////////////////////////////////////////////////////////////////
 extern RobotGlobalStructure sys;		//System data structure
@@ -151,7 +150,6 @@ int main(void)
 				
 			case M_FORMATION:
 			//placeholder
-				followTheLeader(&sys);
 				break;
 						
 			case M_OBSTACLE_AVOIDANCE:
