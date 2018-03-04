@@ -4,7 +4,7 @@
 * Author : Esmond Mather and Matthew Witt
 * Created: 11/07/2017 11:11:00 AM
 *
-* Project Repository: https://github.com/AdamParlane/aut-swarm-robotics
+* Project Repository: https://github.com/wittsend/aut-swarm-robotics
 *
 * Contains functions for initialising and accessing the proximity sensors.
 *

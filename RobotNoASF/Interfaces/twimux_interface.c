@@ -4,7 +4,7 @@
 * Author : Esmond Mather and Matthew Witt
 * Created: 11/07/2017 10:41:59 AM
 *
-* Project Repository:https://github.com/AdamParlane/aut-swarm-robotics
+* Project Repository:https://github.com/wittsend/aut-swarm-robotics
 *
 * Functions for reading and writing I2C devices on TWI0 bus. Functions for controlling I2C
 * multiplexer on TWI0.
@@ -30,11 +30,11 @@
 */
 
 //////////////[Includes]////////////////////////////////////////////////////////////////////////////
-#include "pio_interface.h"			//For LED control while debugging TWI
+#include "pio_interface.h"				//For LED control while debugging TWI
 #include "twimux_interface.h"
 
 //////////////[Global Variables]////////////////////////////////////////////////////////////////////
-extern RobotGlobalStructure sys;	//Gives TWI2 interrupt handler access
+extern RobotGlobalStructure sys;		//Gives TWI2 interrupt handler access
 TwiEvent twi0Log[TWI_LOG_NUM_ENTRIES];	//TWI0 event log
 
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////

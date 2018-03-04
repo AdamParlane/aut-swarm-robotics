@@ -4,7 +4,7 @@
 * Author : Adam Parlane & Matthew Witt
 * Created: 6/08/2017 1:23:27 PM
 *
-* Project Repository:https://github.com/AdamParlane/aut-swarm-robotics
+* Project Repository:https://github.com/wittsend/aut-swarm-robotics
 *
 * Sets up the timer, for the camera and 1ms interrupts
 * Has delay and get ms functions and the timer handler interrupt

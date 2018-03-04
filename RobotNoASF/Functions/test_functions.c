@@ -1,10 +1,10 @@
 /*
 * test_functions.c
 *
-* Author : Adam Parlane (adam.parlane@outlook.com) Github: AdamParlane
+* Author : Adam Parlane (adam.parlane@outlook.com) Github: wittsend
 * Created: 15/07/2017 3:31:20 PM
 *
-* Project Repository: https://github.com/AdamParlane/aut-swarm-robotics
+* Project Repository: https://github.com/wittsend/aut-swarm-robotics
 *
 * Test functions to communicate with the Swarm GUI for the purpose of testing that
 * all robot systems are working correctly

@@ -4,7 +4,7 @@
 * Author : Mansel Jeffares/Matthew Witt (pxf5695@autuni.ac.nz)
 * Created: 11 July 2017
 *
-* Project Repository: https://github.com/AdamParlane/aut-swarm-robotics
+* Project Repository: https://github.com/wittsend/aut-swarm-robotics
 *
 * Communication to computer GUI using wireless XBee Module in API Mode
 *

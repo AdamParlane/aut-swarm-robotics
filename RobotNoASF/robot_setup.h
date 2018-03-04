@@ -4,7 +4,7 @@
 * Author : Adam Parlane, Matthew Witt
 * Created: 6/7/2017
 *
-* Project Repository: https://github.com/AdamParlane/aut-swarm-robotics
+* Project Repository: https://github.com/wittsend/aut-swarm-robotics
 *
 * Contains the misc defines that havnt been modularised as of yet (6/7)
 * Also has all the headers so it can just be included in every header giving access to everything.
@@ -242,8 +242,8 @@ typedef struct CommunicationDataGroup
 	uint8_t twi2SlavePollEnabled;		//Whether to look for slave requests on twi2 (From LCD)
 	uint8_t twi2ReceivedDataByte;		//Stores the last received data byte from TWI2 slave
 	uint16_t pollInterval;				//Interval at which to poll at (ms)
-	uint16_t updateInterval;			//Interval at which the PC is updated with the robots status
-	uint8_t updateEnable;
+	uint16_t pcUpdateInterval;			//Interval at which the PC is updated with the robots status
+	uint8_t pcUpdateEnable;
 	struct transmitDataStructure transmitData;
 	struct MessageInfo messageData;		//Next message data
 	uint16_t testModeStreamInterval;	//Interval between sending test data packets (ms)

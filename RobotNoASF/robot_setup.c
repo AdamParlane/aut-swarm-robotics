@@ -4,7 +4,7 @@
 * Author : Adam Parlane, Matthew Witt
 * Created: 6/7/2017
 *
-* Project Repository: https://github.com/AdamParlane/aut-swarm-robotics
+* Project Repository: https://github.com/wittsend/aut-swarm-robotics
 *
 * Contains general/miscellaneous  functions
 *
@@ -108,7 +108,7 @@ RobotGlobalStructure sys =
 		.posPCNewData				= 0
 	},
 	
-	//System States
+	//System State Machine States
 	.states =
 	{
 		.mainf						= M_IDLE,
@@ -123,26 +123,26 @@ RobotGlobalStructure sys =
 	//Communications
 	.comms =
 	{
-		.pollEnabled				= 1,
-		.twi2SlavePollEnabled		= 1,
+		.pollEnabled				= 0,	
+		.twi2SlavePollEnabled		= 0,	//Enable for LCD Module Functionality
 		.pollInterval				= 0,
-		.updateEnable				= 1,
-		.updateInterval				= 5000,
-		.testModeStreamInterval		= 100
+		.pcUpdateEnable				= 0,	//Enable to update PC with status data
+		.pcUpdateInterval			= 5000,	//How often to update the PC
+		.testModeStreamInterval		= 100	//Streaming rate in test mode
 	},
 	
-	//Sensor polling setup
+	//Sensor polling config
 	.sensors =
 	{
 		.line =
 		{
-			.pollEnabled			= 1,
+			.pollEnabled			= 0,	//Enable line sensor polling
 			.pollInterval			= 100
 		},
 		
 		.colour =
 		{
-			.pollEnabled			= 0x03,//0x03,		//Bitmask to enable specific sensors.
+			.pollEnabled			= 0x00,	//Bitmask to enable specific sensors. (0x03 for both)
 			.pollInterval			= 40,
 			.getHSV					= 1
 		},
@@ -150,14 +150,12 @@ RobotGlobalStructure sys =
 		.prox =
 		{
 			.errorCount				= 0,
-
-			.pollEnabled			= 0x23,		//Bitmask to enable specific sensors 0x3F
-
+			.pollEnabled			= 0x00,		//Bitmask to enable specific sensors (0x3F for all)
 			.pollInterval			= 150
 		}
 	},
 	
-	//Robot PositionGroup
+	//Robot Position data and polling config
 	.pos =
 	{
 		.x							= 0,		//Resets robot position
@@ -177,7 +175,7 @@ RobotGlobalStructure sys =
 		},
 		.Optical =
 		{
-			.pollEnabled			= 1,			//Enable Optical Polling
+			.pollEnabled			= 1,		//Enable Optical Polling
 			.pollInterval			= 0,
 			.convFactor				= 0
 		}

@@ -4,7 +4,7 @@
 * Author : et. al
 * Created: Unknown
 *
-* Project Repository: https://github.com/AdamParlane/aut-swarm-robotics
+* Project Repository: https://github.com/wittsend/aut-swarm-robotics
 *
 * main c file for robot source code for BE (Hons) / BEng Tech Final year industrial project 2017
 *

@@ -4,7 +4,7 @@
 * Author : Esmond Mather, Matthew Witt and Adam Parlane
 * Created: 11/07/2017 11:21:08 AM
 *
-* Project Repository: https://github.com/AdamParlane/aut-swarm-robotics
+* Project Repository: https://github.com/wittsend/aut-swarm-robotics
 *
 * Functions for accessing and controlling the fast charge chip.
 *
