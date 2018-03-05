@@ -45,10 +45,11 @@
 #define	PCLK			0x00		// Connected to buffer
 #define	XCLK			PIO_PA0
 // Camera Control
-#define	RESET			(REG_PIOC_SODR |= PIO_PC15)	// Reset the camera
-#define	PWDN			(REG_PIOC_SODR |= PIO_PC0)	// Power down the camera
-#define	PWUPtemp		(REG_PIOC_CODR |= PIO_PC0)	// Power down the camera
-#define PWUP			(RESET & PWDN)				// Power up the camera
+#define	resetDisable	(REG_PIOC_SODR |= PIO_PC15)
+#define	resetEnable		(REG_PIOC_CODR |= PIO_PC15)	// Reset the camera
+#define	pwdnDisable		(REG_PIOC_CODR |= PIO_PC0)	// Power up the camera
+#define	pwdnEnable		(REG_PIOC_SODR |= PIO_PC0)	// Power up the camera
+#define powerUp			{resetDisable; pwdnDisable;}// Power up the camera
 
 //#define HEIGHT				480			// Vertical Pixel Count
 //#define WIDTH					640			// Horizontal Pixel Count
@@ -238,11 +239,8 @@ void camInit(void)
 													// period, 12.5MHZ)
 	REG_TC0_CCR0 |= TC_CCR_SWTRG;					// Start the timer
 
-	PWUPtemp;
-	RESET;
-
+	camHardReset();
 	camSetup();
-	//while (failed);
 }
 
 uint8_t camSetup(void)
@@ -296,15 +294,19 @@ uint8_t camReadInstruction(uint8_t regAddress)
 	//This function does not seem to work with the built in TWI implementation. Most likely a bit-
 	//banged custom SCCB routine will need to be written to read data from the camera's registers.
 	uint8_t data = 0;
-	twi0Read(TWI0_CAM_READ_ADDR, regAddress, 1, &data);
+	//twi0Read(TWI0_CAM_READ_ADDR, regAddress, 1, &data);
+	twi0SetCamRegister(regAddress);
+	data = twi0ReadCameraRegister();
 	return data;
 }
 
 // Hard reset of the camera device
 void camHardReset(void)
 {
-	//camReset;
-	//cleareset
+	resetEnable;
+	delay_ms(1);
+	powerUp;
+	delay_ms(1);
 }
 
 // Resets all registers to default values

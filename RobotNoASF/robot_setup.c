@@ -248,8 +248,8 @@ void robotSetup(void)
 	extIntInit();						//Initialise external interrupts.
 	imuDmpInit(sys.pos.IMU.gyroCalEnabled);	//Initialise DMP system
 	lfInit();							//Initialise line follow sensors. Only on V2.
-	camBufferInit();					//Initialise camera RAM buffer
 	camInit();							//Initialise camera
+	camBufferInit();					//Initialise camera RAM buffer
 	
 	sys.states.mainfPrev = sys.states.mainf;
 	sys.states.mainf = M_STARTUP_DELAY;	//DO NOT CHANGE

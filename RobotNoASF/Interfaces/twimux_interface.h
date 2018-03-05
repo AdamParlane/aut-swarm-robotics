@@ -232,6 +232,12 @@ uint8_t twi0MuxSwitch(uint8_t channel);
 */
 uint8_t twi0ReadMuxChannel(void);
 
+//TODO: Annotation
+uint8_t twi0SetCamRegister(uint8_t regAddr);
+//TODO: Annotation
+uint8_t twi0ReadCameraRegister(void);
+
+
 /*
 * Function: char twiNWrite(unsigned char slave_addr, unsigned char reg_addr,
 *								unsigned char length, unsigned char const *data)
