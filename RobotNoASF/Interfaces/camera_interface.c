@@ -35,6 +35,10 @@
 
 //////////////[Private Defines]/////////////////////////////////////////////////////////////////////
 
+//Fixes an issue in Atmel's CMSIS implementation
+#define REG_PIOA_ABCDSR1 (*(__IO uint32_t*)0x400E0E70U)
+#define REG_PIOA_ABCDSR2 (*(__IO uint32_t*)0x400E0E74U)
+
 /********** Camera Pin Connections **********/
 // Camera Timing
 #define	VSYNC			(REG_PIOC_PDSR & PIO_PC13)
@@ -246,7 +250,7 @@ uint8_t camSetup(void)
 	// Hard reset
 	//camReset();
 	// Camera is not responding or the ID was incorrect
-	//if (!camValidID()) return 0xFF;	// Stop camera setup
+	if (!camValidID()) return 0xFF;	// Stop camera setup
 
 	camRegisterReset();
 
@@ -283,20 +287,23 @@ uint8_t camSetup(void)
 // Write to the 8 bit regAdress
 void camWriteInstruction(uint8_t regAddress, uint8_t data)
 {
-	twi0Write(TWI0_CAM_ADDR,regAddress, data);
+	twi0Write(TWI0_CAM_WRITE_ADDR, regAddress, 1, &data);
 }
 
 // Returns the 8 bit value stored in regAddress
 uint8_t camReadInstruction(uint8_t regAddress)
 {
-	uint8_t data = twi0ReadSingle(TWI0_CAM_ADDR, regAddress);
+	//This function does not seem to work with the built in TWI implementation. Most likely a bit-
+	//banged custom SCCB routine will need to be written to read data from the camera's registers.
+	uint8_t data = 0;
+	twi0Read(TWI0_CAM_READ_ADDR, regAddress, 1, &data);
 	return data;
 }
 
 // Hard reset of the camera device
 void camHardReset(void)
 {
-	//reset
+	//camReset;
 	//cleareset
 }
 
@@ -318,7 +325,6 @@ bool camValidID(void)
 }
 
 /********** Camera Data Reading **********/
-
 void camRead(void)
 {
 	// Clear read and write buffers
@@ -365,7 +371,7 @@ void camRead(void)
 		// Line complete
 		flagLineReady = true;
 	}
-	int *pdata = &data;
+	//int *pdata = &data;
 	camBufferReadStop();
 }
 

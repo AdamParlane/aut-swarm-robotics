@@ -210,5 +210,7 @@ int main(void)
 		//check to see if obstacle avoidance is enabled AND the robot is moving
 		//if(sys.flags.obaEnabled && sys.flags.obaMoving && sys.states.mainf != M_OBSTACLE_AVOIDANCE)
 			//checkForObstacles(&sys); //avoid obstacles using proximity sensors
+			
+		
 	}
 }

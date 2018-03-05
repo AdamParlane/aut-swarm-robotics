@@ -13,14 +13,14 @@
 * Relevant reference materials or datasheets if applicable
 *
 * Functions:
-* void CameraBufferInit(void);
-* void CameraBufferWriteStop(void);
-* void CameraBufferWriteStart(void);
-* void CameraBufferWriteReset(void);
-* void CameraBufferReadStop(void);
-* void CameraBufferReadStart(void);
-* void CameraBufferReadReset(void);
-* uint8_t CameraBufferReadData(void);
+* void camBufferInit(void);
+* void camBufferWriteStop(void);
+* void camBufferWriteStart(void);
+* void camBufferWriteReset(void);
+* void camBufferReadStop(void);
+* void camBufferReadStart(void);
+* void camBufferReadReset(void);
+* uint8_t camBufferReadData(void);
 *
 */ 
 
@@ -30,17 +30,33 @@
 //////////////[Includes]////////////////////////////////////////////////////////////////////////////
 #include "../robot_setup.h"
 
+//////////////[Defines]/////////////////////////////////////////////////////////////////////////////
+//Buffer PIO Pin definitions
+// Buffer pin				SAM4 pin		Function			Type
+#define WE					PIO_PC7			// Write Enable		Output
+#define WRST				PIO_PA24		// Write Reset		Output
+#define RCK					PIO_PA15		// Read Clock		Output
+#define OE					PIO_PA11		// Output Enable	Output
+#define RE					PIO_PA11		// Read Enable		Output
+#define RRST				PIO_PA26		// Read Reset		Output
+
+// TEMP: will only allow for a single capture
+// Timer Counter Reset
+#define ReadClockReset		REG_TC0_CCR1 |= TC_CCR_SWTRG;
+#define ReadClockHigh		REG_PIOA_SODR |= RCK;
+#define ReadClockLow		REG_PIOA_CODR |= RCK;
+
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
-void CameraBufferInit(void);
+void camBufferInit(void);
 
-void CameraBufferWriteStop(void);
-void CameraBufferWriteStart(void);
-void CameraBufferWriteReset(void);
+void camBufferWriteStop(void);
+void camBufferWriteStart(void);
+void camBufferWriteReset(void);
 
-void CameraBufferReadStop(void);
-void CameraBufferReadStart(void);
-void CameraBufferReadReset(void);
+void camBufferReadStop(void);
+void camBufferReadStart(void);
+void camBufferReadReset(void);
 
-uint8_t CameraBufferReadData(void);
+uint8_t camBufferReadData(void);
 
 #endif /* CAMERA_BUFFER_INTERFACE_H_ */

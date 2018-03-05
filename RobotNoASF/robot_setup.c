@@ -37,12 +37,15 @@
 #include "Interfaces/twimux_interface.h"
 #include "Interfaces/uart_interface.h"
 #include "Interfaces/xbee_driver.h"
+#include "Interfaces/camera_buffer_interface.h"
+#include "Interfaces/camera_interface.h"
+
 
 #include <stdlib.h>				//srand()
 #include <math.h>
 #include <string.h>
-// For printf
-#include <stdio.h>
+
+#include <stdio.h>				//For printf
 
 //////////////[Global variables]////////////////////////////////////////////////////////////////////
 static double PRECISION = 0.00000000000001;
@@ -245,6 +248,8 @@ void robotSetup(void)
 	extIntInit();						//Initialise external interrupts.
 	imuDmpInit(sys.pos.IMU.gyroCalEnabled);	//Initialise DMP system
 	lfInit();							//Initialise line follow sensors. Only on V2.
+	camBufferInit();					//Initialise camera RAM buffer
+	camInit();							//Initialise camera
 	
 	sys.states.mainfPrev = sys.states.mainf;
 	sys.states.mainf = M_STARTUP_DELAY;	//DO NOT CHANGE

@@ -13,14 +13,14 @@
 * Relevant reference materials or datasheets if applicable
 *
 * Functions:
-* void CameraBufferInit(void);
-* void CameraBufferWriteStop(void);
-* void CameraBufferWriteStart(void);
-* void CameraBufferWriteReset(void);
-* void CameraBufferReadStop(void);
-* void CameraBufferReadStart(void);
-* void CameraBufferReadReset(void);
-* uint8_t CameraBufferReadData(void);
+* void camBufferInit(void);
+* void camBufferWriteStop(void);
+* void camBufferWriteStart(void);
+* void camBufferWriteReset(void);
+* void camBufferReadStop(void);
+* void camBufferReadStart(void);
+* void camBufferReadReset(void);
+* uint8_t camBufferReadData(void);
 *
 */ 
 
@@ -29,17 +29,6 @@
 #include "camera_buffer_interface.h"
 
 //////////////[Private Defines]/////////////////////////////////////////////////////////////////////
-//Fixes an issue in Atmel's CMSIS implementation
-#define REG_PIOA_ABCDSR1 (*(__IO uint32_t*)0x400E0E70U)
-#define REG_PIOA_ABCDSR2 (*(__IO uint32_t*)0x400E0E74U)
-
-// Buffer pin				SAM4 pin		Function			Type
-#define WE					PIO_PC7			// Write Enable		Output
-#define WRST				PIO_PA24		// Write Reset		Output
-#define RCK					PIO_PA15		// Read Clock		Output
-#define OE					PIO_PA11		// Output Enable	Output
-#define RE					PIO_PA11		// Read Enable		Output
-#define RRST				PIO_PA26		// Read Reset		Output
 
 // Data output pin			Macro
 //#define DO0				((REG_PIOA_PDSR & PIO_PA6) ? 0x01 : 0x00)
@@ -77,11 +66,7 @@
 #define OutputEnable		REG_PIOA_CODR |= OE;			// Buffer output enable
 #define OutputDisable		REG_PIOA_SODR |= OE;			// Buffer output disable
 
-// TEMP: will only allow for a single capture
-// Timer Counter Reset
-#define ReadClockReset		REG_TC0_CCR1 |= TC_CCR_SWTRG;
-#define ReadClockHigh		REG_PIOA_SODR |= RCK;
-#define ReadClockLow		REG_PIOA_CODR |= RCK;
+
 
 // TEMP: Dirty Delay Design TODO: Replace with existing delay function
 void delayBuffer()
@@ -94,7 +79,7 @@ void delayBuffer()
 	return;
 }
 
-void CameraBufferInit()
+void camBufferInit()
 {
 	/********Buffer control**************/
 	//buffer AL422B can store one complete VGA frame
@@ -151,7 +136,7 @@ void CameraBufferInit()
 	|=	PIO_PC2				//D3(PC2), 
 	|	PIO_PC4				//D5(PC4),
 	|	PIO_PC5				//D6(PC5),
-	|	PIO_PC6);  			//D7(PC6)
+	|	PIO_PC6;  			//D7(PC6)
 	REG_PIOC_ODR 			//Set D3,D5,D6,D7 as an input
 	|=	PIO_PC2
 	|	PIO_PC4 
@@ -166,21 +151,21 @@ void CameraBufferInit()
 	|=	PIO_PA6 
 	|	PIO_PA9
 	|	PIO_PA10
-	|	PIO_PA24);
+	|	PIO_PA24;
 }
 
-void CameraBufferWriteStop(void)
+void camBufferWriteStop(void)
 {
 	WriteDisable;
 }
 
-void CameraBufferWriteStart(void)
+void camBufferWriteStart(void)
 {
 	// Start write
 	WriteEnable;
 }
 
-void CameraBufferWriteReset(void)
+void camBufferWriteReset(void)
 {
 	// Reset
 	WriteReset;
@@ -190,13 +175,13 @@ void CameraBufferWriteReset(void)
 	delayBuffer();
 }
 
-void CameraBufferReadStop(void)
+void camBufferReadStop(void)
 {
 	OutputDisable;
 	delayBuffer();
 }
 
-void CameraBufferReadStart(void)
+void camBufferReadStart(void)
 {
 	ReadClockReset;
 	delayBuffer();
@@ -205,7 +190,7 @@ void CameraBufferReadStart(void)
 	delayBuffer();
 }
 
-void CameraBufferReadReset(void)
+void camBufferReadReset(void)
 {
 	// Reset
 	ReadReset;
@@ -215,7 +200,7 @@ void CameraBufferReadReset(void)
 	delayBuffer();
 }
 
-uint8_t CameraBufferReadData(void)
+uint8_t camBufferReadData(void)
 {
 	uint8_t d0,d1,d2,d3,d4,d5,d6,d7;
 	

@@ -125,7 +125,8 @@
 #define TWI0_PROXSENS_ADDR			0x39		//Proximity sensors
 #define TWI0_FCHARGE_ADDR			0x6B		//Battery Charger (Fast Charge Controller)
 #define TWI0_IMU_ADDR				0x68		//IMU
-#define TWI0_CAM_ADDR				0x21		//Camera write address (0x42 right shifted 1)
+#define TWI0_CAM_WRITE_ADDR			0x21		//Camera write address (0x42 right shifted 1)
+#define TWI0_CAM_READ_ADDR			0x21		//Camera read address (0x43 right shifted 1)
 #define TWI2_IMU_ADDR				0x68		//IMU
 #define TWI2_SLAVE_ADDR				0x44		//This devices' slave address
 
