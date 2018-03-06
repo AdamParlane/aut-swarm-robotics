@@ -69,19 +69,31 @@ extern RobotGlobalStructure sys;	//gives access TC interrupt handler and delay_m
 */
 void timer0Init(void)
 {
-	////TIMER0////
-	//Timer0 is used for delay_ms and get_ms functions required by the imu driver
+	//Enable the peripheral clock for TC0 channels 0 and 1
 	REG_PMC_PCER0
-	|=	(1<<ID_TC0)						//Enable TC clock (ID_TC0 is the peripheral identifier
-	|	(1<<ID_TC1);					//for timer counter 0)	
-	REG_PIOA_PDR |= (1<<0);				// enable TCO control of XCLK for Camera (PA0)
-	NVIC_EnableIRQ(ID_TC1);				//Enable interrupts
+	|=	(1<<ID_TC0)
+	|	(1<<ID_TC1);
+	
+	//Enable interrupts
+	NVIC_EnableIRQ(ID_TC1);				//Enable interrupts on Timer 0 Channel 1
+	
+	//Timer0 Channel 0 Configuration (Used for the camera clock)
 	REG_TC0_CMR0						//TC Channel Mode Register (Pg877)
 	|=	TC_CMR_TCCLKS_TIMER_CLOCK1		//Prescaler MCK/2 (100MHz/2 = 50MHz)
 	|	TC_CMR_WAVE						//Waveform mode
 	|	TC_CMR_WAVSEL_UP_RC				//Clear on RC compare
 	|	TC_CMR_ACPA_SET					// Set pulse on RA compare
 	|	TC_CMR_ACPC_CLEAR;				// Clear pulse on RC compare
+	REG_TC0_RA0							//RA set to 2 counts
+	|=	(TC_RA_RA(2));
+	REG_TC0_RC0							//RC set to 4 counts (total square wave of 80ns period,
+	|=	(TC_RC_RC(4));					//12.5MHZ)
+	REG_TC0_CCR0						//Clock control register
+	|=	TC_CCR_CLKEN					//Enable the timer clk.
+	|	TC_CCR_SWTRG;					//Start timer register counter	
+	
+	//Timer0 Channel 1 Configuration (Used to generate systemTimestamp and perform other timing
+	//functions such as delays
 	REG_TC0_CMR1						//TC Channel Mode Register (Pg877)
 	|=	TC_CMR_TCCLKS_TIMER_CLOCK3		//Prescaler MCK/32 (100MHz/32 = MHz)
 	|	TC_CMR_WAVE						//Waveform mode
@@ -93,18 +105,10 @@ void timer0Init(void)
 	REG_TC0_RC1							//Set Register C (the timer counter value at which the
 	|=	(TC_RC_RC(3125));				//interrupt will be triggered) Trigger once every ms 
 										//(100MHz/2/1M)
-	REG_TC0_RA0							//RA set to 2 counts
-	|=	(TC_RA_RA(2));
-	REG_TC0_RC0							//RC set to 4 counts (total square wave of 80ns period,
-	|=	(TC_RC_RC(4));					//12.5MHZ)
-	REG_TC0_CCR0						//Clock control register
-	|=	TC_CCR_CLKEN					//Enable the timer clk.
-	|	TC_CCR_SWTRG;					//Start timer register counter
 	REG_TC0_CCR1						//Clock control register
 	|=	TC_CCR_CLKEN					//Enable the timer clk.
 	|	TC_CCR_SWTRG;					//Start timer register counter	
 }
-
 
 /*
 * Function: int get_ms(uint32_t *timestamp)

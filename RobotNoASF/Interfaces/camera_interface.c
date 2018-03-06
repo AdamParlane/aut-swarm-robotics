@@ -30,14 +30,10 @@
 #include "camera_interface.h"
 #include "camera_buffer_interface.h"
 #include "twimux_interface.h"
-//#include "pio_peripheral_fix.h"
+#include "timer_interface.h"
 #include <stdbool.h>
 
 //////////////[Private Defines]/////////////////////////////////////////////////////////////////////
-
-//Fixes an issue in Atmel's CMSIS implementation
-#define REG_PIOA_ABCDSR1 (*(__IO uint32_t*)0x400E0E70U)
-#define REG_PIOA_ABCDSR2 (*(__IO uint32_t*)0x400E0E74U)
 
 /********** Camera Pin Connections **********/
 // Camera Timing
@@ -47,8 +43,8 @@
 // Camera Control
 #define	resetDisable	(REG_PIOC_SODR |= PIO_PC15)
 #define	resetEnable		(REG_PIOC_CODR |= PIO_PC15)	// Reset the camera
-#define	pwdnDisable		(REG_PIOC_CODR |= PIO_PC0)	// Power up the camera
-#define	pwdnEnable		(REG_PIOC_SODR |= PIO_PC0)	// Power up the camera
+#define	pwdnDisable		(REG_PIOC_CODR |= PIO_PC0)	// Bring cam out of standby
+#define	pwdnEnable		(REG_PIOC_SODR |= PIO_PC0)	// Put cam in standby
 #define powerUp			{resetDisable; pwdnDisable;}// Power up the camera
 
 //#define HEIGHT				480			// Vertical Pixel Count
@@ -224,23 +220,10 @@ void camInit(void)
 
 	// Select peripheral B
 	REG_PIOA_ABCDSR1 |= (PIO_ABCDSR_P0);
-	// Enable communication to camera (uses I2C)
-	/*********Timer setup for XCLK using TC0 CH0************/
-	REG_PMC_PCER0 |= (1<<ID_TC0); 					// enable peripheral clock on Timer0
-	REG_PIOA_PDR |= XCLK;							// enable TCO control of XCLK (PA0)
-	REG_TC0_CCR0 |= TC_CCR_CLKEN;					// enable the clock
-	REG_TC0_CMR0 |= TC_CMR_TCCLKS_TIMER_CLOCK1;		// Clk set to MCK/2 (100/2 = 50Mhz|20ns)
-	REG_TC0_CMR0 |= TC_CMR_WAVSEL_UP_RC;			// Up count cleared on RC compare
-	REG_TC0_CMR0 |= TC_CMR_WAVE;					// Waveform mode
-	REG_TC0_CMR0 |= TC_CMR_ACPA_SET; 				// Set pulse on RA compare
-	REG_TC0_CMR0 |= TC_CMR_ACPC_CLEAR; 				// Clear pulse on RC compare
-	REG_TC0_RA0 |= TC_RA_RA(2);						// RA set to 2 counts
-	REG_TC0_RC0 |= TC_RC_RC(4);						// RC set to 4 counts (total square wave of 80ns 
-													// period, 12.5MHZ)
-	REG_TC0_CCR0 |= TC_CCR_SWTRG;					// Start the timer
+	REG_PIOA_PDR |= XCLK;					//Set XCLK (PA0) for output so that TC0 Chnl 0 can use.
 
-	camHardReset();
-	camSetup();
+	camHardReset();							//Reset the camera
+	camSetup();								//Load settings into the camera
 }
 
 uint8_t camSetup(void)
@@ -377,10 +360,7 @@ void camRead(void)
 	camBufferReadStop();
 }
 
-
-
 /********** Camera Settings **********/
-
 void camChangeFormat(uint8_t type)
 {
 	// COM7_REG			CIF,QVGA,QCIF,RGB

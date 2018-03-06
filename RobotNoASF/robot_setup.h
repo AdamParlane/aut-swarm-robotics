@@ -326,6 +326,9 @@ typedef struct RobotGlobalStructure
 } RobotGlobalStructure;
 
 //////////////[Defines]/////////////////////////////////////////////////////////////////////////////
+//Fixes an issue in Atmel's CMSIS implementation
+#define REG_PIOA_ABCDSR1 (*(__IO uint32_t*)0x400E0E70U)
+#define REG_PIOA_ABCDSR2 (*(__IO uint32_t*)0x400E0E74U)
 
 //////////////[Global variables]////////////////////////////////////////////////////////////////////
 //Global variables should be initialised in robot_setup.c, then an extern to them should be placed
