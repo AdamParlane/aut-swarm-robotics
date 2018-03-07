@@ -38,7 +38,7 @@
 /********** Camera Pin Connections **********/
 // Camera Timing
 #define	VSYNC			(REG_PIOC_PDSR & PIO_PC13)
-#define	PCLK			0x00		// Connected to buffer
+#define	PCLK			0x00				// Connected from camera to buffer (Write clock signal)
 #define	XCLK			PIO_PA0
 // Camera Control
 #define	resetDisable	(REG_PIOC_SODR |= PIO_PC15)
@@ -84,20 +84,23 @@
 #define COM5_REG        0x0e    // All "reserved" 
 #define COM6_REG        0x0f    // Control 6 
 #define AECH_REG        0x10    // More bits of AEC value 
+
 #define CLKRC_REG       0x11    // Clock control 
-#define CLK_EXT         0x40    // Use external clock directly 
-#define CLK_SCALE       0x3f    // Mask for internal clock scale 
+#define		CLK_EXT         0x40    // Use external clock directly 
+#define		CLK_SCALE       0x3f    // Mask for internal clock scale 
+
 #define COM7_REG        0x12    // Control 7 
-#define COM7_RESET      0x80    // Register reset 
-#define COM7_FMT_MASK   0x38
-#define COM7_FMT_VGA    0x00
-#define COM7_FMT_CIF    0x20    // CIF format 
-#define COM7_FMT_QVGA   0x10    // QVGA format 
-#define COM7_FMT_QCIF   0x08    // QCIF format 
-#define COM7_RGB        0x04    // bits 0 and 2 - RGB format 
-#define COM7_YUV        0x00    // YUV 
-#define COM7_BAYER      0x01    // Bayer format 
-#define COM7_PBAYER     0x05    // "Processed bayer" 
+#define		COM7_RESET      0x80    // Register reset 
+#define		COM7_FMT_MASK   0x38
+#define		COM7_FMT_VGA    0x00
+#define		COM7_FMT_CIF    0x20    // CIF format 
+#define		COM7_FMT_QVGA   0x10    // QVGA format 
+#define		COM7_FMT_QCIF   0x08    // QCIF format 
+#define		COM7_RGB        0x04    // bits 0 and 2 - RGB format 
+#define		COM7_YUV        0x00    // YUV 
+#define		COM7_BAYER      0x01    // Bayer format 
+#define		COM7_PBAYER     0x05    // "Processed bayer" 
+
 #define COM8_REG        0x13    // Control 8 
 #define COM8_FASTAEC    0x80    // Enable fast AGC/AEC 
 #define COM8_AECSTEP    0x40    // Unlimited AEC step size 
@@ -194,8 +197,7 @@
 
 //////////////[Private Global Variables]////////////////////////////////////////////////////////////
 volatile bool flagLineReady;
-volatile uint8_t data[60][640];		// 2*320
-//volatile uint8_t rubbish[640];	// 2*320
+volatile uint16_t data[60][320];		// 320*60 (w*h) 2 bytes per pixel
 volatile int current;
 volatile int bufferCount;
 
@@ -218,12 +220,31 @@ void camInit(void)
 	REG_PIOA_ODR
 	|=	PIO_PA16;		// Set HREF as an input
 
-	// Select peripheral B
-	REG_PIOA_ABCDSR1 |= (PIO_ABCDSR_P0);
-	REG_PIOA_PDR |= XCLK;					//Set XCLK (PA0) for output so that TC0 Chnl 0 can use.
+	//Timer Counter 0 Channel 0 Config (Used for the camera clock XCLK on PA0 (TIOA0))
+	//Enable the peripheral clock for TC0
+	REG_PMC_PCER0
+	|=	(1<<ID_TC0);
+	REG_TC0_CMR0						//TC Channel Mode Register (Pg877)
+	|=	TC_CMR_TCCLKS_TIMER_CLOCK1		//Prescaler MCK/2 (100MHz/2 = 50MHz)
+	|	TC_CMR_WAVE						//Waveform mode
+	|	TC_CMR_WAVSEL_UP_RC				//Clear on RC compare
+	|	TC_CMR_ACPA_SET					//Set TIOA0 on RA compare
+	|	TC_CMR_ACPC_CLEAR;				//Clear TIOA0 on RC compare
+	REG_TC0_RA0							//RA set to 5 counts
+	|=	(TC_RA_RA(5));
+	REG_TC0_RC0							//RC set to 10 counts (5MHZ). Freqs under 6MHz don't require
+	|=	(TC_RC_RC(10));					//the cameras PLL
+	REG_TC0_CCR0						//Clock control register
+	|=	TC_CCR_CLKEN					//Enable the timer clk.
+	|	TC_CCR_SWTRG;					//Start timer register counter
+	
+	REG_PIOA_ABCDSR1
+	|=	(PIO_ABCDSR_P0);				//Set PA0 for peripheral B (TIOA0)
+	REG_PIOA_PDR
+	|=	XCLK;							//Allow TC0 to use XCLK (PA0)
 
-	camHardReset();							//Reset the camera
-	camSetup();								//Load settings into the camera
+	camHardReset();						//Reset the camera
+	camSetup();							//Load settings into the camera
 }
 
 uint8_t camSetup(void)
@@ -237,6 +258,8 @@ uint8_t camSetup(void)
 
 	camWriteInstruction(CLKRC_REG, 0x01);
 	camWriteInstruction(COM7_REG, COM7_FMT_QVGA | COM7_RGB);		// QVGA and RGB
+	camWriteInstruction(RGB444_REG, 0x00);							//Disable RGB444
+	camWriteInstruction(COM15_REG, COM15_RGB555);					//RGB555 Colour space
 	camWriteInstruction(COM3_REG, 0x80);
 	camWriteInstruction(COM14_REG, 0x80);
 	camWriteInstruction(SCALING_XSC_REG, 0x3A);
@@ -257,10 +280,10 @@ uint8_t camSetup(void)
 	camWriteInstruction(COM10_REG, COM10_PCLK_HB);
 
 	// Set image format to RGB565
-	camChangeFormat(COM7_RGB);
+	//camChangeFormat(COM7_RGB);
 
 	// Test bar image
-	//camTestPattern(PATTERN_BAR);
+	camTestPattern(CAM_PATTERN_NONE);
 
 	return 0x00;
 }
@@ -274,12 +297,8 @@ void camWriteInstruction(uint8_t regAddress, uint8_t data)
 // Returns the 8 bit value stored in regAddress
 uint8_t camReadInstruction(uint8_t regAddress)
 {
-	//This function does not seem to work with the built in TWI implementation. Most likely a bit-
-	//banged custom SCCB routine will need to be written to read data from the camera's registers.
-	uint8_t data = 0;
-	//twi0Read(TWI0_CAM_READ_ADDR, regAddress, 1, &data);
 	twi0SetCamRegister(regAddress);
-	data = twi0ReadCameraRegister();
+	uint8_t data = twi0ReadCameraRegister();
 	return data;
 }
 
@@ -334,24 +353,32 @@ void camRead(void)
 	camBufferReadStart(); // read buffer into CPU
 	ReadClockHigh;
 
-	// Data before frame (FIFO)
+	uint8_t buffer;
+	uint8_t r = 0;
+	uint8_t g = 0;
+	uint8_t b = 0;
 
-	//for (int i=0;i<bufferOffset;i++)
-	//{
-		//ReadClockLow;
-		//ReadClockHigh;
-	//}
 	for (int j = 0;j<60;j++)
 	{
 		// First Line
 		for(int i=0;i<640;i++)
 		{
-			ReadClockLow
-			//rubbish[i] = DataOut;			
-			//data[i] = DataOut;
-			data[j][i] = camBufferReadData();
-			//rubbish[i] = camBufferReadData();
+			ReadClockLow;
+			buffer = camBufferReadData();
 			ReadClockHigh;
+			if(i%2)		//if Odd value of i
+			{
+				data[j][i/2] |= (buffer << 8)&0xFF00;
+				//r = ((data[j][i/2]&0xF800)>>11);
+				//g = ((data[j][i/2]&0x07C0)>>6);
+				//b = ((data[j][i/2]&0x003E)>>1);
+				r = ((data[j][i/2]&0x7C00)>>10);
+				g = ((data[j][i/2]&0x03E0)>>5);
+				b = ((data[j][i/2]&0x001F)>>0);
+			}
+			else
+				data[j][i/2] |= (buffer)&0x00FF;
+			 
 		}
 		// Line complete
 		flagLineReady = true;

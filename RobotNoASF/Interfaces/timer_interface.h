@@ -13,7 +13,7 @@
 * Atmel SAM 4N Processor Datasheet:http://www.atmel.com/Images/Atmel-11158-32-bit%20Cortex-M4-Microcontroller-SAM4N16-SAM4N8_Datasheet.pdf
 *
 * Functions:
-* void timer0Init(void)
+* void timer1Init(void)
 * int get_ms(uint32_t *timestamp)
 * int delay_ms(uint32_t period_ms)
 * void TC1_Handler()
@@ -29,7 +29,7 @@
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*
 * Function:
-* void timer0Init(void)
+* void timer1Init(void)
 *
 * Initializes timer0 and timer counter 1
 * Used to time events with a 1ms interrupt on RC compare match
@@ -42,7 +42,7 @@
 * none
 *
 */
-void timer0Init(void);
+void timer1Init(void);
 
 /*
 * Function: int get_ms(uint32_t *timestamp)
@@ -89,20 +89,5 @@ int delay_ms(uint32_t period_ms);
 *
 */
 uint8_t fdelay_ms(uint32_t period_ms);
-
-/*
-* Function: void TC1_Handler()
-*
-* Timer Counter 1 interrupt handler for get_ms, delay_ms and other various timing requirements
-* Triggered every 1ms
-*
-* Inputs:
-* none
-*
-* Returns:
-* None
-*
-*/
-void TC1_Handler();
 
 #endif /* TIMER_INTERFACE_H_ */

@@ -13,10 +13,10 @@
 * Atmel SAM 4N Processor Datasheet:http://www.atmel.com/Images/Atmel-11158-32-bit%20Cortex-M4-Microcontroller-SAM4N16-SAM4N8_Datasheet.pdf
 *
 * Functions:
-* void timer0Init(void)
+* void timer1Init(void)
 * int get_ms(uint32_t *timestamp)
 * int delay_ms(uint32_t period_ms)
-* void TC1_Handler()
+* void TC3_Handler()
 *
 */
 
@@ -33,7 +33,7 @@ extern RobotGlobalStructure sys;	//gives access TC interrupt handler and delay_m
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*
 * Function:
-* void timer0Init(void)
+* void timer1Init(void)
 *
 * Initializes timer0 and timer counter 1
 * Used to time events with a 1ms interrupt on RC compare match
@@ -67,45 +67,31 @@ extern RobotGlobalStructure sys;	//gives access TC interrupt handler and delay_m
 * Find out more about why camera has 2 compare matches
 *
 */
-void timer0Init(void)
+void timer1Init(void)
 {
-	//Enable the peripheral clock for TC0 channels 0 and 1
+	//Enable the peripheral clock for TC1
 	REG_PMC_PCER0
-	|=	(1<<ID_TC0)
-	|	(1<<ID_TC1);
+	|=	(1<<ID_TC1);
 	
 	//Enable interrupts
-	NVIC_EnableIRQ(ID_TC1);				//Enable interrupts on Timer 0 Channel 1
+	NVIC_EnableIRQ(ID_TC1);				//Enable interrupts on Timer Counter 1
 	
-	//Timer0 Channel 0 Configuration (Used for the camera clock)
-	REG_TC0_CMR0						//TC Channel Mode Register (Pg877)
-	|=	TC_CMR_TCCLKS_TIMER_CLOCK1		//Prescaler MCK/2 (100MHz/2 = 50MHz)
-	|	TC_CMR_WAVE						//Waveform mode
-	|	TC_CMR_WAVSEL_UP_RC				//Clear on RC compare
-	|	TC_CMR_ACPA_SET					// Set pulse on RA compare
-	|	TC_CMR_ACPC_CLEAR;				// Clear pulse on RC compare
-	REG_TC0_RA0							//RA set to 2 counts
-	|=	(TC_RA_RA(2));
-	REG_TC0_RC0							//RC set to 4 counts (total square wave of 80ns period,
-	|=	(TC_RC_RC(4));					//12.5MHZ)
-	REG_TC0_CCR0						//Clock control register
-	|=	TC_CCR_CLKEN					//Enable the timer clk.
-	|	TC_CCR_SWTRG;					//Start timer register counter	
+
 	
-	//Timer0 Channel 1 Configuration (Used to generate systemTimestamp and perform other timing
-	//functions such as delays
-	REG_TC0_CMR1						//TC Channel Mode Register (Pg877)
+	//Timer Counter 1, Channel 0 Configuration (Used to generate systemTimestamp and perform other 
+	//timing functions such as delays
+	REG_TC1_CMR0						//TC Channel Mode Register (Pg877)
 	|=	TC_CMR_TCCLKS_TIMER_CLOCK3		//Prescaler MCK/32 (100MHz/32 = MHz)
 	|	TC_CMR_WAVE						//Waveform mode
 	|	TC_CMR_WAVSEL_UP_RC				//Clear on RC compare
 	|	TC_CMR_ACPA_SET					//Set pulse on RA compare
 	|	TC_CMR_ACPC_CLEAR;				//Clear pulse on RC compare
-	REG_TC0_IER1						//TC interrupt enable register
+	REG_TC1_IER0						//TC interrupt enable register
 	|=	TC_IER_CPCS;					//Enable Register C compare interrupt
 	REG_TC0_RC1							//Set Register C (the timer counter value at which the
 	|=	(TC_RC_RC(3125));				//interrupt will be triggered) Trigger once every ms 
 										//(100MHz/2/1M)
-	REG_TC0_CCR1						//Clock control register
+	REG_TC1_CCR0						//Clock control register
 	|=	TC_CCR_CLKEN					//Enable the timer clk.
 	|	TC_CCR_SWTRG;					//Start timer register counter	
 }
@@ -220,7 +206,7 @@ uint8_t fdelay_ms(uint32_t period_ms)
 }
 
 /*
-* Function: void TC1_Handler()
+* Function: void TC3_Handler()
 *
 * Timer Counter 1 interrupt handler for get_ms, delay_ms and other various timing requirements
 * Triggered every 1ms
@@ -232,7 +218,10 @@ uint8_t fdelay_ms(uint32_t period_ms)
 * None
 *
 * Implementation:
-* Interrupt handler for Timer Counter 1 
+* Interrupt handler for Timer Counter 1, Channel 0. As there are 6 Timer Counter Channels spread
+* across two Timer Counter Modules, there are also 6 Timer Counter Interrupt handlers. Unintuitively
+* these have been labelled TC0_Handler to TC6_Handler. TC3_Handler is the interrupt handler for TC1,
+* Channel 0, which is the third TC channel on the device.
 * Triggered every 1ms using register C compare match
 * Used to help implement get_ms() and delay_ms() functions required by the IMU driver. 
 * Every ms it increments the sys.timeStamp, streamDelayCounter and delaymsCounter
@@ -241,11 +230,11 @@ uint8_t fdelay_ms(uint32_t period_ms)
 * Also includes some IMU manual stuff for V1
 *
 */
-void TC1_Handler()
+void TC3_Handler()
 {
 	//The interrupt handler for timer counter 1
 	//Triggers every 1ms
-	if(REG_TC0_SR1 & TC_SR_CPCS)	//If RC compare flag (once every ms)
+	if(REG_TC1_SR0 & TC_SR_CPCS)	//If RC compare flag (once every ms)
 	{
 		sys.timeStamp++;//used for get ms
 		delaymsCounter++;//used for delay ms

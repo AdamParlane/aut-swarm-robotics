@@ -236,7 +236,7 @@ void robotSetup(void)
 	SPI_Init();							//Initialise SPI for talking with optical sensor
 	twi0Init();							//Initialise TWI0 interface
 	twi2Init();							//Initialise TWI2 interface
-	timer0Init();						//Initialise timer0
+	timer1Init();						//Initialise timer0
 	mouseInit();						//Initialise mouse sensor
 	motorInit();						//Initialise the motor driver chips
 	lightSensInit(MUX_LIGHTSENS_R);		//Initialise Right Light/Colour sensor
@@ -250,6 +250,11 @@ void robotSetup(void)
 	lfInit();							//Initialise line follow sensors. Only on V2.
 	camInit();							//Initialise camera
 	camBufferInit();					//Initialise camera RAM buffer
+	
+	//Temp code for testing the data from the camera
+	delay_ms(100);
+	camRead();
+	
 	
 	sys.states.mainfPrev = sys.states.mainf;
 	sys.states.mainf = M_STARTUP_DELAY;	//DO NOT CHANGE

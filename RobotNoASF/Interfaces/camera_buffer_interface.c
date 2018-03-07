@@ -30,16 +30,6 @@
 
 //////////////[Private Defines]/////////////////////////////////////////////////////////////////////
 
-// Data output pin			Macro
-//#define DO0				((REG_PIOA_PDSR & PIO_PA6) ? 0x01 : 0x00)
-//#define DO1				((REG_PIOA_PDSR & PIO_PA9) ? 0x02 : 0x00)
-//#define DO2				((REG_PIOA_PDSR & PIO_PA10) ? 0x04 : 0x00)
-//#define DO3				((REG_PIOC_PDSR & PIO_PC2) ? 0x08 : 0x00)
-//#define DO4				((REG_PIOA_PDSR & PIO_PA25) ? 0x10 : 0x00)
-//#define DO5				((REG_PIOC_PDSR & PIO_PC4) ? 0x20 : 0x00)
-//#define DO6				((REG_PIOC_PDSR & PIO_PC5) ? 0x40 : 0x00)
-//#define DO7				((REG_PIOC_PDSR & PIO_PC6) ? 0x80 : 0x00)
-
 #define DO0					(REG_PIOA_PDSR & PIO_PA6)
 #define DO1					(REG_PIOA_PDSR & PIO_PA9)
 #define DO2					(REG_PIOA_PDSR & PIO_PA10)
@@ -49,11 +39,6 @@
 #define DO6					(REG_PIOC_PDSR & PIO_PC5)
 #define DO7					(REG_PIOC_PDSR & PIO_PC6)
 
-// Data output bytes
-#define DataOut				(DO0 | DO1 | DO2 | DO3 | DO4 | DO5 | DO6 | DO7)
-#define DataOut1			(DO0 | DO1 | DO2 | DO4)
-#define DataOut2			(DO3 | DO5 | DO6 | DO7)
-
 // Writing to buffer from camera
 #define WriteEnable			REG_PIOC_SODR |= WE;			// Buffer write enable
 #define WriteDisable		REG_PIOC_CODR |= WE;			// Buffer write disable
@@ -61,11 +46,12 @@
 #define WriteOn				REG_PIOA_SODR |= WRST;			// Buffer write on (not in reset)
 
 // Reading from buffer to SAM4
-#define ReadReset			REG_PIOA_CODR |= RRST;			// Buffer read reset
-#define ReadOn				REG_PIOA_SODR |= RRST;			// Buffer read on (not in reset)
-#define OutputEnable		REG_PIOA_CODR |= OE;			// Buffer output enable
-#define OutputDisable		REG_PIOA_SODR |= OE;			// Buffer output disable
-
+#define ReadReset			REG_PIOA_CODR	|= RRST;		// Buffer read reset
+#define ReadOn				REG_PIOA_SODR	|= RRST;		// Buffer read on (not in reset)
+#define OutputEnable		REG_PIOA_CODR	|= OE;			// Buffer output enable
+#define OutputDisable		REG_PIOA_SODR	|= OE;			// Buffer output disable
+#define readClockEnable		REG_TC0_CCR1	|= TC_CCR_CLKEN|TC_CCR_SWTRG;//Enable the read clock
+#define readClockDisable	REG_TC0_CCR1	= 0;			//Disable the read clock
 
 
 // TEMP: Dirty Delay Design TODO: Replace with existing delay function
@@ -104,31 +90,31 @@ void camBufferInit()
 	|	OE;					//PA11 (VB_OE)
 	REG_PIOA_OER			//Set as an output
 	|=	RRST				//PA26 (VB_RRST)
-	|	RCK					//PA15 (Read Clock)
+	|	RCK					//PA15 (Read clock)
 	|	OE;					//PA11 (VB_OE)
 
-	/***********Timer for buffer read clock*****************/
-	/* RCK is on PA15 which is timer 0 TC0 and channel 1 TIOA1.the peripheral clock
-	has been set to timer 0 in the XCLK setup above*/
-	// Select peripheral B
-	//REG_PIOA_ABCDSR1 |= (PIO_ABCDSR_P15);
-	//REG_PMC_PCER0 |= (1<<ID_TC1); 					// Enable peripheral clock on Timer0
-	//REG_PIOA_PDR |= RCK;							// Enable TCO control of PA15
-	//REG_TC0_CCR1 |= TC_CCR_CLKEN;					// Enable the channel 1 clock
-	//REG_TC0_CMR1 |= TC_CMR_TCCLKS_TIMER_CLOCK1;		// Clk set to MCK/2 (100/2 = 50Mhz/20ns)
-	//REG_TC0_CMR1 |= TC_CMR_WAVSEL_UP_RC;			// Up count cleared on RC compare
-	//REG_TC0_CMR1 |= TC_CMR_WAVE;					// Waveform mode
-	//REG_TC0_CMR1 |= TC_CMR_ACPA_SET;				// Set pulse on RA compare
-	//REG_TC0_CMR1 |= TC_CMR_ACPC_CLEAR;				// Clear pulse on RC compare
-	//REG_TC0_RA1 |= TC_RA_RA(25);					// RA set to 20 counts
-	//REG_TC0_RC1 |= TC_RC_RC(50);					// RC set to 40 counts (total square wave of 
-													// 800ns period, 1.25MHZ)
-	//uint32_t temp = REG_TC0_SR1;					// Read ISR so that it clears any interrupt 
-													// flags that might be there
-	//REG_TC0_IER1 |= TC_IER_CPCS;					// Enable input change interrupt on RA compare
-	//REG_TC0_CCR1 |= TC_CCR_SWTRG;
-
-	//NVIC_EnableIRQ(TC1_IRQn);						// Enable interrupt vector for TIMER0
+	//TIMER for READ CLOCK (NOT USED AT THE MOMENT)
+	//Timer Counter 0 Channel 1 Config (Used for the camera buffer read clock RCK on PA15 (TIOA1)
+	//Enable the peripheral clock for TC0
+	REG_PMC_PCER0
+	|=	(1<<ID_TC0);
+	REG_TC0_CMR1						//TC Channel Mode Register (Pg877)
+	|=	TC_CMR_TCCLKS_TIMER_CLOCK1		//Prescaler MCK/2 (100MHz/2 = 50MHz)
+	|	TC_CMR_WAVE						//Waveform mode
+	|	TC_CMR_WAVSEL_UP_RC				//Clear on RC compare
+	|	TC_CMR_ACPA_SET					//Set TIOA1 on RA compare
+	|	TC_CMR_ACPC_CLEAR;				//Clear TIOA1 on RC compare
+	REG_TC0_RA1							//RA set to 12 counts
+	|=	(TC_RA_RA(12));
+	REG_TC0_RC1							//RC set to 25 counts (total (almost) square wave of 500ns
+	|=	(TC_RC_RC(25));					//period, 2MHZ read clock)
+	REG_TC0_CCR1						//Clock control register
+	=	0;								//Keep the timer disabled until its needed
+	
+	//REG_PIOA_ABCDSR1
+	//|=	(PIO_ABCDSR_P15);				//Set PA15 for peripheral B (TIOA1)
+	//REG_PIOA_PDR
+	//|=	RCK;							//Allow TC0 to use RCK (PA15)
 
 	/******* Micro camera data lines**************/
 	/* 8 data lines coming into the micro from the buffer as a byte of half a pixel*/
@@ -214,4 +200,5 @@ uint8_t camBufferReadData(void)
 	d7 = DO7 ? 0x80 : 0x00;
 	
 	return (d0|d1|d2|d3|d4|d5|d6|d7);
+
 }
