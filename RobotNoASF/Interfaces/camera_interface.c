@@ -231,9 +231,9 @@ void camInit(void)
 	|	TC_CMR_ACPA_SET					//Set TIOA0 on RA compare
 	|	TC_CMR_ACPC_CLEAR;				//Clear TIOA0 on RC compare
 	REG_TC0_RA0							//RA set to 5 counts
-	|=	(TC_RA_RA(5));
+	|=	(TC_RA_RA(2));
 	REG_TC0_RC0							//RC set to 10 counts (5MHZ). Freqs under 6MHz don't require
-	|=	(TC_RC_RC(10));					//the cameras PLL
+	|=	(TC_RC_RC(4));					//the cameras PLL
 	REG_TC0_CCR0						//Clock control register
 	|=	TC_CCR_CLKEN					//Enable the timer clk.
 	|	TC_CCR_SWTRG;					//Start timer register counter
@@ -340,12 +340,12 @@ void camRead(void)
 	while (!VSYNC); // wait for sync pulse to go high
 	while (VSYNC); // wait for a vertical sync pulse, sync pulse goes low, thus a frame of data has been stored
 	
-	camBufferWriteReset(); // reset the video buffer memory pointers
-	camBufferReadReset();
-	camBufferWriteStart();
-	
-	while (!VSYNC); // wait for sync pulse to go high
-	while (VSYNC); // wait for a vertical sync pulse, sync pulse goes low, thus a frame of data has been stored
+	//camBufferWriteReset(); // reset the video buffer memory pointers
+	//camBufferReadReset();
+	//camBufferWriteStart();
+	//
+	//while (!VSYNC); // wait for sync pulse to go high
+	//while (VSYNC); // wait for a vertical sync pulse, sync pulse goes low, thus a frame of data has been stored
 	
 	camBufferWriteStop();
 
@@ -364,8 +364,10 @@ void camRead(void)
 		for(int i=0;i<640;i++)
 		{
 			ReadClockLow;
-			buffer = camBufferReadData();
+			delay_ms(1);
+			buffer = camBufferReadByte();
 			ReadClockHigh;
+			delay_ms(1);
 			if(i%2)		//if Odd value of i
 			{
 				data[j][i/2] |= (buffer << 8)&0xFF00;

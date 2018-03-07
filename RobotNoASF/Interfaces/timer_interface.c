@@ -71,12 +71,10 @@ void timer1Init(void)
 {
 	//Enable the peripheral clock for TC1
 	REG_PMC_PCER0
-	|=	(1<<ID_TC1);
+	|=	(1<<ID_TC3);
 	
 	//Enable interrupts
-	NVIC_EnableIRQ(ID_TC1);				//Enable interrupts on Timer Counter 1
-	
-
+	NVIC_EnableIRQ(ID_TC3);				//Enable interrupts on Timer Counter 1
 	
 	//Timer Counter 1, Channel 0 Configuration (Used to generate systemTimestamp and perform other 
 	//timing functions such as delays
@@ -88,7 +86,7 @@ void timer1Init(void)
 	|	TC_CMR_ACPC_CLEAR;				//Clear pulse on RC compare
 	REG_TC1_IER0						//TC interrupt enable register
 	|=	TC_IER_CPCS;					//Enable Register C compare interrupt
-	REG_TC0_RC1							//Set Register C (the timer counter value at which the
+	REG_TC1_RC0							//Set Register C (the timer counter value at which the
 	|=	(TC_RC_RC(3125));				//interrupt will be triggered) Trigger once every ms 
 										//(100MHz/2/1M)
 	REG_TC1_CCR0						//Clock control register

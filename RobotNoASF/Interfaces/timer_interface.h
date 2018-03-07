@@ -90,4 +90,5 @@ int delay_ms(uint32_t period_ms);
 */
 uint8_t fdelay_ms(uint32_t period_ms);
 
+void TC3_Handler();
 #endif /* TIMER_INTERFACE_H_ */

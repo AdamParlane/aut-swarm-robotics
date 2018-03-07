@@ -20,7 +20,7 @@
 * void camBufferReadStop(void);
 * void camBufferReadStart(void);
 * void camBufferReadReset(void);
-* uint8_t camBufferReadData(void);
+* uint8_t camBufferReadByte(void);
 *
 */ 
 
@@ -57,6 +57,6 @@ void camBufferReadStop(void);
 void camBufferReadStart(void);
 void camBufferReadReset(void);
 
-uint8_t camBufferReadData(void);
+uint8_t camBufferReadByte(void);
 
 #endif /* CAMERA_BUFFER_INTERFACE_H_ */

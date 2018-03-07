@@ -20,7 +20,7 @@
 * void camBufferReadStop(void);
 * void camBufferReadStart(void);
 * void camBufferReadReset(void);
-* uint8_t camBufferReadData(void);
+* uint8_t camBufferReadByte(void);
 *
 */ 
 
@@ -53,7 +53,10 @@
 #define readClockEnable		REG_TC0_CCR1	|= TC_CCR_CLKEN|TC_CCR_SWTRG;//Enable the read clock
 #define readClockDisable	REG_TC0_CCR1	= 0;			//Disable the read clock
 
+//////////////[Private Global Variables]////////////////////////////////////////////////////////////
+uint32_t ramAddrPointer = 0;		//Indicates the address in buffer that is currently being read
 
+//////////////[Functions]///////////////////////////////////////////////////////////////////////////
 // TEMP: Dirty Delay Design TODO: Replace with existing delay function
 void delayBuffer()
 {
@@ -97,7 +100,7 @@ void camBufferInit()
 	//Timer Counter 0 Channel 1 Config (Used for the camera buffer read clock RCK on PA15 (TIOA1)
 	//Enable the peripheral clock for TC0
 	REG_PMC_PCER0
-	|=	(1<<ID_TC0);
+	|=	(1<<ID_TC1);
 	REG_TC0_CMR1						//TC Channel Mode Register (Pg877)
 	|=	TC_CMR_TCCLKS_TIMER_CLOCK1		//Prescaler MCK/2 (100MHz/2 = 50MHz)
 	|	TC_CMR_WAVE						//Waveform mode
@@ -186,7 +189,7 @@ void camBufferReadReset(void)
 	delayBuffer();
 }
 
-uint8_t camBufferReadData(void)
+uint8_t camBufferReadByte(void)
 {
 	uint8_t d0,d1,d2,d3,d4,d5,d6,d7;
 	
@@ -201,4 +204,14 @@ uint8_t camBufferReadData(void)
 	
 	return (d0|d1|d2|d3|d4|d5|d6|d7);
 
+}
+
+uint8_t camBufferReadData(uint32_t startAddr, uint32_t endAddr, uint16_t *data)
+{
+	
+}
+
+void TC1_Handler()
+{
+	
 }
