@@ -197,7 +197,7 @@
 
 //////////////[Private Global Variables]////////////////////////////////////////////////////////////
 volatile bool flagLineReady;
-volatile uint16_t data[60][320];		// 320*60 (w*h) 2 bytes per pixel
+volatile uint8_t data[38400];		// 2*320*60 (2*w*h) 2 bytes per pixel
 volatile int current;
 volatile int bufferCount;
 
@@ -283,7 +283,7 @@ uint8_t camSetup(void)
 	//camChangeFormat(COM7_RGB);
 
 	// Test bar image
-	camTestPattern(CAM_PATTERN_NONE);
+	camTestPattern(CAM_PATTERN_SHIFT);
 
 	return 0x00;
 }
@@ -349,44 +349,19 @@ void camRead(void)
 	
 	camBufferWriteStop();
 
-	// start buffer read
-	camBufferReadStart(); // read buffer into CPU
-	ReadClockHigh;
+	camBufferReadData(0, 38399, data);
 
-	uint8_t buffer;
-	uint8_t r = 0;
-	uint8_t g = 0;
-	uint8_t b = 0;
+	//uint8_t buffer;
+	//uint8_t r = 0;
+	//uint8_t g = 0;
+	//uint8_t b = 0;
 
-	for (int j = 0;j<60;j++)
-	{
-		// First Line
-		for(int i=0;i<640;i++)
-		{
-			ReadClockLow;
-			delay_ms(1);
-			buffer = camBufferReadByte();
-			ReadClockHigh;
-			delay_ms(1);
-			if(i%2)		//if Odd value of i
-			{
-				data[j][i/2] |= (buffer << 8)&0xFF00;
-				//r = ((data[j][i/2]&0xF800)>>11);
-				//g = ((data[j][i/2]&0x07C0)>>6);
-				//b = ((data[j][i/2]&0x003E)>>1);
-				r = ((data[j][i/2]&0x7C00)>>10);
-				g = ((data[j][i/2]&0x03E0)>>5);
-				b = ((data[j][i/2]&0x001F)>>0);
-			}
-			else
-				data[j][i/2] |= (buffer)&0x00FF;
-			 
-		}
-		// Line complete
-		flagLineReady = true;
-	}
-	//int *pdata = &data;
-	camBufferReadStop();
+
+				//r = ((data[j][i/2]&0x7C00)>>10);
+				//g = ((data[j][i/2]&0x03E0)>>5);
+				//b = ((data[j][i/2]&0x001F)>>0);
+
+	return;
 }
 
 /********** Camera Settings **********/

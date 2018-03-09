@@ -42,7 +42,6 @@
 
 // TEMP: will only allow for a single capture
 // Timer Counter Reset
-#define ReadClockReset		REG_TC0_CCR1 |= TC_CCR_SWTRG;
 #define ReadClockHigh		REG_PIOA_SODR |= RCK;
 #define ReadClockLow		REG_PIOA_CODR |= RCK;
 
@@ -58,5 +57,6 @@ void camBufferReadStart(void);
 void camBufferReadReset(void);
 
 uint8_t camBufferReadByte(void);
+uint8_t camBufferReadData(uint32_t startAddr, uint32_t endAddr, uint8_t *data);
 
 #endif /* CAMERA_BUFFER_INTERFACE_H_ */

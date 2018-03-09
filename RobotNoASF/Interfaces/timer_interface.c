@@ -74,7 +74,7 @@ void timer1Init(void)
 	|=	(1<<ID_TC3);
 	
 	//Enable interrupts
-	NVIC_EnableIRQ(ID_TC3);				//Enable interrupts on Timer Counter 1
+	NVIC_EnableIRQ(ID_TC3);				//Enable interrupts on Timer Counter 1 Channel 0
 	
 	//Timer Counter 1, Channel 0 Configuration (Used to generate systemTimestamp and perform other 
 	//timing functions such as delays
