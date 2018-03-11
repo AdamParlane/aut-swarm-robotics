@@ -59,4 +59,6 @@ void camBufferReadReset(void);
 uint8_t camBufferReadByte(void);
 uint8_t camBufferReadData(uint32_t startAddr, uint32_t endAddr, uint8_t *data);
 
+void TC1_Handler();
+
 #endif /* CAMERA_BUFFER_INTERFACE_H_ */

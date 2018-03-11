@@ -16,7 +16,7 @@
 * void timer1Init(void)
 * int get_ms(uint32_t *timestamp)
 * int delay_ms(uint32_t period_ms)
-* void TC1_Handler()
+* void TC3_Handler()
 *
 */
  

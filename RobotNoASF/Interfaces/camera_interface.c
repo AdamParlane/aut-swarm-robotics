@@ -229,6 +229,8 @@ void camInit(void)
 	//Enable the peripheral clock for TC0
 	REG_PMC_PCER0
 	|=	(1<<ID_TC0);
+	REG_TC0_WPMR
+	=	(0x54494D << 8);				//Disable Write Protection
 	REG_TC0_CMR0						//TC Channel Mode Register (Pg877)
 	|=	TC_CMR_TCCLKS_TIMER_CLOCK1		//Prescaler MCK/2 (100MHz/2 = 50MHz)
 	|	TC_CMR_WAVE						//Waveform mode

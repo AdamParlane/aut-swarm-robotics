@@ -61,6 +61,7 @@
 volatile uint32_t ramAddrPointer = 0;//Indicates the address in buffer that is currently being read
 //TODO: Make sure that this variable is reset to 0 everytime read reset is asserted to stay synced
 //with the buffer.
+volatile uint8_t retrievedByte = 0;
 
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
 // TEMP: Dirty Delay Design TODO: Replace with existing delay function
@@ -100,7 +101,7 @@ void camBufferInit()
 	//low in order to output stored data
 	REG_PIOA_PER			//Enable PIO control for buffer
 	|=	RRST				//PA26 (VB_RRST)
-	//|	RCK					//PA15 (Read Clock)
+	|	RCK					//PA15 (Read Clock)
 	|	OE;					//PA11 (VB_OE)
 	REG_PIOA_OER			//Set as an output
 	|=	RRST				//PA26 (VB_RRST)
@@ -115,29 +116,29 @@ void camBufferInit()
 	//TIMER for READ CLOCK
 	//Timer Counter 0 Channel 1 Config (Used for the camera buffer read clock RCK on PA15 (TIOA1)
 	//Enable the peripheral clock for TC0
-	//Enable interrupts
-	//NVIC_EnableIRQ(ID_TC1);				//Enable interrupts on Timer Counter 0 Channel 1
+
+	
 	REG_PMC_PCER0
 	|=	(1<<ID_TC1);
+	REG_TC0_WPMR
+	=	(0x54494D << 8);				//Disable Write Protection
 	REG_TC0_CMR1						//TC Channel Mode Register (Pg877)
 	|=	TC_CMR_TCCLKS_TIMER_CLOCK1		//Prescaler MCK/2 (100MHz/2 = 50MHz)
 	|	TC_CMR_WAVE						//Waveform mode
 	|	TC_CMR_WAVSEL_UP_RC				//Up mode with auto triggering on RC compare
-	|	TC_CMR_ACPA_CLEAR				//Clear TIOA1 on RA compare
-	|	TC_CMR_ACPC_SET;				//Set TIOA1 on RC compare (Read data on rising edge)
-	REG_TC0_RA1							//RA set to 12 counts
-	|=	(TC_RA_RA(12));
 	REG_TC0_RC1							//RC set to 25 counts (total (almost) square wave of 500ns
-	|=	(TC_RC_RC(25));					//period, 2MHZ read clock)
+	|=	(TC_RC_RC(12));					//period, 2MHZ read clock)
 	REG_TC0_IER1						//TC interrupt enable register
 	|=	TC_IER_CPCS;					//Enable Register C compare interrupt
 	REG_TC0_CCR1						//Clock control register
 	=	0;								//Keep the timer disabled until its needed
 	
-	REG_PIOA_ABCDSR1
-	|=	(PIO_ABCDSR_P15);				//Set PA15 for peripheral B (TIOA1)
-	REG_PIOA_PDR
-	|=	RCK;							//Allow TC1 to use RCK (PA15)
+	//REG_PIOA_ABCDSR1
+	//|=	(PIO_ABCDSR_P15);				//Set PA15 for peripheral B (TIOA1)
+	//REG_PIOA_PDR
+	//|=	RCK;							//Allow TC1 to use RCK (PA15)
+	//Enable interrupts
+	//NVIC_EnableIRQ(ID_TC1);				//Enable interrupts on Timer Counter 0 Channel 1
 
 	/******* Micro camera data lines**************/
 	/* 8 data lines coming into the micro from the buffer as a byte of half a pixel*/
@@ -226,16 +227,16 @@ void camBufferReadReset(void)
 
 uint8_t camBufferReadByte(void)
 {
-	uint8_t d0,d1,d2,d3,d4,d5,d6,d7;
+	//uint8_t d0,d1,d2,d3,d4,d5,d6,d7;
 	
-	d0 = DO0 ? 0x01 : 0x00;
-	d1 = DO1 ? 0x02 : 0x00;
-	d2 = DO2 ? 0x04 : 0x00;
-	d3 = DO3 ? 0x08 : 0x00;
-	d4 = DO4 ? 0x10 : 0x00;
-	d5 = DO5 ? 0x20 : 0x00;
-	d6 = DO6 ? 0x40 : 0x00;
-	d7 = DO7 ? 0x80 : 0x00;
+	//d0 = DO0 ? 0x01 : 0x00;
+	//d1 = DO1 ? 0x02 : 0x00;
+	//d2 = DO2 ? 0x04 : 0x00;
+	//d3 = DO3 ? 0x08 : 0x00;
+	//d4 = DO4 ? 0x10 : 0x00;
+	//d5 = DO5 ? 0x20 : 0x00;
+	//d6 = DO6 ? 0x40 : 0x00;
+	//d7 = DO7 ? 0x80 : 0x00;
 	
 	//d0 = DO0 ? 0x80 : 0x00;
 	//d1 = DO1 ? 0x40 : 0x00;
@@ -246,7 +247,17 @@ uint8_t camBufferReadByte(void)
 	//d6 = DO6 ? 0x02 : 0x00;
 	//d7 = DO7 ? 0x01 : 0x00;
 	
-	return (d0|d1|d2|d3|d4|d5|d6|d7);
+	return
+	 (DO0 ? 0x01 : 0x00)
+	|(DO1 ? 0x02 : 0x00)
+	|(DO2 ? 0x04 : 0x00)
+	|(DO3 ? 0x08 : 0x00)
+	|(DO4 ? 0x10 : 0x00)
+	|(DO5 ? 0x20 : 0x00)
+	|(DO6 ? 0x40 : 0x00)
+	|(DO7 ? 0x80 : 0x00);
+	
+	//return (d0|d1|d2|d3|d4|d5|d6|d7);
 
 }
 
@@ -303,8 +314,8 @@ uint8_t camBufferReadData(uint32_t startAddr, uint32_t endAddr, uint8_t *data)
 		if(readNow)		//readNow is reset when it is read from.
 		{
 			//We want to be reading on the rising edge of the read clock
-			ramAddrPointer++;
-			data[ramAddrPointer - readWriteDiff] = camBufferReadByte();
+			//ramAddrPointer++;
+			data[ramAddrPointer - readWriteDiff] = retrievedByte;
 		}
 	}
 	
@@ -315,5 +326,7 @@ uint8_t camBufferReadData(uint32_t startAddr, uint32_t endAddr, uint8_t *data)
 
 void TC1_Handler()
 {
+	retrievedByte = camBufferReadByte();
 	ramAddrPointer++;
+	return;
 }
