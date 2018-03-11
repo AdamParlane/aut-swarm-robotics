@@ -34,33 +34,6 @@
 #include <stdbool.h>
 
 //////////////[Private Defines]/////////////////////////////////////////////////////////////////////
-
-/********** Camera Pin Connections **********/
-// Camera Timing
-#define	VSYNC			(REG_PIOC_PDSR & PIO_PC13)
-#define	PCLK			0x00				// Connected from camera to buffer (Write clock signal)
-#define	XCLK			PIO_PA0
-// Camera Control
-#define	resetDisable	(REG_PIOC_SODR |= PIO_PC15)
-#define	resetEnable		(REG_PIOC_CODR |= PIO_PC15)	// Reset the camera
-#define	pwdnDisable		(REG_PIOC_CODR |= PIO_PC0)	// Bring cam out of standby
-#define	pwdnEnable		(REG_PIOC_SODR |= PIO_PC0)	// Put cam in standby
-#define powerUp			{resetDisable; pwdnDisable;}// Power up the camera
-
-//#define HEIGHT				480			// Vertical Pixel Count
-//#define WIDTH					640			// Horizontal Pixel Count
-//#define BYTE_PER_PIXEL		2			// Pixel data size
-//#define V_FRONT				11			// Vertical front porch
-//#define V_BACK				31			// Vertical back porch
-//#define H_FRONT				16			// Horizontal front porch
-//#define H_BACK				48			// Horizontal back porch
-
-//#define cameraByteCount		614400		//640*480*2
-#define cameraByteCount			153600		//320*240*2
-#define bufferSize				393216		//
-//#define bufferOffset			bufferSize - cameraByteCount	// 239616
-#define bufferOffset			0	// 239616
-
 //********* Camera Register Set *********/
 #define GAIN_REG        0x00    // Gain lower 8 bits (rest in vref)
 #define BLUE_REG        0x01    // blue gain 
@@ -188,16 +161,45 @@
 #define SCALING_PCLK_DELAY_REG	0xA2
 
 // Test patterns
-#define SHIFT_XSC		0x00	// 
-#define SHIFT_YSC		0x80	//
-#define BAR_XSC			0x80	//
-#define BAR_YSC			0x00	// 
+#define SHIFT_XSC		0x80	// 
+#define SHIFT_YSC		0x00	//
+#define BAR_XSC			0x00	//
+#define BAR_YSC			0x80	// 
 #define FADE_XSC		0x80	//
 #define FADE_YSC		0x80	//
 
+/********** Camera Pin Connections **********/
+// Camera Timing
+#define RESET_PIN			PIO_PC15
+#define PWDN_PIN			PIO_PC0
+#define	XCLK_PIN			PIO_PA0
+#define VSYNC_PIN			PIO_PC13
+#define HREF_PIN			PIO_PA16
+// Camera Control
+#define	resetDisable	(REG_PIOC_SODR |= PIO_PC15)
+#define	resetEnable		(REG_PIOC_CODR |= PIO_PC15)	// Reset the camera
+#define	pwdnDisable		(REG_PIOC_CODR |= PWDN_PIN)	// Bring cam out of standby
+#define	pwdnEnable		(REG_PIOC_SODR |= PWDN_PIN)	// Put cam in standby
+#define powerUp			{resetDisable; pwdnDisable;}// Power up the camera
+#define	VSYNC			(REG_PIOC_PDSR & VSYNC_PIN)
+
+//#define HEIGHT				480			// Vertical Pixel Count
+//#define WIDTH					640			// Horizontal Pixel Count
+//#define BYTE_PER_PIXEL		2			// Pixel data size
+//#define V_FRONT				11			// Vertical front porch
+//#define V_BACK				31			// Vertical back porch
+//#define H_FRONT				16			// Horizontal front porch
+//#define H_BACK				48			// Horizontal back porch
+
+//#define cameraByteCount		614400		//640*480*2
+#define cameraByteCount			153600		//320*240*2
+#define bufferSize				393216		//
+//#define bufferOffset			bufferSize - cameraByteCount	// 239616
+#define bufferOffset			0	// 239616
+
 //////////////[Private Global Variables]////////////////////////////////////////////////////////////
 volatile bool flagLineReady;
-volatile uint8_t data[38400];		// 2*320*60 (2*w*h) 2 bytes per pixel
+uint8_t data[38400];		// 2*320*60 (2*w*h) 2 bytes per pixel
 volatile int current;
 volatile int bufferCount;
 
@@ -206,21 +208,24 @@ void camInit(void)
 {
 	// Enable pins
 	REG_PIOC_PER
-	|=	PIO_PC15		// Enable PIO control of Camera RESET
-	|	PIO_PC13;		// Enable PIO control of Camera VSYNC
+	|=	RESET_PIN		// Enable PIO control of Camera RESET_PIN
+	|	PWDN_PIN		// Set PWDN_PIN
+	|	VSYNC_PIN;		// Enable PIO control of Camera VSYNC
 	REG_PIOA_PER
-	|=	PIO_PA16;		// Enable PIO control of HREF(PA16)
+	|=	HREF_PIN;		// Enable PIO control of HREF(PA16)
 	// Outputs
 	REG_PIOC_OER
-	|=	PIO_PC0			// Set PWDN as an output
-	|	PIO_PC15;		// Set RESET as an output
+	|=	PWDN_PIN		// Set PWDN_PIN as an output
+	|	RESET_PIN;		// Set RESET_PIN as an output
 	// Inputs
 	REG_PIOC_ODR
-	|=	PIO_PC13;		// Set VSYNC as an input
+	|=	VSYNC_PIN;		// Set VSYNC as an input
 	REG_PIOA_ODR
-	|=	PIO_PA16;		// Set HREF as an input
+	|=	HREF_PIN;		// Set HREF as an input
 
-	//Timer Counter 0 Channel 0 Config (Used for the camera clock XCLK on PA0 (TIOA0))
+	pwdnEnable;			//PWDN must be active during startup (See power up sequence in datasheet)
+
+	//Timer Counter 0 Channel 0 Config (Used for the camera clock XCLK_PIN on PA0 (TIOA0))
 	//Enable the peripheral clock for TC0
 	REG_PMC_PCER0
 	|=	(1<<ID_TC0);
@@ -241,8 +246,12 @@ void camInit(void)
 	REG_PIOA_ABCDSR1
 	|=	(PIO_ABCDSR_P0);				//Set PA0 for peripheral B (TIOA0)
 	REG_PIOA_PDR
-	|=	XCLK;							//Allow TC0 to use XCLK (PA0)
+	|=	XCLK_PIN;						//Allow TC0 to use XCLK_PIN (PA0)
 
+
+	delay_ms(5);
+	pwdnDisable;
+	
 	camHardReset();						//Reset the camera
 	camSetup();							//Load settings into the camera
 }
@@ -262,8 +271,8 @@ uint8_t camSetup(void)
 	camWriteInstruction(COM15_REG, COM15_RGB555);					//RGB555 Colour space
 	camWriteInstruction(COM3_REG, 0x80);
 	camWriteInstruction(COM14_REG, 0x80);
-	camWriteInstruction(SCALING_XSC_REG, 0x3A);
-	camWriteInstruction(SCALING_YSC_REG, 0x35);
+	//camWriteInstruction(SCALING_XSC_REG, 0x3A);			//No mention of these in the datasheet?
+	//camWriteInstruction(SCALING_YSC_REG, 0x35);
 	camWriteInstruction(SCALING_DCWCTR_REG, 0x11);
 	camWriteInstruction(SCALING_PCLK_DIV_REG, 0xF1);
 	camWriteInstruction(SCALING_PCLK_DELAY_REG, 0x02);
@@ -283,7 +292,8 @@ uint8_t camSetup(void)
 	//camChangeFormat(COM7_RGB);
 
 	// Test bar image
-	camTestPattern(CAM_PATTERN_SHIFT);
+	//camWriteInstruction(COM17_REG, COM17_CBAR);
+	camTestPattern(CAM_PATTERN_NONE);
 
 	return 0x00;
 }

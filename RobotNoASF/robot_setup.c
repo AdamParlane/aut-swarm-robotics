@@ -48,7 +48,7 @@
 #include <stdio.h>				//For printf
 
 //////////////[Global variables]////////////////////////////////////////////////////////////////////
-static double PRECISION = 0.00000000000001;
+static double PRECISION = 0.00000000000001;		//Used by dtoa()
 
 //////////////[Global variables]////////////////////////////////////////////////////////////////////
 /*Global Data Structure Initialisation. These are the initial settings for the robot
@@ -111,10 +111,10 @@ RobotGlobalStructure sys =
 		.posPCNewData				= 0
 	},
 	
-	//System State Machine States
+	//System State Machine Initial States
 	.states =
 	{
-		.mainf						= M_IDLE,
+		.mainf						= M_IDLE,	//Change the initial main function state here
 		.mainfPrev					= M_IDLE,
 		.docking					= DS_START,
 		.chargeCycle				= CCS_CHECK_POWER,
@@ -254,10 +254,12 @@ void robotSetup(void)
 	//Temp code for testing the data from the camera
 	delay_ms(100);
 	camRead();
-	
+	camRead();
+	camRead();
+	camRead();
 	
 	sys.states.mainfPrev = sys.states.mainf;
-	sys.states.mainf = M_STARTUP_DELAY;	//DO NOT CHANGE
+	sys.states.mainf = M_STARTUP_DELAY;	//DO NOT CHANGE (Set above in the sys settings)
 	
 	srand(sys.timeStamp);				//Seed rand() to give unique random numbers
 	return;
