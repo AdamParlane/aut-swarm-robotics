@@ -361,7 +361,7 @@ void camRead(void)
 		camBufferWriteStart();
 		
 		while (!VSYNC); // wait for a low vertical sync pulse to reset the pointers in memory buffer, sync pulse goes low
-		
+		camBufferWriteStop();
 		pwdnEnable;
 		delay_ms(100);
 			
@@ -385,7 +385,7 @@ void camRead(void)
 		//while (!VSYNC); // wait for sync pulse to go high
 		//while (VSYNC); // wait for a vertical sync pulse, sync pulse goes low, thus a frame of data has been stored
 	
-		camBufferWriteStop();
+		
 
 		camBufferReadData(0, 38399, data);
 
