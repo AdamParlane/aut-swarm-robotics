@@ -173,15 +173,17 @@
 #define RESET_PIN			PIO_PC15
 #define PWDN_PIN			PIO_PC0
 #define	XCLK_PIN			PIO_PA0
-#define VSYNC_PIN			PIO_PC13
+
 #define HREF_PIN			PIO_PA16
+
 // Camera Control
 #define	resetDisable	(REG_PIOC_SODR |= PIO_PC15)
 #define	resetEnable		(REG_PIOC_CODR |= PIO_PC15)	// Reset the camera
 #define	pwdnDisable		(REG_PIOC_CODR |= PWDN_PIN)	// Bring cam out of standby
 #define	pwdnEnable		(REG_PIOC_SODR |= PWDN_PIN)	// Put cam in standby
 #define powerUp			{resetDisable; pwdnDisable;}// Power up the camera
-#define	VSYNC			(REG_PIOC_PDSR & VSYNC_PIN)
+//#define	VSYNC			(REG_PIOC_PDSR & VSYNC_PIN)
+#define	HSYNC			(REG_PIOA_PDSR & HREF_PIN)
 
 //#define HEIGHT				480			// Vertical Pixel Count
 //#define WIDTH					640			// Horizontal Pixel Count
@@ -273,8 +275,8 @@ uint8_t camSetup(void)
 	camWriteInstruction(COM15_REG, COM15_RGB555);					//RGB555 Colour space
 	camWriteInstruction(COM3_REG, 0x80);
 	camWriteInstruction(COM14_REG, 0x80);
-	//camWriteInstruction(SCALING_XSC_REG, 0x3A);			//No mention of these in the datasheet?
-	//camWriteInstruction(SCALING_YSC_REG, 0x35);
+	camWriteInstruction(SCALING_XSC_REG, 0x3A);			//No mention of these in the datasheet?
+	camWriteInstruction(SCALING_YSC_REG, 0x35);
 	camWriteInstruction(SCALING_DCWCTR_REG, 0x11);
 	camWriteInstruction(SCALING_PCLK_DIV_REG, 0xF1);
 	camWriteInstruction(SCALING_PCLK_DELAY_REG, 0x02);
@@ -343,36 +345,60 @@ bool camValidID(void)
 /********** Camera Data Reading **********/
 void camRead(void)
 {
-	// Clear read and write buffers
-	while (VSYNC); // wait for a low vertical sync pulse to reset the pointers in memory buffer, sync pulse goes low
-	camBufferWriteReset(); // reset the video buffer memory pointers
-	camBufferReadReset();
-	camBufferWriteStart();
+	int lines = 0;
+	uint32_t hsync_old;
+	while(1)
+	{
+
+		pwdnDisable;
+		delay_ms(100);
+		
+		// Clear read and write buffers
+		while (!VSYNC); // wait for a low vertical sync pulse to reset the pointers in memory buffer, sync pulse goes low
+		while (VSYNC);
+		
+		camBufferWriteReset(); // reset the video buffer memory pointers
+		camBufferWriteStart();
+		
+		while (!VSYNC); // wait for a low vertical sync pulse to reset the pointers in memory buffer, sync pulse goes low
+		
+		pwdnEnable;
+		delay_ms(100);
+			
+		//camBufferReadReset();
+		 // wait for sync pulse to go high
+		//while(!VSYNC) // wait for a vertical sync pulse, sync pulse goes low, thus a frame of data has been stored
+		//{
+			//hsync_old = HSYNC;
+			//if(HSYNC)
+				//camBufferWriteStart();
+			//else
+				//camBufferWriteStop();
+			//if(HSYNC != hsync_old)
+				//lines++;
+		//}
 	
-	while (!VSYNC); // wait for sync pulse to go high
-	while (VSYNC); // wait for a vertical sync pulse, sync pulse goes low, thus a frame of data has been stored
+		//camBufferWriteReset(); // reset the video buffer memory pointers
+		//camBufferReadReset();
+		//camBufferWriteStart();
+		//
+		//while (!VSYNC); // wait for sync pulse to go high
+		//while (VSYNC); // wait for a vertical sync pulse, sync pulse goes low, thus a frame of data has been stored
 	
-	//camBufferWriteReset(); // reset the video buffer memory pointers
-	//camBufferReadReset();
-	//camBufferWriteStart();
-	//
-	//while (!VSYNC); // wait for sync pulse to go high
-	//while (VSYNC); // wait for a vertical sync pulse, sync pulse goes low, thus a frame of data has been stored
-	
-	camBufferWriteStop();
+		camBufferWriteStop();
 
-	camBufferReadData(0, 38399, data);
+		camBufferReadData(0, 38399, data);
 
-	//uint8_t buffer;
-	//uint8_t r = 0;
-	//uint8_t g = 0;
-	//uint8_t b = 0;
+		//uint8_t buffer;
+		//uint8_t r = 0;
+		//uint8_t g = 0;
+		//uint8_t b = 0;
 
 
-				//r = ((data[j][i/2]&0x7C00)>>10);
-				//g = ((data[j][i/2]&0x03E0)>>5);
-				//b = ((data[j][i/2]&0x001F)>>0);
-
+					//r = ((data[j][i/2]&0x7C00)>>10);
+					//g = ((data[j][i/2]&0x03E0)>>5);
+					//b = ((data[j][i/2]&0x001F)>>0);
+	}
 	return;
 }
 

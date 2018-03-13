@@ -41,8 +41,9 @@
 #define DO7					(REG_PIOC_PDSR & PIO_PC6)
 
 // Writing to buffer from camera
-#define WriteDisable		REG_PIOC_SODR |= WE				// Buffer write enable
-#define WriteEnable			REG_PIOC_CODR |= WE				// Buffer write disable
+#define WriteDisable		REG_PIOC_CODR |= WE				// Buffer write enable (Active high via
+															// NAND gate)
+#define WriteEnable			REG_PIOC_SODR |= WE				// Buffer write disable
 #define WriteReset			REG_PIOA_CODR |= WRST			// Buffer write reset
 #define WriteOn				REG_PIOA_SODR |= WRST			// Buffer write on (not in reset)
 
@@ -56,6 +57,8 @@
 #define readNow				REG_TC0_SR1		& TC_SR_CPCS	//A flag that says whether RC has over-
 															//flowed on TC1. (Indicates when to read
 															//a byte from the RAM)
+#define readClkOn			REG_PIOA_SODR	|= RCK;
+#define readClkOff			REG_PIOA_CODR	|= RCK;
 
 //////////////[Private Global Variables]////////////////////////////////////////////////////////////
 volatile uint32_t ramAddrPointer = 0;//Indicates the address in buffer that is currently being read
@@ -70,7 +73,7 @@ void delayBuffer()
 	// Dirty: variable
 	int x = 0;
 	// Delay: Not even sure
-	while (x < 100000) x++;
+	while (x < 10) x++;
 	// Design: 3/10
 	return;
 }
@@ -116,8 +119,6 @@ void camBufferInit()
 	//TIMER for READ CLOCK
 	//Timer Counter 0 Channel 1 Config (Used for the camera buffer read clock RCK on PA15 (TIOA1)
 	//Enable the peripheral clock for TC0
-
-	
 	REG_PMC_PCER0
 	|=	(1<<ID_TC1);
 	REG_TC0_WPMR
@@ -126,8 +127,12 @@ void camBufferInit()
 	|=	TC_CMR_TCCLKS_TIMER_CLOCK1		//Prescaler MCK/2 (100MHz/2 = 50MHz)
 	|	TC_CMR_WAVE						//Waveform mode
 	|	TC_CMR_WAVSEL_UP_RC				//Up mode with auto triggering on RC compare
+	|	TC_CMR_ACPA_CLEAR				//Clear TIOA1 on RA compare
+	|	TC_CMR_ACPC_SET;				//Set TIOA1 on RC compare (Read data on rising edge)
+	REG_TC0_RA1							//RA set to 12 counts
+	|=	(TC_RA_RA(12000));
 	REG_TC0_RC1							//RC set to 25 counts (total (almost) square wave of 500ns
-	|=	(TC_RC_RC(12));					//period, 2MHZ read clock)
+	|=	(TC_RC_RC(25000));					//period, 2MHZ read clock)
 	REG_TC0_IER1						//TC interrupt enable register
 	|=	TC_IER_CPCS;					//Enable Register C compare interrupt
 	REG_TC0_CCR1						//Clock control register
@@ -138,7 +143,7 @@ void camBufferInit()
 	//REG_PIOA_PDR
 	//|=	RCK;							//Allow TC1 to use RCK (PA15)
 	//Enable interrupts
-	//NVIC_EnableIRQ(ID_TC1);				//Enable interrupts on Timer Counter 0 Channel 1
+	//NVIC_EnableIRQ(ID_TC1);			//Enable interrupts on Timer Counter 0 Channel 1
 
 	/******* Micro camera data lines**************/
 	/* 8 data lines coming into the micro from the buffer as a byte of half a pixel*/
@@ -194,7 +199,7 @@ void camBufferWriteReset(void)
 {
 	// Reset
 	WriteReset;
-	delay_ms(1);
+	while (VSYNC);
 	//delayBuffer();
 	// Clear reset
 	WriteOn;
@@ -203,23 +208,46 @@ void camBufferWriteReset(void)
 
 void camBufferReadStop(void)
 {
-	readClockDisable;
+	//readClockDisable;
 	OutputDisable;
-	delay_ms(1);
+	//readClkOff;
+	//delay_ms(1);
+	//readClkOn;
+	//delay_ms(1);
+	//readClkOff;
+	//delay_ms(1);
+	//readClkOn;
+	//delay_ms(1);
+	//readClkOff;
 }
 
 void camBufferReadStart(void)
 {
 	OutputEnable;
-	delay_ms(1);
-	readClockEnable;
+	//readClkOff;
+	//delay_ms(1);
+	//readClkOn;
+	//delay_ms(1);
+	//readClkOff;
+	//delay_ms(1);
+	//readClkOn;
+	//delay_ms(1);
+	//readClkOff;
 }
 
 void camBufferReadReset(void)
 {
 	// Reset
 	readResetEnable;
-	delay_ms(1);	//TODO:Shorter delays would be better in future
+	readClkOff;
+	delay_ms(1);
+	readClkOn;
+	delay_ms(1);
+	readClkOff;
+	delay_ms(1);
+	readClkOn;
+	delay_ms(1);
+	readClkOff;
 	// Clear reset
 	readResetDisable;
 	ramAddrPointer = 0;
@@ -305,18 +333,28 @@ uint8_t camBufferReadData(uint32_t startAddr, uint32_t endAddr, uint8_t *data)
 	camBufferReadStart();
 	
 	//Wait for the RAM read pointer to reach the start address
-	while(ramAddrPointer < startAddr);
+	while(ramAddrPointer < startAddr)
+	{
+		readClkOn;
+		delay_ms(1);
+		readClkOff;
+		delay_ms(1);
+	}
 	
 	//Now we can begin pulling data from the RAM
 	while(ramAddrPointer >= startAddr && ramAddrPointer <= endAddr)
 	{
+		readClkOn;
 		
-		if(readNow)		//readNow is reset when it is read from.
-		{
-			//We want to be reading on the rising edge of the read clock
-			//ramAddrPointer++;
-			data[ramAddrPointer - readWriteDiff] = retrievedByte;
-		}
+		//We want to be reading on the rising edge of the read clock
+		//ramAddrPointer++;
+		data[ramAddrPointer - readWriteDiff] = camBufferReadByte();
+		ramAddrPointer++;
+		//delay_ms(1);
+		delayBuffer();
+		readClkOff;
+		//delay_ms(1);
+		delayBuffer();
 	}
 	
 	camBufferReadStop();
@@ -326,7 +364,6 @@ uint8_t camBufferReadData(uint32_t startAddr, uint32_t endAddr, uint8_t *data)
 
 void TC1_Handler()
 {
-	retrievedByte = camBufferReadByte();
 	ramAddrPointer++;
 	return;
 }
