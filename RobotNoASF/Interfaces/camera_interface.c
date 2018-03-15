@@ -40,19 +40,23 @@
 #define RED_REG				0x02    // red gain 
 #define VREF_REG			0x03    // Pieces of GAIN, VSTART, VSTOP 
 #define COM1_REG			0x04    // Control 1 
-#define COM1_CCIR656		0x40    // CCIR656 enable 
+#define		COM1_CCIR656	0x40    // CCIR656 enable 
+
 #define BAVE_REG			0x05    // U/B Average level 
 #define GbAVE_REG			0x06    // Y/Gb Average level 
 #define AECHH_REG			0x07    // AEC MS 5 bits 
 #define RAVE_REG			0x08    // V/R Average level 
 #define COM2_REG			0x09    // Control 2 
-#define COM2_SSLEEP			0x10    // Soft sleep mode 
+#define		COM2_SSLEEP		0x10    // Soft sleep mode 
+
 #define PID_REG				0x0a    // Product ID MSB 
 #define VER_REG				0x0b    // Product ID LSB 
+
 #define COM3_REG			0x0c    // Control 3 
-#define COM3_SWAP			0x40    // Byte swap 
-#define COM3_SCALEEN		0x08    // Enable scaling 
-#define COM3_DCWEN			0x04    // Enable down-sample/crop/window 
+#define		COM3_SWAP		0x40    // Byte swap 
+#define		COM3_SCALEEN	0x08    // Enable scaling 
+#define		COM3_DCWEN		0x04    // Enable down-sample/crop/window 
+
 #define COM4_REG			0x0d    // Control 4 
 #define COM5_REG			0x0e    // All "reserved" 
 #define COM6_REG			0x0f    // Control 6 
@@ -196,11 +200,11 @@
 
 // Camera Control
 #define	resetDisable	(RESET_PORT->PIO_SODR |= RESET_PIN)
-#define	resetEnable		(RESET_PORT->PIO_CODR |= RESET_PIN)	// Reset the camera
-#define	pwdnDisable		(PWDN_PORT->PIO_CODR |= PWDN_PIN)	// Bring cam out of standby
-#define	pwdnEnable		(PWDN_PORT->PIO_SODR |= PWDN_PIN)	// Put cam in standby
+#define	resetEnable		(RESET_PORT->PIO_CODR |= RESET_PIN)	//Reset the camera
+#define	pwdnDisable		(PWDN_PORT->PIO_CODR |= PWDN_PIN)	//Bring cam out of standby
+#define	pwdnEnable		(PWDN_PORT->PIO_SODR |= PWDN_PIN)	//Put cam in standby
 #define	HREF			(HREF_PORT->PIO_PDSR & HREF_PIN)	//Indicates when to write to buffer
-#define powerUp			{resetDisable; pwdnDisable;}		// Power up the camera
+#define powerUp			{resetDisable; pwdnDisable;}		//Power up the camera
 //#define	VSYNC			(REG_PIOC_PDSR & VSYNC_PIN)		//Public (see header file for def)
 
 //#define cameraByteCount		614400		//640*480*2
@@ -210,10 +214,9 @@
 #define bufferOffset			0	// 239616
 
 //////////////[Private Global Variables]////////////////////////////////////////////////////////////
-volatile bool flagLineReady;
 uint8_t data[56340];		// 2*313*90 (2*w*h) 2 bytes per pixel
-volatile int current;
-volatile int bufferCount;
+uint16_t hStart, hStop,	vStart,	vStop;		//Image window size (pixels)
+uint16_t winWidth, winHeight, winX, winY;	//Window Size and position (From centre, in pixels)
 
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
 //Private function prototypes
@@ -280,31 +283,12 @@ uint8_t camSetup(void)
 	camWriteInstruction(RGB444_REG, 0x00);			//Disable RGB444
 	camWriteInstruction(COM7_REG, COM7_FMT_QVGA | COM7_RGB);// QVGA and RGB
 	camWriteInstruction(COM15_REG, COM15_RGB555);	//RGB555 Colour space
-	camWriteInstruction(COM3_REG, 0x80);
 	camWriteInstruction(SCALING_PCLK_DIV_REG, 0xF1);
 	camWriteInstruction(SCALING_PCLK_DELAY_REG, 0x02);
 
-<<<<<<< HEAD
-	camTestPattern(CAM_PATTERN_NONE);				//Test pattern can be set here.
-=======
-	
-	//camWriteInstruction(HSTART_REG, 0x12);
-	//camWriteInstruction(HSTOP_REG, 0x61);
-	//camWriteInstruction(VSTART_REG, 0x03);
-	//camWriteInstruction(VSTOP_REG, 0x7B);
-	//camWriteInstruction(PSHFT_REG, 0x00);
+	camUpdateWindowSize();//Get the window size from the camera
 
-
-	// PCLK does not toggle during horizontal blank
-	//camWriteInstruction(COM10_REG, COM10_PCLK_HB);
-
-	// Set image format to RGB565
-	//camChangeFormat(COM7_RGB);
-
-	// Test bar image
-	//camWriteInstruction(COM17_REG, COM17_CBAR);
-	camTestPattern(CAM_PATTERN_NONE);
->>>>>>> 20ca911e14762f19f37919026e299111f0108fbc
+	camTestPattern(CAM_PATTERN_BAR);				//Test pattern can be set here.
 
 	return 0x00;
 }
@@ -349,11 +333,72 @@ bool camValidID(void)
 	return data == REG76_REG;
 }
 
+//(uint16_t *hStart, uint16_t *hStop, uint16_t *vStart, uint16_t *vStop)
+/*
+* Function:
+* uint8_t camUpdateWindowSize(void)
+*
+* Returns the dimensions of the capture window within the camera. This is used to format the data
+* retrieved from the buffer correctly.
+*
+* Inputs:
+* None (updates global vars within the camera interface module)
+*
+* Returns:
+* 0 on exit
+*
+* Implementation:
+* Retrieves each part of the window dimensions from various registers on the camera and then uses
+* bit masking and manipulation to recreate the complete numbers. These are stored in the window size
+* globals above.
+*
+*/
+uint8_t camUpdateWindowSize(void)
+{
+	uint8_t h[4], v[4];
+	const uint8_t START_H = 0, START_L = 1, STOP_H = 2, STOP_L = 3;
+	
+	uint8_t qvgaMode = ((camReadInstruction(COM7_REG) & 0x10)>>4);
+	
+	h[START_H] = camReadInstruction(HSTART_REG);	//Bits 7:0
+	h[START_L] = camReadInstruction(HREF_REG);		//Bits 2:0
+	h[STOP_H] = camReadInstruction(HSTOP_REG);		//Bits 7:0
+	h[STOP_L] = h[START_L];							//Bits 5:3
+	v[START_H] = camReadInstruction(VSTART_REG);	//Bits 7:0
+	v[START_L] = camReadInstruction(VREF_REG);		//Bits 1:0
+	v[STOP_H] = camReadInstruction(VSTOP_REG);		//Bits 7:0
+	v[STOP_L] = v[START_L];							//Bits 3:2
+	
+	hStart	= ((h[START_H]	& 0xFF)<<3) | ((h[START_L]	& 0x07)<<0);
+	hStop	= ((h[STOP_H]	& 0xFF)<<3) | ((h[STOP_L]	& 0x34)>>3);
+	vStart	= ((v[START_H]	& 0xFF)<<2) | ((v[START_L]	& 0x03)<<0);
+	vStop	= ((v[STOP_H]	& 0xFF)<<2) | ((v[STOP_L]	& 0x0C)>>2);
+	
+
+	winX = (hStart + hStop)/2;
+	winY = (vStart + vStop)/2;
+	winWidth = (hStop - hStart);
+	winHeight = (vStop - vStart);		
+
+	//If the cam is in QVGA mode, then divide all outputs by 2:
+	if(qvgaMode)
+	{		
+		winX /= 2;
+		winY /= 2;
+		winWidth /= 2;
+		winHeight /=2;
+		hStart /= 2;
+		hStop /= 2;
+		vStart /= 2;
+		vStop /= 2;
+	}	
+	
+	return 0;
+}
+
 /********** Camera Data Reading **********/
 void camRead(void)
 {
-	int lines = 0;
-	uint32_t hsync_old;
 	while(1)
 	{
 
@@ -361,53 +406,19 @@ void camRead(void)
 		//delay_ms(100);
 		
 		// Clear read and write buffers
-		while (!VSYNC); // wait for a low vertical sync pulse to reset the pointers in memory buffer, sync pulse goes low
-		while (VSYNC);
-		
+		while (!VSYNC); //wait for a low vertical sync pulse to reset the pointers in memory
+						//buffer, sync pulse goes low
 		camBufferWriteReset(); // reset the video buffer memory pointers
+		while (VSYNC);
 		camBufferWriteStart();
-		
 		while (!VSYNC); // wait for a low vertical sync pulse to reset the pointers in memory buffer, sync pulse goes low
 		camBufferWriteStop();
-		
-		//pwdnEnable;
-		//delay_ms(100);
-			
-		//camBufferReadReset();
-		 // wait for sync pulse to go high
-		//while(!VSYNC) // wait for a vertical sync pulse, sync pulse goes low, thus a frame of data has been stored
-		//{
-			//hsync_old = HSYNC;
-			//if(HSYNC)
-				//camBufferWriteStart();
-			//else
-				//camBufferWriteStop();
-			//if(HSYNC != hsync_old)
-				//lines++;
-		//}
-	
-		//camBufferWriteReset(); // reset the video buffer memory pointers
-		//camBufferReadReset();
-		//camBufferWriteStart();
-		//
-		//while (!VSYNC); // wait for sync pulse to go high
-		//while (VSYNC); // wait for a vertical sync pulse, sync pulse goes low, thus a frame of data has been stored
-	
+		camUpdateWindowSize();//Get the window size from the camera
 		
 		//read the buffer in parts as we don't have enough memory for an entire frame at once.
 		camBufferReadData(0, 56339, data);			
 		camBufferReadData(56340, 112679, data);
 		camBufferReadData(112680, 150239, data);
-
-		//uint8_t buffer;
-		//uint8_t r = 0;
-		//uint8_t g = 0;
-		//uint8_t b = 0;
-
-
-					//r = ((data[j][i/2]&0x7C00)>>10);
-					//g = ((data[j][i/2]&0x03E0)>>5);
-					//b = ((data[j][i/2]&0x001F)>>0);
 	}
 	return;
 }

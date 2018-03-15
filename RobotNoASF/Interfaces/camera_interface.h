@@ -56,6 +56,21 @@ void camHardReset(void);
 void camRegisterReset(void);
 bool camValidID(void);
 
+/*
+* Function:
+* uint8_t camUpdateWindowSize(void)
+*
+* Returns the dimensions of the capture window within the camera. This is used to format the data
+* retrieved from the buffer correctly.
+*
+* Inputs:
+* Pointers to 16 bit uints where the retrieved window dimensions will be stored
+*
+* Returns:
+* 0 on exit
+*
+*/
+uint8_t camUpdateWindowSize(void);
 void camChangeFormat(uint8_t type);
 void camTestPattern(CameraTestPatterns type);
 
