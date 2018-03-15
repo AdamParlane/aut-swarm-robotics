@@ -211,7 +211,7 @@
 
 //////////////[Private Global Variables]////////////////////////////////////////////////////////////
 volatile bool flagLineReady;
-uint8_t data[38400];		// 2*320*60 (2*w*h) 2 bytes per pixel
+uint8_t data[56340];		// 2*313*90 (2*w*h) 2 bytes per pixel
 volatile int current;
 volatile int bufferCount;
 
@@ -284,7 +284,27 @@ uint8_t camSetup(void)
 	camWriteInstruction(SCALING_PCLK_DIV_REG, 0xF1);
 	camWriteInstruction(SCALING_PCLK_DELAY_REG, 0x02);
 
+<<<<<<< HEAD
 	camTestPattern(CAM_PATTERN_NONE);				//Test pattern can be set here.
+=======
+	
+	//camWriteInstruction(HSTART_REG, 0x12);
+	//camWriteInstruction(HSTOP_REG, 0x61);
+	//camWriteInstruction(VSTART_REG, 0x03);
+	//camWriteInstruction(VSTOP_REG, 0x7B);
+	//camWriteInstruction(PSHFT_REG, 0x00);
+
+
+	// PCLK does not toggle during horizontal blank
+	//camWriteInstruction(COM10_REG, COM10_PCLK_HB);
+
+	// Set image format to RGB565
+	//camChangeFormat(COM7_RGB);
+
+	// Test bar image
+	//camWriteInstruction(COM17_REG, COM17_CBAR);
+	camTestPattern(CAM_PATTERN_NONE);
+>>>>>>> 20ca911e14762f19f37919026e299111f0108fbc
 
 	return 0x00;
 }
@@ -374,8 +394,10 @@ void camRead(void)
 		//while (VSYNC); // wait for a vertical sync pulse, sync pulse goes low, thus a frame of data has been stored
 	
 		
-
-		camBufferReadData(0, 38399, data);
+		//read the buffer in parts as we don't have enough memory for an entire frame at once.
+		camBufferReadData(0, 56339, data);			
+		camBufferReadData(56340, 112679, data);
+		camBufferReadData(112680, 150239, data);
 
 		//uint8_t buffer;
 		//uint8_t r = 0;
