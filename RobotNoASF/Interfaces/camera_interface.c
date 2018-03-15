@@ -282,9 +282,12 @@ uint8_t camSetup(void)
 	camWriteInstruction(TSLB_REG, 0x01);			//Auto adjust output window on resolution change
 	camWriteInstruction(RGB444_REG, 0x00);			//Disable RGB444
 	camWriteInstruction(COM7_REG, COM7_FMT_QVGA | COM7_RGB);// QVGA and RGB
+	//camWriteInstruction(COM7_REG, COM7_RGB);// VGA and RGB
 	camWriteInstruction(COM15_REG, COM15_RGB555);	//RGB555 Colour space
-	camWriteInstruction(SCALING_PCLK_DIV_REG, 0xF1);
-	camWriteInstruction(SCALING_PCLK_DELAY_REG, 0x02);
+	//camWriteInstruction(SCALING_PCLK_DIV_REG, 0xF1);//MARKED AS DEBUG IN DATASHEET??
+	//camWriteInstruction(SCALING_PCLK_DELAY_REG, 0x02);
+	camWriteInstruction(0x2B, 0x08);			//Href falling edge delay
+
 
 	camUpdateWindowSize();//Get the window size from the camera
 

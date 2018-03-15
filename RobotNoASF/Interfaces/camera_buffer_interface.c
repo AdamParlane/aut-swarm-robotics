@@ -300,8 +300,6 @@ uint8_t camBufferReadData(uint32_t startAddr, uint32_t endAddr, uint8_t *data)
 		camBufferReadReset();	//Reset the read pointers
 	}
 	
-	readWriteDiff = ramAddrPointer;
-	
 	//Start the read clock
 	camBufferReadStart();
 	
@@ -309,10 +307,13 @@ uint8_t camBufferReadData(uint32_t startAddr, uint32_t endAddr, uint8_t *data)
 	while(ramAddrPointer < startAddr)
 	{
 		readClkOn;
-		delay_ms(1);
+		//delay_ms(1);
 		readClkOff;
-		delay_ms(1);
+		//delay_ms(1);
+		ramAddrPointer++;
 	}
+	
+	readWriteDiff = ramAddrPointer;
 	
 	//Now we can begin pulling data from the RAM
 	while(ramAddrPointer >= startAddr && ramAddrPointer <= endAddr)
@@ -320,14 +321,13 @@ uint8_t camBufferReadData(uint32_t startAddr, uint32_t endAddr, uint8_t *data)
 		readClkOn;
 		
 		//We want to be reading on the rising edge of the read clock
-		//ramAddrPointer++;
 		data[ramAddrPointer - readWriteDiff] = camBufferReadByte();
 		ramAddrPointer++;
 		//delay_ms(1);
-		delayBuffer();
+		//delayBuffer();
 		readClkOff;
 		//delay_ms(1);
-		delayBuffer();
+		//delayBuffer();
 	}
 	
 	camBufferReadStop();
