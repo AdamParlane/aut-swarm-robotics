@@ -48,17 +48,17 @@
 #define WriteOn				WRST_PORT->PIO_SODR |= WRST_PIN		// Buffer write on (not in reset)
 
 // Reading from buffer to SAM4
-#define readResetEnable		REG_PIOA_CODR	|= RRST			// Buffer read reset
-#define readResetDisable	REG_PIOA_SODR	|= RRST			// Buffer read on (not in reset)
-#define OutputEnable		REG_PIOA_CODR	|= OE			// Buffer output enable
-#define OutputDisable		REG_PIOA_SODR	|= OE			// Buffer output disable
+#define readResetEnable		REG_PIOA_CODR	|= RRST_PIN			// Buffer read reset
+#define readResetDisable	REG_PIOA_SODR	|= RRST_PIN			// Buffer read on (not in reset)
+#define OutputEnable		REG_PIOA_CODR	|= OE_PIN			// Buffer output enable
+#define OutputDisable		REG_PIOA_SODR	|= OE_PIN			// Buffer output disable
 #define readClockEnable		REG_TC0_CCR1	|= TC_CCR_CLKEN|TC_CCR_SWTRG//Enable the read clock
 #define readClockDisable	REG_TC0_CCR1	= 0				//Disable the read clock
 #define readNow				REG_TC0_SR1		& TC_SR_CPCS	//A flag that says whether RC has over-
 															//flowed on TC1. (Indicates when to read
 															//a byte from the RAM)
-#define readClkOn			REG_PIOA_SODR	|= RCK;
-#define readClkOff			REG_PIOA_CODR	|= RCK;
+#define readClkOn			REG_PIOA_SODR	|= RCK_PIN;
+#define readClkOff			REG_PIOA_CODR	|= RCK_PIN;
 
 //////////////[Private Global Variables]////////////////////////////////////////////////////////////
 volatile uint32_t ramAddrPointer = 0;//Indicates the address in buffer that is currently being read

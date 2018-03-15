@@ -200,7 +200,7 @@ RobotGlobalStructure sys =
 	},
 	
 	.timeStamp						= 0,		//millisecs since power on
-	.startupDelay					= 2500		//Time to wait at startup.
+	.startupDelay					= 0		//Time to wait at startup.
 };
 
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////

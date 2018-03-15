@@ -269,15 +269,17 @@ uint8_t camSetup(void)
 
 	camRegisterReset();
 
-	camWriteInstruction(CLKRC_REG, 0x01);
-	camWriteInstruction(COM7_REG, COM7_FMT_QVGA | COM7_RGB);		// QVGA and RGB
-	camWriteInstruction(RGB444_REG, 0x00);							//Disable RGB444
-	camWriteInstruction(COM15_REG, COM15_RGB555);					//RGB555 Colour space
+	camWriteInstruction(CLKRC_REG, 0x01);					//No prescaling of the input clock [f/(CLKRC+1)]
+	
+	camWriteInstruction(TSLB_REG, 0x01);					//Auto adjust output window on resolution change
+	camWriteInstruction(RGB444_REG, 0x00);					//Disable RGB444
+	camWriteInstruction(COM7_REG, COM7_FMT_QVGA | COM7_RGB);// QVGA and RGB
+	camWriteInstruction(COM15_REG, COM15_RGB555);			//RGB555 Colour space
 	camWriteInstruction(COM3_REG, 0x80);
-	camWriteInstruction(COM14_REG, 0x80);
-	camWriteInstruction(SCALING_XSC_REG, 0x3A);			//No mention of these in the datasheet?
-	camWriteInstruction(SCALING_YSC_REG, 0x35);
-	camWriteInstruction(SCALING_DCWCTR_REG, 0x11);
+	//camWriteInstruction(COM14_REG, 0x80);
+	//camWriteInstruction(SCALING_XSC_REG, 0x3A);				//No mention of these in the datasheet?
+	//camWriteInstruction(SCALING_YSC_REG, 0x35);
+	//camWriteInstruction(SCALING_DCWCTR_REG, 0x11);
 	camWriteInstruction(SCALING_PCLK_DIV_REG, 0xF1);
 	camWriteInstruction(SCALING_PCLK_DELAY_REG, 0x02);
 
@@ -290,14 +292,14 @@ uint8_t camSetup(void)
 
 
 	// PCLK does not toggle during horizontal blank
-	camWriteInstruction(COM10_REG, COM10_PCLK_HB);
+	//camWriteInstruction(COM10_REG, COM10_PCLK_HB);
 
 	// Set image format to RGB565
 	//camChangeFormat(COM7_RGB);
 
 	// Test bar image
 	//camWriteInstruction(COM17_REG, COM17_CBAR);
-	camTestPattern(CAM_PATTERN_NONE);
+	camTestPattern(CAM_PATTERN_BAR);
 
 	return 0x00;
 }
@@ -350,8 +352,8 @@ void camRead(void)
 	while(1)
 	{
 
-		pwdnDisable;
-		delay_ms(100);
+		//pwdnDisable;
+		//delay_ms(100);
 		
 		// Clear read and write buffers
 		while (!VSYNC); // wait for a low vertical sync pulse to reset the pointers in memory buffer, sync pulse goes low
@@ -362,8 +364,9 @@ void camRead(void)
 		
 		while (!VSYNC); // wait for a low vertical sync pulse to reset the pointers in memory buffer, sync pulse goes low
 		camBufferWriteStop();
-		pwdnEnable;
-		delay_ms(100);
+		
+		//pwdnEnable;
+		//delay_ms(100);
 			
 		//camBufferReadReset();
 		 // wait for sync pulse to go high
