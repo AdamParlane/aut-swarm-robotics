@@ -33,7 +33,8 @@
 #include "../robot_setup.h"
 
 //////////////[Public Defines]//////////////////////////////////////////////////////////////////////
-//TEMP
+//This has been made available publicly so the buffer can time it's write reset procedure to vsync
+#define VSYNC_PORT		PIOC
 #define VSYNC_PIN		PIO_PC13
 #define	VSYNC			(REG_PIOC_PDSR & VSYNC_PIN)
 
@@ -50,9 +51,6 @@ typedef enum CameraTestPatterns
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
 void camInit(void);
 uint8_t camSetup(void);
-
-void camWriteInstruction(uint8_t regAddress, uint8_t data);
-uint8_t camReadInstruction(uint8_t data);
 
 void camHardReset(void);
 void camRegisterReset(void);

@@ -31,23 +31,7 @@
 #include "../robot_setup.h"
 
 //////////////[Defines]/////////////////////////////////////////////////////////////////////////////
-//Buffer PIO Pin definitions
-// Buffer pin				SAM4 pin		Function			Type
-#define WE_PORT				PIOC
-#define WE_PIN				PIO_PC7			// Write Enable		Output
-#define WRST_PORT			PIOA
-#define WRST_PIN			PIO_PA24		// Write Reset		Output
-#define RCK_PORT			PIOA
-#define RCK_PIN				PIO_PA15		// Read Clock		Output
-#define OE_PORT				PIOA
-#define OE_PIN				PIO_PA11		// Output Enable	Output
-#define RRST_PORT			PIOA
-#define RRST_PIN			PIO_PA26		// Read Reset		Output
 
-// TEMP: will only allow for a single capture
-// Timer Counter Reset
-#define ReadClockHigh		RCK_PORT->PIO_SODR |= RCK_PIN;
-#define ReadClockLow		PCK_PORT->PIO_CODR |= RCK_PIN;
 
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
 void camBufferInit(void);

@@ -30,35 +30,66 @@
 #include "timer_interface.h"	//Provides delay_ms()
 
 //////////////[Private Defines]/////////////////////////////////////////////////////////////////////
+//Buffer PIO Pin definitions
+// Buffer pin			SAM4 port/pin	Function			Type		Robot Pin Name
+#define WE_PORT			PIOC
+#define WE_PIN			PIO_PC7			//Write Enable		Output		VB_WE
+#define WRST_PORT		PIOA
+#define WRST_PIN		PIO_PA24		//Write Reset		Output		VB_WRST
+#define RCK_PORT		PIOA
+#define RCK_PIN			PIO_PA15		//Read Clock		Output		VB_RCK
+#define OE_PORT			PIOA
+#define OE_PIN			PIO_PA11		//Output Enable		Output		VB_OE
+#define RRST_PORT		PIOA
+#define RRST_PIN		PIO_PA26		//Read Reset		Output		VB_RRST
 
-#define DO0					(REG_PIOA_PDSR & PIO_PA6)
-#define DO1					(REG_PIOA_PDSR & PIO_PA9)
-#define DO2					(REG_PIOA_PDSR & PIO_PA10)
-#define DO3					(REG_PIOC_PDSR & PIO_PC2)
-#define DO4					(REG_PIOA_PDSR & PIO_PA25)
-#define DO5					(REG_PIOC_PDSR & PIO_PC4)
-#define DO6					(REG_PIOC_PDSR & PIO_PC5)
-#define DO7					(REG_PIOC_PDSR & PIO_PC6)
+#define DO0_PORT		PIOA			//Data line 0		Input
+#define DO0_PIN			PIO_PA6
+#define DO1_PORT		PIOA			//Data line 1		Input
+#define DO1_PIN			PIO_PA9
+#define DO2_PORT		PIOA			//Data line 2		Input
+#define DO2_PIN			PIO_PA10
+#define DO3_PORT		PIOC			//Data line 3		Input
+#define DO3_PIN			PIO_PC2
+#define DO4_PORT		PIOA			//Data line 4		Input
+#define DO4_PIN			PIO_PA25
+#define DO5_PORT		PIOC			//Data line 5		Input
+#define DO5_PIN			PIO_PC4
+#define DO6_PORT		PIOC			//Data line 6		Input
+#define DO6_PIN			PIO_PC5
+#define DO7_PORT		PIOC			//Data line 7		Input
+#define DO7_PIN			PIO_PC6
+
+//Data parallel input macros
+#define DO0				(DO0_PORT->PIO_PDSR & DO0_PIN)
+#define DO1				(DO1_PORT->PIO_PDSR & DO1_PIN)
+#define DO2				(DO2_PORT->PIO_PDSR & DO2_PIN)
+#define DO3				(DO3_PORT->PIO_PDSR & DO3_PIN)
+#define DO4				(DO4_PORT->PIO_PDSR & DO4_PIN)
+#define DO5				(DO5_PORT->PIO_PDSR & DO5_PIN)
+#define DO6				(DO6_PORT->PIO_PDSR & DO6_PIN)
+#define DO7				(DO7_PORT->PIO_PDSR & DO7_PIN)
 
 // Writing to buffer from camera
-#define writeDisable		WE_PORT->PIO_CODR	|= WE_PIN	// Buffer write disable (Active high via
-															// NAND gate)
-#define writeEnable			WE_PORT->PIO_SODR	|= WE_PIN	// Buffer write enable
-#define WriteReset			WRST_PORT->PIO_CODR	|= WRST_PIN	// Buffer write reset
-#define WriteOn				WRST_PORT->PIO_SODR |= WRST_PIN		// Buffer write on (not in reset)
+#define writeDisable	WE_PORT->PIO_CODR	|= WE_PIN		//Buffer write disable (Active high via
+															//NAND gate)
+#define writeEnable		WE_PORT->PIO_SODR	|= WE_PIN		//Buffer write enable
+#define writeResetOn	WRST_PORT->PIO_CODR	|= WRST_PIN		//Buffer write reset
+#define writeResetOff	WRST_PORT->PIO_SODR |= WRST_PIN		//Buffer write on (not in reset)
 
 // Reading from buffer to SAM4
-#define readResetEnable		REG_PIOA_CODR	|= RRST_PIN			// Buffer read reset
-#define readResetDisable	REG_PIOA_SODR	|= RRST_PIN			// Buffer read on (not in reset)
-#define OutputEnable		REG_PIOA_CODR	|= OE_PIN			// Buffer output enable
-#define OutputDisable		REG_PIOA_SODR	|= OE_PIN			// Buffer output disable
-#define readClockEnable		REG_TC0_CCR1	|= TC_CCR_CLKEN|TC_CCR_SWTRG//Enable the read clock
+#define readResetOn		RRST_PORT->PIO_CODR	|= RRST_PIN		//Buffer read reset
+#define readResetOff	RRST_PORT->PIO_SODR	|= RRST_PIN		//Buffer read on (not in reset)
+#define outputEnable	OE_PORT->PIO_CODR	|= OE_PIN		//Buffer output enable
+#define outputDisable	OE_PORT->PIO_SODR	|= OE_PIN		//Buffer output disable
+#define readClkOn		RCK_PORT->PIO_SODR	|= RCK_PIN;		//Turns the clock pin on manually
+#define readClkOff		RCK_PORT->PIO_CODR	|= RCK_PIN;		//Turns the clock pin off manually
+#define readClockEnable	REG_TC0_CCR1		|= TC_CCR_CLKEN|TC_CCR_SWTRG//Enable the read clock
 #define readClockDisable	REG_TC0_CCR1	= 0				//Disable the read clock
-#define readNow				REG_TC0_SR1		& TC_SR_CPCS	//A flag that says whether RC has over-
+#define readNow			REG_TC0_SR1			& TC_SR_CPCS	//A flag that says whether RC has over-
 															//flowed on TC1. (Indicates when to read
 															//a byte from the RAM)
-#define readClkOn			REG_PIOA_SODR	|= RCK_PIN;
-#define readClkOff			REG_PIOA_CODR	|= RCK_PIN;
+
 
 //////////////[Private Global Variables]////////////////////////////////////////////////////////////
 volatile uint32_t ramAddrPointer = 0;//Indicates the address in buffer that is currently being read
@@ -67,6 +98,7 @@ volatile uint32_t ramAddrPointer = 0;//Indicates the address in buffer that is c
 volatile uint8_t retrievedByte = 0;
 
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
+
 // TEMP: Dirty Delay Design TODO: Replace with existing delay function
 void delayBuffer()
 {
@@ -83,44 +115,66 @@ void camBufferInit()
 	/********Buffer control**************/
 	//buffer AL422B can store one complete VGA frame
 
-	/************Write to buffer from Camera**********/
 	// buffer AL422B has a active low WE write enable. a 0 is applied to this pin from NAND gate
 	//U7 when HREF (camera) and VB_WE (micro) is high
 	// this means the buffer only captures 640 pixels active pixels in one line.
+
+	//the buffer must have read enable (RE - tied to gnd), Output enable (OE) and read reset(RRST)
+	//low in order to output stored data
+	//Enable PIO control for buffer
+	RRST_PORT->PIO_PER	|= RRST_PIN;
+	RCK_PORT->PIO_PER	|= RCK_PIN;
+	OE_PORT->PIO_PER	|= OE_PIN;
+	WRST_PORT->PIO_PER	|= WRST_PIN;
+	WE_PORT->PIO_PER	|= WE_PIN;
+	DO0_PORT->PIO_PER	|= DO0_PIN;
+	DO1_PORT->PIO_PER	|= DO1_PIN;
+	DO2_PORT->PIO_PER	|= DO2_PIN;
+	DO3_PORT->PIO_PER	|= DO3_PIN;
+	DO4_PORT->PIO_PER	|= DO4_PIN;
+	DO5_PORT->PIO_PER	|= DO5_PIN;
+	DO6_PORT->PIO_PER	|= DO6_PIN;
+	DO7_PORT->PIO_PER	|= DO7_PIN;
 	
-	//Set up the IO pins for controlling the buffer chip
-	//Peripheral enable
-	WRST_PORT->PIO_PER	|= WRST_PIN;	//PA24 (VB_WRST)
-	WE_PORT->PIO_PER	|= WE_PIN;		//PC7 (VB_WE)
-	//Enable pins as outputs
-	WRST_PORT->PIO_OER	|= WRST_PIN;	//PA24 (VB_WRST)
-	WE_PORT->PIO_OER	|= WE_PIN;		//PC7 (VB_WE)
+	//Set as an output
+	RRST_PORT->PIO_OER	|= RRST_PIN;
+	RCK_PORT->PIO_OER	|= RCK_PIN;
+	OE_PORT->PIO_OER	|= OE_PIN;
+	WRST_PORT->PIO_OER	|= WRST_PIN;
+	WE_PORT->PIO_OER	|= WE_PIN;
+	DO0_PORT->PIO_OER	|= DO0_PIN;
+	DO1_PORT->PIO_OER	|= DO1_PIN;
+	DO2_PORT->PIO_OER	|= DO2_PIN;
+	DO3_PORT->PIO_OER	|= DO3_PIN;
+	DO4_PORT->PIO_OER	|= DO4_PIN;
+	DO5_PORT->PIO_OER	|= DO5_PIN;
+	DO6_PORT->PIO_OER	|= DO6_PIN;
+	DO7_PORT->PIO_OER	|= DO7_PIN;
+	
 	//Enable internal pullup resistors
+	RRST_PORT->PIO_PUER	|= RRST_PIN;
+	RCK_PORT->PIO_PUER	|= RCK_PIN;
+	OE_PORT->PIO_PUER	|= OE_PIN;
 	WRST_PORT->PIO_PUER	|= WRST_PIN;
 	WE_PORT->PIO_PUER	|= WE_PIN;
-
-	/***********Read from buffer to micro***********/
-	// the buffer must have read enable (RE - tied to gnd), Output enable (OE) and read reset(RRST)
-	//low in order to output stored data
-	REG_PIOA_PER			//Enable PIO control for buffer
-	|=	RRST_PIN				//PA26 (VB_RRST)
-	|	RCK_PIN					//PA15 (Read Clock)
-	|	OE_PIN;					//PA11 (VB_OE)
-	REG_PIOA_OER			//Set as an output
-	|=	RRST_PIN				//PA26 (VB_RRST)
-	|	RCK_PIN				//PA15 (Read clock)
-	|	OE_PIN;					//PA11 (VB_OE)
-	REG_PIOA_PUER			//Enable internal pullup resistors
-	|=	RRST_PIN				//PA26 (VB_RRST)
-	|	RCK_PIN					//PA15 (Read clock)
-	|	OE_PIN;					//PA11 (VB_OE)
-
-
+	DO0_PORT->PIO_PUER	|= DO0_PIN;
+	DO1_PORT->PIO_PUER	|= DO1_PIN;
+	DO2_PORT->PIO_PUER	|= DO2_PIN;
+	DO3_PORT->PIO_PUER	|= DO3_PIN;
+	DO4_PORT->PIO_PUER	|= DO4_PIN;
+	DO5_PORT->PIO_PUER	|= DO5_PIN;
+	DO6_PORT->PIO_PUER	|= DO6_PIN;
+	DO7_PORT->PIO_PUER	|= DO7_PIN;
+	
+	//Allow TC1 to take control of the read clock
+	//REG_PIOA_ABCDSR1	|=	(PIO_ABCDSR_P15);			//Set PA15 for peripheral B (TIOA1)
+	//RCK_PORT->PIO_PDR	|= RCK_PIN;						//Allow TC1 to use RCK (PA15)
+	
 	//TIMER for READ CLOCK
 	//Timer Counter 0 Channel 1 Config (Used for the camera buffer read clock RCK on PA15 (TIOA1)
 	//Enable the peripheral clock for TC0
 	REG_PMC_PCER0
-	|=	(1<<ID_TC1);
+	|=	(1<<ID_TC1);					//Enable peripheral clock for Timer0 Ch1
 	REG_TC0_WPMR
 	=	(0x54494D << 8);				//Disable Write Protection
 	REG_TC0_CMR1						//TC Channel Mode Register (Pg877)
@@ -138,45 +192,8 @@ void camBufferInit()
 	REG_TC0_CCR1						//Clock control register
 	=	0;								//Keep the timer disabled until its needed
 	
-	//REG_PIOA_ABCDSR1
-	//|=	(PIO_ABCDSR_P15);				//Set PA15 for peripheral B (TIOA1)
-	//REG_PIOA_PDR
-	//|=	RCK;							//Allow TC1 to use RCK (PA15)
 	//Enable interrupts
 	//NVIC_EnableIRQ(ID_TC1);			//Enable interrupts on Timer Counter 0 Channel 1
-
-	/******* Micro camera data lines**************/
-	/* 8 data lines coming into the micro from the buffer as a byte of half a pixel*/
-	REG_PIOC_PER			//Enable PIO control
-	|=	PIO_PC2				//D3(PC2), 
-	|	PIO_PC4				//D5(PC4),
-	|	PIO_PC5				//D6(PC5),
-	|	PIO_PC6;  			//D7(PC6)
-	REG_PIOC_ODR 			//Set D3,D5,D6,D7 as an input
-	|=	PIO_PC2
-	|	PIO_PC4 
-	|	PIO_PC5 
-	|	PIO_PC6; 
-	REG_PIOC_PUER 			//Enable internal pullups
-	|=	PIO_PC2
-	|	PIO_PC4
-	|	PIO_PC5
-	|	PIO_PC6;
-	REG_PIOA_PER			//Enable PIO control
-	|=	PIO_PA6 			//D0(PA6),
-	|	PIO_PA9				//D1 (PA9),
-	|	PIO_PA10			//D2(PA10),
-	|	PIO_PA24;			//D4(PA24)
-	REG_PIOA_ODR			//Set D0,D1,D2,D4 as an input
-	|=	PIO_PA6 
-	|	PIO_PA9
-	|	PIO_PA10
-	|	PIO_PA24;
-	REG_PIOA_PUER			//Enable internal pullup resistors
-	|=	PIO_PA6
-	|	PIO_PA9
-	|	PIO_PA10
-	|	PIO_PA24;
 		
 	//100ms after power, the buffer chip should be reset (Pg14 of datasheet):
 	delay_ms(100);
@@ -198,47 +215,26 @@ void camBufferWriteStart(void)
 void camBufferWriteReset(void)
 {
 	// Reset
-	WriteReset;
+	writeResetOn;
 	while (VSYNC);
-	//delayBuffer();
 	// Clear reset
-	WriteOn;
-	//delayBuffer();
+	writeResetOff;
 }
 
 void camBufferReadStop(void)
 {
-	//readClockDisable;
-	OutputDisable;
-	//readClkOff;
-	//delay_ms(1);
-	//readClkOn;
-	//delay_ms(1);
-	//readClkOff;
-	//delay_ms(1);
-	//readClkOn;
-	//delay_ms(1);
-	//readClkOff;
+	outputDisable;
 }
 
 void camBufferReadStart(void)
 {
-	OutputEnable;
-	//readClkOff;
-	//delay_ms(1);
-	//readClkOn;
-	//delay_ms(1);
-	//readClkOff;
-	//delay_ms(1);
-	//readClkOn;
-	//delay_ms(1);
-	//readClkOff;
+	outputEnable;
 }
 
 void camBufferReadReset(void)
 {
 	// Reset
-	readResetEnable;
+	readResetOn;
 	readClkOff;
 	delay_ms(1);
 	readClkOn;
@@ -249,7 +245,7 @@ void camBufferReadReset(void)
 	delay_ms(1);
 	readClkOff;
 	// Clear reset
-	readResetDisable;
+	readResetOff;
 	ramAddrPointer = 0;
 }
 
