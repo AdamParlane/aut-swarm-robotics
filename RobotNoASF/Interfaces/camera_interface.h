@@ -15,8 +15,8 @@
 * Functions:
 * void camInit(void);
 * uint8_t camSetup(void);
-* void camWriteInstruction(uint8_t regAddress, uint8_t data);
-* uint8_t camReadInstruction(uint8_t data);
+* void camWriteReg(uint8_t regAddress, uint8_t data);
+* uint8_t camReadReg(uint8_t data);
 * void camHardReset(void);
 * void camRegisterReset(void);
 * bool camValidID(void)

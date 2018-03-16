@@ -15,8 +15,8 @@
 * Functions:
 * void camInit(void);
 * uint8_t camSetup(void);
-* void camWriteInstruction(uint8_t regAddress, uint8_t data);
-* uint8_t camReadInstruction(uint8_t data);
+* void camWriteReg(uint8_t regAddress, uint8_t data);
+* uint8_t camReadReg(uint8_t data);
 * void camHardReset(void);
 * void camRegisterReset(void);
 * bool camValidID(void)
@@ -221,8 +221,8 @@ uint16_t winWidth, winHeight, winX, winY;	//Window Size and position (From centr
 
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
 //Private function prototypes
-void camWriteInstruction(uint8_t regAddress, uint8_t data);
-uint8_t camReadInstruction(uint8_t data);
+void camWriteReg(uint8_t regAddress, uint8_t data);
+uint8_t camReadReg(uint8_t data);
 
 void camInit(void)
 {
@@ -269,8 +269,10 @@ void camInit(void)
 	delay_ms(5);
 	pwdnDisable;
 	
+
 	camHardReset();						//Reset the camera
 	camSetup();							//Load settings into the camera
+	camBufferInit();					//Initialise camera RAM buffer
 }
 
 uint8_t camSetup(void)
@@ -279,36 +281,42 @@ uint8_t camSetup(void)
 	if (!camValidID()) return 0xFF;	// Stop camera setup
 
 	camRegisterReset();								//Reset all registers to default.
-	camWriteInstruction(CLKRC_REG, 0x01);			//No prescaling of the input clock [f/(CLKRC+1)]
-	camWriteInstruction(TSLB_REG, 0x01);			//Auto adjust output window on resolution change
-	camWriteInstruction(RGB444_REG, 0x00);			//Disable RGB444
-	camWriteInstruction(COM7_REG, COM7_FMT_QVGA | COM7_RGB);// QVGA and RGB
-	//camWriteInstruction(COM7_REG, COM7_RGB);// VGA and RGB
-	camWriteInstruction(COM15_REG, COM15_RGB555);	//RGB555 Colour space
-	//camWriteInstruction(SCALING_PCLK_DIV_REG, 0xF1);//MARKED AS DEBUG IN DATASHEET??
-	//camWriteInstruction(SCALING_PCLK_DELAY_REG, 0x02);
-	camWriteInstruction(COM6_REG, 0xC3);			//Keep HREF at optical black (No diff)
-	camWriteInstruction(COM12_REG, COM12_HREF);		//Keep HREF on while VSYNCing (prevents loss of
-													//pixels on each line)
+	camWriteReg(CLKRC_REG, 0x01);			//No prescaling of the input clock [f/(CLKRC+1)]
+	camWriteReg(TSLB_REG, 0x01);			//Auto adjust output window on resolution change
+	camWriteReg(RGB444_REG, 0x00);			//Disable RGB444
+	camWriteReg(COM7_REG, COM7_FMT_QVGA | COM7_RGB);// QVGA and RGB
+	//camWriteReg(COM7_REG, COM7_RGB);// VGA and RGB
+	camWriteReg(COM15_REG, COM15_RGB555);	//RGB555 Colour space
+	//camWriteReg(SCALING_PCLK_DIV_REG, 0xF1);//MARKED AS DEBUG IN DATASHEET??
+	//camWriteReg(SCALING_PCLK_DELAY_REG, 0x02);
+	//camWriteReg(COM6_REG, 0xC3);			//Keep HREF at optical black (No diff)
+	camWriteReg(COM12_REG, COM12_HREF);		//Keep HREF on while VSYNCing (prevents loss of
+											//pixels on each line)
 
+	
+	camWriteReg(CONTRAS_REG, 48);			//Set contrast
+	
+	//Set up the Automatic Exposure and Gain Control
+	camWriteReg(COM8_REG, COM8_AEC|COM8_AGC|COM8_AWB); //Also Auto white balance
+	camWriteReg(COM16_REG, COM16_AWBGAIN);
+	
+	//camSetWindowSize(72, 392, 12, 252);
 	
 	camUpdateWindowSize();//Get the window size from the camera
 
-	//camSetWindowSize(72, 388, 6, 246);
-
-	camTestPattern(CAM_PATTERN_BAR);				//Test pattern can be set here.
+	camTestPattern(CAM_PATTERN_NONE);				//Test pattern can be set here.
 
 	return 0x00;
 }
 
 // Write to the 8 bit regAdress
-void camWriteInstruction(uint8_t regAddress, uint8_t data)
+void camWriteReg(uint8_t regAddress, uint8_t data)
 {
 	twi0Write(TWI0_CAM_WRITE_ADDR, regAddress, 1, &data);
 }
 
 // Returns the 8 bit value stored in regAddress
-uint8_t camReadInstruction(uint8_t regAddress)
+uint8_t camReadReg(uint8_t regAddress)
 {
 	twi0SetCamRegister(regAddress);
 	uint8_t data = twi0ReadCameraRegister();
@@ -327,7 +335,7 @@ void camHardReset(void)
 // Resets all registers to default values
 void camRegisterReset(void)
 {
-	camWriteInstruction(COM7_REG, COM7_RESET);
+	camWriteReg(COM7_REG, COM7_RESET);
 }
 
 // Checks camera is responding and has correct ID
@@ -335,8 +343,8 @@ bool camValidID(void)
 {
 	// PID_REG		0x76	(Default)	// Camera ID MSB
 
-	//uint8_t data = camReadInstruction(PID_REG);
-	uint8_t data = camReadInstruction(0x0A);
+	//uint8_t data = camReadReg(PID_REG);
+	uint8_t data = camReadReg(0x0A);
 	// if the PID register value is returned and is the camera ID
 	return data == REG76_REG;
 }
@@ -366,15 +374,15 @@ uint8_t camUpdateWindowSize(void)
 	uint8_t h[4], v[4];
 	const uint8_t START_H = 0, START_L = 1, STOP_H = 2, STOP_L = 3;
 	
-	uint8_t qvgaMode = ((camReadInstruction(COM7_REG) & 0x10)>>4);
+	uint8_t qvgaMode = ((camReadReg(COM7_REG) & 0x10)>>4);
 	
-	h[START_H] = camReadInstruction(HSTART_REG);	//Bits 7:0
-	h[START_L] = camReadInstruction(HREF_REG);		//Bits 2:0
-	h[STOP_H] = camReadInstruction(HSTOP_REG);		//Bits 7:0
+	h[START_H] = camReadReg(HSTART_REG);	//Bits 7:0
+	h[START_L] = camReadReg(HREF_REG);		//Bits 2:0
+	h[STOP_H] = camReadReg(HSTOP_REG);		//Bits 7:0
 	h[STOP_L] = h[START_L];							//Bits 5:3
-	v[START_H] = camReadInstruction(VSTART_REG);	//Bits 7:0
-	v[START_L] = camReadInstruction(VREF_REG);		//Bits 1:0
-	v[STOP_H] = camReadInstruction(VSTOP_REG);		//Bits 7:0
+	v[START_H] = camReadReg(VSTART_REG);	//Bits 7:0
+	v[START_L] = camReadReg(VREF_REG);		//Bits 1:0
+	v[STOP_H] = camReadReg(VSTOP_REG);		//Bits 7:0
 	v[STOP_L] = v[START_L];							//Bits 3:2
 	
 	hStart	= ((h[START_H]	& 0xFF)<<3) | ((h[START_L]	& 0x07)<<0);
@@ -389,17 +397,17 @@ uint8_t camUpdateWindowSize(void)
 	winHeight = (vStop - vStart);		
 
 	//If the cam is in QVGA mode, then divide all outputs by 2:
-	if(qvgaMode)
-	{		
-		winX /= 2;
-		winY /= 2;
-		winWidth /= 2;
-		winHeight /=2;
-		hStart /= 2;
-		hStop /= 2;
-		vStart /= 2;
-		vStop /= 2;
-	}	
+	//if(qvgaMode)
+	//{		
+		//winX /= 2;
+		//winY /= 2;
+		//winWidth /= 2;
+		//winHeight /=2;
+		//hStart /= 2;
+		//hStop /= 2;
+		//vStart /= 2;
+		//vStop /= 2;
+	//}	
 	
 	return 0;
 }
@@ -442,18 +450,18 @@ uint8_t camSetWindowSize(uint16_t hStart, uint16_t hStop, uint16_t vStart, uint1
 	const uint8_t START_H = 0, START_L = 1, STOP_H = 2, STOP_L = 3;
 	
 	//Check if the camera is in QVGA mode or not.
-	uint8_t qvgaMode = ((camReadInstruction(COM7_REG) & 0x10)>>4);
+	uint8_t qvgaMode = ((camReadReg(COM7_REG) & 0x10)>>4);
 	//Get the data from each of the partial registers so we can OR in the new data
-	hRefReg = camReadInstruction(HREF_REG);		//Bits 2:0, 5:3
-	vRefReg = camReadInstruction(VREF_REG);		//Bits 1:0, 3:2
+	hRefReg = camReadReg(HREF_REG);		//Bits 2:0, 5:3
+	vRefReg = camReadReg(VREF_REG);		//Bits 1:0, 3:2
 	
-	if(qvgaMode)
-	{
-		hStart *= 2;
-		hStop *= 2;
-		vStart *= 2;
-		vStop *= 2;
-	}
+	//if(qvgaMode)
+	//{
+		//hStart *= 2;
+		//hStop *= 2;
+		//vStart *= 2;
+		//vStop *= 2;
+	//}
 	
 	//Clear the appropriate bits in the existing register data
 	hRefReg &= ~(0x3F);
@@ -470,12 +478,12 @@ uint8_t camSetWindowSize(uint16_t hStart, uint16_t hStop, uint16_t vStart, uint1
 	v[STOP_L]	= ((vStop	& 0x0003)>>0);
 	
 	//Write out the data
-	camWriteInstruction(HSTART_REG, h[START_H]);
-	camWriteInstruction(HSTOP_REG, h[STOP_H]);
-	camWriteInstruction(VSTART_REG, v[START_H]);
-	camWriteInstruction(VSTOP_REG, v[STOP_H]);
-	camWriteInstruction(HREF_REG, h[START_L]|h[STOP_L]|hRefReg);
-	camWriteInstruction(VREF_REG, v[START_L]|v[STOP_L]|vRefReg);	
+	camWriteReg(HSTART_REG, h[START_H]);
+	camWriteReg(HSTOP_REG, h[STOP_H]);
+	camWriteReg(VSTART_REG, v[START_H]);
+	camWriteReg(VSTOP_REG, v[STOP_H]);
+	camWriteReg(HREF_REG, h[START_L]|h[STOP_L]|hRefReg);
+	camWriteReg(VREF_REG, v[START_L]|v[STOP_L]|vRefReg);	
 
 	return 0;
 }
@@ -483,6 +491,7 @@ uint8_t camSetWindowSize(uint16_t hStart, uint16_t hStop, uint16_t vStart, uint1
 /********** Camera Data Reading **********/
 void camRead(void)
 {
+	uint8_t var = 0x0;
 	while(1)
 	{
 
@@ -501,6 +510,8 @@ void camRead(void)
 		
 		//read the buffer in parts as we don't have enough memory for an entire frame at once.
 		camBufferReadData(0, 57239, data);			
+		
+		camWriteReg(BRIGHT_REG, var);
 		//camBufferReadData(57240, 114479, data);
 		//camBufferReadData(112680, 150239, data);
 	}
@@ -527,11 +538,11 @@ void camChangeFormat(uint8_t type)
 	if (type == COM7_RGB)
 	{
 		// Enable RGB
-		camWriteInstruction(COM7_REG,COM7_RGB);
+		camWriteReg(COM7_REG,COM7_RGB);
 		// Disable RGB444
-		camWriteInstruction(RGB444_REG, 0x00);
+		camWriteReg(RGB444_REG, 0x00);
 		// Enable RGB565
-		camWriteInstruction(COM15_REG,COM15_RGB565);
+		camWriteReg(COM15_REG,COM15_RGB565);
 	}
 }
 
@@ -540,20 +551,20 @@ void camTestPattern(CameraTestPatterns type)
 	switch (type)
 	{
 		case CAM_PATTERN_SHIFT:
-			camWriteInstruction(SCALING_XSC_REG, SHIFT_XSC);
-			camWriteInstruction(SCALING_YSC_REG, SHIFT_YSC);
+			camWriteReg(SCALING_XSC_REG, SHIFT_XSC);
+			camWriteReg(SCALING_YSC_REG, SHIFT_YSC);
 		break;
 		case CAM_PATTERN_BAR:
-			camWriteInstruction(SCALING_XSC_REG, BAR_XSC);
-			camWriteInstruction(SCALING_YSC_REG, BAR_YSC);
+			camWriteReg(SCALING_XSC_REG, BAR_XSC);
+			camWriteReg(SCALING_YSC_REG, BAR_YSC);
 		break;
 		case CAM_PATTERN_FADE:
-			camWriteInstruction(SCALING_XSC_REG, FADE_XSC);
-			camWriteInstruction(SCALING_YSC_REG, FADE_YSC);
+			camWriteReg(SCALING_XSC_REG, FADE_XSC);
+			camWriteReg(SCALING_YSC_REG, FADE_YSC);
 		break;
 		default:
-			camWriteInstruction(SCALING_XSC_REG, 0x00);
-			camWriteInstruction(SCALING_YSC_REG, 0x00);
+			camWriteReg(SCALING_XSC_REG, 0x00);
+			camWriteReg(SCALING_YSC_REG, 0x00);
 		break;
 	}
 }
