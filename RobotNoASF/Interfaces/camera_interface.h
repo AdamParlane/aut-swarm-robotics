@@ -71,6 +71,28 @@ bool camValidID(void);
 *
 */
 uint8_t camUpdateWindowSize(void);
+
+/*
+* Function:
+* uint8_t camSetWindowSize(uint16_t hStart, uint16_t hStop, uint16_t vStart, uint16_t vStop)
+*
+* Sets the size of the image window.
+*
+* Inputs:
+* uint16_t hStart:
+*	The x axis pixel location where the camera should start a line
+* uint16_t hStop:
+*	The x axis pixel loaction where a line should end
+* uint16_t vStart:
+*	The vertical line that an image should begin from
+* uint16_t the vertical line that an image should end at.
+*
+* Returns:
+* 0 on exit
+*
+*/
+uint8_t camSetWindowSize(uint16_t hStart, uint16_t hStop, uint16_t vStart, uint16_t vStop);
+
 void camChangeFormat(uint8_t type);
 void camTestPattern(CameraTestPatterns type);
 

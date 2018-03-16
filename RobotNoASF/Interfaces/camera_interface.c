@@ -113,7 +113,8 @@
 #define HSYEN_REG			0x31    // HSYNC falling edge delay 
 #define HREF_REG			0x32    // HREF pieces 
 #define TSLB_REG			0x3a    // lots of stuff 
-#define TSLB_YLAST			0x04    // UYVY or VYUY - see com13 
+#define		TSLB_YLAST		0x04    // UYVY or VYUY - see com13 
+
 #define COM11_REG			0x3b    // Control 11 
 #define		COM11_NIGHT     0x80    // NIght mode enable 
 #define		COM11_NMFR      0x60    // Two bit NM frame rate 
@@ -214,7 +215,7 @@
 #define bufferOffset			0	// 239616
 
 //////////////[Private Global Variables]////////////////////////////////////////////////////////////
-uint8_t data[56340];		// 2*313*90 (2*w*h) 2 bytes per pixel
+uint8_t data[57240];		// 2*318*90 (2*w*h) 2 bytes per pixel
 uint16_t hStart, hStop,	vStart,	vStop;		//Image window size (pixels)
 uint16_t winWidth, winHeight, winX, winY;	//Window Size and position (From centre, in pixels)
 
@@ -253,9 +254,9 @@ void camInit(void)
 	|	TC_CMR_ACPA_SET					//Set TIOA0 on RA compare
 	|	TC_CMR_ACPC_CLEAR;				//Clear TIOA0 on RC compare
 	REG_TC0_RA0							//RA set to 5 counts
-	|=	(TC_RA_RA(2));
+	|=	(TC_RA_RA(1));
 	REG_TC0_RC0							//RC set to 10 counts (5MHZ). Freqs under 6MHz don't require
-	|=	(TC_RC_RC(4));					//the cameras PLL
+	|=	(TC_RC_RC(2));					//the cameras PLL
 	REG_TC0_CCR0						//Clock control register
 	|=	TC_CCR_CLKEN					//Enable the timer clk.
 	|	TC_CCR_SWTRG;					//Start timer register counter
@@ -286,10 +287,14 @@ uint8_t camSetup(void)
 	camWriteInstruction(COM15_REG, COM15_RGB555);	//RGB555 Colour space
 	//camWriteInstruction(SCALING_PCLK_DIV_REG, 0xF1);//MARKED AS DEBUG IN DATASHEET??
 	//camWriteInstruction(SCALING_PCLK_DELAY_REG, 0x02);
-	camWriteInstruction(0x2B, 0x08);			//Href falling edge delay
+	camWriteInstruction(COM6_REG, 0xC3);			//Keep HREF at optical black (No diff)
+	camWriteInstruction(COM12_REG, COM12_HREF);		//Keep HREF on while VSYNCing (prevents loss of
+													//pixels on each line)
 
-
+	
 	camUpdateWindowSize();//Get the window size from the camera
+
+	//camSetWindowSize(72, 388, 6, 246);
 
 	camTestPattern(CAM_PATTERN_BAR);				//Test pattern can be set here.
 
@@ -336,7 +341,7 @@ bool camValidID(void)
 	return data == REG76_REG;
 }
 
-//(uint16_t *hStart, uint16_t *hStop, uint16_t *vStart, uint16_t *vStop)
+
 /*
 * Function:
 * uint8_t camUpdateWindowSize(void)
@@ -399,6 +404,82 @@ uint8_t camUpdateWindowSize(void)
 	return 0;
 }
 
+/*
+* Function:
+* uint8_t camSetWindowSize(uint16_t hStart, uint16_t hStop, uint16_t vStart, uint16_t vStop)
+*
+* Sets the size of the image window.
+*
+* Inputs:
+* uint16_t hStart:
+*	The x axis pixel location where the camera should start a line
+* uint16_t hStop:
+*	The x axis pixel loaction where a line should end
+* uint16_t vStart:
+*	The vertical line that an image should begin from
+* uint16_t the vertical line that an image should end at. 
+*
+* Returns:
+* 0 on exit
+*
+* Implementation:
+* First, this function will check if the camera is in QVGA mode as the output will have to be
+* adjusted accordingly. Next, the function retrieves the data from the HREF and VREG registers on
+* the camera, as the function will be writing to only a few bits in these registers and the rest of
+* the data will need to remain intact.
+* 
+* If the cam is in QVGA mode, then double the values in the input parameters (The camera seems to
+* set the window size based on a full VGA frame, even when in QVGA output mode).
+*
+* Finally, the approriate bits are cleared in the retrieved HREF and VREF data, bit shifting is
+* performed on the input data to get the bits arranged correctly for insertion into the registers.
+* Finally, the data is written out to the appropriate registers on the camera.
+*
+*/
+uint8_t camSetWindowSize(uint16_t hStart, uint16_t hStop, uint16_t vStart, uint16_t vStop)
+{
+	uint8_t h[4], v[4], hRefReg, vRefReg;
+	const uint8_t START_H = 0, START_L = 1, STOP_H = 2, STOP_L = 3;
+	
+	//Check if the camera is in QVGA mode or not.
+	uint8_t qvgaMode = ((camReadInstruction(COM7_REG) & 0x10)>>4);
+	//Get the data from each of the partial registers so we can OR in the new data
+	hRefReg = camReadInstruction(HREF_REG);		//Bits 2:0, 5:3
+	vRefReg = camReadInstruction(VREF_REG);		//Bits 1:0, 3:2
+	
+	if(qvgaMode)
+	{
+		hStart *= 2;
+		hStop *= 2;
+		vStart *= 2;
+		vStop *= 2;
+	}
+	
+	//Clear the appropriate bits in the existing register data
+	hRefReg &= ~(0x3F);
+	vRefReg &= ~(0x0F);
+	
+	//Separate out the bitfields ready for each camera register to receive
+	h[START_H]	= ((hStart	& 0x07F8)>>3);
+	h[START_L]	= ((hStart	& 0x0007)>>0);
+	h[STOP_H]	= ((hStop	& 0x07F8)>>3);
+	h[STOP_L]	= ((hStop	& 0x0007)>>0);
+	v[START_H]	= ((vStart	& 0x03FC)>>2);
+	v[START_L]	= ((vStart	& 0x0003)>>0);
+	v[STOP_H]	= ((vStop	& 0x03FC)>>2);
+	v[STOP_L]	= ((vStop	& 0x0003)>>0);
+	
+	//Write out the data
+	camWriteInstruction(HSTART_REG, h[START_H]);
+	camWriteInstruction(HSTOP_REG, h[STOP_H]);
+	camWriteInstruction(VSTART_REG, v[START_H]);
+	camWriteInstruction(VSTOP_REG, v[STOP_H]);
+	camWriteInstruction(HREF_REG, h[START_L]|h[STOP_L]|hRefReg);
+	camWriteInstruction(VREF_REG, v[START_L]|v[STOP_L]|vRefReg);	
+
+	return 0;
+}
+
 /********** Camera Data Reading **********/
 void camRead(void)
 {
@@ -419,9 +500,9 @@ void camRead(void)
 		camUpdateWindowSize();//Get the window size from the camera
 		
 		//read the buffer in parts as we don't have enough memory for an entire frame at once.
-		camBufferReadData(0, 56339, data);			
-		camBufferReadData(56340, 112679, data);
-		camBufferReadData(112680, 150239, data);
+		camBufferReadData(0, 57239, data);			
+		//camBufferReadData(57240, 114479, data);
+		//camBufferReadData(112680, 150239, data);
 	}
 	return;
 }

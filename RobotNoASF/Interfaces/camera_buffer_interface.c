@@ -95,7 +95,6 @@
 volatile uint32_t ramAddrPointer = 0;//Indicates the address in buffer that is currently being read
 //TODO: Make sure that this variable is reset to 0 everytime read reset is asserted to stay synced
 //with the buffer.
-volatile uint8_t retrievedByte = 0;
 
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
 
