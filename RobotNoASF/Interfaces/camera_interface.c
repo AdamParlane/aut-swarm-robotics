@@ -284,9 +284,12 @@ uint8_t camSetup(void)
 	camWriteReg(CLKRC_REG, 0x01);			//No prescaling of the input clock [f/(CLKRC+1)]
 	camWriteReg(TSLB_REG, 0x01);			//Auto adjust output window on resolution change
 	camWriteReg(RGB444_REG, 0x00);			//Disable RGB444
-	camWriteReg(COM7_REG, COM7_FMT_QVGA | COM7_RGB);// QVGA and RGB
+	//camWriteReg(RGB444_REG, 0x02);			//Enable RGB444
+	//camWriteReg(COM7_REG, COM7_FMT_QVGA|0x00);// QVGA and no RGB
+	camWriteReg(COM7_REG, COM7_FMT_QVGA|COM7_RGB);// QVGA and RGB
 	//camWriteReg(COM7_REG, COM7_RGB);// VGA and RGB
-	camWriteReg(COM15_REG, COM15_RGB555);	//RGB555 Colour space
+	camWriteReg(COM15_REG, 0xF0);	//RGB555 Colour space
+	//camWriteReg(COM15_REG, 0xC0);	//RGB444 Colour space
 	//camWriteReg(SCALING_PCLK_DIV_REG, 0xF1);//MARKED AS DEBUG IN DATASHEET??
 	//camWriteReg(SCALING_PCLK_DELAY_REG, 0x02);
 	//camWriteReg(COM6_REG, 0xC3);			//Keep HREF at optical black (No diff)
@@ -379,11 +382,11 @@ uint8_t camUpdateWindowSize(void)
 	h[START_H] = camReadReg(HSTART_REG);	//Bits 7:0
 	h[START_L] = camReadReg(HREF_REG);		//Bits 2:0
 	h[STOP_H] = camReadReg(HSTOP_REG);		//Bits 7:0
-	h[STOP_L] = h[START_L];							//Bits 5:3
+	h[STOP_L] = h[START_L];					//Bits 5:3
 	v[START_H] = camReadReg(VSTART_REG);	//Bits 7:0
 	v[START_L] = camReadReg(VREF_REG);		//Bits 1:0
 	v[STOP_H] = camReadReg(VSTOP_REG);		//Bits 7:0
-	v[STOP_L] = v[START_L];							//Bits 3:2
+	v[STOP_L] = v[START_L];					//Bits 3:2
 	
 	hStart	= ((h[START_H]	& 0xFF)<<3) | ((h[START_L]	& 0x07)<<0);
 	hStop	= ((h[STOP_H]	& 0xFF)<<3) | ((h[STOP_L]	& 0x34)>>3);
