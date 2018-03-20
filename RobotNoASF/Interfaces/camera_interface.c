@@ -280,27 +280,35 @@ uint8_t camSetup(void)
 	// Camera is not responding or the ID was incorrect
 	if (!camValidID()) return 0xFF;	// Stop camera setup
 
-	camRegisterReset();								//Reset all registers to default.
-	camWriteReg(CLKRC_REG, 0x01);			//No prescaling of the input clock [f/(CLKRC+1)]
-	camWriteReg(TSLB_REG, 0x01);			//Auto adjust output window on resolution change
-	camWriteReg(RGB444_REG, 0x00);			//Disable RGB444
-	//camWriteReg(RGB444_REG, 0x02);			//Enable RGB444
-	//camWriteReg(COM7_REG, COM7_FMT_QVGA|0x00);// QVGA and no RGB
-	camWriteReg(COM7_REG, COM7_FMT_QVGA|COM7_RGB);// QVGA and RGB
-	//camWriteReg(COM7_REG, COM7_RGB);// VGA and RGB
-	camWriteReg(COM15_REG, 0xF0);	//RGB555 Colour space
-	//camWriteReg(COM15_REG, 0xC0);	//RGB444 Colour space
-	//camWriteReg(SCALING_PCLK_DIV_REG, 0xF1);//MARKED AS DEBUG IN DATASHEET??
+	camRegisterReset();							//Reset all registers to default.
+	camWriteReg(CLKRC_REG, 0x01);				//No prescaling of the input clock [f/(CLKRC+1)]
+	camWriteReg(TSLB_REG, 0x01);				//Auto adjust output window on resolution change
+	//camWriteReg(SCALING_PCLK_DIV_REG, 0xF1);	//MARKED AS DEBUG IN DATASHEET??
 	//camWriteReg(SCALING_PCLK_DELAY_REG, 0x02);
-	//camWriteReg(COM6_REG, 0xC3);			//Keep HREF at optical black (No diff)
-	camWriteReg(COM12_REG, COM12_HREF);		//Keep HREF on while VSYNCing (prevents loss of
-											//pixels on each line)
+	//camWriteReg(COM6_REG, 0xC3);				//Keep HREF at optical black (No diff)
+	camWriteReg(COM12_REG, COM12_HREF);			//Keep HREF on while VSYNCing (prevents loss of
+	//pixels on each line)
 
+	////RGB555
+	//camWriteReg(RGB444_REG, 0x00);				//Disable RGB444
+	//camWriteReg(COM7_REG, COM7_FMT_QVGA|COM7_RGB);	// QVGA and RGB
+	//camWriteReg(COM15_REG, 0xF0);					//RGB555 Colour space
+
+	//RGB565
+	camWriteReg(RGB444_REG, 0x00);					//Disable RGB444
+	camWriteReg(COM7_REG, COM7_FMT_QVGA|COM7_RGB);	// QVGA and RGB
+	camWriteReg(COM15_REG, 0xD0);					//RGB565 Colour space
+		
+	////RGB444
+	//camWriteReg(RGB444_REG, 0x02);				//Enable RGB444
+	//camWriteReg(COM7_REG, COM7_FMT_QVGA|COM7_RGB);	//QVGA and RGB
+	//camWriteReg(COM15_REG, 0xD0);					//RGB444 Colour space
+	////camWriteReg(COM3_REG, COM3_SWAP);			//Bit swap
 	
-	camWriteReg(CONTRAS_REG, 48);			//Set contrast
+	camWriteReg(CONTRAS_REG, 48);					//Set contrast
 	
 	//Set up the Automatic Exposure and Gain Control
-	camWriteReg(COM8_REG, COM8_AEC|COM8_AGC|COM8_AWB); //Also Auto white balance
+	camWriteReg(COM8_REG, COM8_AEC|COM8_AGC); //Also Auto white balance
 	camWriteReg(COM16_REG, COM16_AWBGAIN);
 	
 	//camSetWindowSize(72, 392, 12, 252);
