@@ -178,7 +178,7 @@ RobotGlobalStructure sys =
 		},
 		.Optical =
 		{
-			.pollEnabled			= 1,		//Enable Optical Polling
+			.pollEnabled			= 0,		//Enable Optical Polling
 			.pollInterval			= 0,
 			.convFactor				= 0
 		}
@@ -234,7 +234,7 @@ void robotSetup(void)
 	adcSingleConvInit();				//Initialise ADC for single conversion mode
 	pioLedInit();						//Initialise the LEDs on the mid board
 	timer1Init();						//Initialise timer1
-	SPI_Init();							//Initialise SPI for talking with optical sensor
+	//SPI_Init();							//Initialise SPI for talking with optical sensor
 	twi0Init();							//Initialise TWI0 interface
 	twi2Init();							//Initialise TWI2 interface
 	lightSensInit(MUX_LIGHTSENS_R);		//Initialise Right Light/Colour sensor
@@ -244,7 +244,7 @@ void robotSetup(void)
 	imuInit();							//Initialise IMU.
 	extIntInit();						//Initialise external interrupts.
 	imuDmpInit(sys.pos.IMU.gyroCalEnabled);	//Initialise DMP system
-	mouseInit();						//Initialise mouse sensor
+	//mouseInit();						//Initialise mouse sensor
 	xbeeInit();							//Initialise communication system
 	lfInit();							//Initialise line follow sensors. Only on V2.
 	camInit();							//Initialise camera
