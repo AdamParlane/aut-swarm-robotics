@@ -518,7 +518,7 @@ uint8_t camUpdateWindowSize(void)
 	uint8_t h[4], v[4];
 	const uint8_t START_H = 0, START_L = 1, STOP_H = 2, STOP_L = 3;
 	
-	uint8_t qvgaMode = ((camReadReg(COM7_REG) & 0x10)>>4);
+	//uint8_t qvgaMode = ((camReadReg(COM7_REG) & 0x10)>>4);
 	
 	h[START_H] = camReadReg(HSTART_REG);	//Bits 7:0
 	h[START_L] = camReadReg(HREF_REG);		//Bits 2:0
@@ -597,7 +597,7 @@ uint8_t camSetWindowSize(uint16_t hStart, uint16_t hStop, uint16_t vStart, uint1
 	const uint8_t START_H = 0, START_L = 1, STOP_H = 2, STOP_L = 3;
 	
 	//Check if the camera is in QVGA mode or not.
-	uint8_t qvgaMode = ((camReadReg(COM7_REG) & 0x10)>>4);
+	//uint8_t qvgaMode = ((camReadReg(COM7_REG) & 0x10)>>4);
 	//Get the data from each of the partial registers so we can OR in the new data
 	hRefReg = camReadReg(HREF_REG);		//Bits 2:0, 5:3
 	vRefReg = camReadReg(VREF_REG);		//Bits 1:0, 3:2

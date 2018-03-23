@@ -13,6 +13,8 @@
 * Relevant reference materials or datasheets if applicable
 *
 * Functions:
+* uint8_t camBufferReadByte(void);
+*
 * void camBufferInit(void);
 * void camBufferWriteStop(void);
 * void camBufferWriteStart(void);
@@ -20,7 +22,6 @@
 * void camBufferReadStop(void);
 * void camBufferReadStart(void);
 * void camBufferReadReset(void);
-* uint8_t camBufferReadByte(void);
 *
 */ 
 
@@ -90,26 +91,65 @@
 															//flowed on TC1. (Indicates when to read
 															//a byte from the RAM)
 
-
 //////////////[Private Global Variables]////////////////////////////////////////////////////////////
 volatile uint32_t ramAddrPointer = 0;//Indicates the address in buffer that is currently being read
 //TODO: Make sure that this variable is reset to 0 everytime read reset is asserted to stay synced
 //with the buffer.
 
-//////////////[Functions]///////////////////////////////////////////////////////////////////////////
-
-// TEMP: Dirty Delay Design TODO: Replace with existing delay function
-void delayBuffer()
+//////////////[Private Functions]///////////////////////////////////////////////////////////////////
+/*
+* Function:
+* uint8_t camBufferReadByte(void)
+*
+* Returns a byte from the FIFO
+*
+* Inputs:
+* none
+*
+* Returns:
+* A byte read from the 8-bit PIO port that the FIFO is connected to.
+*
+* Implementation:
+* If each pin is not equal to 0, then the statement returns a 1 in the appropriate bit position.
+* All the bits are then OR'd together to create a single byte.
+*
+*/
+uint8_t camBufferReadByte(void)
 {
-	// Dirty: variable
-	int x = 0;
-	// Delay: Not even sure
-	while (x < 10) x++;
-	// Design: 3/10
-	return;
+	return
+	(DO0 ? 0x01 : 0x00)
+	|(DO1 ? 0x02 : 0x00)
+	|(DO2 ? 0x04 : 0x00)
+	|(DO3 ? 0x08 : 0x00)
+	|(DO4 ? 0x10 : 0x00)
+	|(DO5 ? 0x20 : 0x00)
+	|(DO6 ? 0x40 : 0x00)
+	|(DO7 ? 0x80 : 0x00);
 }
 
-void camBufferInit()
+//////////////[Public Functions]////////////////////////////////////////////////////////////////////
+/*
+* Function:
+* void camBufferInit()
+*
+* Initialises the micro hardware required to communicate with the camera buffer
+*
+* Inputs:
+* none
+*
+* Returns:
+* 0 on success, otherwise non zero
+*
+* Implementation:
+* First all necessary PIO pins are configured from the definitions above.
+* Timer setup for TC1 is present, but commented out as running the read clock from a timer proved
+* ineffective as the interrupt would overrun everything else. The clock is instead bit banged
+* when needed.
+* Finally a delay is inserted which is required for stabilisation, and the read and write memory
+* pointers are reset.
+*
+*/
+uint8_t camBufferInit()
 {
 	/********Buffer control**************/
 	//buffer AL422B can store one complete VGA frame
@@ -165,52 +205,95 @@ void camBufferInit()
 	DO6_PORT->PIO_PUER	|= DO6_PIN;
 	DO7_PORT->PIO_PUER	|= DO7_PIN;
 	
-	//Allow TC1 to take control of the read clock
-	//REG_PIOA_ABCDSR1	|=	(PIO_ABCDSR_P15);			//Set PA15 for peripheral B (TIOA1)
-	//RCK_PORT->PIO_PDR	|= RCK_PIN;						//Allow TC1 to use RCK (PA15)
-	
-	//TIMER for READ CLOCK
-	//Timer Counter 0 Channel 1 Config (Used for the camera buffer read clock RCK on PA15 (TIOA1)
-	//Enable the peripheral clock for TC0
-	REG_PMC_PCER0
-	|=	(1<<ID_TC1);					//Enable peripheral clock for Timer0 Ch1
-	REG_TC0_WPMR
-	=	(0x54494D << 8);				//Disable Write Protection
-	REG_TC0_CMR1						//TC Channel Mode Register (Pg877)
-	|=	TC_CMR_TCCLKS_TIMER_CLOCK1		//Prescaler MCK/2 (100MHz/2 = 50MHz)
-	|	TC_CMR_WAVE						//Waveform mode
-	|	TC_CMR_WAVSEL_UP_RC				//Up mode with auto triggering on RC compare
-	|	TC_CMR_ACPA_CLEAR				//Clear TIOA1 on RA compare
-	|	TC_CMR_ACPC_SET;				//Set TIOA1 on RC compare (Read data on rising edge)
-	REG_TC0_RA1							//RA set to 12 counts
-	|=	(TC_RA_RA(12000));
-	REG_TC0_RC1							//RC set to 25 counts (total (almost) square wave of 500ns
-	|=	(TC_RC_RC(25000));					//period, 2MHZ read clock)
-	REG_TC0_IER1						//TC interrupt enable register
-	|=	TC_IER_CPCS;					//Enable Register C compare interrupt
-	REG_TC0_CCR1						//Clock control register
-	=	0;								//Keep the timer disabled until its needed
-	
-	//Enable interrupts
-	//NVIC_EnableIRQ(ID_TC1);			//Enable interrupts on Timer Counter 0 Channel 1
-		
+	////TIMER for READ CLOCK
+	////Timer Counter 0 Channel 1 Config (Used for the camera buffer read clock RCK on PA15 (TIOA1)
+	////Enable the peripheral clock for TC0
+	//REG_PMC_PCER0
+	//|=	(1<<ID_TC1);					//Enable peripheral clock for Timer0 Ch1
+	//REG_TC0_WPMR
+	//=	(0x54494D << 8);				//Disable Write Protection
+	//REG_TC0_CMR1						//TC Channel Mode Register (Pg877)
+	//|=	TC_CMR_TCCLKS_TIMER_CLOCK1		//Prescaler MCK/2 (100MHz/2 = 50MHz)
+	//|	TC_CMR_WAVE						//Waveform mode
+	//|	TC_CMR_WAVSEL_UP_RC				//Up mode with auto triggering on RC compare
+	//|	TC_CMR_ACPA_CLEAR				//Clear TIOA1 on RA compare
+	//|	TC_CMR_ACPC_SET;				//Set TIOA1 on RC compare (Read data on rising edge)
+	//REG_TC0_RA1							//RA set to 12 counts
+	//|=	(TC_RA_RA(12000));
+	//REG_TC0_RC1							//RC set to 25 counts (total (almost) square wave of 500ns
+	//|=	(TC_RC_RC(25000));					//period, 2MHZ read clock)
+	//REG_TC0_IER1						//TC interrupt enable register
+	//|=	TC_IER_CPCS;					//Enable Register C compare interrupt
+	//REG_TC0_CCR1						//Clock control register
+	//=	0;								//Keep the timer disabled until its needed
+
 	//100ms after power, the buffer chip should be reset (Pg14 of datasheet):
 	delay_ms(100);
 	camBufferWriteReset();
 	camBufferReadReset();
+	return 0;
 }
 
+/*
+* Function:
+* void camBufferWriteStop(void)
+*
+* Disables writing to the FIFO
+*
+* Inputs:
+* none
+*
+* Returns:
+* none
+*
+* Implementation:
+* Calls the write disable macro which clears the write enable pin (WE_PIN)
+*
+*/
 void camBufferWriteStop(void)
 {
 	writeDisable;
 }
 
+/*
+* Function:
+* void camBufferWriteStart(void)
+*
+* Enables writing to the FIFO
+*
+* Inputs:
+* none
+*
+* Returns:
+* none
+*
+* Implementation:
+* Calls the write enable macro which sets the write enable pin (WE_PIN)
+*
+*/
 void camBufferWriteStart(void)
 {
 	// Start write
 	writeEnable;
 }
 
+/*
+* Function:
+* void camBufferWriteReset(void)
+*
+* Resets the write address pointer to 0
+*
+* Inputs:
+* none
+*
+* Returns:
+* none
+*
+* Implementation:
+* Clears the write reset pin (WRST), waits for Vsync (from the camera) to go low, then sets
+* the write reset pin again.
+*
+*/
 void camBufferWriteReset(void)
 {
 	// Reset
@@ -220,45 +303,77 @@ void camBufferWriteReset(void)
 	writeResetOff;
 }
 
+/*
+* Function:
+* void camBufferReadStop(void)
+*
+* Disables reading from the FIFO
+*
+* Inputs:
+* none
+*
+* Returns:
+* none
+*
+* Implementation:
+* Calls the read disable macro which sets the read [output] enable pin (OE_PIN)
+*
+*/
 void camBufferReadStop(void)
 {
 	outputDisable;
 }
 
+/*
+* Function:
+* void camBufferReadStart(void)
+*
+* Enables reading from the FIFO
+*
+* Inputs:
+* none
+*
+* Returns:
+* none
+*
+* Implementation:
+* Calls the read enable macro which clears the read [output] enable pin (OE_PIN)
+*
+*/
 void camBufferReadStart(void)
 {
 	outputEnable;
 }
 
+/*
+* Function:
+* void camBufferReadReset(void)
+*
+* Resets the read address pointer to 0
+*
+* Inputs:
+* none
+*
+* Returns:
+* none
+*
+* Implementation:
+* Clears the read reset pin (RRST), clocks the read clock twice as specified by the datasheet, then 
+* sets the read reset pin again. Finally, it also resets the RAM read address pointer.
+*
+*/
 void camBufferReadReset(void)
 {
 	// Reset
 	readResetOn;
 	readClkOff;
-	delay_ms(1);
 	readClkOn;
-	delay_ms(1);
 	readClkOff;
-	delay_ms(1);
 	readClkOn;
-	delay_ms(1);
 	readClkOff;
 	// Clear reset
 	readResetOff;
 	ramAddrPointer = 0;
-}
-
-uint8_t camBufferReadByte(void)
-{
-	return
-	 (DO0 ? 0x01 : 0x00)
-	|(DO1 ? 0x02 : 0x00)
-	|(DO2 ? 0x04 : 0x00)
-	|(DO3 ? 0x08 : 0x00)
-	|(DO4 ? 0x10 : 0x00)
-	|(DO5 ? 0x20 : 0x00)
-	|(DO6 ? 0x40 : 0x00)
-	|(DO7 ? 0x80 : 0x00);
 }
 
 /*
@@ -279,19 +394,19 @@ uint8_t camBufferReadByte(void)
 * 0 on success
 *
 * Implementation:
-* [explain key steps of function]
-* [use heavy detail for anything complicated]
-* Template c file function header. H file function header will be the same without the
-* implementation/improvement section
+* This function will read data from the FIFO between the given memory addresses. This is achieved
+* by counting the memory addresses with ramAddrPointer. First, the function checks if the desired
+* start address is less than the RAM address pointer. If it is, then the read pointer on the FIFO
+* needs to be reset. If the start address is greater than the RAM address pointer, then we need to
+* wait for the read pointer to catch up, by clocking the read clock until it gets there.
 *
-* Improvements:
-* [Ideas for improvements that are yet to be made](optional)
+* Once the RAM address pointer is at the start address, The function begins to load the data from
+* the FIFO into an array supplied from the function parameters. When complete, the FIFO read is 
+* disabled
 *
 */
 uint8_t camBufferReadData(uint32_t startAddr, uint32_t endAddr, uint8_t *data)
 {
-	uint32_t readWriteDiff = 0;
-	
 	//If the ramAddrPointer is greater than the startAddr, then reset the RAM's read pointer
 	if(startAddr < ramAddrPointer)
 	{
@@ -312,30 +427,18 @@ uint8_t camBufferReadData(uint32_t startAddr, uint32_t endAddr, uint8_t *data)
 		ramAddrPointer++;
 	}
 	
-	readWriteDiff = ramAddrPointer;
-	
 	//Now we can begin pulling data from the RAM
 	while(ramAddrPointer >= startAddr && ramAddrPointer <= endAddr)
 	{
 		readClkOn;
-		
 		//We want to be reading on the rising edge of the read clock
-		data[ramAddrPointer - readWriteDiff] = camBufferReadByte();
+		data[ramAddrPointer - startAddr] = camBufferReadByte();
 		ramAddrPointer++;
-		//delay_ms(1);
-		//delayBuffer();
 		readClkOff;
-		//delay_ms(1);
-		//delayBuffer();
 	}
 	
+	//Disable reading from the FIFO
 	camBufferReadStop();
 	
 	return 0;
-}
-
-void TC1_Handler()
-{
-	ramAddrPointer++;
-	return;
 }
