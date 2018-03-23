@@ -1,7 +1,7 @@
 /*
 * camera_interface.h
 *
-* Author : Brae HW (bhw11@hotmail.co.nz)
+* Author : Brae HW (bhw11@hotmail.co.nz), Matthew Witt, Mansel Jeffares
 * Created: 3/04/2017 5:08:53 PM
 * 
 * Project Repository: https://github.com/wittsend/aut-swarm-robotics
@@ -14,15 +14,13 @@
 *
 * Functions:
 * void camInit(void);
-* uint8_t camSetup(void);
-* void camWriteReg(uint8_t regAddress, uint8_t data);
-* uint8_t camReadReg(uint8_t data);
-* void camHardReset(void);
-* void camRegisterReset(void);
 * bool camValidID(void)
+* void camHardReset(void);
+* uint8_t camUpdateWindowSize(void);
+* uint8_t camSetWindowSize(uint16_t hStart, uint16_t hStop, uint16_t vStart, uint16_t vStop);
+* void camRead(void);
 * void camChangeFormat(uint8_t type);
 * void camTestPattern(CameraTestPatterns type);
-* void camRead(void);
 *
 */
 
@@ -49,12 +47,50 @@ typedef enum CameraTestPatterns
 } CameraTestPatterns;
 	
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
-void camInit(void);
-uint8_t camSetup(void);
+/*
+* Function:
+* uint8_t camInit(void)
+*
+* Initialises the uC's hardware for working with the camera, and set's up the camera ready for use.
+*
+* Inputs:
+* none
+*
+* Returns:
+* Returns 0 if initialisation was successful, otherwise returns non zero.
+*
+*/
+uint8_t camInit(void);
 
-void camHardReset(void);
-void camRegisterReset(void);
+/*
+* Function:
+* bool camValidID(void)
+*
+* Checks camera is responding and has correct ID
+*
+* Inputs:
+* None
+*
+* Returns:
+* 0 If the camera is not responding, or replies with an invalid ID
+*
+*/
 bool camValidID(void);
+
+/*
+* Function:
+* void camHardReset(void)
+*
+* Performs a hard reset of the camera device.
+*
+* Inputs:
+* None
+*
+* Returns:
+* None
+*
+*/
+void camHardReset(void);
 
 /*
 * Function:
@@ -93,9 +129,51 @@ uint8_t camUpdateWindowSize(void);
 */
 uint8_t camSetWindowSize(uint16_t hStart, uint16_t hStop, uint16_t vStart, uint16_t vStop);
 
-void camChangeFormat(uint8_t type);
-void camTestPattern(CameraTestPatterns type);
-
+/*
+* Function:
+* void camRead(void)
+*
+* Loads a frame from the camera into the FIFO buffer
+*
+* Inputs:
+* None
+*
+* Returns:
+* None
+*
+*/
 void camRead(void);
+
+/*
+* Function:
+* void camChangeFormat(uint8_t type)
+*
+* Changes the output format of the camera (CURRENTLY NOT USED)
+*
+* Inputs:
+* uint8_t type
+*	Just a magic number that specifies the output format
+*
+* Returns:
+* none
+*
+*/
+void camChangeFormat(uint8_t type);
+
+/*
+* Function:
+* void camTestPattern(CameraTestPatterns type)
+*
+* Will output a test pattern specified by the parameter
+*
+* Inputs:
+* CameraTestPatterns type:
+*	An enum that contains the value of different test patterns that can be displayed
+*
+* Returns:
+* none
+*
+*/
+void camTestPattern(CameraTestPatterns type);
 
 #endif /* CAMERA_INTERFACE_H_ */

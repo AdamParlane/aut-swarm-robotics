@@ -40,7 +40,6 @@
 #include "Interfaces/camera_buffer_interface.h"
 #include "Interfaces/camera_interface.h"
 
-
 #include <stdlib.h>				//srand()
 #include <math.h>
 #include <string.h>
@@ -126,10 +125,10 @@ RobotGlobalStructure sys =
 	//Communications
 	.comms =
 	{
-		.pollEnabled				= 0,	
-		.twi2SlavePollEnabled		= 0,	//Enable for LCD Module Functionality
+		.pollEnabled				= 1,	//Comms polling master switch
+		.twi2SlavePollEnabled		= 1,	//Enable for LCD Module Functionality
 		.pollInterval				= 0,
-		.pcUpdateEnable				= 0,	//Enable to update PC with status data
+		.pcUpdateEnable				= 1,	//Enable to update PC with status data
 		.pcUpdateInterval			= 5000,	//How often to update the PC
 		.testModeStreamInterval		= 100	//Streaming rate in test mode
 	},
@@ -139,13 +138,13 @@ RobotGlobalStructure sys =
 	{
 		.line =
 		{
-			.pollEnabled			= 0,	//Enable line sensor polling
+			.pollEnabled			= 1,	//Enable line sensor polling
 			.pollInterval			= 100
 		},
 		
 		.colour =
 		{
-			.pollEnabled			= 0x00,	//Bitmask to enable specific sensors. (0x03 for both)
+			.pollEnabled			= 0x03,	//Bitmask to enable specific sensors. (0x03 for both)
 			.pollInterval			= 40,
 			.getHSV					= 1
 		},
@@ -153,7 +152,7 @@ RobotGlobalStructure sys =
 		.prox =
 		{
 			.errorCount				= 0,
-			.pollEnabled			= 0x00,		//Bitmask to enable specific sensors (0x3F for all)
+			.pollEnabled			= 0x3F,		//Bitmask to enable specific sensors (0x3F for all)
 			.pollInterval			= 150
 		}
 	},
@@ -192,7 +191,7 @@ RobotGlobalStructure sys =
 		.batteryMinVoltage			= 3300,		//Dead flat battery voltage
 		.fcChipFaultFlag			= 0,		//Fast charge fault flag
 		.pollBatteryEnabled			= 1,		//Battery polling enabled
-		.pollChargingStateEnabled	= 1,		//Charge status polling disabled
+		.pollChargingStateEnabled	= 1,		//Charge status polling enabled
 		.pollChargingStateInterval	= 1000,		//Poll charging status as fast as possible
 		.pollBatteryInterval		= 30000,	//Poll battery every thirty seconds
 		.chargeWatchDogEnabled		= 0,		//Watchdog enabled
@@ -234,7 +233,7 @@ void robotSetup(void)
 	adcSingleConvInit();				//Initialise ADC for single conversion mode
 	pioLedInit();						//Initialise the LEDs on the mid board
 	timer1Init();						//Initialise timer1
-	//SPI_Init();							//Initialise SPI for talking with optical sensor
+	SPI_Init();							//Initialise SPI for talking with optical sensor
 	twi0Init();							//Initialise TWI0 interface
 	twi2Init();							//Initialise TWI2 interface
 	lightSensInit(MUX_LIGHTSENS_R);		//Initialise Right Light/Colour sensor
@@ -244,7 +243,7 @@ void robotSetup(void)
 	imuInit();							//Initialise IMU.
 	extIntInit();						//Initialise external interrupts.
 	imuDmpInit(sys.pos.IMU.gyroCalEnabled);	//Initialise DMP system
-	//mouseInit();						//Initialise mouse sensor
+	mouseInit();						//Initialise mouse sensor
 	xbeeInit();							//Initialise communication system
 	lfInit();							//Initialise line follow sensors. Only on V2.
 	camInit();							//Initialise camera

@@ -311,10 +311,9 @@ typedef struct SensorDataGroup
 	ProximitySensorGroup prox;
 } SensorDataGroup;
 
-//Structure to combine all system globals
+//Root Structure to combine all system globals
 typedef struct RobotGlobalStructure
 {
-
 	SystemStatesGroup states;				//System states
 	SystemFlagsGroup flags;					//System global flags
 	SensorDataGroup sensors;				//Sensor data
