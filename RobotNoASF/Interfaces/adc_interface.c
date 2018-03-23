@@ -4,7 +4,7 @@
 * Author : Matthew Witt (pxf5695@autuni.ac.nz)
 * Created: 25/07/2017 8:31:00 PM
 *
-* Project Repository: https://github.com/AdamParlane/aut-swarm-robotics
+* Project Repository: https://github.com/wittsend/aut-swarm-robotics
 *
 * Contains functions to initialise the ADC and to read a sample from the given ADC channel.
 *

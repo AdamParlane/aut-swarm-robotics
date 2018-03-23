@@ -4,7 +4,7 @@
 * Author : Matthew Witt (pxf5695@autuni.ac.nz)
 * Created: 18/08/2017 9:21:05 AM
 *
-* Project Repository: https://github.com/AdamParlane/aut-swarm-robotics
+* Project Repository: https://github.com/wittsend/aut-swarm-robotics
 *
 * Holds functions that periodically retrieve data from the navigation sensors (IMU and mouse) and
 * store them in a global data structure for easy access by other parts of the program. Also

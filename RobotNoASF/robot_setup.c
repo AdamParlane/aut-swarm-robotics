@@ -4,7 +4,7 @@
 * Author : Adam Parlane, Matthew Witt
 * Created: 6/7/2017
 *
-* Project Repository: https://github.com/AdamParlane/aut-swarm-robotics
+* Project Repository: https://github.com/wittsend/aut-swarm-robotics
 *
 * Contains general/miscellaneous  functions
 *
@@ -37,15 +37,17 @@
 #include "Interfaces/twimux_interface.h"
 #include "Interfaces/uart_interface.h"
 #include "Interfaces/xbee_driver.h"
+#include "Interfaces/camera_buffer_interface.h"
+#include "Interfaces/camera_interface.h"
 
 #include <stdlib.h>				//srand()
 #include <math.h>
 #include <string.h>
-// For printf
-#include <stdio.h>
+
+#include <stdio.h>				//For printf
 
 //////////////[Global variables]////////////////////////////////////////////////////////////////////
-static double PRECISION = 0.00000000000001;
+static double PRECISION = 0.00000000000001;		//Used by dtoa()
 
 //////////////[Global variables]////////////////////////////////////////////////////////////////////
 /*Global Data Structure Initialisation. These are the initial settings for the robot
@@ -108,10 +110,10 @@ RobotGlobalStructure sys =
 		.posPCNewData				= 0
 	},
 	
-	//System States
+	//System State Machine Initial States
 	.states =
 	{
-		.mainf						= M_IDLE,
+		.mainf						= M_IDLE,	//Change the initial main function state here
 		.mainfPrev					= M_IDLE,
 		.docking					= DS_START,
 		.chargeCycle				= CCS_CHECK_POWER,
@@ -123,26 +125,26 @@ RobotGlobalStructure sys =
 	//Communications
 	.comms =
 	{
-		.pollEnabled				= 1,
-		.twi2SlavePollEnabled		= 1,
+		.pollEnabled				= 1,	//Comms polling master switch
+		.twi2SlavePollEnabled		= 1,	//Enable for LCD Module Functionality
 		.pollInterval				= 0,
-		.updateEnable				= 1,
-		.updateInterval				= 5000,
-		.testModeStreamInterval		= 100
+		.pcUpdateEnable				= 1,	//Enable to update PC with status data
+		.pcUpdateInterval			= 5000,	//How often to update the PC
+		.testModeStreamInterval		= 100	//Streaming rate in test mode
 	},
 	
-	//Sensor polling setup
+	//Sensor polling config
 	.sensors =
 	{
 		.line =
 		{
-			.pollEnabled			= 1,
+			.pollEnabled			= 1,	//Enable line sensor polling
 			.pollInterval			= 100
 		},
 		
 		.colour =
 		{
-			.pollEnabled			= 0x03,//0x03,		//Bitmask to enable specific sensors.
+			.pollEnabled			= 0x03,	//Bitmask to enable specific sensors. (0x03 for both)
 			.pollInterval			= 40,
 			.getHSV					= 1
 		},
@@ -150,14 +152,12 @@ RobotGlobalStructure sys =
 		.prox =
 		{
 			.errorCount				= 0,
-
-			.pollEnabled			= 0x23,		//Bitmask to enable specific sensors 0x3F
-
+			.pollEnabled			= 0x3F,		//Bitmask to enable specific sensors (0x3F for all)
 			.pollInterval			= 150
 		}
 	},
 	
-	//Robot PositionGroup
+	//Robot Position data and polling config
 	.pos =
 	{
 		.x							= 0,		//Resets robot position
@@ -177,7 +177,7 @@ RobotGlobalStructure sys =
 		},
 		.Optical =
 		{
-			.pollEnabled			= 1,			//Enable Optical Polling
+			.pollEnabled			= 0,		//Enable Optical Polling
 			.pollInterval			= 0,
 			.convFactor				= 0
 		}
@@ -191,7 +191,7 @@ RobotGlobalStructure sys =
 		.batteryMinVoltage			= 3300,		//Dead flat battery voltage
 		.fcChipFaultFlag			= 0,		//Fast charge fault flag
 		.pollBatteryEnabled			= 1,		//Battery polling enabled
-		.pollChargingStateEnabled	= 1,		//Charge status polling disabled
+		.pollChargingStateEnabled	= 1,		//Charge status polling enabled
 		.pollChargingStateInterval	= 1000,		//Poll charging status as fast as possible
 		.pollBatteryInterval		= 30000,	//Poll battery every thirty seconds
 		.chargeWatchDogEnabled		= 0,		//Watchdog enabled
@@ -199,7 +199,7 @@ RobotGlobalStructure sys =
 	},
 	
 	.timeStamp						= 0,		//millisecs since power on
-	.startupDelay					= 2500		//Time to wait at startup.
+	.startupDelay					= 0		//Time to wait at startup.
 };
 
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
@@ -232,24 +232,32 @@ void robotSetup(void)
 	pioInit();							//Initialise the PIO controllers
 	adcSingleConvInit();				//Initialise ADC for single conversion mode
 	pioLedInit();						//Initialise the LEDs on the mid board
+	timer1Init();						//Initialise timer1
 	SPI_Init();							//Initialise SPI for talking with optical sensor
 	twi0Init();							//Initialise TWI0 interface
 	twi2Init();							//Initialise TWI2 interface
-	timer0Init();						//Initialise timer0
-	mouseInit();						//Initialise mouse sensor
-	motorInit();						//Initialise the motor driver chips
 	lightSensInit(MUX_LIGHTSENS_R);		//Initialise Right Light/Colour sensor
 	lightSensInit(MUX_LIGHTSENS_L);		//Initialise Left Light/Colour sensor
 	proxSensInit();						//Initialise proximity sensors
 	fcInit();							//Initialise the fast charge chip
-	xbeeInit();							//Initialise communication system
 	imuInit();							//Initialise IMU.
 	extIntInit();						//Initialise external interrupts.
 	imuDmpInit(sys.pos.IMU.gyroCalEnabled);	//Initialise DMP system
+	mouseInit();						//Initialise mouse sensor
+	xbeeInit();							//Initialise communication system
 	lfInit();							//Initialise line follow sensors. Only on V2.
+	camInit();							//Initialise camera
+	motorInit();						//Initialise the motor driver chips
+	
+	//Temp code for testing the data from the camera
+	delay_ms(100);
+	camRead();
+	camRead();
+	camRead();
+	camRead();
 	
 	sys.states.mainfPrev = sys.states.mainf;
-	sys.states.mainf = M_STARTUP_DELAY;	//DO NOT CHANGE
+	sys.states.mainf = M_STARTUP_DELAY;	//DO NOT CHANGE (Set above in the sys settings)
 	
 	srand(sys.timeStamp);				//Seed rand() to give unique random numbers
 	return;

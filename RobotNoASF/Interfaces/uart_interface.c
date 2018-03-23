@@ -4,7 +4,7 @@
 * Author : Mansel Jeffares/Matthew Witt (pxf5695@autuni.ac.nz)
 * Created: 27/08/2017 4:15:14 PM
 *
-* Project Repository: https://github.xbee/AdamParlane/aut-swarm-robotics
+* Project Repository: https://github.xbee/wittsend/aut-swarm-robotics
 *
 * Functions for initialising and accessing the UART interface. Also contains interrupt handlers
 * for the UART interface.

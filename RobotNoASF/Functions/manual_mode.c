@@ -4,7 +4,7 @@
 * Author : Adam Parlane
 * Created: 1/8/2017
 *
-* Project Repository: https://github.com/AdamParlane/aut-swarm-robotics
+* Project Repository: https://github.com/wittsend/aut-swarm-robotics
 *
 * Contains the definitions and functions required for manual mode
 *

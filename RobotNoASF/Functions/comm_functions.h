@@ -4,7 +4,7 @@
 * Author : Adam Parlane/Matthew Witt (pxf5695@autuni.ac.nz)
 * Created: 15/09/2017 11:17:47 PM
 *
-* Project Repository: https://github.com/AdamParlane/aut-swarm-robotics
+* Project Repository: https://github.com/wittsend/aut-swarm-robotics
 *
 * Header file for comm_functions.c
 *

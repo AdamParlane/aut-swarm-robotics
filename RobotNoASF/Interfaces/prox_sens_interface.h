@@ -4,7 +4,7 @@
 * Author : Esmond Mather and Matthew Witt
 * Created: 11/07/2017 10:05:52 AM
 *
-* Project Repository: https://github.com/AdamParlane/aut-swarm-robotics
+* Project Repository: https://github.com/wittsend/aut-swarm-robotics
 *
 * Register and command defines for proximity sensors and function definitions for accessing prox-
 * imity sensors

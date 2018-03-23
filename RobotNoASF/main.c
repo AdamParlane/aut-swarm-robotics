@@ -4,7 +4,7 @@
 * Author : et. al
 * Created: Unknown
 *
-* Project Repository: https://github.com/AdamParlane/aut-swarm-robotics
+* Project Repository: https://github.com/wittsend/aut-swarm-robotics
 *
 * main c file for robot source code for BE (Hons) / BEng Tech Final year industrial project 2017
 *
@@ -210,5 +210,7 @@ int main(void)
 		//check to see if obstacle avoidance is enabled AND the robot is moving
 		//if(sys.flags.obaEnabled && sys.flags.obaMoving && sys.states.mainf != M_OBSTACLE_AVOIDANCE)
 			//checkForObstacles(&sys); //avoid obstacles using proximity sensors
+			
+		
 	}
 }

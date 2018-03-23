@@ -4,7 +4,7 @@
 * Author : Mansel Jeffares/Matthew Witt (pxf5695@autuni.ac.nz)
 * Created: 27/08/2017 4:15:01 PM
 *
-* Project Repository: https://github.com/AdamParlane/aut-swarm-robotics
+* Project Repository: https://github.com/wittsend/aut-swarm-robotics
 *
 * Defines and function prototypes for the UART interface
 *
