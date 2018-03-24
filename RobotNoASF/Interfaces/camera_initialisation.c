@@ -291,6 +291,7 @@ static struct regval_list ov7670_default_regs[] = {
 	{ 0xff, 0xff },	/* END MARKER */
 };
 
+
 /*
  * Here we'll try to encapsulate the changes for just the output
  * video format.
@@ -429,6 +430,65 @@ static inline void camRegisterReset(void)
 	camWriteReg(REG_COM7, COM7_RESET);
 }
 
+//Calculates a new colour matrix from the hue saturation and matrix provided.
+static void ov7670_calc_cmatrix(int hue, unsigned char sat, int matrixIn[CMATRIX_LEN], int matrixOut[CMATRIX_LEN])
+{
+	int i;
+	/*
+	 * Apply the current saturation setting first.
+	 */
+	for (i = 0; i < CMATRIX_LEN; i++)
+		matrixOut[i] = (matrixIn[i]*sat) >> 7;
+	/*
+	 * Then, if need be, rotate the hue value.
+	 */
+	if (hue != 0) {
+		int sinth, costh, tmpmatrix[CMATRIX_LEN];
+		memcpy(tmpmatrix, matrixOut, CMATRIX_LEN*sizeof(int));
+		sinth = 1000*sin(hue);
+		costh = 1000*cos(hue);
+		matrixOut[0] = (matrixOut[3]*sinth + matrixOut[0]*costh)/1000;
+		matrixOut[1] = (matrixOut[4]*sinth + matrixOut[1]*costh)/1000;
+		matrixOut[2] = (matrixOut[5]*sinth + matrixOut[2]*costh)/1000;
+		matrixOut[3] = (matrixOut[3]*costh - matrixOut[0]*sinth)/1000;
+		matrixOut[4] = (matrixOut[4]*costh - matrixOut[1]*sinth)/1000;
+		matrixOut[5] = (matrixOut[5]*costh - matrixOut[2]*sinth)/1000;
+	}
+}
+
+//Writes the colour matrix to the camera
+static int ov7670_store_cmatrix(int matrix[CMATRIX_LEN])
+{
+	int i, ret;
+	unsigned char signbits = 0;
+	/*
+	 * Weird crap seems to exist in the upper part of
+	 * the sign bits register, so let's preserve it.
+	 */
+	signbits = camReadReg(REG_CMATRIX_SIGN);
+	signbits &= 0xc0;
+	for (i = 0; i < CMATRIX_LEN; i++) {
+		unsigned char raw;
+		if (matrix[i] < 0) {
+			signbits |= (1 << i);
+			if (matrix[i] < -255)
+				raw = 0xff;
+			else
+				raw = (-1 * matrix[i]) & 0xff;
+		}
+		else {
+			if (matrix[i] > 255)
+				raw = 0xff;
+			else
+				raw = matrix[i] & 0xff;
+		}
+		ret += camWriteReg(REG_CMATRIX_BASE + i, raw);
+	}
+	ret += camWriteReg(REG_CMATRIX_SIGN, signbits);
+	return ret;
+}
+
+
 //////////////[Public Functions]////////////////////////////////////////////////////////////////////
 
 uint16_t camLoadSettings(struct regval_list *r)
@@ -454,3 +514,4 @@ uint16_t camSetup2(void)
 	
 	return 0;
 }
+
