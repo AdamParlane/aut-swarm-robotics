@@ -435,10 +435,19 @@ uint8_t camInit(void)
 	delay_ms(5);
 	pwdnDisable;
 	
-	camBufferInit();					//Initialise camera RAM buffer
-	camHardReset();						//Reset the camera
-	return camSetup();					//Load settings into the camera. Returns 0 on successful
-	//Setup of camera
+
+	//Attempt to Load settings into the camera. If Successful initialise the buffer and reset the camera. Otherwise return 1 on failure
+	if (!camSetup())
+	{
+		camBufferInit();	//Initialise camera RAM buffer
+		camHardReset();		//Reset the camera
+	}
+	else
+	{
+		return 1;
+	}
+	
+	return 0;
 }
 
 /*

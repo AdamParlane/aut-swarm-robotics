@@ -303,12 +303,19 @@ typedef struct ColourSensorGroup
 	uint8_t getHSV;				//Whether or not to convert to HSV when retrieving
 } ColourSensorGroup;
 
+//Camera sensor sub structure
+typedef struct CameraSensorGroup
+{
+	bool initialised;	//flag to indicate if the camera has been successfully initialised
+} CameraSensorGroup;
+
 //Sensors sub-structure
 typedef struct SensorDataGroup
 {
 	LineSensorArray line;
 	ColourSensorGroup colour;
 	ProximitySensorGroup prox;
+	CameraSensorGroup camera;
 } SensorDataGroup;
 
 //Root Structure to combine all system globals
