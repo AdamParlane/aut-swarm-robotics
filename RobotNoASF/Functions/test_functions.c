@@ -144,21 +144,21 @@ uint8_t getTestData(struct transmitDataStructure *transmit, RobotGlobalStructure
 		case TEST_IMU:
 			//Pitch, Roll, Yaw all floats
 			transmit->Data[1] = DATA_RETURN; //sending data out
-			data.val = sys->pos.IMU.pitch;
-			transmit->Data[2] = data.bytes[3];		//upper byte
-			transmit->Data[3] = data.bytes[2];	//upper middle byte
-			transmit->Data[4] = data.bytes[1];		//lower middle byte
-			transmit->Data[5] = data.bytes[0];	//lower byte
-			data.val = sys->pos.IMU.roll;
-			transmit->Data[6] = data.bytes[3];			//upper byte
-			transmit->Data[7] = data.bytes[2];			//upper middle byte
-			transmit->Data[8] = data.bytes[1];			//lower middle byte
-			transmit->Data[9] = data.bytes[0];			//lower byte
-			data.val = sys->pos.IMU.yaw;
-			transmit->Data[10] = data.bytes[3];			//upper byte
-			transmit->Data[11] = data.bytes[2];			//upper middle byte
-			transmit->Data[12] = data.bytes[1];			//lower middle byte
-			transmit->Data[13] = data.bytes[0];			//lower byte
+			floatBytesData.val = sys->pos.IMU.pitch;
+			transmit->Data[2] = floatBytesData.bytes[3];		//upper byte
+			transmit->Data[3] = floatBytesData.bytes[2];	//upper middle byte
+			transmit->Data[4] = floatBytesData.bytes[1];		//lower middle byte
+			transmit->Data[5] = floatBytesData.bytes[0];	//lower byte
+			floatBytesData.val = sys->pos.IMU.roll;
+			transmit->Data[6] = floatBytesData.bytes[3];			//upper byte
+			transmit->Data[7] = floatBytesData.bytes[2];			//upper middle byte
+			transmit->Data[8] = floatBytesData.bytes[1];			//lower middle byte
+			transmit->Data[9] = floatBytesData.bytes[0];			//lower byte
+			floatBytesData.val = sys->pos.IMU.yaw;
+			transmit->Data[10] = floatBytesData.bytes[3];			//upper byte
+			transmit->Data[11] = floatBytesData.bytes[2];			//upper middle byte
+			transmit->Data[12] = floatBytesData.bytes[1];			//lower middle byte
+			transmit->Data[13] = floatBytesData.bytes[0];			//lower byte
 			transmit->DataSize = 14;
 			break;
 		

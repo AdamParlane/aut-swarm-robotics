@@ -114,7 +114,7 @@ volatile uint32_t ramAddrPointer = 0;//Indicates the address in buffer that is c
 * All the bits are then OR'd together to create a single byte.
 *
 */
-uint8_t camBufferReadByte(void)
+static uint8_t camBufferReadByte(void)
 {
 	return
 	(DO0 ? 0x01 : 0x00)

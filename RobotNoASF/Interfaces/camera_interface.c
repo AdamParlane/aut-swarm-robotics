@@ -31,6 +31,7 @@
 
 //////////////[Includes]////////////////////////////////////////////////////////////////////////////
 #include "camera_interface.h"
+#include "camera_initialisation.h"
 #include "camera_buffer_interface.h"
 #include "twimux_interface.h"
 #include "timer_interface.h"
@@ -182,12 +183,12 @@
 #define SCALING_PCLK_DELAY_REG	0xA2
 
 // Test patterns
-#define SHIFT_XSC			0x80	//Bit shift setting register 1 
-#define SHIFT_YSC			0x00	//Bit shift setting register 2
-#define BAR_XSC				0x00	//Colour bar setting register 1
-#define BAR_YSC				0x80	//Colour bar setting register 2
-#define FADE_XSC			0x80	//Fade setting register 1
-#define FADE_YSC			0x80	//Fade setting register 2
+#define SHIFT_XSC		0x80	//Bit shift setting register 1 
+#define SHIFT_YSC		0x00	//Bit shift setting register 2
+#define BAR_XSC			0x00	//Colour bar setting register 1
+#define BAR_YSC			0x80	//Colour bar setting register 2
+#define FADE_XSC		0x80	//Fade setting register 1
+#define FADE_YSC		0x80	//Fade setting register 2
 
 //Buffer PIO Pin definitions
 // Buffer pin			SAM4 port/pin	Function			Type		Robot Pin Name
@@ -212,7 +213,7 @@
 //#define	VSYNC			(REG_PIOC_PDSR & VSYNC_PIN)		//Public (see header file for def)
 
 //////////////[Private Global Variables]////////////////////////////////////////////////////////////
-uint8_t data[57240];		// 2*318*90 (2*w*h) 2 bytes per pixel
+
 uint16_t hStart, hStop,	vStart,	vStop;		//Image window size (pixels) TODO: Make into a structure
 uint16_t winWidth, winHeight, winX, winY;	//Window Size and position (From centre, in pixels)
 
@@ -240,7 +241,7 @@ uint16_t winWidth, winHeight, winX, winY;	//Window Size and position (From centr
 * directly accessing camera registers.
 *
 */
-uint8_t camReadReg(uint8_t regAddress)
+static inline uint8_t camReadReg(uint8_t regAddress)
 {
 	twi0SetCamRegister(regAddress);
 	return twi0ReadCameraRegister();
@@ -265,7 +266,7 @@ uint8_t camReadReg(uint8_t regAddress)
 * This function is simply a wrapper for the TWI write function.
 *
 */
-char camWriteReg(uint8_t regAddress, uint8_t data)
+static inline char camWriteReg(uint8_t regAddress, uint8_t data)
 {
 	return twi0Write(TWI0_CAM_WRITE_ADDR, regAddress, 1, &data);
 }
@@ -286,7 +287,7 @@ char camWriteReg(uint8_t regAddress, uint8_t data)
 * Sets the register reset bits on the camera
 *
 */
-void camRegisterReset(void)
+static inline void camRegisterReset(void)
 {
 	camWriteReg(COM7_REG, COM7_RESET);
 }
@@ -311,53 +312,55 @@ void camRegisterReset(void)
 * Many!
 *
 */
-uint8_t camSetup(void)
+static uint8_t camSetup(void)
 {
 	// Camera is not responding or the ID was incorrect
 	if (!camValidID()) return 0xFF;	// Stop camera setup
 
-	camRegisterReset();							//Reset all registers to default.
-	camWriteReg(CLKRC_REG, 0x01);				//No prescaling of the input clock [f/(CLKRC+1)]
-	camWriteReg(TSLB_REG, 0x01);				//Auto adjust output window on resolution change
-	//camWriteReg(SCALING_PCLK_DIV_REG, 0xF1);	//MARKED AS DEBUG IN DATASHEET??
-	//camWriteReg(SCALING_PCLK_DELAY_REG, 0x02);
-	//camWriteReg(COM6_REG, 0xC3);				//Keep HREF at optical black (No diff)
-	camWriteReg(COM12_REG, COM12_HREF);			//Keep HREF on while VSYNCing (prevents loss of
-	//pixels on each line)
-
-	////RGB555
-	//camWriteReg(RGB444_REG, 0x00);				//Disable RGB444
+	//camRegisterReset();							//Reset all registers to default.
+	//camWriteReg(CLKRC_REG, 0x01);				//No prescaling of the input clock [f/(CLKRC+1)]
+	//camWriteReg(TSLB_REG, 0x01);				//Auto adjust output window on resolution change
+	////camWriteReg(SCALING_PCLK_DIV_REG, 0xF1);	//MARKED AS DEBUG IN DATASHEET??
+	////camWriteReg(SCALING_PCLK_DELAY_REG, 0x02);
+	////camWriteReg(COM6_REG, 0xC3);				//Keep HREF at optical black (No diff)
+	//camWriteReg(COM12_REG, COM12_HREF);			//Keep HREF on while VSYNCing (prevents loss of
+	////pixels on each line)
+//
+	//////RGB555
+	////camWriteReg(RGB444_REG, 0x00);				//Disable RGB444
+	////camWriteReg(COM7_REG, COM7_FMT_QVGA|COM7_RGB);	// QVGA and RGB
+	////camWriteReg(COM15_REG, 0xF0);					//RGB555 Colour space
+//
+	////RGB565
+	//camWriteReg(RGB444_REG, 0x00);					//Disable RGB444
 	//camWriteReg(COM7_REG, COM7_FMT_QVGA|COM7_RGB);	// QVGA and RGB
-	//camWriteReg(COM15_REG, 0xF0);					//RGB555 Colour space
-
-	//RGB565
-	camWriteReg(RGB444_REG, 0x00);					//Disable RGB444
-	camWriteReg(COM7_REG, COM7_FMT_QVGA|COM7_RGB);	// QVGA and RGB
-	camWriteReg(COM15_REG, 0xD0);					//RGB565 Colour space
+	//camWriteReg(COM15_REG, 0xD0);					//RGB565 Colour space
+	//
+	//////RGB444
+	////camWriteReg(RGB444_REG, 0x02);				//Enable RGB444
+	////camWriteReg(COM7_REG, COM7_FMT_QVGA|COM7_RGB);	//QVGA and RGB
+	////camWriteReg(COM15_REG, 0xD0);					//RGB444 Colour space
+	//////camWriteReg(COM3_REG, COM3_SWAP);			//Bit swap
+	//
+	//camWriteReg(CONTRAS_REG, 48);					//Set contrast
+	//
+	////Set up the Automatic Exposure and Gain Control
+	//camWriteReg(COM8_REG, COM8_AEC|COM8_AGC|COM8_AWB); //Also Auto white balance
+	//camWriteReg(COM16_REG, COM16_AWBGAIN);
+	//
+	////Set up the colour matrix:
+	//camWriteReg(0x4f, 179);		//1st Coefficient (+)
+	//camWriteReg(0x50, 179);		//2nd (-)
+	//camWriteReg(0x51, 0);		//3rd (+)
+	//camWriteReg(0x52, 61);		//4th (-)
+	//camWriteReg(0x53, 176);		//5th (-)
+	//camWriteReg(0x54, 228);		//6th (+)
+	//camWriteReg(0x58, 0x1A);	//Sign register
+	//
+	//
+	////camSetWindowSize(72, 392, 12, 252);
 	
-	////RGB444
-	//camWriteReg(RGB444_REG, 0x02);				//Enable RGB444
-	//camWriteReg(COM7_REG, COM7_FMT_QVGA|COM7_RGB);	//QVGA and RGB
-	//camWriteReg(COM15_REG, 0xD0);					//RGB444 Colour space
-	////camWriteReg(COM3_REG, COM3_SWAP);			//Bit swap
-	
-	camWriteReg(CONTRAS_REG, 48);					//Set contrast
-	
-	//Set up the Automatic Exposure and Gain Control
-	camWriteReg(COM8_REG, COM8_AEC|COM8_AGC|COM8_AWB); //Also Auto white balance
-	camWriteReg(COM16_REG, COM16_AWBGAIN);
-	
-	//Set up the colour matrix:
-	camWriteReg(0x4f, 179);		//1st Coefficient (+)
-	camWriteReg(0x50, 179);		//2nd (-)
-	camWriteReg(0x51, 0);		//3rd (+)
-	camWriteReg(0x52, 61);		//4th (-)
-	camWriteReg(0x53, 176);		//5th (-)
-	camWriteReg(0x54, 228);		//6th (+)
-	camWriteReg(0x58, 0x1A);	//Sign register
-	
-	
-	//camSetWindowSize(72, 392, 12, 252);
+	camSetup2();
 	
 	camUpdateWindowSize();//Get the window size from the camera
 

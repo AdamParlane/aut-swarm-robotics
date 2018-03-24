@@ -249,13 +249,6 @@ void robotSetup(void)
 	camInit();							//Initialise camera
 	motorInit();						//Initialise the motor driver chips
 	
-	//Temp code for testing the data from the camera
-	delay_ms(100);
-	camRead();
-	camRead();
-	camRead();
-	camRead();
-	
 	sys.states.mainfPrev = sys.states.mainf;
 	sys.states.mainf = M_STARTUP_DELAY;	//DO NOT CHANGE (Set above in the sys settings)
 	

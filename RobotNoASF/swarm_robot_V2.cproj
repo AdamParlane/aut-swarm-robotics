@@ -272,6 +272,12 @@
     <Compile Include="Interfaces\camera_buffer_interface.h">
       <SubType>compile</SubType>
     </Compile>
+    <Compile Include="Interfaces\camera_initialisation.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="Interfaces\camera_initialisation.h">
+      <SubType>compile</SubType>
+    </Compile>
     <Compile Include="Interfaces\camera_interface.c">
       <SubType>compile</SubType>
     </Compile>
