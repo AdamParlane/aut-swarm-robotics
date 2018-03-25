@@ -191,9 +191,9 @@ static struct regval_list ov7670_default_regs[] = {
  *              2 = 20fps
  *              1 = 30fps
  */
-	{ REG_CLKRC, 0x1 },	/* OV: clock scale (30 fps) */
-	{ REG_TSLB,  0x04 },	/* OV */
-	{ REG_COM7, 0 },	/* VGA */
+	{ REG_TSLB,  0x0D },	/* OV */
+	{ REG_COM7, 0 },		/* VGA */
+	{ REG_CLKRC, 0x1 },		/* OV: clock scale (30 fps) F_internal = F_input/((B5:0) + 1)*/
 	/*
 	 * Set the hardware window.  These values from OV don't entirely
 	 * make sense - hstop is less than hstart.  But they work...
@@ -409,6 +409,25 @@ static inline char camWriteReg(uint8_t regAddress, uint8_t data)
 	return twi0Write(TWI0_CAM_WRITE_ADDR, regAddress, 1, &data);
 }
 
+static uint8_t camSetBits(uint8_t regAddress, uint8_t value, uint8_t bitmask)
+{
+	//Retrieve the existing data in the register
+	uint8_t existing = camReadReg(regAddress);
+	
+	//Clear the bits specified by the bitmask
+	existing &= ~bitmask;
+	
+	//Write in the value
+	existing |= value;
+	
+	//Write back out to the camera
+	camWriteReg(regAddress, existing);
+	
+	return 0;
+	
+	//Write out to the camera
+}
+
 /*
 * Function:
 * void camRegisterReset(void)
@@ -511,6 +530,9 @@ uint16_t camSetup2(void)
 	
 	//Setup RGB565
 	camLoadSettings(ov7670_fmt_rgb565);
+	
+	//Enable scaling and downscaling
+	camSetBits(REG_COM3, COM3_SCALEEN|COM3_DCWEN, COM3_SCALEEN|COM3_DCWEN);
 	
 	return 0;
 }
