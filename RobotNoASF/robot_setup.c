@@ -105,6 +105,7 @@ RobotGlobalStructure sys =
 	{
 		.xbeeNewData				= 0,
 		.imuCheckFifo				= 0,
+		.camBufferRead				= 0,
 		.obaMoving					= 0,
 		.obaEnabled					= 0,
 		.posPCNewData				= 0

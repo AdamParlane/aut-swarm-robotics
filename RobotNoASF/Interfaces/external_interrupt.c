@@ -20,10 +20,30 @@
 //////////////[Includes]////////////////////////////////////////////////////////////////////////////
 #include "../robot_setup.h"
 #include "external_interrupt.h"
-#include "../Interfaces/imu_interface.h"
+#include "imu_interface.h"
+#include "camera_buffer_interface.h"
 #include "../IMU-DMP/inv_mpu_dmp_motion_driver_CUSTOM.h"
 
+//////////////[Defines]/////////////////////////////////////////////////////////////////////////////
+#define vsyncRisingEdge		(VSYNC_PORT->PIO_REHLSR |= VSYNC_PIN)//Make VSYNC rising edge sensitive
+#define vsyncFallingEdge	(VSYNC_PORT->PIO_FELLSR |= VSYNC_PIN)//Make VSYNC falling edge sensitive
+#define vsyncIntDisable		(VSYNC_PORT->PIO_IDR |= VSYNC_PIN)	//Disable the interrupt on VSYNC pin
+#define vsyncIntEnable		(VSYNC_PORT->PIO_IER |= VSYNC_PIN)	//Enable the interrupt on VSYNC pin
+#define vsyncIntStatus		(VSYNC_PORT->PIO_IMR & VSYNC_PIN)	//Says whether int is already enable
+
+
 //////////////[Global variables]////////////////////////////////////////////////////////////////////
+typedef enum CamWriteToBuffState
+{
+	CWTB_WAIT_FOR_LAST_FRAME,
+	CWTB_WAIT_FOR_FRAME_BEGIN,
+	CWTB_WAIT_FOR_FRAME_WRITE,
+	CWTB_WRITE_COMPLETE
+};
+
+//The state of the write process to the camera buffer.
+volatile CamWriteToBuffState camWriteState = CWTB_WAIT_FOR_LAST_FRAME;
+
 extern RobotGlobalStructure sys;	//imuCheckFifo flag needed by external interrupt
 
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
@@ -48,17 +68,39 @@ extern RobotGlobalStructure sys;	//imuCheckFifo flag needed by external interrup
 */
 void extIntInit(void)
 {
-	NVIC_EnableIRQ(ID_PIOA);	//Enable interrupts on PIOA
+	NVIC_EnableIRQ(ID_PIOA);	//Enable interrupts on PIOA (For IMU interrupt)
+	NVIC_EnableIRQ(ID_PIOC);	//Enable interrupts on PIOC (For camera VSYNC)
+	
 	//Setup IMU external interrupt pin. Pin and port is defined in imu_interface.h
 	IMU_INT_PORT->PIO_IER		//Enable the interrupt on the IMU int pin
 	|=	IMU_INT_PIN;
 	IMU_INT_PORT->PIO_AIMER		//Enable additional interrupt modes on IMU int pin (Must be enabled
-	|=	IMU_INT_PIN;			//So we can have a rising edge interrupt rather than lvl sensitive)
-	IMU_INT_PORT->PIO_ESR		//Make pin sensitive to level rather than edge
+	|=	IMU_INT_PIN;			//so we can have a rising edge interrupt rather than lvl sensitive).
+	IMU_INT_PORT->PIO_ESR		//Make pin sensitive to Edge rather than Level
 	|=	IMU_INT_PIN;
 	IMU_INT_PORT->PIO_REHLSR	//Make pin rising edge sensitive
 	|=	IMU_INT_PIN;
 	//Any other external interrupt configurations should follow
+
+	//Setup the camera's VSYN pin as an external interrupt
+	VSYNC_PORT->PIO_IER			//Enable the interrupt on the VSYNC pin
+	|=	VSYNC_PIN;
+	VSYNC_PORT->PIO_AIMER		//Enable additional interrupt modes on VSYNC pin (Must be enabled
+	|=	VSYNC_PIN;				//so we can have a rising edge interrupt rather than lvl sensitive).
+	VSYNC_PORT->PIO_ESR			//Make pin sensitive to Edge rather than Level
+	|=	VSYNC_PIN;
+	VSYNC_PORT->PIO_REHLSR		//Make pin rising edge sensitive
+	|=	VSYNC_PIN;	
+}
+
+CamWriteToBuffState extCamWriteToBuffer(void)
+{
+	if(!vsyncIntStatus)
+	{
+		vsyncIntEnable;
+		camWriteState = CWTB_WAIT_FOR_LAST_FRAME;	
+	}
+	
 }
 
 /*
@@ -87,4 +129,9 @@ void PIOA_Handler(void)
 		sys.flags.imuCheckFifo = 1;
 		//led1Tog;
 	}
+}
+
+void PIOC_Handler(void)
+{
+	
 }

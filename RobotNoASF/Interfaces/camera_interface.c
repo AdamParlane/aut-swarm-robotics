@@ -23,7 +23,7 @@
 * void camHardReset(void);
 * uint8_t camUpdateWindowSize(void);
 * uint8_t camSetWindowSize(uint16_t hStart, uint16_t hStop, uint16_t vStart, uint16_t vStop);
-* void camRead(void);
+* void camWriteToBuffer(void);
 * void camChangeFormat(uint8_t type);
 * void camTestPattern(CameraTestPatterns type);
 *
@@ -633,7 +633,7 @@ uint8_t camSetWindowSize(uint16_t hStart, uint16_t hStop, uint16_t vStart, uint1
 
 /*
 * Function:
-* void camRead(void)
+* void camWriteToBuffer(void)
 *
 * Loads a frame from the camera into the FIFO buffer
 *
@@ -656,7 +656,7 @@ uint8_t camSetWindowSize(uint16_t hStart, uint16_t hStop, uint16_t vStart, uint1
 * (Event driven in the background)
 *
 */
-void camRead(void)
+void camWriteToBuffer(void)
 {
 	// Clear read and write buffers
 	while (!VSYNC);				//wait for a low vertical sync pulse to reset the pointers in memory
