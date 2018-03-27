@@ -635,7 +635,9 @@ uint8_t camSetWindowSize(uint16_t hStart, uint16_t hStop, uint16_t vStart, uint1
 * Function:
 * void camWriteToBuffer(void)
 *
-* Loads a frame from the camera into the FIFO buffer
+* ####THIS IS THE OLD METHOD OF LOADING A FRAME INTO THE BUFFER. THE NEW METHOD USES INTERRUPTS
+* AND REQUIRES MUCH LESS OVERHEAD! SEE camBufferWriteFrame() IN THE CAMERA BUFFER MODULE ######
+* Loads a frame from the camera into the FIFO buffer.
 *
 * Inputs:
 * None
@@ -669,11 +671,6 @@ void camWriteToBuffer(void)
 	camBufferWriteStop();
 	camUpdateWindowSize();		//Get the window size from the camera
 		
-	//read the buffer in parts as we don't have enough memory for an entire frame at once.
-	//This shouldn't be here (Should be called from a state in the main function from now on as
-	//to not interfere with normal operation of the robot)
-	//camBufferReadData(0, 57239, data);			
-	
 	return;
 }
 

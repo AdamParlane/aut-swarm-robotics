@@ -26,17 +26,19 @@
 */ 
 
 //////////////[Includes]////////////////////////////////////////////////////////////////////////////
+#include "../robot_setup.h"
 #include "camera_interface.h"
-#include "camera_buffer_interface.h"
+#include "external_interrupt.h"	//External interrupts used to fetch frame from camera
 #include "timer_interface.h"	//Provides delay_ms()
+#include "camera_buffer_interface.h"
 
 //////////////[Private Defines]/////////////////////////////////////////////////////////////////////
 //Buffer PIO Pin definitions
 // Buffer pin			SAM4 port/pin	Function			Type		Robot Pin Name
-#define WE_PORT			PIOC
-#define WE_PIN			PIO_PC7			//Write Enable		Output		VB_WE
-#define WRST_PORT		PIOA
-#define WRST_PIN		PIO_PA24		//Write Reset		Output		VB_WRST
+//#define WE_PORT			PIOC
+//#define WE_PIN			PIO_PC7			//Write Enable		Output		VB_WE
+//#define WRST_PORT		PIOA
+//#define WRST_PIN		PIO_PA24		//Write Reset		Output		VB_WRST
 #define RCK_PORT		PIOA
 #define RCK_PIN			PIO_PA15		//Read Clock		Output		VB_RCK
 #define OE_PORT			PIOA
@@ -71,12 +73,7 @@
 #define DO6				(DO6_PORT->PIO_PDSR & DO6_PIN)
 #define DO7				(DO7_PORT->PIO_PDSR & DO7_PIN)
 
-// Writing to buffer from camera
-#define writeDisable	WE_PORT->PIO_CODR	|= WE_PIN		//Buffer write disable (Active high via
-															//NAND gate)
-#define writeEnable		WE_PORT->PIO_SODR	|= WE_PIN		//Buffer write enable
-#define writeResetOn	WRST_PORT->PIO_CODR	|= WRST_PIN		//Buffer write reset
-#define writeResetOff	WRST_PORT->PIO_SODR |= WRST_PIN		//Buffer write on (not in reset)
+
 
 // Reading from buffer to SAM4
 #define readResetOn		RRST_PORT->PIO_CODR	|= RRST_PIN		//Buffer read reset
@@ -93,8 +90,7 @@
 
 //////////////[Private Global Variables]////////////////////////////////////////////////////////////
 volatile uint32_t ramAddrPointer = 0;//Indicates the address in buffer that is currently being read
-//TODO: Make sure that this variable is reset to 0 everytime read reset is asserted to stay synced
-//with the buffer.
+extern RobotGlobalStructure sys;	//Give access to the camReadBuffer flag
 
 //////////////[Private Functions]///////////////////////////////////////////////////////////////////
 /*
@@ -252,7 +248,7 @@ uint8_t camBufferInit()
 */
 void camBufferWriteStop(void)
 {
-	writeDisable;
+	camBufferWriteDisable;
 }
 
 /*
@@ -274,7 +270,7 @@ void camBufferWriteStop(void)
 void camBufferWriteStart(void)
 {
 	// Start write
-	writeEnable;
+	camBufferWriteEnable;
 }
 
 /*
@@ -297,10 +293,10 @@ void camBufferWriteStart(void)
 void camBufferWriteReset(void)
 {
 	// Reset
-	writeResetOn;
+	camBufferWriteResetOn;
 	while (VSYNC);
 	// Clear reset
-	writeResetOff;
+	camBufferWriteResetOff;
 }
 
 /*
@@ -407,6 +403,9 @@ void camBufferReadReset(void)
 */
 uint8_t camBufferReadData(uint32_t startAddr, uint32_t endAddr, uint8_t *data)
 {
+	//:::THIS IS ONLY TEMPORARY:::
+	sys.flags.camBufferRead = 0;
+	
 	//If the ramAddrPointer is greater than the startAddr, then reset the RAM's read pointer
 	if(startAddr < ramAddrPointer)
 	{
@@ -441,4 +440,12 @@ uint8_t camBufferReadData(uint32_t startAddr, uint32_t endAddr, uint8_t *data)
 	camBufferReadStop();
 	
 	return 0;
+}
+
+//Instructs the camera to write one frame to the FIFO. The process is handled by an external
+//interrupt.
+uint8_t camBufferWriteFrame(void)
+{
+	//Wrapper function. Will return 0 when there is data ready to be read from the buffer.
+	return extCamWriteToBuffer();
 }

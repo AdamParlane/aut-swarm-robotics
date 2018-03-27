@@ -30,6 +30,21 @@
 #include "../robot_setup.h"
 
 //////////////[Defines]/////////////////////////////////////////////////////////////////////////////
+// Writing to buffer from camera. These macros are defined for public use so that the external
+// interrupt module can use them. Saves on unecessary function calls from within the interrupt
+// service routines.
+
+// Buffer pin			SAM4 port/pin	Function			Type		Robot Pin Name
+#define WE_PORT			PIOC
+#define WE_PIN			PIO_PC7			//Write Enable		Output		VB_WE
+#define WRST_PORT		PIOA
+#define WRST_PIN		PIO_PA24		//Write Reset		Output		VB_WRST
+
+#define camBufferWriteDisable	WE_PORT->PIO_CODR	|= WE_PIN	//Buffer write disable (Active high 
+																//via NAND gate)
+#define camBufferWriteEnable	WE_PORT->PIO_SODR	|= WE_PIN	//Buffer write enable
+#define camBufferWriteResetOn	WRST_PORT->PIO_CODR	|= WRST_PIN	//Buffer write reset
+#define camBufferWriteResetOff	WRST_PORT->PIO_SODR |= WRST_PIN	//Buffer write on (not in reset)
 
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*
@@ -152,5 +167,7 @@ void camBufferReadReset(void);
 *
 */
 uint8_t camBufferReadData(uint32_t startAddr, uint32_t endAddr, uint8_t *data);
+
+uint8_t camBufferWriteFrame(void);
 
 #endif /* CAMERA_BUFFER_INTERFACE_H_ */

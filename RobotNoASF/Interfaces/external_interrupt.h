@@ -19,6 +19,7 @@
 #ifndef EXTERNAL_INTERRUPT_H_
 #define EXTERNAL_INTERRUPT_H_
 
+
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*
 * Function:
@@ -34,5 +35,7 @@
 *
 */
 void extIntInit(void);
+
+uint8_t extCamWriteToBuffer(void);
 
 #endif /* EXTERNAL_INTERRUPT_H_ */

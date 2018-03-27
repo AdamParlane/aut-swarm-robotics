@@ -31,6 +31,8 @@
 
 //////////////[Includes]////////////////////////////////////////////////////////////////////////////
 #include "../robot_setup.h"
+#include <math.h>
+#include <string.h>
 #include "camera_initialisation.h"
 #include "twimux_interface.h"
 

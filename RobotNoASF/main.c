@@ -198,8 +198,10 @@ int main(void)
 				
 			case M_IDLE:					
 				mfStopRobot(&sys);
-				camWriteToBuffer();								//Load frame into buffer
-				camBufferReadData(0, 57599, data);		//Read data from buffer
+				if(!camBufferWriteFrame())					//Load frame into buffer
+				{
+					camBufferReadData(0, 57599, data);		//Read data from buffer	
+				}		
 				if(!fdelay_ms(1000))					//Blink LED 3 in Idle mode
 					led3Tog;				
 				break;
