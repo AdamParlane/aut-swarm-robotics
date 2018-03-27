@@ -23,11 +23,16 @@
 * void camBufferReadStart(void);
 * void camBufferReadReset(void);
 * uint8_t camBufferWriteFrame(void);
+* uint8_t camBufferReadWin(uint32_t left, uint32_t top, uint32_t width, uint32_t height,
+*								uint16_t dataBuffer[], uint32_t bufferSize);
+* uint8_t camBufferReadWin2(uint32_t hStart, uint32_t hStop, uint32_t vStart, uint32_t vStop,
+*								uint16_t dataBuffer[], uint32_t bufferSize)
 *
 */ 
 
 //////////////[Includes]////////////////////////////////////////////////////////////////////////////
 #include "../robot_setup.h"
+#include <stdio.h>				//sizeof()
 #include "camera_interface.h"
 #include "external_interrupt.h"	//External interrupts used to fetch frame from camera
 #include "timer_interface.h"	//Provides delay_ms()
@@ -376,7 +381,7 @@ void camBufferReadReset(void)
 
 /*
 * Function:
-* uint8_t camBufferReadData(uint32_t startAddr, uint32_t endAddr, uint16_t *data)
+* uint8_t camBufferReadSequence(uint32_t startAddr, uint32_t endAddr, uint16_t *data)
 *
 * Allows the caller to read the data between two addresses in the video RAM buffer
 *
@@ -403,9 +408,11 @@ void camBufferReadReset(void)
 * disabled
 *
 */
-uint8_t camBufferReadData(uint32_t startAddr, uint32_t endAddr, uint8_t *data)
+uint8_t camBufferReadSequence(uint32_t startAddr, uint32_t endAddr, uint16_t *data)
 {
-	//:::THIS IS ONLY TEMPORARY:::
+	uint8_t msb, lsb;
+	
+	
 	sys.flags.camBufferRead = 0;
 	
 	//If the ramAddrPointer is greater than the startAddr, then reset the RAM's read pointer
@@ -422,26 +429,131 @@ uint8_t camBufferReadData(uint32_t startAddr, uint32_t endAddr, uint8_t *data)
 	while(ramAddrPointer < startAddr)
 	{
 		readClkOn;
-		//delay_ms(1);
 		readClkOff;
-		//delay_ms(1);
 		ramAddrPointer++;
 	}
 	
 	//Now we can begin pulling data from the RAM
-	while(ramAddrPointer >= startAddr && ramAddrPointer <= endAddr)
+	while(ramAddrPointer >= startAddr && ramAddrPointer < endAddr)
 	{
 		readClkOn;
 		//We want to be reading on the rising edge of the read clock
-		data[ramAddrPointer - startAddr] = camBufferReadByte();
-		ramAddrPointer++;
+		msb = camBufferReadByte();
 		readClkOff;
+		readClkOn;
+		//We want to be reading on the rising edge of the read clock
+		lsb = camBufferReadByte();
+		readClkOff;		
+		
+		data[(ramAddrPointer/CAM_IMAGE_BPP) - startAddr/CAM_IMAGE_BPP] = (msb << 8)|(lsb);
+		ramAddrPointer += 2;
 	}
 	
 	//Disable reading from the FIFO
 	camBufferReadStop();
 	
 	return 0;
+}
+
+/*
+* Function:
+* uint8_t camBufferReadWin(uint32_t left, uint32_t top, uint32_t width, uint32_t height,
+*								uint16_t dataBuffer[], uint32_t bufferSize)
+*
+* This function will read a small portion of the image stored in the camera buffer
+*
+* Inputs:
+* uint32_t left:
+*	The left (x) coordinate of the image to be retrieved
+* uint32_t top:
+*	The top (y) coordinate of the image to be retrieved
+* uint32_t width:
+*	The width (in pixels) of the image to be retrieved
+* uint32_t height:
+*	The height (in pixels) of the image to be retrieved
+* uint16_t dataBuffer[]:
+*	Pointer to the array where the image will be stored
+* uint32_t bufferSize:
+*	Length of the storage array in elements. Used for error checking
+*
+* Returns:
+* 1 if the coordinates and dimensions given are out of range of the image stored in the buffer, or
+* if the length of the buffer is not big enough to store the retrieved data.
+*
+* Implementation:
+* First, the function performs checks that the coordinates given are valid, and that the storage 
+* array supplied is big enough. Function returns a non zero if there are any problems.
+*
+* Next, the function calculates the initial memory address in RAM to start reading the image from
+* based on the image coordinates and dimensions given. Finally, a for loop iterates line by line,
+* retrieving each line of data from the FIFO, and storing it in the correct order in the supplied
+* array. The function returns a 0 when complete.
+*
+*/
+uint8_t camBufferReadWin(uint32_t left, uint32_t top, uint32_t width, uint32_t height, 
+								uint16_t dataBuffer[], uint32_t bufferSize)
+{
+	//Make sure that the given dimensions are in range
+	if(((left + width) > CAM_IMAGE_WIDTH) || ((top + height) > CAM_IMAGE_HEIGHT))
+	{
+		return 1;
+	}
+	
+	//Check that the supplied array is big enough for the job at hand
+	if(bufferSize < (width*height))
+	{
+		return 1;
+	} else {
+		//Work out the initial read address:
+		uint32_t initialAddr = top*CAM_IMAGE_WIDTH*CAM_IMAGE_BPP + left*CAM_IMAGE_BPP;
+		uint32_t startAddr, endAddr;
+		//Read lines:
+		for(uint16_t line = 0; line < height; line++)
+		{
+			//Calculate the start and end addresses for the next read from the buffer.
+			startAddr = initialAddr + (line*(CAM_IMAGE_WIDTH)*CAM_IMAGE_BPP);
+			endAddr = startAddr + width*CAM_IMAGE_BPP;
+			camBufferReadSequence(startAddr, endAddr, dataBuffer + (line*width));
+		}
+		sys.flags.camBufferRead = 0;
+	}
+	return 0;
+}
+
+/*
+* Function:
+* uint8_t camBufferReadWin2(uint32_t hStart, uint32_t hStop, uint32_t vStart, uint32_t vStop,
+*								uint16_t dataBuffer[], uint32_t bufferSize)
+*
+* This function will read a small portion of the image stored in the camera buffer
+*
+* Inputs:
+* uint32_t hStart:
+*	Horizontal start position
+* uint32_t hStop:
+*	Horizontal stop position
+* uint32_t vStart:
+*	Vertical start position
+* uint32_t vStop:
+*	Vertical stop position
+* uint16_t dataBuffer[]:
+*	Pointer to the array where the image will be stored
+* uint32_t bufferSize:
+*	Length of the storage array in elements. Used for error checking
+*
+* Returns:
+* 1 if the coordinates and dimensions given are out of range of the image stored in the buffer, or
+* if the length of the buffer is not big enough to store the retrieved data.
+*
+* Implementation:
+* This function is a wrapper function for camBufferReadWin() that allows the coordinates of the
+* image to be retrieved to be supplied in a different format to above.
+*
+*/
+uint8_t camBufferReadWin2(uint32_t hStart, uint32_t hStop, uint32_t vStart, uint32_t vStop,
+								uint16_t dataBuffer[], uint32_t bufferSize)
+{
+	return camBufferReadWin(hStart, vStart, hStop - hStart, vStop - vStart, dataBuffer, bufferSize);			
 }
 
 /*

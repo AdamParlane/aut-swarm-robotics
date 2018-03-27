@@ -425,7 +425,7 @@ uint8_t camInit(void)
 	camHardReset();						//Reset the camera
 	if(!camSetup())						//Load settings into the camera. Returns 0 on success.
 	{
-		camBufferInit();					//Initialise camera RAM buffer
+		camBufferInit();				//Initialise camera RAM buffer
 		return 0;
 	} else {
 		return 1;

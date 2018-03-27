@@ -302,22 +302,6 @@ static struct regval_list ov7670_default_regs[] = {
  *
  * IMPORTANT RULE: the first entry must be for COM7, see ov7670_s_fmt for why.
  */
-static struct regval_list ov7670_fmt_yuv422[] = {
-	{ REG_COM7, 0x0 },  /* Selects YUV mode */
-	{ REG_RGB444, 0 },	/* No RGB444 please */
-	{ REG_COM1, 0 },	/* CCIR601 */
-	{ REG_COM15, COM15_R00FF },
-	{ REG_COM9, 0x18 }, /* 4x gain ceiling; 0x8 is reserved bit */
-	{ 0x4f, 0x80 }, 	/* "matrix coefficient 1" */
-	{ 0x50, 0x80 }, 	/* "matrix coefficient 2" */
-	{ 0x51, 0    },		/* vb */
-	{ 0x52, 0x22 }, 	/* "matrix coefficient 4" */
-	{ 0x53, 0x5e }, 	/* "matrix coefficient 5" */
-	{ 0x54, 0x80 }, 	/* "matrix coefficient 6" */
-	{ REG_COM13, COM13_GAMMA|COM13_UVSAT },
-	{ 0xff, 0xff },
-};
-
 static struct regval_list ov7670_fmt_rgb565[] = {
 	{ REG_COM7, COM7_RGB },	/* Selects RGB mode */
 	{ REG_RGB444, 0 },	/* No RGB444 please */
@@ -334,29 +318,6 @@ static struct regval_list ov7670_fmt_rgb565[] = {
 	{ 0xff, 0xff },
 };
 
-static struct regval_list ov7670_fmt_rgb444[] = {
-	{ REG_COM7, COM7_RGB },	/* Selects RGB mode */
-	{ REG_RGB444, R444_ENABLE },	/* Enable xxxxrrrr ggggbbbb */
-	{ REG_COM1, 0x0 },	/* CCIR601 */
-	{ REG_COM15, COM15_R01FE|COM15_RGB565 }, /* Data range needed? */
-	{ REG_COM9, 0x38 }, 	/* 16x gain ceiling; 0x8 is reserved bit */
-	{ 0x4f, 0xb3 }, 	/* "matrix coefficient 1" */
-	{ 0x50, 0xb3 }, 	/* "matrix coefficient 2" */
-	{ 0x51, 0    },		/* vb */
-	{ 0x52, 0x3d }, 	/* "matrix coefficient 4" */
-	{ 0x53, 0xa7 }, 	/* "matrix coefficient 5" */
-	{ 0x54, 0xe4 }, 	/* "matrix coefficient 6" */
-	{ REG_COM13, COM13_GAMMA|COM13_UVSAT|0x2 },  /* Magic rsvd bit */
-	{ 0xff, 0xff },
-};
-
-static struct regval_list ov7670_fmt_raw[] = {
-	{ REG_COM7, COM7_BAYER },
-	{ REG_COM13, 0x08 }, /* No gamma, magic rsvd bit */
-	{ REG_COM16, 0x3d }, /* Edge enhancement, denoise */
-	{ REG_REG76, 0xe1 }, /* Pix correction, magic rsvd */
-	{ 0xff, 0xff },
-};
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*
 * Function:
@@ -451,63 +412,63 @@ static inline void camRegisterReset(void)
 	camWriteReg(REG_COM7, COM7_RESET);
 }
 
-//Calculates a new colour matrix from the hue saturation and matrix provided.
-static void ov7670_calc_cmatrix(int hue, unsigned char sat, int matrixIn[CMATRIX_LEN], int matrixOut[CMATRIX_LEN])
-{
-	int i;
-	/*
-	 * Apply the current saturation setting first.
-	 */
-	for (i = 0; i < CMATRIX_LEN; i++)
-		matrixOut[i] = (matrixIn[i]*sat) >> 7;
-	/*
-	 * Then, if need be, rotate the hue value.
-	 */
-	if (hue != 0) {
-		int sinth, costh, tmpmatrix[CMATRIX_LEN];
-		memcpy(tmpmatrix, matrixOut, CMATRIX_LEN*sizeof(int));
-		sinth = 1000*sin(hue);
-		costh = 1000*cos(hue);
-		matrixOut[0] = (matrixOut[3]*sinth + matrixOut[0]*costh)/1000;
-		matrixOut[1] = (matrixOut[4]*sinth + matrixOut[1]*costh)/1000;
-		matrixOut[2] = (matrixOut[5]*sinth + matrixOut[2]*costh)/1000;
-		matrixOut[3] = (matrixOut[3]*costh - matrixOut[0]*sinth)/1000;
-		matrixOut[4] = (matrixOut[4]*costh - matrixOut[1]*sinth)/1000;
-		matrixOut[5] = (matrixOut[5]*costh - matrixOut[2]*sinth)/1000;
-	}
-}
-
-//Writes the colour matrix to the camera
-static int ov7670_store_cmatrix(int matrix[CMATRIX_LEN])
-{
-	int i, ret;
-	unsigned char signbits = 0;
-	/*
-	 * Weird crap seems to exist in the upper part of
-	 * the sign bits register, so let's preserve it.
-	 */
-	signbits = camReadReg(REG_CMATRIX_SIGN);
-	signbits &= 0xc0;
-	for (i = 0; i < CMATRIX_LEN; i++) {
-		unsigned char raw;
-		if (matrix[i] < 0) {
-			signbits |= (1 << i);
-			if (matrix[i] < -255)
-				raw = 0xff;
-			else
-				raw = (-1 * matrix[i]) & 0xff;
-		}
-		else {
-			if (matrix[i] > 255)
-				raw = 0xff;
-			else
-				raw = matrix[i] & 0xff;
-		}
-		ret += camWriteReg(REG_CMATRIX_BASE + i, raw);
-	}
-	ret += camWriteReg(REG_CMATRIX_SIGN, signbits);
-	return ret;
-}
+////Calculates a new colour matrix from the hue saturation and matrix provided.
+//static void ov7670_calc_cmatrix(int hue, unsigned char sat, int matrixIn[CMATRIX_LEN], int matrixOut[CMATRIX_LEN])
+//{
+	//int i;
+	///*
+	 //* Apply the current saturation setting first.
+	 //*/
+	//for (i = 0; i < CMATRIX_LEN; i++)
+		//matrixOut[i] = (matrixIn[i]*sat) >> 7;
+	///*
+	 //* Then, if need be, rotate the hue value.
+	 //*/
+	//if (hue != 0) {
+		//int sinth, costh, tmpmatrix[CMATRIX_LEN];
+		//memcpy(tmpmatrix, matrixOut, CMATRIX_LEN*sizeof(int));
+		//sinth = 1000*sin(hue);
+		//costh = 1000*cos(hue);
+		//matrixOut[0] = (matrixOut[3]*sinth + matrixOut[0]*costh)/1000;
+		//matrixOut[1] = (matrixOut[4]*sinth + matrixOut[1]*costh)/1000;
+		//matrixOut[2] = (matrixOut[5]*sinth + matrixOut[2]*costh)/1000;
+		//matrixOut[3] = (matrixOut[3]*costh - matrixOut[0]*sinth)/1000;
+		//matrixOut[4] = (matrixOut[4]*costh - matrixOut[1]*sinth)/1000;
+		//matrixOut[5] = (matrixOut[5]*costh - matrixOut[2]*sinth)/1000;
+	//}
+//}
+//
+////Writes the colour matrix to the camera
+//static int ov7670_store_cmatrix(int matrix[CMATRIX_LEN])
+//{
+	//int i, ret;
+	//unsigned char signbits = 0;
+	///*
+	 //* Weird crap seems to exist in the upper part of
+	 //* the sign bits register, so let's preserve it.
+	 //*/
+	//signbits = camReadReg(REG_CMATRIX_SIGN);
+	//signbits &= 0xc0;
+	//for (i = 0; i < CMATRIX_LEN; i++) {
+		//unsigned char raw;
+		//if (matrix[i] < 0) {
+			//signbits |= (1 << i);
+			//if (matrix[i] < -255)
+				//raw = 0xff;
+			//else
+				//raw = (-1 * matrix[i]) & 0xff;
+		//}
+		//else {
+			//if (matrix[i] > 255)
+				//raw = 0xff;
+			//else
+				//raw = matrix[i] & 0xff;
+		//}
+		//ret += camWriteReg(REG_CMATRIX_BASE + i, raw);
+	//}
+	//ret += camWriteReg(REG_CMATRIX_SIGN, signbits);
+	//return ret;
+//}
 
 
 //////////////[Public Functions]////////////////////////////////////////////////////////////////////
