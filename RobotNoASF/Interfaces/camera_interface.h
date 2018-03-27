@@ -18,8 +18,6 @@
 * void camHardReset(void);
 * uint8_t camUpdateWindowSize(void);
 * uint8_t camSetWindowSize(uint16_t hStart, uint16_t hStop, uint16_t vStart, uint16_t vStop);
-* void camWriteToBuffer(void);
-* void camChangeFormat(uint8_t type);
 * void camTestPattern(CameraTestPatterns type);
 *
 */
@@ -128,37 +126,6 @@ uint8_t camUpdateWindowSize(void);
 *
 */
 uint8_t camSetWindowSize(uint16_t hStart, uint16_t hStop, uint16_t vStart, uint16_t vStop);
-
-/*
-* Function:
-* void camWriteToBuffer(void)
-*
-* Loads a frame from the camera into the FIFO buffer
-*
-* Inputs:
-* None
-*
-* Returns:
-* None
-*
-*/
-void camRead(void);
-
-/*
-* Function:
-* void camChangeFormat(uint8_t type)
-*
-* Changes the output format of the camera (CURRENTLY NOT USED)
-*
-* Inputs:
-* uint8_t type
-*	Just a magic number that specifies the output format
-*
-* Returns:
-* none
-*
-*/
-void camChangeFormat(uint8_t type);
 
 /*
 * Function:

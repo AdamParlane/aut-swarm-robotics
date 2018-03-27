@@ -22,6 +22,7 @@
 * void camBufferReadStop(void);
 * void camBufferReadStart(void);
 * void camBufferReadReset(void);
+* uint8_t camBufferWriteFrame(void);
 *
 */ 
 
@@ -35,8 +36,9 @@
 //////////////[Private Defines]/////////////////////////////////////////////////////////////////////
 //Buffer PIO Pin definitions
 // Buffer pin			SAM4 port/pin	Function			Type		Robot Pin Name
-//#define WE_PORT			PIOC
-//#define WE_PIN			PIO_PC7			//Write Enable		Output		VB_WE
+//Commented lines have been moved the header file
+//#define WE_PORT		PIOC
+//#define WE_PIN		PIO_PC7			//Write Enable		Output		VB_WE
 //#define WRST_PORT		PIOA
 //#define WRST_PIN		PIO_PA24		//Write Reset		Output		VB_WRST
 #define RCK_PORT		PIOA
@@ -442,8 +444,24 @@ uint8_t camBufferReadData(uint32_t startAddr, uint32_t endAddr, uint8_t *data)
 	return 0;
 }
 
-//Instructs the camera to write one frame to the FIFO. The process is handled by an external
-//interrupt.
+/*
+* Function:
+* uint8_t camBufferWriteFrame(void)
+*
+* Instructs the camera to write one frame to the FIFO. The process is handled by an external
+* interrupt.
+*
+* Inputs:
+* none
+*
+* Returns:
+* Returns 0 when there is a frame ready to be read from the buffer
+*
+* Implementation:
+* This is a wrapper function, and most of the work is performed in the external_interrupt module.
+* (See extCamWriteBuffer())
+*
+*/
 uint8_t camBufferWriteFrame(void)
 {
 	//Wrapper function. Will return 0 when there is data ready to be read from the buffer.

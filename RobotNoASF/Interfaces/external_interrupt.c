@@ -14,6 +14,7 @@
 *
 * Functions:
 * void extIntInit(void)
+* uint8_t extCamWriteToBuffer(void);
 *
 */
 
@@ -92,7 +93,26 @@ void extIntInit(void)
 	|=	VSYNC_PIN;	
 }
 
-
+/*
+* Function:
+* uint8_t extCamWriteToBuffer(void)
+*
+* If there is no new data in the buffer, will start the VSYNC ext interrupt to load a frame into
+* the camera's FIFO buffer.
+*
+* Inputs:
+* none
+*
+* Returns:
+* Returns 0 if there is new data to be read from the FIFO, otherwise will return 1 while the
+* write operation is being performed.
+*
+* Implementation:
+* If the cam buffer flag is set to 1, this function will just exit with a 0. Otherwise, the function
+* will check if the vsync interrupt isn;t already enabled and enable it, starting the write process
+* which is handled in the interrupt service routine itself.
+*
+*/
 uint8_t extCamWriteToBuffer(void)
 {
 	//If there is unread data in the buffer

@@ -23,8 +23,6 @@
 * void camHardReset(void);
 * uint8_t camUpdateWindowSize(void);
 * uint8_t camSetWindowSize(uint16_t hStart, uint16_t hStop, uint16_t vStart, uint16_t vStop);
-* void camWriteToBuffer(void);
-* void camChangeFormat(uint8_t type);
 * void camTestPattern(CameraTestPatterns type);
 *
 */ 
@@ -336,8 +334,6 @@ static uint8_t camSetup(void)
 	// Camera is not responding or the ID was incorrect
 	if (!camValidID()) return 0xFF;	// Stop camera setup
 
-
-	
 	camSetup2();
 
 	camSetBits(COM7_REG, COM7_FMT_QVGA, COM7_FMT_QVGA);	// QVGA
@@ -345,10 +341,9 @@ static uint8_t camSetup(void)
 	camSetBits(COM12_REG, COM12_HREF, COM12_HREF);	//Keep HREF on while VSYNCing (prevents loss of
 													//pixels on each line)
 	
+	//Experimental
 	camWriteReg(CONTRAS_REG, 0x40);
 	camWriteReg(BRIGHT_REG, 0x00);
-	
-	//camSetWindowSize(0, 308, 0, 240);
 	
 	camUpdateWindowSize();//Get the window size from the camera
 
@@ -629,49 +624,6 @@ uint8_t camSetWindowSize(uint16_t hStart, uint16_t hStop, uint16_t vStart, uint1
 	camWriteReg(VREF_REG, v[START_L]|v[STOP_L]|vRefReg);	
 
 	return 0;
-}
-
-/*
-* Function:
-* void camWriteToBuffer(void)
-*
-* ####THIS IS THE OLD METHOD OF LOADING A FRAME INTO THE BUFFER. THE NEW METHOD USES INTERRUPTS
-* AND REQUIRES MUCH LESS OVERHEAD! SEE camBufferWriteFrame() IN THE CAMERA BUFFER MODULE ######
-* Loads a frame from the camera into the FIFO buffer.
-*
-* Inputs:
-* None
-*
-* Returns:
-* None
-*
-* Implementation:
-* Waits for Vsync to go high, then resets the write address pointer in the FIFO. When Vsync goes
-* low again, the write enable signal is sent to the FIFO. This signal is AND'd in hardware with the
-* HREF signal from the camera so that the buffer only writes when there are valid pixels coming
-* from the camera.
-* Write is enabled until Vsync goes high again, at which point an entire frame should be loaded into
-* the FIFO
-*
-* Improvements:
-* Maybe Vsync could be handled by an external interrupt instead of blocking with while loops.
-* (Event driven in the background)
-*
-*/
-void camWriteToBuffer(void)
-{
-	// Clear read and write buffers
-	while (!VSYNC);				//wait for a low vertical sync pulse to reset the pointers in memory
-								//buffer, sync pulse goes low
-	camBufferWriteReset();		// reset the video buffer memory pointers
-	while (VSYNC);
-	camBufferWriteStart();
-	while (!VSYNC);				// wait for a low vertical sync pulse to reset the pointers in 
-								//memory buffer, sync pulse goes low
-	camBufferWriteStop();
-	camUpdateWindowSize();		//Get the window size from the camera
-		
-	return;
 }
 
 /*

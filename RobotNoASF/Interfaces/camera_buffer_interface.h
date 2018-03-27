@@ -20,6 +20,7 @@
 * void camBufferReadStop(void);
 * void camBufferReadStart(void);
 * void camBufferReadReset(void);
+* uint8_t camBufferWriteFrame(void);
 *
 */ 
 
@@ -168,6 +169,20 @@ void camBufferReadReset(void);
 */
 uint8_t camBufferReadData(uint32_t startAddr, uint32_t endAddr, uint8_t *data);
 
+/*
+* Function:
+* uint8_t camBufferWriteFrame(void)
+*
+* Instructs the camera to write one frame to the FIFO. The process is handled by an external
+* interrupt.
+*
+* Inputs:
+* none
+*
+* Returns:
+* Returns 0 when there is a frame ready to be read from the buffer
+*
+*/
 uint8_t camBufferWriteFrame(void);
 
 #endif /* CAMERA_BUFFER_INTERFACE_H_ */
