@@ -342,8 +342,8 @@ static uint8_t camSetup(void)
 													//pixels on each line)
 	
 	//Experimental
-	camWriteReg(CONTRAS_REG, 0x40);
-	camWriteReg(BRIGHT_REG, 0x00);
+	//camWriteReg(CONTRAS_REG, 0x40);
+	//camWriteReg(BRIGHT_REG, 0x00);
 	
 	camUpdateWindowSize();//Get the window size from the camera
 

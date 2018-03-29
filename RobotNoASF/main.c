@@ -200,7 +200,7 @@ int main(void)
 				mfStopRobot(&sys);
 				if(!camBufferWriteFrame())					//Load frame into buffer
 				{
-					camBufferReadWin(50, 50, 50, 50, data, 28800);//Read data from buffer	
+					camBufferReadWin(0, 220, 311, 40, data, 28800);//Read data from buffer	
 				}		
 				if(!fdelay_ms(1000))					//Blink LED 3 in Idle mode
 					led3Tog;				

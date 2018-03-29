@@ -33,6 +33,15 @@
 #include "pio_interface.h"				//For LED control while debugging TWI
 #include "twimux_interface.h"
 
+//////////////[Defines]/////////////////////////////////////////////////////////////////////////////
+//TWI Multiplexor Reset Pin definition (Experimental feature on brown bot)
+#define TWIMUX_RESET_PORT		PIOC
+#define TWIMUX_RESET_PIN		PIO_PC26
+
+//TWI Multiplexor reset macros
+#define twiMuxSet				TWIMUX_RESET_PORT->PIO_SODR |= TWIMUX_RESET_PIN
+#define twiMuxReset				TWIMUX_RESET_PORT->PIO_CODR |= TWIMUX_RESET_PIN
+
 //////////////[Global Variables]////////////////////////////////////////////////////////////////////
 extern RobotGlobalStructure sys;		//Gives TWI2 interrupt handler access
 TwiEvent twi0Log[TWI_LOG_NUM_ENTRIES];	//TWI0 event log
@@ -69,6 +78,11 @@ TwiEvent twi0Log[TWI_LOG_NUM_ENTRIES];	//TWI0 event log
 */
 void twi0Init(void)
 {
+	//Setup the TWI mux reset output pin (Experimental on brown robot)
+	TWIMUX_RESET_PORT->PIO_OER |= TWIMUX_RESET_PIN;
+	TWIMUX_RESET_PORT->PIO_PUER |= TWIMUX_RESET_PIN;
+	twiMuxSet;
+	
 	REG_PMC_PCER0
 	|=	(1<<ID_TWI0);						//Enable clock access to TWI0, Peripheral TWI0_ID = 19
 	REG_PIOA_PDR
