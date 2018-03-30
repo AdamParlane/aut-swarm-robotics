@@ -29,7 +29,6 @@
 
 //////////////[Includes]////////////////////////////////////////////////////////////////////////////
 #include "camera_interface.h"
-#include "camera_initialisation.h"
 #include "camera_buffer_interface.h"
 #include "twimux_interface.h"
 #include "timer_interface.h"
@@ -175,6 +174,11 @@
 #define REG_HAECC6	0xa9	/* Hist AEC/AGC control 6 */
 #define REG_HAECC7	0xaa	/* Hist AEC/AGC control 7 */
 #define REG_BD60MAX	0xab	/* 60hz banding step limit */
+#define REG_SCALING_XSC		0x70	// Has test pattern
+#define REG_SCALING_YSC		0x71	// Has test pattern
+#define REG_SCALING_DCWCTR	0x72
+#define REG_SCALING_PCLK_DIV	0x73
+#define REG_SCALING_PCLK_DELAY	0xA2
 
 // Test patterns
 #define SHIFT_XSC		0x80	//Bit shift setting register 1 
@@ -307,7 +311,7 @@ static uint8_t camSetBits(uint8_t regAddress, uint8_t value, uint8_t bitmask)
 */
 static inline void camRegisterReset(void)
 {
-	camWriteReg(COM7_REG, COM7_RESET);
+	camWriteReg(REG_COM7, COM7_RESET);
 }
 
 
@@ -604,7 +608,7 @@ bool camValidID(void)
 	//uint8_t data = camReadReg(PID_REG);
 	uint8_t data = camReadReg(0x0A);
 	// if the PID register value is returned and is the camera ID
-	return data == REG76_REG;
+	return data == REG_REG76;
 }
 
 /*
@@ -658,13 +662,13 @@ uint8_t camUpdateWindowSize(void)
 	
 	//uint8_t qvgaMode = ((camReadReg(COM7_REG) & 0x10)>>4);
 	
-	h[START_H] = camReadReg(HSTART_REG);	//Bits 7:0
-	h[START_L] = camReadReg(HREF_REG);		//Bits 2:0
-	h[STOP_H] = camReadReg(HSTOP_REG);		//Bits 7:0
+	h[START_H] = camReadReg(REG_HSTART);	//Bits 7:0
+	h[START_L] = camReadReg(REG_HREF);		//Bits 2:0
+	h[STOP_H] = camReadReg(REG_HSTOP);		//Bits 7:0
 	h[STOP_L] = h[START_L];					//Bits 5:3
-	v[START_H] = camReadReg(VSTART_REG);	//Bits 7:0
-	v[START_L] = camReadReg(VREF_REG);		//Bits 1:0
-	v[STOP_H] = camReadReg(VSTOP_REG);		//Bits 7:0
+	v[START_H] = camReadReg(REG_VSTART);	//Bits 7:0
+	v[START_L] = camReadReg(REG_VREF);		//Bits 1:0
+	v[STOP_H] = camReadReg(REG_VSTOP);		//Bits 7:0
 	v[STOP_L] = v[START_L];					//Bits 3:2
 	
 	hStart	= ((h[START_H]	& 0xFF)<<3) | ((h[START_L]	& 0x07)<<0);
@@ -737,8 +741,8 @@ uint8_t camSetWindowSize(uint16_t hStart, uint16_t hStop, uint16_t vStart, uint1
 	//Check if the camera is in QVGA mode or not.
 	//uint8_t qvgaMode = ((camReadReg(COM7_REG) & 0x10)>>4);
 	//Get the data from each of the partial registers so we can OR in the new data
-	hRefReg = camReadReg(HREF_REG);		//Bits 2:0, 5:3
-	vRefReg = camReadReg(VREF_REG);		//Bits 1:0, 3:2
+	hRefReg = camReadReg(REG_HREF);		//Bits 2:0, 5:3
+	vRefReg = camReadReg(REG_VREF);		//Bits 1:0, 3:2
 	
 	//if(qvgaMode)
 	//{
@@ -763,12 +767,12 @@ uint8_t camSetWindowSize(uint16_t hStart, uint16_t hStop, uint16_t vStart, uint1
 	v[STOP_L]	= ((vStop	& 0x0003)>>0);
 	
 	//Write out the data
-	camWriteReg(HSTART_REG, h[START_H]);
-	camWriteReg(HSTOP_REG, h[STOP_H]);
-	camWriteReg(VSTART_REG, v[START_H]);
-	camWriteReg(VSTOP_REG, v[STOP_H]);
-	camWriteReg(HREF_REG, h[START_L]|h[STOP_L]|hRefReg);
-	camWriteReg(VREF_REG, v[START_L]|v[STOP_L]|vRefReg);	
+	camWriteReg(REG_HSTART, h[START_H]);
+	camWriteReg(REG_HSTOP, h[STOP_H]);
+	camWriteReg(REG_VSTART, v[START_H]);
+	camWriteReg(REG_VSTOP, v[STOP_H]);
+	camWriteReg(REG_HREF, h[START_L]|h[STOP_L]|hRefReg);
+	camWriteReg(REG_VREF, v[START_L]|v[STOP_L]|vRefReg);	
 
 	return 0;
 }
@@ -795,20 +799,20 @@ void camTestPattern(CameraTestPatterns type)
 	switch (type)
 	{
 		case CAM_PATTERN_SHIFT:
-			camWriteReg(SCALING_XSC_REG, SHIFT_XSC);
-			camWriteReg(SCALING_YSC_REG, SHIFT_YSC);
+			camWriteReg(REG_SCALING_XSC, SHIFT_XSC);
+			camWriteReg(REG_SCALING_YSC, SHIFT_YSC);
 		break;
 		case CAM_PATTERN_BAR:
-			camWriteReg(SCALING_XSC_REG, BAR_XSC);
-			camWriteReg(SCALING_YSC_REG, BAR_YSC);
+			camWriteReg(REG_SCALING_XSC, BAR_XSC);
+			camWriteReg(REG_SCALING_YSC, BAR_YSC);
 		break;
 		case CAM_PATTERN_FADE:
-			camWriteReg(SCALING_XSC_REG, FADE_XSC);
-			camWriteReg(SCALING_YSC_REG, FADE_YSC);
+			camWriteReg(REG_SCALING_XSC, FADE_XSC);
+			camWriteReg(REG_SCALING_YSC, FADE_YSC);
 		break;
 		default:
-			camWriteReg(SCALING_XSC_REG, 0x00);
-			camWriteReg(SCALING_YSC_REG, 0x00);
+			camWriteReg(REG_SCALING_XSC, 0x00);
+			camWriteReg(REG_SCALING_YSC, 0x00);
 		break;
 	}
 }
