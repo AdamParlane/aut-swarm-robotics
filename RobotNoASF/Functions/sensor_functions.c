@@ -396,6 +396,7 @@ void sfRGB2HSV(struct ColourSensorData *colours)
 	return;
 }
 
+//TODO: Commenting
 void sfRGB565Convert(uint16_t pixel, uint16_t *red, uint16_t *green, uint16_t *blue)
 {	
 	//Converts 16-bit RGB565 pixel data to RGB values
@@ -414,6 +415,7 @@ void sfRGB565Convert(uint16_t pixel, uint16_t *red, uint16_t *green, uint16_t *b
 	*blue = (blue_mask & pixel) << 11;
 }
 
+//TODO: Commenting
 void scanForColour(uint16_t startLine, uint16_t endLine, uint16_t startHue, uint16_t endHue,
 					uint16_t sectionScores[])
 {

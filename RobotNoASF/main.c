@@ -41,7 +41,7 @@
 //////////////[Global variables]////////////////////////////////////////////////////////////////////
 extern RobotGlobalStructure sys;		//System data structure
 ///TEMP FOR TESTING CAMERA//////////////////////////////////////////////////////////////////////
-uint16_t data[28800];			// 320*90 (w*h) 2 bytes per pixel                             //
+//uint16_t data[28800];			// 320*90 (w*h) 2 bytes per pixel                             //
 ////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*
@@ -198,10 +198,11 @@ int main(void)
 				
 			case M_IDLE:					
 				mfStopRobot(&sys);
-				if(!camBufferWriteFrame())					//Load frame into buffer
-				{
-					camBufferReadWin(0, 220, 311, 40, data, 28800);//Read data from buffer	
-				}		
+				//CAMERA DEBUG STUFF
+				//if(!camBufferWriteFrame())					//Load frame into buffer
+				//{
+					//camBufferReadWin(0, 220, 311, 40, data, 28800);//Read data from buffer	
+				//}		
 				if(!fdelay_ms(1000))					//Blink LED 3 in Idle mode
 					led3Tog;				
 				break;

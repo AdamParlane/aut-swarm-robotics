@@ -273,7 +273,7 @@ static inline char camWriteReg(uint8_t regAddress, uint8_t data)
 	return twi0Write(TWI0_CAM_WRITE_ADDR, regAddress, 1, &data);
 }
 
-
+//TODO: Commenting
 static uint8_t camSetBits(uint8_t regAddress, uint8_t value, uint8_t bitmask)
 {
 	//Retrieve the existing data in the register
@@ -314,7 +314,7 @@ static inline void camRegisterReset(void)
 	camWriteReg(REG_COM7, COM7_RESET);
 }
 
-
+//TODO: Commenting
 static uint16_t camLoadSettings(struct regval_list *r)
 {
 	uint16_t num = 0;
@@ -350,7 +350,7 @@ static uint16_t camLoadSettings(struct regval_list *r)
 */
 static uint8_t camSetup(void)
 {
-	// Camera is not responding or the ID was incorrect
+	//Camera is not responding or the ID was incorrect
 	if (!camValidID()) return 0xFF;	// Stop camera setup
 	
 	//Default register settings. Will be loaded after the camera has been initialised.
@@ -487,18 +487,21 @@ static uint8_t camSetup(void)
 	//Enable scaling and downscaling
 	camSetBits(REG_COM3, COM3_SCALEEN|COM3_DCWEN, COM3_SCALEEN|COM3_DCWEN);
 
-	camSetBits(REG_COM7, COM7_FMT_QVGA, COM7_FMT_QVGA);	// QVGA
+	//QVGA Resolution (320x240)
+	camSetBits(REG_COM7, COM7_FMT_QVGA, COM7_FMT_QVGA);
 	
-	camSetBits(REG_COM12, COM12_HREF, COM12_HREF);	//Keep HREF on while VSYNCing (prevents loss of
-													//pixels on each line)
+	//Keep HREF on while VSYNCing (prevents loss of pixels on each line)
+	camSetBits(REG_COM12, COM12_HREF, COM12_HREF);
 	
 	//Experimental
 	//camWriteReg(CONTRAS_REG, 0x40);
 	//camWriteReg(BRIGHT_REG, 0x00);
 	
-	camUpdateWindowSize();//Get the window size from the camera
+	//Get the window size from the camera
+	camUpdateWindowSize();
 
-	camTestPattern(CAM_PATTERN_NONE);				//Test pattern can be set here.
+	//Test pattern can be set here.
+	camTestPattern(CAM_PATTERN_NONE);
 
 	return 0x00;
 }
