@@ -197,13 +197,13 @@ typedef struct BatteryChargeData
 //Stores colour sensor data, both raw and converted, for a single colour sensor
 typedef struct ColourSensorData
 {
-	unsigned short red;
-	unsigned short green;
-	unsigned short blue;
-	unsigned short white;
-	unsigned short hue;
-	unsigned short saturation;
-	unsigned short value;
+	uint16_t red;
+	uint16_t green;
+	uint16_t blue;
+	uint16_t white;
+	uint16_t hue;
+	uint16_t saturation;
+	uint16_t value;
 } ColourSensorData;
 
 //Stores proximity data

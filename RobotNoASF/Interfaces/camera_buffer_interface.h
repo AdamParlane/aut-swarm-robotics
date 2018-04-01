@@ -51,10 +51,16 @@
 //on the buffer
 #define CAM_IMAGE_BPP		2		//Bytes per pixel
 #define CAM_IMAGE_WIDTH		311
-#define CAM_IMAGE_HEIGHT	632		//393,216 bytes/2/311. The actual picture is much less than this
+#define CAM_IMAGE_HEIGHT	249		//393,216 bytes/2/311. The actual picture is much less than this
 									//but this specifies the absolute maximum height that could be
 									//read from the buffer. This might get smaller once I know how
 									//tall the picture actually is.
+
+//The margins define how far in from the edge that you will obtain "clean" image data:
+#define CAM_TOP_MARGIN		9
+#define CAM_BOTTOM_MARGIN	0
+#define CAM_LEFT_MARGIN		9		
+#define CAM_RIGHT_MARGIN	1
 
 //Macros
 #define camBufferWriteDisable	WE_PORT->PIO_CODR	|= WE_PIN	//Buffer write disable (Active high 
