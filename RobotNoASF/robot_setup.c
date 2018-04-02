@@ -155,6 +155,11 @@ RobotGlobalStructure sys =
 			.errorCount				= 0,
 			.pollEnabled			= 0x00,		//Bitmask to enable specific sensors (0x3F for all)
 			.pollInterval			= 150
+		},
+
+		.camera =
+		{
+			.initialised			= false
 		}
 	},
 	
@@ -247,7 +252,7 @@ void robotSetup(void)
 	mouseInit();						//Initialise mouse sensor
 	xbeeInit();							//Initialise communication system
 	lfInit();							//Initialise line follow sensors. Only on V2.
-	camInit();							//Initialise camera
+	sys.sensors.camera.initialised = camInit(); //Initialise the camera 
 	motorInit();						//Initialise the motor driver chips
 	
 	sys.states.mainfPrev = sys.states.mainf;

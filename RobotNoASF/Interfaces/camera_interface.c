@@ -575,7 +575,6 @@ uint8_t camInit(void)
 	delay_ms(5);
 	pwdnDisable;
 	
-	
 	camHardReset();						//Reset the camera
 	if(!camSetup())						//Load settings into the camera. Returns 0 on success.
 	{

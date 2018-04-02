@@ -291,6 +291,7 @@ void commPCStatusUpdate(RobotGlobalStructure *sys)
 		char stringBuffer[49];
 								
 		//DEBUG MESSAGE (please don't delete - Matt):
+		/*
 		sys->comms.transmitData.Data[0] = 0x00;
 		dtoa(stringBuffer, (double)sys->pos.Optical.convFactor);
 		
@@ -299,5 +300,6 @@ void commPCStatusUpdate(RobotGlobalStructure *sys)
 		sys->comms.transmitData.DataSize = strlen(stringBuffer) + 2;
 		xbeeSendAPITransmitRequest(COORDINATOR_64,UNKNOWN_16, sys->comms.transmitData.Data,
 									sys->comms.transmitData.DataSize);  //Send the Message	
+		*/
 	}
 }
