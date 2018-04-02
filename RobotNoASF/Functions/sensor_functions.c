@@ -25,6 +25,7 @@
 #include "../Interfaces/prox_sens_interface.h"
 #include "../Interfaces/light_sens_interface.h"
 #include "../Interfaces/twimux_interface.h"
+#include "../Interfaces/camera_buffer_interface.h"
 
 #include "sensor_functions.h"
 
@@ -393,4 +394,59 @@ void sfRGB2HSV(struct ColourSensorData *colours)
 	colours->hue = rawHue;
 
 	return;
+}
+
+//TODO: Commenting
+void sfRGB565Convert(uint16_t pixel, uint16_t *red, uint16_t *green, uint16_t *blue)
+{	
+	//Converts 16-bit RGB565 pixel data to RGB values
+	//Masks for RGB565 format
+	uint16_t red_mask =   0b1111100000000000;
+	uint16_t green_mask = 0b0000011111100000;
+	uint16_t blue_mask =  0b0000000000011111;
+	//RGB565 -> RGB888
+	//*red = (red_mask & pixel) >> 8;
+	//*green = (green_mask & pixel) >> 3;
+	//*blue = (blue_mask & pixel) << 3;
+	
+	//RGB565 -> RGB161616
+	*red = (red_mask & pixel) >> 0;
+	*green = (green_mask & pixel) << 5;
+	*blue = (blue_mask & pixel) << 11;
+}
+
+//TODO: Commenting
+void scanForColour(uint16_t startLine, uint16_t endLine, uint16_t startHue, uint16_t endHue,
+					uint16_t sectionScores[])
+{
+	ColourSensorData pixel;
+	uint16_t line[CAM_IMAGE_WIDTH];
+	uint32_t sectionWidth = CAM_IMAGE_WIDTH/7;
+	
+	//Make sure the score table is clear
+	for(uint8_t i = 0; i < 7; i++) sectionScores[i] = 0;
+
+	//For each line
+	for(uint16_t thisLine = startLine; thisLine <= endLine; thisLine++)
+	{
+		camBufferReadWin(0, thisLine, CAM_IMAGE_WIDTH - 1, 1, line, CAM_IMAGE_WIDTH);
+
+		//For each pixel in each line
+		for(uint16_t thisPixel = 0; thisPixel < CAM_IMAGE_WIDTH; thisPixel++)
+		{
+			sfRGB565Convert(line[thisPixel], &pixel.red, &pixel.green, &pixel.blue);
+			sfRGB2HSV(&pixel);
+			//If the hue range does not contain the 359->0 degree crossing
+			if(startHue <= endHue)
+			{
+				if(pixel.saturation > 128 && pixel.hue >= startHue && pixel.hue <= endHue)
+					sectionScores[(int)(thisPixel/sectionWidth)] += 1;
+			} else {
+				if(pixel.saturation > 128
+					&& ((pixel.hue >= startHue && pixel.hue <= 359)
+					|| (pixel.hue <= endHue && pixel.hue >= 0)))
+					sectionScores[(int)(thisPixel/sectionWidth)] += 1;
+			}
+		}
+	}
 }

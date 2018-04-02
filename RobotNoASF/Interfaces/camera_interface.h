@@ -18,8 +18,6 @@
 * void camHardReset(void);
 * uint8_t camUpdateWindowSize(void);
 * uint8_t camSetWindowSize(uint16_t hStart, uint16_t hStop, uint16_t vStart, uint16_t vStop);
-* void camRead(void);
-* void camChangeFormat(uint8_t type);
 * void camTestPattern(CameraTestPatterns type);
 *
 */
@@ -34,7 +32,7 @@
 //This has been made available publicly so the buffer can time it's write reset procedure to vsync
 #define VSYNC_PORT		PIOC
 #define VSYNC_PIN		PIO_PC13
-#define	VSYNC			(REG_PIOC_PDSR & VSYNC_PIN)
+#define	VSYNC			(VSYNC_PORT->PIO_PDSR & VSYNC_PIN)
 
 //////////////[Enumerations]////////////////////////////////////////////////////////////////////////
 // Test patterns
@@ -128,37 +126,6 @@ uint8_t camUpdateWindowSize(void);
 *
 */
 uint8_t camSetWindowSize(uint16_t hStart, uint16_t hStop, uint16_t vStart, uint16_t vStop);
-
-/*
-* Function:
-* void camRead(void)
-*
-* Loads a frame from the camera into the FIFO buffer
-*
-* Inputs:
-* None
-*
-* Returns:
-* None
-*
-*/
-void camRead(void);
-
-/*
-* Function:
-* void camChangeFormat(uint8_t type)
-*
-* Changes the output format of the camera (CURRENTLY NOT USED)
-*
-* Inputs:
-* uint8_t type
-*	Just a magic number that specifies the output format
-*
-* Returns:
-* none
-*
-*/
-void camChangeFormat(uint8_t type);
 
 /*
 * Function:

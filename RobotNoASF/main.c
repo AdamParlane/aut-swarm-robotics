@@ -23,6 +23,10 @@
 #include "Interfaces/pio_interface.h"
 #include "Interfaces/timer_interface.h"
 #include "Interfaces/motor_driver.h"
+///Testing only::////////////////////////////////
+#include "Interfaces/camera_interface.h"       //
+#include "Interfaces/camera_buffer_interface.h"//
+/////////////////////////////////////////////////
 
 #include "Functions/power_functions.h"
 #include "Functions/comm_functions.h"
@@ -36,7 +40,9 @@
 
 //////////////[Global variables]////////////////////////////////////////////////////////////////////
 extern RobotGlobalStructure sys;		//System data structure
-
+///TEMP FOR TESTING CAMERA//////////////////////////////////////////////////////////////////////
+//uint16_t data[28800];			// 320*90 (w*h) 2 bytes per pixel                             //
+////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*
 * Function:
@@ -192,6 +198,11 @@ int main(void)
 				
 			case M_IDLE:					
 				mfStopRobot(&sys);
+				//CAMERA DEBUG STUFF
+				//if(!camBufferWriteFrame())					//Load frame into buffer
+				//{
+					//camBufferReadWin(0, 220, 311, 40, data, 28800);//Read data from buffer	
+				//}		
 				if(!fdelay_ms(1000))					//Blink LED 3 in Idle mode
 					led3Tog;				
 				break;

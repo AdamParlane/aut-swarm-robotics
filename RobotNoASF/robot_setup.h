@@ -197,13 +197,13 @@ typedef struct BatteryChargeData
 //Stores colour sensor data, both raw and converted, for a single colour sensor
 typedef struct ColourSensorData
 {
-	unsigned short red;
-	unsigned short green;
-	unsigned short blue;
-	unsigned short white;
-	unsigned short hue;
-	unsigned short saturation;
-	unsigned short value;
+	uint16_t red;
+	uint16_t green;
+	uint16_t blue;
+	uint16_t white;
+	uint16_t hue;
+	uint16_t saturation;
+	uint16_t value;
 } ColourSensorData;
 
 //Stores proximity data
@@ -263,6 +263,7 @@ typedef struct SystemFlagsGroup
 {
 	char xbeeNewData;	//New data from Xbee interface
 	char imuCheckFifo;	//IMU ext interrupt has been triggered
+	char camBufferRead;	//A new image is ready to be read from the camera FIFO buffer
 	char twi2NewData;	//New data received on twi2 (Slave interface)
 	char obaMoving;		//Robot is in motion
 	char obaEnabled;	//Obstacle avoidance enabled

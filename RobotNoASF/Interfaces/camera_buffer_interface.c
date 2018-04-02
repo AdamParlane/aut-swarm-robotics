@@ -22,21 +22,29 @@
 * void camBufferReadStop(void);
 * void camBufferReadStart(void);
 * void camBufferReadReset(void);
+* uint8_t camBufferWriteFrame(void);
+* uint8_t camBufferReadWin(uint32_t left, uint32_t top, uint32_t width, uint32_t height,
+*								uint16_t dataBuffer[], uint32_t bufferSize);
+* uint8_t camBufferReadWin2(uint32_t hStart, uint32_t hStop, uint32_t vStart, uint32_t vStop,
+*								uint16_t dataBuffer[], uint32_t bufferSize)
 *
 */ 
 
 //////////////[Includes]////////////////////////////////////////////////////////////////////////////
+#include "../robot_setup.h"
 #include "camera_interface.h"
-#include "camera_buffer_interface.h"
+#include "external_interrupt.h"	//External interrupts used to fetch frame from camera
 #include "timer_interface.h"	//Provides delay_ms()
+#include "camera_buffer_interface.h"
 
 //////////////[Private Defines]/////////////////////////////////////////////////////////////////////
 //Buffer PIO Pin definitions
 // Buffer pin			SAM4 port/pin	Function			Type		Robot Pin Name
-#define WE_PORT			PIOC
-#define WE_PIN			PIO_PC7			//Write Enable		Output		VB_WE
-#define WRST_PORT		PIOA
-#define WRST_PIN		PIO_PA24		//Write Reset		Output		VB_WRST
+//Commented lines have been moved the header file
+//#define WE_PORT		PIOC
+//#define WE_PIN		PIO_PC7			//Write Enable		Output		VB_WE
+//#define WRST_PORT		PIOA
+//#define WRST_PIN		PIO_PA24		//Write Reset		Output		VB_WRST
 #define RCK_PORT		PIOA
 #define RCK_PIN			PIO_PA15		//Read Clock		Output		VB_RCK
 #define OE_PORT			PIOA
@@ -71,13 +79,6 @@
 #define DO6				(DO6_PORT->PIO_PDSR & DO6_PIN)
 #define DO7				(DO7_PORT->PIO_PDSR & DO7_PIN)
 
-// Writing to buffer from camera
-#define writeDisable	WE_PORT->PIO_CODR	|= WE_PIN		//Buffer write disable (Active high via
-															//NAND gate)
-#define writeEnable		WE_PORT->PIO_SODR	|= WE_PIN		//Buffer write enable
-#define writeResetOn	WRST_PORT->PIO_CODR	|= WRST_PIN		//Buffer write reset
-#define writeResetOff	WRST_PORT->PIO_SODR |= WRST_PIN		//Buffer write on (not in reset)
-
 // Reading from buffer to SAM4
 #define readResetOn		RRST_PORT->PIO_CODR	|= RRST_PIN		//Buffer read reset
 #define readResetOff	RRST_PORT->PIO_SODR	|= RRST_PIN		//Buffer read on (not in reset)
@@ -93,8 +94,7 @@
 
 //////////////[Private Global Variables]////////////////////////////////////////////////////////////
 volatile uint32_t ramAddrPointer = 0;//Indicates the address in buffer that is currently being read
-//TODO: Make sure that this variable is reset to 0 everytime read reset is asserted to stay synced
-//with the buffer.
+extern RobotGlobalStructure sys;	//Give access to the camReadBuffer flag
 
 //////////////[Private Functions]///////////////////////////////////////////////////////////////////
 /*
@@ -114,7 +114,7 @@ volatile uint32_t ramAddrPointer = 0;//Indicates the address in buffer that is c
 * All the bits are then OR'd together to create a single byte.
 *
 */
-uint8_t camBufferReadByte(void)
+static uint8_t camBufferReadByte(void)
 {
 	return
 	(DO0 ? 0x01 : 0x00)
@@ -252,7 +252,7 @@ uint8_t camBufferInit()
 */
 void camBufferWriteStop(void)
 {
-	writeDisable;
+	camBufferWriteDisable;
 }
 
 /*
@@ -274,7 +274,7 @@ void camBufferWriteStop(void)
 void camBufferWriteStart(void)
 {
 	// Start write
-	writeEnable;
+	camBufferWriteEnable;
 }
 
 /*
@@ -297,10 +297,10 @@ void camBufferWriteStart(void)
 void camBufferWriteReset(void)
 {
 	// Reset
-	writeResetOn;
+	camBufferWriteResetOn;
 	while (VSYNC);
 	// Clear reset
-	writeResetOff;
+	camBufferWriteResetOff;
 }
 
 /*
@@ -378,7 +378,7 @@ void camBufferReadReset(void)
 
 /*
 * Function:
-* uint8_t camBufferReadData(uint32_t startAddr, uint32_t endAddr, uint16_t *data)
+* uint8_t camBufferReadSequence(uint32_t startAddr, uint32_t endAddr, uint16_t *data)
 *
 * Allows the caller to read the data between two addresses in the video RAM buffer
 *
@@ -405,8 +405,13 @@ void camBufferReadReset(void)
 * disabled
 *
 */
-uint8_t camBufferReadData(uint32_t startAddr, uint32_t endAddr, uint8_t *data)
+uint8_t camBufferReadSequence(uint32_t startAddr, uint32_t endAddr, uint16_t *data)
 {
+	uint8_t msb, lsb;
+	
+	
+	sys.flags.camBufferRead = 0;
+	
 	//If the ramAddrPointer is greater than the startAddr, then reset the RAM's read pointer
 	if(startAddr < ramAddrPointer)
 	{
@@ -421,24 +426,153 @@ uint8_t camBufferReadData(uint32_t startAddr, uint32_t endAddr, uint8_t *data)
 	while(ramAddrPointer < startAddr)
 	{
 		readClkOn;
-		//delay_ms(1);
 		readClkOff;
-		//delay_ms(1);
 		ramAddrPointer++;
 	}
 	
 	//Now we can begin pulling data from the RAM
-	while(ramAddrPointer >= startAddr && ramAddrPointer <= endAddr)
+	while(ramAddrPointer >= startAddr && ramAddrPointer < endAddr)
 	{
 		readClkOn;
 		//We want to be reading on the rising edge of the read clock
-		data[ramAddrPointer - startAddr] = camBufferReadByte();
-		ramAddrPointer++;
+		lsb = camBufferReadByte();
 		readClkOff;
+		readClkOn;
+		//We want to be reading on the rising edge of the read clock
+		msb = camBufferReadByte();
+		readClkOff;		
+		
+		data[(ramAddrPointer/CAM_IMAGE_BPP) - startAddr/CAM_IMAGE_BPP] = (msb << 8)|(lsb);
+		ramAddrPointer += 2;
 	}
 	
 	//Disable reading from the FIFO
 	camBufferReadStop();
 	
 	return 0;
+}
+
+/*
+* Function:
+* uint8_t camBufferReadWin(uint32_t left, uint32_t top, uint32_t width, uint32_t height,
+*								uint16_t dataBuffer[], uint32_t bufferSize)
+*
+* This function will read a small portion of the image stored in the camera buffer
+*
+* Inputs:
+* uint32_t left:
+*	The left (x) coordinate of the image to be retrieved
+* uint32_t top:
+*	The top (y) coordinate of the image to be retrieved
+* uint32_t width:
+*	The width (in pixels) of the image to be retrieved
+* uint32_t height:
+*	The height (in pixels) of the image to be retrieved
+* uint16_t dataBuffer[]:
+*	Pointer to the array where the image will be stored
+* uint32_t bufferSize:
+*	Length of the storage array in elements. Used for error checking
+*
+* Returns:
+* 1 if the coordinates and dimensions given are out of range of the image stored in the buffer, or
+* if the length of the buffer is not big enough to store the retrieved data.
+*
+* Implementation:
+* First, the function performs checks that the coordinates given are valid, and that the storage 
+* array supplied is big enough. Function returns a non zero if there are any problems.
+*
+* Next, the function calculates the initial memory address in RAM to start reading the image from
+* based on the image coordinates and dimensions given. Finally, a for loop iterates line by line,
+* retrieving each line of data from the FIFO, and storing it in the correct order in the supplied
+* array. The function returns a 0 when complete.
+*
+*/
+uint8_t camBufferReadWin(uint32_t left, uint32_t top, uint32_t width, uint32_t height, 
+								uint16_t dataBuffer[], uint32_t bufferSize)
+{
+	//Make sure that the given dimensions are in range
+	if(((left + width) > CAM_IMAGE_WIDTH) || ((top + height) > CAM_IMAGE_HEIGHT))
+	{
+		return 1;
+	}
+	
+	//Check that the supplied array is big enough for the job at hand
+	if(bufferSize < (width*height))
+	{
+		return 1;
+	} else {
+		//Work out the initial read address:
+		uint32_t initialAddr = top*CAM_IMAGE_WIDTH*CAM_IMAGE_BPP + left*CAM_IMAGE_BPP;
+		uint32_t startAddr, endAddr;
+		//Read lines:
+		for(uint16_t line = 0; line < height; line++)
+		{
+			//Calculate the start and end addresses for the next read from the buffer.
+			startAddr = initialAddr + (line*(CAM_IMAGE_WIDTH)*CAM_IMAGE_BPP);
+			endAddr = startAddr + width*CAM_IMAGE_BPP;
+			camBufferReadSequence(startAddr, endAddr, dataBuffer + (line*width));
+		}
+		sys.flags.camBufferRead = 0;
+	}
+	return 0;
+}
+
+/*
+* Function:
+* uint8_t camBufferReadWin2(uint32_t hStart, uint32_t hStop, uint32_t vStart, uint32_t vStop,
+*								uint16_t dataBuffer[], uint32_t bufferSize)
+*
+* This function will read a small portion of the image stored in the camera buffer
+*
+* Inputs:
+* uint32_t hStart:
+*	Horizontal start position
+* uint32_t hStop:
+*	Horizontal stop position
+* uint32_t vStart:
+*	Vertical start position
+* uint32_t vStop:
+*	Vertical stop position
+* uint16_t dataBuffer[]:
+*	Pointer to the array where the image will be stored
+* uint32_t bufferSize:
+*	Length of the storage array in elements. Used for error checking
+*
+* Returns:
+* 1 if the coordinates and dimensions given are out of range of the image stored in the buffer, or
+* if the length of the buffer is not big enough to store the retrieved data.
+*
+* Implementation:
+* This function is a wrapper function for camBufferReadWin() that allows the coordinates of the
+* image to be retrieved to be supplied in a different format to above.
+*
+*/
+uint8_t camBufferReadWin2(uint32_t hStart, uint32_t hStop, uint32_t vStart, uint32_t vStop,
+								uint16_t dataBuffer[], uint32_t bufferSize)
+{
+	return camBufferReadWin(hStart, vStart, hStop - hStart, vStop - vStart, dataBuffer, bufferSize);			
+}
+
+/*
+* Function:
+* uint8_t camBufferWriteFrame(void)
+*
+* Instructs the camera to write one frame to the FIFO. The process is handled by an external
+* interrupt.
+*
+* Inputs:
+* none
+*
+* Returns:
+* Returns 0 when there is a frame ready to be read from the buffer
+*
+* Implementation:
+* This is a wrapper function, and most of the work is performed in the external_interrupt module.
+* (See extCamWriteBuffer())
+*
+*/
+uint8_t camBufferWriteFrame(void)
+{
+	//Wrapper function. Will return 0 when there is data ready to be read from the buffer.
+	return extCamWriteToBuffer();
 }
