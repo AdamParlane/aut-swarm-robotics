@@ -37,7 +37,7 @@
 union float_bytes {
 	float val;
 	unsigned char bytes[sizeof(float)];
-}data;
+}floatBytesData;
 
 struct MessageInfo;	//Defined in xbee_driver.h
 

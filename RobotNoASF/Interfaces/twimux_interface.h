@@ -4,7 +4,7 @@
 * Author : Esmond Mather and Matthew Witt
 * Created: 11/07/2017 10:03:32 AM
 *
-* Project Repository:https://github.com/AdamParlane/aut-swarm-robotics
+* Project Repository:https://github.com/wittsend/aut-swarm-robotics
 *
 * Defines macros for TWI0 status, control and multiplexer addresses. Function definitions for TWI0
 * and mux
@@ -125,6 +125,8 @@
 #define TWI0_PROXSENS_ADDR			0x39		//Proximity sensors
 #define TWI0_FCHARGE_ADDR			0x6B		//Battery Charger (Fast Charge Controller)
 #define TWI0_IMU_ADDR				0x68		//IMU
+#define TWI0_CAM_WRITE_ADDR			0x21		//Camera write address (0x42 right shifted 1)
+#define TWI0_CAM_READ_ADDR			0x21		//Camera read address (0x43 right shifted 1)
 #define TWI2_IMU_ADDR				0x68		//IMU
 #define TWI2_SLAVE_ADDR				0x44		//This devices' slave address
 
@@ -229,6 +231,12 @@ uint8_t twi0MuxSwitch(uint8_t channel);
 *
 */
 uint8_t twi0ReadMuxChannel(void);
+
+//TODO: Annotation
+uint8_t twi0SetCamRegister(uint8_t regAddr);
+//TODO: Annotation
+uint8_t twi0ReadCameraRegister(void);
+
 
 /*
 * Function: char twiNWrite(unsigned char slave_addr, unsigned char reg_addr,

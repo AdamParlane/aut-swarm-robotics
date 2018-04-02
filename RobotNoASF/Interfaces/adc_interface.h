@@ -4,7 +4,7 @@
 * Author : Matthew Witt (pxf5695@autuni.ac.nz)
 * Created: 25/07/2017 8:30:48 PM
 *
-* Project Repository: https://github.com/AdamParlane/aut-swarm-robotics
+* Project Repository: https://github.com/wittsend/aut-swarm-robotics
 *
 * Contains ADC channel defines and ADC access function prototypes.
 *

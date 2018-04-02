@@ -39,7 +39,7 @@
       </framework-data>
     </AsfFrameworkConfig>
     <avrtool>com.atmel.avrdbg.tool.atmelice</avrtool>
-    <avrtoolserialnumber>J41800047224</avrtoolserialnumber>
+    <avrtoolserialnumber>J41800047448</avrtoolserialnumber>
     <avrdeviceexpectedsignature>0x295B0AE0</avrdeviceexpectedsignature>
     <com_atmel_avrdbg_tool_jtagice3plus>
       <ToolOptions>
@@ -62,7 +62,7 @@
         <InterfaceName>JTAG</InterfaceName>
       </ToolOptions>
       <ToolType>com.atmel.avrdbg.tool.atmelice</ToolType>
-      <ToolNumber>J41800047224</ToolNumber>
+      <ToolNumber>J41800047448</ToolNumber>
       <ToolName>Atmel-ICE</ToolName>
     </com_atmel_avrdbg_tool_atmelice>
     <custom>
@@ -78,6 +78,8 @@
       </ToolNumber>
       <ToolName>Custom Programming Tool</ToolName>
     </custom>
+    <ResetRule>0</ResetRule>
+    <EraseKey />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
     <ToolchainSettings>
@@ -234,12 +236,6 @@
     <Compile Include="Functions\sensor_functions.h">
       <SubType>compile</SubType>
     </Compile>
-    <Compile Include="Functions\swarm.functions.h">
-      <SubType>compile</SubType>
-    </Compile>
-    <Compile Include="Functions\swarm_functions.c">
-      <SubType>compile</SubType>
-    </Compile>
     <Compile Include="Functions\test_functions.c">
       <SubType>compile</SubType>
     </Compile>
@@ -268,6 +264,18 @@
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="Interfaces\adc_interface.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="Interfaces\camera_buffer_interface.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="Interfaces\camera_buffer_interface.h">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="Interfaces\camera_interface.c">
+      <SubType>compile</SubType>
+    </Compile>
+    <Compile Include="Interfaces\camera_interface.h">
       <SubType>compile</SubType>
     </Compile>
     <Compile Include="Interfaces\rgbled_driver.c">

@@ -4,7 +4,7 @@
 * Author : Esmond Mather and Matthew Witt
 * Created: 11/07/2017 10:41:59 AM
 *
-* Project Repository:https://github.com/AdamParlane/aut-swarm-robotics
+* Project Repository:https://github.com/wittsend/aut-swarm-robotics
 *
 * Functions for reading and writing I2C devices on TWI0 bus. Functions for controlling I2C
 * multiplexer on TWI0.
@@ -30,11 +30,20 @@
 */
 
 //////////////[Includes]////////////////////////////////////////////////////////////////////////////
-#include "pio_interface.h"			//For LED control while debugging TWI
+#include "pio_interface.h"				//For LED control while debugging TWI
 #include "twimux_interface.h"
 
+//////////////[Defines]/////////////////////////////////////////////////////////////////////////////
+//TWI Multiplexor Reset Pin definition (Experimental feature on brown bot)
+#define TWIMUX_RESET_PORT		PIOC
+#define TWIMUX_RESET_PIN		PIO_PC26
+
+//TWI Multiplexor reset macros
+#define twiMuxSet				TWIMUX_RESET_PORT->PIO_SODR |= TWIMUX_RESET_PIN
+#define twiMuxReset				TWIMUX_RESET_PORT->PIO_CODR |= TWIMUX_RESET_PIN
+
 //////////////[Global Variables]////////////////////////////////////////////////////////////////////
-extern RobotGlobalStructure sys;	//Gives TWI2 interrupt handler access
+extern RobotGlobalStructure sys;		//Gives TWI2 interrupt handler access
 TwiEvent twi0Log[TWI_LOG_NUM_ENTRIES];	//TWI0 event log
 
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
@@ -69,6 +78,11 @@ TwiEvent twi0Log[TWI_LOG_NUM_ENTRIES];	//TWI0 event log
 */
 void twi0Init(void)
 {
+	//Setup the TWI mux reset output pin (Experimental on brown robot)
+	TWIMUX_RESET_PORT->PIO_OER |= TWIMUX_RESET_PIN;
+	TWIMUX_RESET_PORT->PIO_PUER |= TWIMUX_RESET_PIN;
+	twiMuxSet;
+	
 	REG_PMC_PCER0
 	|=	(1<<ID_TWI0);						//Enable clock access to TWI0, Peripheral TWI0_ID = 19
 	REG_PIOA_PDR
@@ -249,6 +263,71 @@ uint8_t twi0ReadMuxChannel(void)
 	if(waitForFlag((uint32_t*)&REG_TWI0_SR, TWI_SR_TXCOMP, TWI_TXCOMP_TIMEOUT))
 	{
 		return 1;
+	}
+	return returnVal;
+}
+
+/* Function for setting the desired camera register to read from (TODO: Annotation)*/
+uint8_t twi0SetCamRegister(uint8_t regAddr)
+{
+	//Event information to be passed to the TWI event logger
+	TwiEvent thisEvent;
+	thisEvent.readOp = 0;
+	thisEvent.slaveAddress = TWI0_CAM_WRITE_ADDR;
+	thisEvent.regAddress = regAddr;
+	thisEvent.transferLen = 1;
+	thisEvent.twiBusNumber = 0;
+	thisEvent.timeStamp = sys.timeStamp;
+	thisEvent.bytesTransferred = 1;
+	
+	twi0MasterMode;					//Master mode enabled, slave disabled
+	twi0RegAddrSize(0);				//Set single internal device register
+	twi0SetSlave(TWI0_CAM_WRITE_ADDR);	//Slave address (eg. Mux or Fast Charge Chip)
+	//No internal address and set to master write mode by default of zero
+	twi0Send(regAddr);				//Load THR and writing to THR causes start to be sent
+	twi0Stop;						//Set STOP bit after tx
+	//wait for start and data to be shifted out of holding register
+	if(waitForFlag((uint32_t*)&REG_TWI0_SR, TWI_SR_TXRDY, TWI_TXRDY_TIMEOUT))
+	{
+		//Log the error
+		thisEvent.operationResult = TWIERR_TXRDY;
+		twi0LogEvent(thisEvent);
+		return 1;
+	}
+	//Communication complete, holding and shifting registers empty, Stop sent
+	if(waitForFlag((uint32_t*)&REG_TWI0_SR, TWI_SR_TXCOMP, TWI_TXCOMP_TIMEOUT))
+	{
+		//Log the error
+		thisEvent.operationResult = TWIERR_TXCOMP;
+		twi0LogEvent(thisEvent);
+		return 1;
+	} else {
+		thisEvent.operationResult = TWIERR_NONE;
+		twi0LogEvent(thisEvent);
+		return 0;
+	}
+}
+
+/* Function for reading a byte from the previously set register on the camera (TODO: Annotation)*/
+uint8_t twi0ReadCameraRegister(void)
+{
+	uint8_t returnVal;
+	
+	twi0MasterMode;					//Master mode enabled, slave disabled
+	twi0SetSlave(TWI0_CAM_READ_ADDR);	//Slave address (eg. Mux or Fast Charge Chip)
+	twi0RegAddrSize(0);				//Set single internal device register
+	twi0SetReadMode;				//Master read direction = 1
+	twi0StartSingle;				//Send a START|STOP bit as required (single byte read)
+	//While Receive Holding Register not ready. wait.
+	if(waitForFlag((uint32_t*)&REG_TWI0_SR, TWI_SR_RXRDY, TWI_RXRDY_TIMEOUT))
+	{
+		//return 1;
+	}
+	returnVal = twi0Receive;		//Store data received
+	//Wait for transmission complete
+	if(waitForFlag((uint32_t*)&REG_TWI0_SR, TWI_SR_TXCOMP, TWI_TXCOMP_TIMEOUT))
+	{
+		//return 1;
 	}
 	return returnVal;
 }

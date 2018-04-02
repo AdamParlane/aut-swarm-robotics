@@ -5,7 +5,7 @@
 *          Alterations made by Adam Parlane and Matthew Witt.
 * Created: 20/06/2017
 *
-* Project Repository: https://github.com/AdamParlane/aut-swarm-robotics
+* Project Repository: https://github.com/wittsend/aut-swarm-robotics
 *
 * Redistribution and use in source and binary forms, with or without
 * modification, are permitted provided that the following condition is met:

@@ -4,7 +4,7 @@
 * Author : Matthew Witt (pxf5695@autuni.ac.nz)
 * Created: 13/08/2017 12:42:12 AM
 *
-* Project Repository: https://github.com/AdamParlane/aut-swarm-robotics
+* Project Repository: https://github.com/wittsend/aut-swarm-robotics
 *
 * Defines and function prototypes for motion_function.c which provides high level movement functions
 *

@@ -4,7 +4,7 @@
 * Author : Matthew Witt (pxf5695@autuni.ac.nz)
 * Created: 18/08/2017 9:21:05 AM
 *
-* Project Repository: https://github.com/AdamParlane/aut-swarm-robotics
+* Project Repository: https://github.com/wittsend/aut-swarm-robotics
 *
 * Defines and function prototypes for the navigation functions.
 *

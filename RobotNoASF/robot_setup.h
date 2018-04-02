@@ -4,7 +4,7 @@
 * Author : Adam Parlane, Matthew Witt
 * Created: 6/7/2017
 *
-* Project Repository: https://github.com/AdamParlane/aut-swarm-robotics
+* Project Repository: https://github.com/wittsend/aut-swarm-robotics
 *
 * Contains the misc defines that havnt been modularised as of yet (6/7)
 * Also has all the headers so it can just be included in every header giving access to everything.
@@ -197,13 +197,13 @@ typedef struct BatteryChargeData
 //Stores colour sensor data, both raw and converted, for a single colour sensor
 typedef struct ColourSensorData
 {
-	unsigned short red;
-	unsigned short green;
-	unsigned short blue;
-	unsigned short white;
-	unsigned short hue;
-	unsigned short saturation;
-	unsigned short value;
+	uint16_t red;
+	uint16_t green;
+	uint16_t blue;
+	uint16_t white;
+	uint16_t hue;
+	uint16_t saturation;
+	uint16_t value;
 } ColourSensorData;
 
 //Stores proximity data
@@ -242,8 +242,8 @@ typedef struct CommunicationDataGroup
 	uint8_t twi2SlavePollEnabled;		//Whether to look for slave requests on twi2 (From LCD)
 	uint8_t twi2ReceivedDataByte;		//Stores the last received data byte from TWI2 slave
 	uint16_t pollInterval;				//Interval at which to poll at (ms)
-	uint16_t updateInterval;			//Interval at which the PC is updated with the robots status
-	uint8_t updateEnable;
+	uint16_t pcUpdateInterval;			//Interval at which the PC is updated with the robots status
+	uint8_t pcUpdateEnable;
 	struct transmitDataStructure transmitData;
 	struct MessageInfo messageData;		//Next message data
 	uint16_t testModeStreamInterval;	//Interval between sending test data packets (ms)
@@ -263,6 +263,7 @@ typedef struct SystemFlagsGroup
 {
 	char xbeeNewData;	//New data from Xbee interface
 	char imuCheckFifo;	//IMU ext interrupt has been triggered
+	char camBufferRead;	//A new image is ready to be read from the camera FIFO buffer
 	char twi2NewData;	//New data received on twi2 (Slave interface)
 	char obaMoving;		//Robot is in motion
 	char obaEnabled;	//Obstacle avoidance enabled
@@ -311,10 +312,9 @@ typedef struct SensorDataGroup
 	ProximitySensorGroup prox;
 } SensorDataGroup;
 
-//Structure to combine all system globals
+//Root Structure to combine all system globals
 typedef struct RobotGlobalStructure
 {
-
 	SystemStatesGroup states;				//System states
 	SystemFlagsGroup flags;					//System global flags
 	SensorDataGroup sensors;				//Sensor data
@@ -326,6 +326,9 @@ typedef struct RobotGlobalStructure
 } RobotGlobalStructure;
 
 //////////////[Defines]/////////////////////////////////////////////////////////////////////////////
+//Fixes an issue in Atmel's CMSIS implementation
+#define REG_PIOA_ABCDSR1 (*(__IO uint32_t*)0x400E0E70U)
+#define REG_PIOA_ABCDSR2 (*(__IO uint32_t*)0x400E0E74U)
 
 //////////////[Global variables]////////////////////////////////////////////////////////////////////
 //Global variables should be initialised in robot_setup.c, then an extern to them should be placed
