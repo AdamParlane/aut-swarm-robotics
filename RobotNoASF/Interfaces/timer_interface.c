@@ -13,31 +13,31 @@
 * Atmel SAM 4N Processor Datasheet:http://www.atmel.com/Images/Atmel-11158-32-bit%20Cortex-M4-Microcontroller-SAM4N16-SAM4N8_Datasheet.pdf
 *
 * Functions:
-* void timer1Init(void)
+* void sysTimerInit(void)
 * int get_ms(uint32_t *timestamp)
 * int delay_ms(uint32_t period_ms)
-* void TC3_Handler()
+* void SysTick_Handler()
 *
 */
 
 //////////////[Includes]////////////////////////////////////////////////////////////////////////////
+//#include "sam.h"
 #include "timer_interface.h"
 
+//////////////[Private Defines]/////////////////////////////////////////////////////////////////////
+#define SYS_CLOCK_SPD	100000000	//Clock speed in Hz
+
 //////////////[Global Variables]////////////////////////////////////////////////////////////////////
-
-volatile uint16_t delaymsCounter = 0;
-
 extern RobotGlobalStructure sys;	//gives access TC interrupt handler and delay_ms(), get_ms(),
 									//and fdelay_ms() access to sys.timeStamp
 
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*
 * Function:
-* void timer1Init(void)
+* void sysTimerInit(void)
 *
-* Initializes timer0 and timer counter 1
-* Used to time events with a 1ms interrupt on RC compare match
-* Sets timr0 CLK speed to 12.5MHz for camera
+* Initializes SysTick timer
+* Used to time events with a 1ms interrupt
 *
 * Inputs:
 * none
@@ -52,46 +52,16 @@ extern RobotGlobalStructure sys;	//gives access TC interrupt handler and delay_m
 *		For some reason this is a bit strange as the interrupt will only work as TC1
 *		This seems to act as the interrupt for channel 1 regardless of if it is timer0 or timer1
 *
-* Channel 0 is for the Clock and is set at 50MHz using divisor clock 1
-* The camera uses set on RA compare (RA is 2 giving f = 25MHz)
-* The camera also has clear on RC compare (RC is 4 giving 12.5MHz)
-* I believe RC is the main counter for the cameras
-* This channel is then enabled and the clock started
-*
 * Channel 1 is for generating ms timing triggers and is set to 3.125MHz using divisor clock3
 * An interrupt is setup  (named TC1_Handler) to trigger on RC compare match
 * RC = 3125 therefore match every 3.125MHz / 3125 = 1kHz -> 1ms
 * This channel is then enabled and the clock started
-* 
-* Improvements:
-* Find out more about why camera has 2 compare matches
 *
 */
-void timer1Init(void)
+void sysTimerInit(void)
 {
-	//Enable the peripheral clock for TC1
-	REG_PMC_PCER0
-	|=	(1<<ID_TC3);
-	
-	//Enable interrupts
-	NVIC_EnableIRQ(ID_TC3);				//Enable interrupts on Timer Counter 1 Channel 0
-	
-	//Timer Counter 1, Channel 0 Configuration (Used to generate systemTimestamp and perform other 
-	//timing functions such as delays
-	REG_TC1_CMR0						//TC Channel Mode Register (Pg877)
-	|=	TC_CMR_TCCLKS_TIMER_CLOCK3		//Prescaler MCK/32 (100MHz/32 = MHz)
-	|	TC_CMR_WAVE						//Waveform mode
-	|	TC_CMR_WAVSEL_UP_RC				//Clear on RC compare
-	|	TC_CMR_ACPA_SET					//Set pulse on RA compare
-	|	TC_CMR_ACPC_CLEAR;				//Clear pulse on RC compare
-	REG_TC1_IER0						//TC interrupt enable register
-	|=	TC_IER_CPCS;					//Enable Register C compare interrupt
-	REG_TC1_RC0							//Set Register C (the timer counter value at which the
-	|=	(TC_RC_RC(3125));				//interrupt will be triggered) Trigger once every ms 
-										//(100MHz/2/1M)
-	REG_TC1_CCR0						//Clock control register
-	|=	TC_CCR_CLKEN					//Enable the timer clk.
-	|	TC_CCR_SWTRG;					//Start timer register counter	
+	//Enable the System Tick Timer to generate an exception every millisecond.
+	SysTick_Config(SYS_CLOCK_SPD/1000);
 }
 
 /*
@@ -133,20 +103,71 @@ int get_ms(uint32_t *timestamp)
 * Always returns 0
 *
 * Implementation:
-* The function uses a while loop to delay for period_ms number of milliseconds using TC1
-* Each time 1 ms has occurred (delaymsCounter, a flag set by TC1_handler)
-* Period_ms is decremented until it reaches 0 then the while loop quits and the function returns 0
+* Uses the SysTick to monitor the change in time (timeDiff). The timeDiff is summed in timeEla to
+* count the amount of clock cycles that have elapsed. When the appropriate number of clock cycles
+* has elapsed to constitute 1ms, period_ms is decremented until it reaches 0, at which point the 
+* function exits.
 *
 */
 int delay_ms(uint32_t period_ms)
 {
+	int32_t timeOld = SysTick->VAL;
+	int32_t timeCur;
+	int32_t timeDiff;
+	int32_t timeEla = 0;
+	int32_t ticksPerMillisec = SysTick->LOAD;
+	
 	while(period_ms > 0)
 	{
-		if(delaymsCounter)
+		timeCur = SysTick->VAL;
+		timeDiff = (timeOld - timeCur);
+		if(timeDiff < 0) timeDiff += SysTick->LOAD;
+		timeEla += timeDiff;
+		if(timeEla >= ticksPerMillisec)
 		{
-			delaymsCounter = 0;
-			period_ms --;
+			period_ms--;
+			timeEla -= ticksPerMillisec;
 		}
+		timeOld = timeCur;
+	}
+	return 0;
+}
+
+/*
+* Function: int delay_us(uint32_t period_us)
+*
+* Halts execution for desired number of microseconds.
+*
+* Inputs:
+* period_us is the number of milliseconds to wait
+*
+* Returns:
+* Always returns 0
+*
+* Implementation:
+* see delay_ms() description
+*
+*/
+int delay_us(uint32_t period_us)
+{
+	int32_t timeOld = SysTick->VAL;
+	int32_t timeCur;
+	int32_t timeDiff;
+	int32_t timeEla = 0;
+	int32_t ticksPerMicrosec = SysTick->LOAD/1000;
+	
+	while(period_us > 0)
+	{
+		timeCur = SysTick->VAL;
+		timeDiff = (timeOld - timeCur);
+		if(timeDiff < 0) timeDiff += SysTick->LOAD;
+		timeEla += timeDiff;
+		if(timeEla >= ticksPerMicrosec)
+		{
+			period_us--;
+			timeEla -= ticksPerMicrosec;
+		}
+		timeOld = timeCur;
 	}
 	return 0;
 }
@@ -204,9 +225,9 @@ uint8_t fdelay_ms(uint32_t period_ms)
 }
 
 /*
-* Function: void TC3_Handler()
+* Function: void SysTick_Handler()
 *
-* Timer Counter 1 interrupt handler for get_ms, delay_ms and other various timing requirements
+* System tick exception handler for get_ms, and the systemTimeStamp.
 * Triggered every 1ms
 * 
 * Inputs:
@@ -216,9 +237,10 @@ uint8_t fdelay_ms(uint32_t period_ms)
 * None
 *
 * Implementation:
+* [This description is rather old now]
 * Interrupt handler for Timer Counter 1, Channel 0. As there are 6 Timer Counter Channels spread
 * across two Timer Counter Modules, there are also 6 Timer Counter Interrupt handlers. Unintuitively
-* these have been labelled TC0_Handler to TC6_Handler. TC3_Handler is the interrupt handler for TC1,
+* these have been labeled TC0_Handler to TC6_Handler. TC3_Handler is the interrupt handler for TC1,
 * Channel 0, which is the third TC channel on the device.
 * Triggered every 1ms using register C compare match
 * Used to help implement get_ms() and delay_ms() functions required by the IMU driver. 
@@ -228,14 +250,10 @@ uint8_t fdelay_ms(uint32_t period_ms)
 * Also includes some IMU manual stuff for V1
 *
 */
-void TC3_Handler()
+void SysTick_Handler()
 {
-	//The interrupt handler for timer counter 1
+	//The interrupt handler for System Tick Counter
 	//Triggers every 1ms
-	if(REG_TC1_SR0 & TC_SR_CPCS)	//If RC compare flag (once every ms)
-	{
-		sys.timeStamp++;//used for get ms
-		delaymsCounter++;//used for delay ms
-	}
+	sys.timeStamp++;//used for get ms
 }
 
