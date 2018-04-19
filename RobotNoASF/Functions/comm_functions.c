@@ -4,7 +4,7 @@
 * Author : Adam Parlane/Matthew Witt (pxf5695@autuni.ac.nz)
 * Created: 15/09/2017 11:17:34 PM
 *
-* Project Repository: https://github.com/AdamParlane/aut-swarm-robotics
+* Project Repository: https://github.com/wittsend/aut-swarm-robotics
 *
 * Retrieves and handles messages from the Xbee network
 *
@@ -276,9 +276,9 @@ void commPCStatusUpdate(RobotGlobalStructure *sys)
 	//When to next send update
 	static uint32_t updateNextTime = 0;
 
-	if((sys->timeStamp > updateNextTime) && sys->comms.updateEnable)
+	if((sys->timeStamp > updateNextTime) && sys->comms.pcUpdateEnable)
 	{
-		updateNextTime = sys->timeStamp + sys->comms.updateInterval;
+		updateNextTime = sys->timeStamp + sys->comms.pcUpdateInterval;
 		sys->comms.transmitData.Data[0] = 0xA1; //Command letting PC know of update
 		sys->comms.transmitData.Data[1] = sys->states.mainf; //Robot State
 		sys->comms.transmitData.Data[2] = sys->power.batteryVoltage >> 8; //Upper byte
@@ -291,6 +291,7 @@ void commPCStatusUpdate(RobotGlobalStructure *sys)
 		char stringBuffer[49];
 								
 		//DEBUG MESSAGE (please don't delete - Matt):
+		/*
 		sys->comms.transmitData.Data[0] = 0x00;
 		dtoa(stringBuffer, (double)sys->pos.Optical.convFactor);
 		
@@ -299,5 +300,6 @@ void commPCStatusUpdate(RobotGlobalStructure *sys)
 		sys->comms.transmitData.DataSize = strlen(stringBuffer) + 2;
 		xbeeSendAPITransmitRequest(COORDINATOR_64,UNKNOWN_16, sys->comms.transmitData.Data,
 									sys->comms.transmitData.DataSize);  //Send the Message	
+		*/
 	}
 }

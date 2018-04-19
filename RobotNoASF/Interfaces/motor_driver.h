@@ -4,7 +4,7 @@
 * Author : Adam Parlane and Matthew Witt
 * Created: 13/05/2017 4:18:25 PM
 *
-* Project Repository: https://github.com/AdamParlane/aut-swarm-robotics
+* Project Repository: https://github.com/wittsend/aut-swarm-robotics
 *
 * Defines pin assignments for the motor driver chips. Also, motor control function prototypes.
 *
@@ -26,57 +26,6 @@
 
 #ifndef MOTOR_DRIVER_H_
 #define MOTOR_DRIVER_H_
-
-//////////////[Defines]/////////////////////////////////////////////////////////////////////////////
-//[[[IMPORTANT]]]
-//Forward drives the motors in a direction that gets the robot moving in a clockwise direction.
-//Reverse drives the motors in a direction that gets the robot moving in an anti-clockwise direction
-//****Motor Pins***//
-//Rear motor (1)
-#define	rearFwdLo				(REG_PIOC_CODR |= (1<<23))
-#define	rearFwdHi				(REG_PIOC_SODR |= (1<<23))
-#define	rearRevLo				(REG_PIOC_CODR |= (1<<22))
-#define	rearRevHi				(REG_PIOC_SODR |= (1<<22))
-	
-//Front right motor (2)
-#define	frontRightFwdLo			(REG_PIOC_CODR |= (1<<19))
-#define	frontRightFwdHi			(REG_PIOC_SODR |= (1<<19))
-#define	frontRightRevLo			(REG_PIOA_CODR |= (1<<31))
-#define	frontRightRevHi			(REG_PIOA_SODR |= (1<<31))
-	
-//Front left motor (3)
-#define	frontLeftFwdLo			(REG_PIOA_CODR |= (1<<29))
-#define	frontLeftFwdHi			(REG_PIOA_SODR |= (1<<29))
-#define	frontLeftRevLo			(REG_PIOC_CODR |= (1<<10))
-#define	frontLeftRevHi			(REG_PIOC_SODR |= (1<<10))
-
-//Motor control macros
-#define frontLeftMotorCW		{frontLeftFwdHi; frontLeftRevLo;}
-#define frontLeftMotorCCW		{frontLeftRevHi; frontLeftFwdLo;}
-#define frontLeftMotorStop		{frontLeftFwdLo; frontLeftRevLo;}
-#define frontLeftMotorBrake		{frontLeftFwdHi; frontLeftRevHi;}
-#define frontRightMotorCW		{frontRightFwdHi; frontRightRevLo;}
-#define frontRightMotorCCW		{frontRightRevHi; frontRightFwdLo;}
-#define frontRightMotorStop		{frontRightFwdLo; frontRightRevLo;}
-#define frontRightMotorBrake	{frontRightFwdHi; frontRightRevHi;}
-#define rearMotorCW				{rearFwdHi; rearRevLo;}
-#define rearMotorCCW			{rearRevHi; rearFwdLo;}
-#define rearMotorStop			{rearFwdLo; rearRevLo;}
-#define rearMotorBrake			{rearFwdHi; rearRevHi;}
-	
-//PWM duty cycle channels
-#define frontLeftPwm			REG_PWM_CUPD1
-#define frontRightPwm			REG_PWM_CUPD2
-#define rearPwm					REG_PWM_CUPD3
-
-//Pre-calculated wheel specific angles in Radians:
-#define RM_ANGLE_RAD			4.712388980		//270*PI/180
-#define FRM_ANGLE_RAD			0.523598775		//30*PI/180
-#define FLM_ANGLE_RAD			2.617993877		//150*PI/180
-
-#define FR_MOTOR				0
-#define FL_MOTOR				1
-#define R_MOTOR					2
 
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*

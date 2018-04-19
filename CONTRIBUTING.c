@@ -1,8 +1,9 @@
-//The code format should be as below,
-//Excessive commenting and documentations is encouraged as this project is multi-year, in the future a new group of
-//students will need to pick this project up as quickly as possible.
+//The code format should be as below. Excessive commenting and documentations is encouraged as this 
+//project is multi-year. In the future a new group of students will need to pick this project up as
+//quickly as possible.
 
-//Also Note the Max line width should be 100
+//***PLEASE NOTE*** the Max line width should be 100 characters. In most IDEs you can set up a guide
+//line to help you conform to this.
 
 /*
 * formatting.c
@@ -10,7 +11,7 @@
 * Author : Adam Parlane (adam.parlane@outlook.com) Github: AdamParlane
 * Created: 15/04/2017 3:31:20 PM
 * 
-* Project Repository: https://github.com/AdamParlane/aut-swarm-robotics
+* Project Repository: https://github.com/wittsend/aut-swarm-robotics
 *
 * SPI driver for optical mouse sensor ADNS-7530 used for navigation
 * in the 2017 swarm robotics project for Mark Beckerleg, AUT
@@ -29,7 +30,7 @@
 * Author : name (email)
 * Created: time date
 * 
-* Project Repository: https://github.com/AdamParlane/aut-swarm-robotics
+* Project Repository: https://github.com/wittsend/aut-swarm-robotics
 *
 * 1 or 2 liner on the purpose of the file
 *
@@ -148,7 +149,6 @@ void registerAccess(void)
 	//Register name is on the first line, then subsequent bitfields being set are on following lines.	
 	//Tabs are used to space things out evenly to keep them neat and readable.	
 	REG_PMC_PCER0
-	
 	|=	(1<<ID_TWI1);					//Sometimes there isn't a macro for a bit field
 
 	//Bit field macros are as follows: The first part of the name is the peripheral catergory.
@@ -159,9 +159,9 @@ void registerAccess(void)
 	|	TWI_CWGR_CKDIV(0);
 	
 	REG_TWI1_CR 
-	=	TWI_CR_MSEN					//These will turn specific bits on and off
+	=	TWI_CR_MSEN						//These will turn specific bits on and off
 	|	TWI_CR_SVDIS;
 	
-								//Inline comments kept straight in a row with tabs
-								//By keeping them in line they become easier to read
+										//Inline comments kept straight in a row with tabs
+										//By keeping them in line they become easier to read
 }

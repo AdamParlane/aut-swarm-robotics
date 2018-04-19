@@ -1,10 +1,10 @@
 /*
 * optInterface.c
 *
-* Author : Adam Parlane (adam.parlane@outlook.com) Github: AdamParlane
+* Author : Adam Parlane (adam.parlane@outlook.com) Github: wittsend
 * Created: 15/04/2017 3:31:20 PM
 * 
-* Project Repository: https://github.com/AdamParlane/aut-swarm-robotics
+* Project Repository: https://github.com/wittsend/aut-swarm-robotics
 *
 * SPI driver for optical mouse sensor ADNS-7530 used for navigation
 * in the 2017 swarm robotics project for Mark Beckerleg, AUT

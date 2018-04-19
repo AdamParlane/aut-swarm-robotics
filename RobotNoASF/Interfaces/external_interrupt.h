@@ -4,7 +4,7 @@
 * Author : Matthew Witt (pxf5695@autuni.ac.nz)
 * Created: 9/08/2017 9:26:57 AM
 *
-* Project Repository: https://github.com/AdamParlane/aut-swarm-robotics
+* Project Repository: https://github.com/wittsend/aut-swarm-robotics
 *
 * Function prototypes for setting up external interrupts
 *
@@ -14,10 +14,12 @@
 *
 * Functions:
 * void extIntInit(void)
+* uint8_t extCamWriteToBuffer(void);
 *
 */
 #ifndef EXTERNAL_INTERRUPT_H_
 #define EXTERNAL_INTERRUPT_H_
+
 
 //////////////[Functions]///////////////////////////////////////////////////////////////////////////
 /*
@@ -34,5 +36,22 @@
 *
 */
 void extIntInit(void);
+
+/*
+* Function:
+* uint8_t extCamWriteToBuffer(void)
+*
+* If there is no new data in the buffer, will start the VSYNC ext interrupt to load a frame into
+* the camera's FIFO buffer.
+*
+* Inputs:
+* none
+*
+* Returns:
+* Returns 0 if there is new data to be read from the FIFO, otherwise will return 1 while the
+* write operation is being performed.
+*
+*/
+uint8_t extCamWriteToBuffer(void);
 
 #endif /* EXTERNAL_INTERRUPT_H_ */
